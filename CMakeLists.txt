@@ -1,7 +1,7 @@
 ##########################
 ## Set Project version
 ##########################
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.14)
 set(JET_LOGO "
       ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄ 
       ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀ 
@@ -30,11 +30,12 @@ option(ENABLE_NATIVE "Enable native build tuning" OFF)
 option(ENABLE_IPO "Enable interprocedural/link-time optimisation" OFF)
 
 # Build options
+option(BUILD_PYTHON "Generate Python bindings" OFF)
+option(BUILD_TESTS "Build tests" OFF)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING
             "Default build type: Release" FORCE)
 endif()
-option(BUILD_TESTS "Build tests" OFF)
 
 ##########################
 ## Enfore Compiler Support
@@ -88,7 +89,7 @@ endif()
 
 
 ##########################
-## Fetch Taskflow
+## Fetch dependencies
 ##########################
 Include(FetchContent)
 
@@ -97,31 +98,30 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/taskflow/taskflow.git
   GIT_TAG        v3.1.0
 )
+FetchContent_Declare(
+  Pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11.git
+  GIT_TAG        v2.6.2
+)
 
-# FetchContent_MakeAvailable() requires CMake 3.14 or newer.
-FetchContent_GetProperties(Taskflow)
-if(NOT Taskflow_POPULATED)
-  FetchContent_Populate(Taskflow)
-  # Don't build the Taskflow tests or examples.
-  set(TF_BUILD_EXAMPLES OFF CACHE INTERNAL "Build Taskflow examples")
-  set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
-  add_subdirectory(${taskflow_SOURCE_DIR} ${taskflow_BINARY_DIR})
+# Don't build the Taskflow tests or examples.
+set(TF_BUILD_EXAMPLES OFF CACHE INTERNAL "Build Taskflow examples")
+set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
+
+if(BUILD_PYTHON)
+  FetchContent_MakeAvailable(Taskflow Pybind11)
+else()
+  FetchContent_MakeAvailable(Taskflow)
 endif()
 
 find_package(OpenMP QUIET)
-
-message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-message(STATUS "BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
-message(STATUS "BLAS_INCLUDE_DIRS: ${BLAS_INCLUDE_DIRS}")
-message(STATUS "ENABLE_NATIVE: ${ENABLE_NATIVE}")
-message(STATUS "ENABLE_IPO: ${ENABLE_IPO}")
 
 ##########################
 ## Create Jet target
 ##########################
 
 add_library(Jet INTERFACE)
-target_include_directories(Jet INTERFACE    
+target_include_directories(Jet INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
     ${BLAS_INCLUDE_DIRS}
 )
@@ -137,23 +137,46 @@ if (ENABLE_OPENMP AND OPENMP_FOUND)
 elseif (ENABLE_OPENMP AND NOT OPENMP_FOUND)
     message(FATAL_ERROR "\nOpenMP is enabled but could not be found")
 endif()
+
 if(ENABLE_SANITIZERS)
     target_compile_options(Jet INTERFACE -g -fsanitize=address,undefined)
     target_link_options(Jet INTERFACE -fsanitize=address,undefined)
 endif()
+
 if(ENABLE_WARNINGS)
     target_compile_options(Jet INTERFACE -Wall -Wextra -Werror)
 endif()
+
 if(ENABLE_NATIVE)
     target_compile_options(Jet INTERFACE -march=native)
 endif()
+
 if(ENABLE_IPO)
     target_compile_options(Jet INTERFACE -flto)
 endif()
 
 ##########################
-## Build tests
+## Report
 ##########################
+
+message(STATUS "BLAS_INCLUDE_DIRS: ${BLAS_INCLUDE_DIRS}")
+message(STATUS "BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
+message(STATUS "BUILD_PYTHON: ${BUILD_PYTHON}")
+message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
+message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+message(STATUS "ENABLE_IPO: ${ENABLE_IPO}")
+message(STATUS "ENABLE_NATIVE: ${ENABLE_NATIVE}")
+message(STATUS "ENABLE_SANITIZERS: ${ENABLE_SANITIZERS}")
+message(STATUS "ENABLE_WARNINGS: ${ENABLE_WARNINGS}")
+
+##########################
+## Build targets
+##########################
+
+if(BUILD_PYTHON)
+  pybind11_add_module(jet src/Python.cpp)
+  target_link_libraries(jet PRIVATE Jet)
+endif()
 
 if(BUILD_TESTS)
     enable_testing()
