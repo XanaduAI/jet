@@ -14,6 +14,7 @@
 #define MIN_RIGHT_DIM 32
 #endif
 
+#include <complex>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -25,68 +26,45 @@
 namespace Jet {
 
 /**
- * @brief `%Tensor` class represents an n-rank data-structure of
- * complex-valued data for tensor operations. We use the following conventions:
- * - rank & order are used interchangeably, referring to the number of tensor
- * indices.
- * - dimension refers to the number of elements for a given tensor index.
- * - shape refers to all dimensions for the given tensor.
+ * @brief `%Tensor` represents an \f$n\f$-rank data structure of complex-valued
+ *        data for tensor operations.
  *
- * @tparam T Underlying complex tensor data type (`complex<float>`
- * or `complex<double>`).
+ * The following conventions are used:
+ *
+ *     - "Rank" and "order" are used interchangeably and refer to the number of
+ *       tensor indices.
+ *     - "Dimension" refers to the number of elements along a tensor index.
+ *     - "Shape" refers to the dimensions of a tensor; the number of dimensions
+ *       is the rank of the tensor.
+ *
+ * @tparam T Underlying complex tensor data type (`complex<float>` or
+ *           `complex<double>`).
  */
 template <class T = std::complex<float>> class Tensor {
-
-  private:
-    std::vector<std::string> indices_;
-    std::vector<size_t> shape_;
-    std::unordered_map<std::string, size_t> index_to_dimension_;
-    std::vector<T> data_;
-
   public:
-    /**
-     * @brief Initialize `%Tensor` indices and size of each index. Indices
-     * and shapes are ordered to map directly (e.g `indices[i]` has size
-     * `shape[i]`).
-     *
-     * @param indices Index labels for `%Tensor` object.
-     * @param shape Number of elements per index.
-     */
-    void InitIndicesAndShape(const std::vector<std::string> &indices,
-                             const std::vector<size_t> &shape)
-    {
-        indices_ = indices;
-        shape_ = shape;
-        for (size_t i = 0; i < shape_.size(); ++i)
-            index_to_dimension_[indices[i]] = shape[i];
-    }
-
-    /**
-     * @brief Allow ease-of-access to tensor data type.
-     *
-     */
+    /// Type of the real and imaginary components of the tensor data.
     using scalar_type_t = T;
 
-    virtual ~Tensor() {}
-
     /**
-     * @brief Default `%Tensor` objects will have a zero-initialized scalar
-     * complex data-value, and a given size of `1`. Shape and indices for the
-     * tensor will not be set.
+     * @brief Constructs a default `%Tensor` object.
      *
+     * Default tensor objects have a single zero-initialized data value.
+     *
+     * @warning The shape and indices of a default `%Tensor` object are not set.
      */
     Tensor() : data_(1) {}
 
     /**
-     * @brief Initialize a `%Tensor` object with a given shape and
-     * zero-initialized complex data-values, and a given size of
-     * (\f$\prod_i{\textrm{shape}_i}\f$). Indices for the tensor will default to
-     * values from the set `?[a-zA-Z]`.
+     * @brief Constructs a shaped `%Tensor` object.
+     *
+     * Shaped `%Tensor` objects have zero-initialized data values and a size of
+     * (\f$\prod_i{\textrm{shape}_i}\f$). The indices of a shaped `%Tensor`
+     * object default to the values from the set `?[a-zA-Z]`.
      *
      * @param shape Dimension of each `%Tensor` index.
      */
     Tensor(const std::vector<size_t> &shape)
-        : data_(TensorHelpers::ShapeToSize(shape), {0.0, 0.0})
+        : data_(TensorHelpers::ShapeToSize(shape))
     {
         using namespace Utilities;
         std::vector<std::string> indices(shape.size());
@@ -98,52 +76,54 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Initialize a `%Tensor` object with a given shape,
-     * zero-initialized complex data-values, a given size of
-     * (\f$\prod_i{\textrm{shape}_i}\f$), and labeled indices.
+     * @brief Constructs a shaped and labeled `%Tensor` object.
      *
-     * @param indices Index labels for `%Tensor` object.
-     * @param shape Dimension of each `%Tensor` object index.
+     * Shaped and labeled `%Tensor` objects have zero-initialized data values
+     * and a size of (\f$\prod_i{\textrm{shape}_i}\f$).
+     *
+     * @param indices Label of each `%Tensor` index.
+     * @param shape Dimension of each `%Tensor` index.
      */
     Tensor(const std::vector<std::string> &indices,
            const std::vector<size_t> &shape)
-        : data_(TensorHelpers::ShapeToSize(shape), {0.0, 0.0})
+        : data_(TensorHelpers::ShapeToSize(shape))
     {
         InitIndicesAndShape(indices, shape);
     }
 
     /**
-     * @brief Initialize a `%Tensor` object with a given shape, complex
-     * data-values, a given size of (\f$\prod_i{\textrm{shape}_i}\f$), and
-     * labeled indices.
+     * @brief Constructs a shaped, labeled, and populated `%Tensor` object.
      *
-     * @param indices Index labels of the `%Tensor` object.
-     * @param dimensions Size of each rank (index) of the `%Tensor` object.
+     * The size of a shaped, indexed, and populated `%Tensor` object is
+     * (\f$\prod_i{\textrm{shape}_i}\f$).
+     *
+     * @param indices Label of each `%Tensor` index.
+     * @param shape Dimension of each `%Tensor` index.
      * @param data Row-major encoded complex data representation of the
-     * `%Tensor` object.
+     *             `%Tensor` object.
      */
     Tensor(const std::vector<std::string> &indices,
-           const std::vector<size_t> &dimensions, const std::vector<T> &data)
-        : Tensor(indices, dimensions)
+           const std::vector<size_t> &shape, const std::vector<T> &data)
+        : Tensor(indices, shape)
     {
         Utilities::FastCopy(data, data_);
     }
 
     /**
-     * @brief Construct a new `%Tensor` object using copy constructor.
+     * @brief Constructs a `%Tensor` object by copying another `%Tensor` object.
      *
-     * @param other `%Tensor` object to copy state from.
+     * @param other `%Tensor` object to be copied.
      */
     Tensor(const Tensor &other)
     {
         InitIndicesAndShape(other.GetIndices(), other.GetShape());
-        Utilities::FastCopy(other.GetData(), GetData());
+        Utilities::FastCopy(other.data_, data_);
     }
 
     /**
-     * @brief Construct a new `%Tensor` object using move constructor.
+     * @brief Constructs a `%Tensor` object by moving another `%Tensor` object.
      *
-     * @param other `%Tensor` of which to take ownership.
+     * @param other `%Tensor` object to be moved.
      */
     Tensor(Tensor &&other)
     {
@@ -154,54 +134,85 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Set the `%Tensor` object shape. This defines the number of
-     * elements per rank (index).
-     *
-     * @param shape Vector of elements per rank (index).
+     * @brief Destructs this `%Tensor` object.
      */
-    void SetShape(const std::vector<size_t> &shape) { shape_ = shape; }
+    virtual ~Tensor() {}
 
     /**
-     * @brief Get the `%Tensor` shape.
+     * @brief Initializes the indices and shape of a `%Tensor` object.
      *
+     * The indices and shapes must be ordered to map directly such that
+     * `indices[i]` has size `shape[i]`.
+     *
+     * @note This function updates the internal index-to-dimension map.
+     *
+     * @param indices Label of each `%Tensor` index.
+     * @param shape Dimension of each `%Tensor` index.
      */
-    const std::vector<size_t> &GetShape() const { return shape_; }
+    void InitIndicesAndShape(const std::vector<std::string> &indices,
+                             const std::vector<size_t> &shape) noexcept
+    {
+        indices_ = indices;
+        shape_ = shape;
+        for (size_t i = 0; i < shape_.size(); ++i)
+            index_to_dimension_[indices[i]] = shape[i];
+    }
 
     /**
-     * @brief Return reference to `%Tensor` object data at a given index.
+     * @brief Sets the shape of a `%Tensor` object.
+     *
+     * The shape of a `%Tensor` defines the number of elements per rank (index).
+     *
+     * @param shape Number of elements in each `%Tensor` index.
+     */
+    void SetShape(const std::vector<size_t> &shape) noexcept { shape_ = shape; }
+
+    /**
+     * @brief Returns the shape of a `%Tensor` tensor object.
+     *
+     * @return Number of elements in each `%Tensor` index.
+     */
+    const std::vector<size_t> &GetShape() const noexcept { return shape_; }
+
+    /**
+     * @brief Returns a reference to a `%Tensor` object datum.
      *
      * @warning Supplying an index greater than or equal to `%GetSize()` is
      *          undefined behaviour.
      *
-     * @param local_index 1D data row-major index (lexicographic ordering).
-     */
-    T &operator[](size_t local_index) { return data_[local_index]; }
-
-    /**
-     * @see `operator[](size_t local_index)`.
-     */
-    const T &operator[](size_t local_index) const { return data_[local_index]; }
-
-    /**
-     * @brief Change `%Tensor` index label at given location.
+     * @param pos Position of the datum to retrieve, encoded as a 1D row-major
+     *            index (lexicographic ordering).
      *
-     * @param ind Location of `%Tensor` index label.
-     * @param new_string New `%Tensor` index label.
+     * @return Reference to the complex data value at the specified position.
      */
-    void RenameIndex(size_t ind, std::string new_string)
+    T &operator[](size_t pos) { return data_[pos]; }
+
+    /**
+     * @see `operator[](size_t pos)`.
+     */
+    const T &operator[](size_t pos) const { return data_[pos]; }
+
+    /**
+     * @brief Renames a `%Tensor` index label.
+     *
+     * @param pos Position of the `%Tensor` label.
+     * @param new_label New `%Tensor` label.
+     */
+    void RenameIndex(size_t pos, std::string new_label) noexcept
     {
+        const auto old_label = indices_[pos];
+        const auto dimension = index_to_dimension_[old_label];
+        index_to_dimension_.erase(old_label);
 
-        std::string old_string = GetIndices()[ind];
-
-        indices_[ind] = new_string;
-        index_to_dimension_[new_string] = index_to_dimension_[old_string];
-        index_to_dimension_.erase(old_string);
+        indices_[pos] = new_label;
+        index_to_dimension_.emplace(new_label, dimension);
     }
 
     /**
      * @brief Equality operator for `%Tensor` objects.
      *
-     * @param other `%Tensor` object to compare from.
+     * @param other `%Tensor` object to be compared to this `%Tensor` object.
+     * @return True if the two `%Tensor` objects are equivalent.
      */
     bool operator==(const Tensor<T> &other) const noexcept
     {
@@ -213,14 +224,16 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Inequality operator for `%Tensor` objects.
      *
-     * @param other `%Tensor` object to compare from.
+     * @param other `%Tensor` object to be compared to this `%Tensor` object.
+     * @return True if the two `%Tensor` objects are not equivalent.
      */
     bool operator!=(const Tensor<T> &other) const { return !(*this == other); }
 
     /**
      * @brief Assignment operator for `%Tensor` objects.
      *
-     * @param other `%Tensor` object to assign from.
+     * @param other `%Tensor` object to be assigned from.
+     * @return Reference to this `%Tensor` object.
      */
     const Tensor<T> &operator=(const Tensor<T> &other)
     {
@@ -232,7 +245,8 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Assignment operator for `%Tensor` objects using move semantics.
      *
-     * @param other `%Tensor` object to take ownership from.
+     * @param other `%Tensor` object to take ownership of.
+     * @return Reference to this `%Tensor` object.
      */
     const Tensor<T> &operator=(Tensor<T> &&other)
     {
@@ -244,8 +258,9 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Return mapping from `%Tensor` index label to dimension.
+     * @brief Returns the index-to-dimension map.
      *
+     * @returns Mapping from `%Tensor` index labels to dimension sizes.
      */
     const std::unordered_map<std::string, size_t> &GetIndexToDimension() const
     {
@@ -253,64 +268,83 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Set the `%Tensor` data value for a given n-dimensional index.
+     * @brief Sets the `%Tensor` data value at the given n-dimensional index.
      *
-     * @tparam V Type of data values stored by `%Tensor`.
      * @param indices n-dimensional `%Tensor` data index.
-     * @param val Data value to set at given index.
+     * @param value Data value to set at given index.
      */
-    template <class V>
-    void SetValue(const std::vector<size_t> &indices, const V &val)
+    void SetValue(const std::vector<size_t> &indices, const T &value)
     {
-        data_[Jet::Utilities::RavelIndex(indices, GetShape())] = val;
+        data_[Jet::Utilities::RavelIndex(indices, shape_)] = value;
     }
 
     /**
-     * @brief Get the `%Tensor` data value at given tensor index.
+     * @brief Returns the `%Tensor` data value at the given n-dimensional index.
      *
      * @param indices n-dimensional `%Tensor` data index.
+     *
+     * @returns Complex data value.
      */
     T GetValue(const std::vector<size_t> &indices) const
     {
-        return data_[Jet::Utilities::RavelIndex(indices, GetShape())];
+        return data_[Jet::Utilities::RavelIndex(indices, shape_)];
     }
 
     /**
-     * @brief Get the `%Tensor` data in row-major order.
+     * @brief Returns the `%Tensor` data in row-major order.
      *
+     * @return Vector of complex data values.
      */
-    const std::vector<T> &GetData() const { return data_; }
+    const std::vector<T> &GetData() const noexcept { return data_; }
 
     /**
-     * @see const std::vector<T> &GetData() const.
-     *
+     * @see GetData().
      */
     std::vector<T> &GetData() { return data_; }
 
     /**
-     * @brief Get the `%Tensor` index labels.
+     * @brief Returns the `%Tensor` index labels.
      *
+     * @return Vector of index labels.
      */
-    const std::vector<std::string> &GetIndices() const { return indices_; }
+    const std::vector<std::string> &GetIndices() const noexcept
+    {
+        return indices_;
+    }
 
     /**
-     * @brief Get the total number of data elements in `%Tensor` object.
+     * @brief Returns the size of a `%Tensor` object.
      *
+     * @return Number of data elements.
      */
     size_t GetSize() const { return TensorHelpers::ShapeToSize(shape_); }
 
     /**
-     * @brief Get a single scalar value from the `%Tensor` object data.
-     * Equivalent to `%GetValue({})`.
+     * @brief Returns a single scalar value from the `%Tensor` object.
      *
+     * @note This is equivalent to calling `%GetValue({})`.
+     *
+     * @return Complex data value.
      */
-    const T &GetScalar() { return data_[0]; }
+    const T &GetScalar() const { return data_[0]; }
 
     /**
-     * @brief Randomly assign values to `%Tensor` object data. This method
-     * will allow for reproducible random number generation with a given seed.
+     * @brief Reports whether a `%Tensor` object is a scalar.
      *
-     * @param seed Seed the RNG with a given value.
+     * @return True if this `%Tensor` object is rank-0 (and false otherwise).
+     */
+    bool IsScalar() const noexcept { return GetSize() == 1; }
+
+    /**
+     * @brief Assigns random values to the `%Tensor` object data.
+     *
+     * The real and imaginary components of each datum will be independently
+     * sampled from a uniform distribution with support over [-1, 1].
+     *
+     * @note This overload enables reproducible random number generation for a
+     *        given seed.
+     *
+     * @param seed Seed to supply to the RNG engine.
      */
     void FillRandom(size_t seed)
     {
@@ -323,8 +357,10 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Randomly assign values to `%Tensor` object data.
+     * @brief Assigns random values to the `%Tensor` object data.
      *
+     * The real and imaginary components of each datum will be independently
+     * sampled from a uniform distribution with support over [-1, 1].
      */
     void FillRandom()
     {
@@ -337,21 +373,30 @@ template <class T = std::complex<float>> class Tensor {
         }
     }
 
-    /**
-     * @brief Inform whether the tensor is rank-0 (true) or otherwise (false).
-     *
-     */
-    bool IsScalar() const noexcept { return GetSize() == 1; }
+  private:
+    /// Index labels.
+    std::vector<std::string> indices_;
+
+    /// Dimension along each index.
+    std::vector<size_t> shape_;
+
+    /// Mapping from index labels to dimensions.
+    std::unordered_map<std::string, size_t> index_to_dimension_;
+
+    /// Complex data values in row-major order.
+    std::vector<T> data_;
 };
 
 /**
- * @brief Contract given `%Tensor` objects over the intersection of the index
- * sets. The resulting tensor will be formed with indices given by the symmetric
+ * @brief Contracts two `%Tensor` objects over the intersection of their index
+ *        sets.
+ *
+ * The resulting tensor will be formed with indices given by the symmetric
  * difference of the index sets.
  *
  * Example: Given a 3x2x4 tensor A(i,j,k) and a 2x4x2 tensor B(j,k,l), the
- * common indices are (j,k), and the symmetric difference of the sets are (i,l).
- * The result of the contraction will be a tensor 3x2 tensor C(i,l).
+ * common indices are (j,k) and the symmetric difference of the sets is (i,l).
+ * The result of the contraction is a tensor 3x2 tensor C(i,l).
  * \code{.cpp}
  *     Tensor A({"i", "j", "k"}, {3, 2, 4});
  *     Tensor B({"j", "k", "l"}, {2, 4, 2});
@@ -363,8 +408,9 @@ template <class T = std::complex<float>> class Tensor {
  * @see TODO: Link to documentation
  *
  * @tparam T `%Tensor` data type.
- * @param A Left tensor to contract.
- * @param B Right tensor to contract.
+ * @param A tensor on the LHS of the contraction.
+ * @param B tensor on the RHS of the contraction.
+ * @return `%Tensor` object representing the contraction of the tensors.
  */
 template <class T> Tensor<T> ContractTensors(Tensor<T> &A, Tensor<T> &B)
 {
@@ -411,14 +457,13 @@ template <class T> Tensor<T> ContractTensors(Tensor<T> &A, Tensor<T> &B)
 }
 
 /**
- * @brief Perform slicing of given tensor index. This will return a `%Tensor`
- * object whose given indices and data are a subset of the provided tensor
- * object, sliced along the given index argument.
+ * @brief Slices a `%Tensor` object index.
  *
- * Example: Given a 2x3 tensor `%A(i,j)`. We can slice along any of the given
- * indices, and return a Tensor object of a given slice, indexed relative to
- * the ranges given by `%RavelIndex()`. The following example slices along each
- * index, with the resulting slices selected as required.
+ * The result is a `%Tensor` object whose given indices and data are a subset of
+ * the provided tensor object, sliced along the given index argument.
+ *
+ * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices along
+ * each index with the resulting slices selected as required:
  * \code{.cpp}
  *     Tensor A({"i", "j"}, {2, 3});
  *     A.FillRandom();
@@ -433,20 +478,20 @@ template <class T> Tensor<T> ContractTensors(Tensor<T> &A, Tensor<T> &B)
  *
  * @tparam T `%Tensor` data type.
  * @param tensor `%Tensor` object to slice.
- * @param index_str Tensor index label on which to slice.
- * @param index_value Tensor slice to return from multidimensional indexing
- returned by `%RavelIndex()`.
+ * @param index `%Tensor` index label on which to slice.
+ * @param value Value to slice the `%Tensor` index on.
+ * @return Slice of the `%Tensor` object.
  */
 template <class T>
-Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index_str,
-                     size_t index_value)
+Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index,
+                     size_t value)
 {
 
     std::vector<std::string> new_ordering = tensor.GetIndices();
-    auto it = find(new_ordering.begin(), new_ordering.end(), index_str);
+    auto it = find(new_ordering.begin(), new_ordering.end(), index);
     size_t index_num = std::distance(new_ordering.begin(), it);
     new_ordering.erase(new_ordering.begin() + index_num);
-    new_ordering.insert(new_ordering.begin(), index_str);
+    new_ordering.insert(new_ordering.begin(), index);
 
     auto &&tensor_trans = Transpose(tensor, new_ordering);
     std::vector<std::string> sliced_indices(
@@ -456,7 +501,7 @@ Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index_str,
 
     Tensor<T> tensor_sliced(sliced_indices, sliced_dimensions);
     size_t projection_size = tensor_sliced.GetSize();
-    size_t projection_begin = projection_size * index_value;
+    size_t projection_begin = projection_size * value;
     auto data_ptr = tensor_trans.GetData();
 
 #if defined _OPENMP
@@ -470,11 +515,12 @@ Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index_str,
 }
 
 /**
- * @brief Reshape `%Tensor` object to new given dimensions.
+ * @brief Reshapes a `%Tensor` object to the given dimensions.
  *
  * @tparam T `%Tensor` data type.
  * @param old_tensor Original tensor object to reshape.
  * @param new_shape Index dimensionality for new tensor object.
+ * @return Reshaped copy of the `%Tensor` object.
  */
 template <class T>
 Tensor<T> Reshape(const Tensor<T> &old_tensor,
@@ -491,10 +537,11 @@ Tensor<T> Reshape(const Tensor<T> &old_tensor,
 }
 
 /**
- * @brief Perform conjugation of complex data in `%Tensor`.
+ * @brief Returns the conjugate of a `%Tensor` object.
  *
  * @tparam T `%Tensor` data type.
  * @param A Reference `%Tensor` object.
+ * @return `%Tensor` object representing the conjugate of `A`.
  */
 template <class T> Tensor<T> Conj(const Tensor<T> &A)
 {
@@ -506,12 +553,12 @@ template <class T> Tensor<T> Conj(const Tensor<T> &A)
 }
 
 /**
- * @brief Transpose `%Tensor` indices to new ordering.
+ * @brief Transposes the indices of a `%Tensor` object to a new ordering.
  *
  * @tparam T `%Tensor` data type.
  * @param A Reference `%Tensor` object.
  * @param new_indices New `%Tensor` index label ordering.
- * @return Transposed tensor.
+ * @return Transposed `%Tensor` object.
  */
 template <class T>
 Tensor<T> Transpose(const Tensor<T> &A,
@@ -634,15 +681,15 @@ Tensor<T> Transpose(const Tensor<T> &A,
 }
 
 /**
- * @brief Transpose `%Tensor` indices to new ordering.
+ * @brief Transposes the indices of a `%Tensor` to a new ordering.
  *
  * @warning The program is aborted if the number of elements in the new ordering
  *          does match the number of indices in the tensor.
  *
  * @tparam T `%Tensor` data type.
  * @param A Reference `%Tensor` object.
- * @param new_ordering New ordering of the `%Tensor` index labels.
- * @return Transposed tensor.
+ * @param new_ordering New `%Tensor` index permutation.
+ * @return Transposed `%Tensor` object.
  */
 template <class T>
 Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
@@ -666,6 +713,7 @@ Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
  *
  * @param out Output stream to be modified.
  * @param tensor Tensor to be streamed.
+ * @return Reference to the given output stream.
  */
 template <class T>
 inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)

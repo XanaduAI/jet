@@ -174,7 +174,9 @@ message(STATUS "ENABLE_WARNINGS: ${ENABLE_WARNINGS}")
 ##########################
 
 if(BUILD_PYTHON)
-  pybind11_add_module(jet src/Python.cpp)
+  pybind11_add_module(jet src/Python.cpp
+                          src/python/Tensor.hpp
+                          src/python/Version.hpp)
   target_link_libraries(jet PRIVATE Jet)
 endif()
 
