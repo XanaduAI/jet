@@ -1,0 +1,35 @@
+name: Documentation
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "include/**"
+
+jobs:
+  build:
+    name: Build (HTML)
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - uses: josh146/sphinx-action@master
+        with:
+          docs-folder: "docs/"
+          pre-build-command: "apt install -y doxygen && pip3 install -r requirements.txt"
+          build-command: "make html"
+
+      - name: Upload HTML
+        uses: actions/upload-artifact@v2
+        with:
+          name: html
+          path: docs/_build/html/

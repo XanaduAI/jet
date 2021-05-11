@@ -1,0 +1,38 @@
+# As the name suggests, Test_Main.cpp implements main().
+add_executable(runner Test_Main.cpp)
+
+Include(FetchContent)
+
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v2.13.1
+)
+
+# FetchContent_MakeAvailable() requires CMake 3.14 or newer.
+FetchContent_GetProperties(Catch2)
+if(NOT Catch2_POPULATED)
+  FetchContent_Populate(Catch2)
+  add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
+endif()
+
+target_link_libraries(runner Catch2::Catch2)
+
+# Required for catch_discover_tests().
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
+
+# Modify `ctest` to only run the supported subset of tests.
+include(CTest)
+include(Catch)
+
+target_sources(runner PRIVATE Test_PathInfo.cpp
+                              Test_TaskBasedCpuContractor.cpp
+                              Test_Tensor.cpp
+                              Test_TensorNetwork.cpp
+                              Test_TensorNetworkIO.cpp
+                              Test_Utilities.cpp)
+
+target_link_libraries(runner Jet)
+
+# Run all tests which are not hidden.
+catch_discover_tests(runner)

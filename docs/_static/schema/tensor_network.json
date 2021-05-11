@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Tensor Network File schema",
+  "type": "object",
+  "required": [
+    "tensors"
+  ],
+  "properties": {
+    "path": {
+      "title": "Path",
+      "description": "List of tensor indices describing a contraction path",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "additionalItems": false,
+        "items": [
+          {"$ref": "#/$defs/tensor_index"},
+          {"$ref": "#/$defs/tensor_index"}
+        ]
+      }
+    },
+    "tensors": {
+      "title": "Tensors",
+      "description": "List of tensors in network",
+      "type": "array",
+      "items": {"$ref": "#/$defs/tensor"}
+    }
+  },
+  "$defs": {
+    "complex_number": {
+      "title": "Complex Number",
+      "type": "array",
+      "additionalItems": false,
+      "items": [
+        {
+          "title": "Real",
+          "type": "number"
+        },
+        {
+          "title": "Imaginary",
+          "type": "number"
+        }
+      ]
+    },
+    "tensor": {
+      "title": "Tensor",
+      "type": "array",
+      "additionalItems": false,
+      "items": [
+        {
+          "title": "Tags",
+          "description": "Tags for identifying or categorizing the tensor",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "title": "Indices",
+          "description": "Indices of the tensor",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "title": "Shape",
+          "description": "Dimension of the corresponding indices",
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        {
+          "title": "Data",
+          "description": "Complex elements of the tensor",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/complex_number"
+          }
+        }
+      ]
+    },
+    "tensor_index": {
+      "title": "Tensor Index",
+      "description": "Index of a tensor in 'tensors'",
+      "type": "integer"
+    }   
+  }
+}

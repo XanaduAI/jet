@@ -1,0 +1,13 @@
+breathe==4.29.0
+docutils<0.17
+exhale
+ipykernel
+m2r2
+nbsphinx
+repoze.lru>=0.7
+scipy>=1.2.1
+sphinx-copybutton
+sphinx==3.5.4
+sphinxcontrib-bibtex
+sympy>=1.5.1
+version_information

@@ -1,0 +1,62 @@
+name: Nightly
+on:
+  schedule:
+    # Run this workflow at midnight every workday.
+    - cron: "0 0 * * 1-5"
+
+jobs:
+  test-ubuntu:
+    name: Build (Ubuntu)
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install dependencies
+        run: sudo apt install -y libopenmpi-dev libopenblas-dev
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Initialize build directory
+        run: |
+          mkdir build
+          cd build
+          cmake -DENABLE_SANITIZERS=ON -DBUILD_TESTS=ON ../
+
+      - name: Build Jet
+        run: |
+          cd build
+          make -j`nproc`
+
+      - name: Run tests
+        run: |
+          cd build
+          mkdir test/results
+          ./test/runner --order lex
+
+  test-macos:
+    name: Build (MacOS)
+    runs-on: macos-10.15
+
+    steps:
+      - name: Install dependencies
+        run: brew install openmpi libomp
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Initialize build directory
+        run: |
+          mkdir build
+          cd build
+          cmake -DENABLE_SANITIZERS=ON -DBUILD_TESTS=ON ../
+
+      - name: Build Jet
+        run: |
+          cd build
+          make -j`sysctl -n hw.physicalcpu`
+
+      - name: Run tests
+        run: |
+          cd build
+          mkdir test/results
+          ./test/runner --order lex
