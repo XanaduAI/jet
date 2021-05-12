@@ -247,6 +247,17 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 Tensor object representing the contraction of the tensors.
           )");
 
+    m.def("reshape", Jet::Reshape<T>, py::arg("tensor"), py::arg("shape"), R"(
+            Reshapes a tensor object to the given dimensions.
+
+            Params:
+                tensor: tensor object to reshape.
+                shape: index dimensionality of the reshaped tensor object.
+            
+            Returns:
+                Reshaped copy of the given tensor object.
+          )");
+
     m.def("slice_index", Jet::SliceIndex<T>, py::arg("tensor"),
           py::arg("index"), py::arg("value"), R"(
             Slices a tensor object index. The result is a tensor object whose
@@ -277,21 +288,10 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 Slice of the tensor object.
           )");
 
-    m.def("reshape", Jet::Reshape<T>, py::arg("tensor"), py::arg("shape"), R"(
-            Reshapes a tensor object to the given dimensions.
-
-            Params:
-                tensor: tensor object to reshape.
-                shape: index dimensionality of the reshaped tensor object.
-            
-            Returns:
-                Reshaped copy of the given tensor object.
-          )");
-
     m.def("transpose",
           py::overload_cast<const tensor_t &, const std::vector<std::string> &>(
               Jet::Transpose<T>),
-          py::arg("tensor"), py::arg("ordering"), R"(
+          py::arg("tensor"), py::arg("indices"), R"(
             Transposes the indices of a tensor object.
 
             Params:
