@@ -31,15 +31,16 @@ else
 endif
 
 .PHONY: test
-test: $(.TEST_BUILD_DIR)
-	$(.VENV_bin)/python3 pytest
+test: $(.VENV_DIR)/requirements_test.txt.touch
+	$(.VENV_BIN)/python3 -m pytest
 
 .PHONY: clean
 	rm -rf $(.VENV_DIR)
 
-$(.VENV_DIR)/requirements_test.txt.touch: $(.VENV_DIR) requirements_test.txt
+$(.VENV_DIR)/requirements_test.txt.touch: $(.VENV_DIR)/touch requirements_test.txt
 	$(.VENV_DIR)/bin/pip install -r requirements_test.txt
 	touch $@
 
-$(.VENV_DIR):
-	python3 -m venv $@
+$(.VENV_DIR)/touch:
+	python3 -m venv $(.VENV_DIR)
+	touch $@
