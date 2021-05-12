@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 
-#include "python/Tensor.hpp"
-#include "python/Version.hpp"
+#include "Tensor.hpp"
+#include "Version.hpp"
 
 PYBIND11_MODULE(jet, m)
 {
