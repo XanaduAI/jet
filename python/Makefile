@@ -23,8 +23,7 @@ help:
 	@: $(info $(HELP_BODY))
 
 .PHONY: setup
-setup: $(.VENV_DIR) requirements_test.txt
-	$(.VENV_DIR)/bin/pip install -r requirements_test.txt
+setup: $(.VENV_DIR)/requirements_test.txt.touch
 
 .PHONY: format
 format:
@@ -35,12 +34,17 @@ else
 endif
 
 .PHONY: test
-test: setup
+test: $(.VENV_DIR)/requirements_test.txt.touch
 	PYTHONPATH="../build" $(.VENV_BIN)/python -m pytest
 
 .PHONY: clean
 clean:
 	rm -rf $(.VENV_DIR)
 
-$(.VENV_DIR):
-	$(python) -m venv $@
+$(.VENV_DIR)/requirements_test.txt.touch: $(.VENV_DIR)/touch requirements_test.txt
+	$(.VENV_DIR)/bin/pip install -r requirements_test.txt
+	@touch $@
+
+$(.VENV_DIR)/touch:
+	$(python) -m venv ${.VENV_DIR}
+	@touch $@
