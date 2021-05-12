@@ -16,7 +16,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-[Mikhail Andrenkov](https://github.com/Mandrenkov).
+[Mikhail Andrenkov](https://github.com/Mandrenkov) and [Jack Brown](https://github.com/brownj85).
 
 ## Release 0.1.0 (current release)
 
