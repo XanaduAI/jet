@@ -41,8 +41,9 @@ build
 # CMake build artifacts
 include/jet/CmakeMacros.hpp
 
-# Python virtualenv
+# Python
 .venv
+__pycache__
 
 # Sphinx documentation
 docs/__pycache__/*
