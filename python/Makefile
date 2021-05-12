@@ -10,7 +10,7 @@ TARGETS
 
   setup [python=<path>]       Set up virtualenv using the Python interpreter at <path>, defaults to $(python)
 
-  test                        Run tests
+  test [args=<pytest args>]   Run tests; use with 'args=<pytest args>' to pass test arguments
 
   format [check=1]            Apply formatters; use with 'check=1' to check instead of modify
 
@@ -35,7 +35,7 @@ endif
 
 .PHONY: test
 test: $(.VENV_DIR)/requirements_test.txt.touch
-	PYTHONPATH="../build" $(.VENV_BIN)/python -m pytest
+	PYTHONPATH="../build" $(.VENV_BIN)/python -m pytest ./tests $(args)
 
 .PHONY: clean
 clean:
