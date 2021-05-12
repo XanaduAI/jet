@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 
-#include "python/Version.hpp"
+#include "Version.hpp"
 
 PYBIND11_MODULE(jet, m)
 {
