@@ -32,15 +32,19 @@ jobs:
           cd build
           cmake -DBUILD_PYTHON=ON ../
 
-      - name: Build Jet
+      - name: Generate Python bindings
         run: |
           cd build
           make -j`nproc`
 
-      - name: Run tests
+      - name: Create virtual environment
         run: |
           cd python
           make setup
+
+      - name: Run tests
+        run: |
+          cd python
           make test
 
   test-macos:
@@ -65,13 +69,17 @@ jobs:
           cd build
           cmake -DBUILD_PYTHON=ON ../
 
-      - name: Build Jet
+      - name: Generate Python bindings
         run: |
           cd build
           make -j`sysctl -n hw.physicalcpu`
 
-      - name: Run tests
+      - name: Create virtual environment
         run: |
           cd python
           make setup
+
+      - name: Run tests
+        run: |
+          cd python
           make test
