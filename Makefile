@@ -30,9 +30,9 @@ help:
 .PHONY: format
 format:
 ifdef check
-	./bin/format --check include test
+	./bin/format --check include test python/src
 else
-	./bin/format include test
+	./bin/format include test python/src
 endif
 
 
