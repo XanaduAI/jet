@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "include/**"
-      - "python/**"
+      - "python/src/**"
       - "test/**"
 
 jobs:
@@ -27,4 +27,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run formatter
-        run: ./bin/format --check include python test
+        run: ./bin/format --check include python/src test
