@@ -32,7 +32,7 @@ endif
 
 .PHONY: test
 test: $(.VENV_DIR)/requirements_test.txt.touch
-	$(.VENV_BIN)/python3 pytest
+	$(.VENV_BIN)/python3 -m pytest
 
 .PHONY: clean
 	rm -rf $(.VENV_DIR)
