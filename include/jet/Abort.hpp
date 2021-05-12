@@ -58,10 +58,10 @@ namespace Jet {
 inline void Abort(const char *message, const char *file_name, int line,
                   const char *function_name)
 {
-    std::cerr << "Fatal error in jet/" << file_name << ", line " << line
+    std::stringstream err_code;  
+    err_code << "Fatal error in jet/" << file_name << ", line " << line
               << ", in " << function_name << ": " << message << std::endl;
-
-    std::terminate();
+    throw err_code.str();
 }
 
 }; // namespace Jet
