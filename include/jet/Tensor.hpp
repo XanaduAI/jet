@@ -154,6 +154,8 @@ template <class T = std::complex<float>> class Tensor {
     {
         indices_ = indices;
         shape_ = shape;
+
+        index_to_dimension_.clear();
         for (size_t i = 0; i < shape_.size(); ++i)
             index_to_dimension_[indices[i]] = shape[i];
     }
