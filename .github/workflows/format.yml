@@ -11,7 +11,7 @@ on:
 
 jobs:
   format-cpp:
-    name: C++
+    name: Format (C++)
     runs-on: ubuntu-20.04
 
     steps:
@@ -30,7 +30,7 @@ jobs:
         run: ./bin/format --check include python/src test
 
   format-python:
-    name: Python
+    name: Format (Python)
     runs-on: ubuntu-20.04
 
     steps:
