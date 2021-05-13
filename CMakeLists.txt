@@ -78,13 +78,13 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(MKL QUIET)
 
 if(MKL_FOUND)
-    add_definitions("-DENABLE_MKL")
-    set(BLAS_INCLUDE_DIRS "${MKL_INCLUDE_DIR}")
-    set(BLAS_LIBRARIES ${MKL_LIBRARY})
+  add_definitions("-DENABLE_MKL")
+  set(BLAS_INCLUDE_DIRS "${MKL_INCLUDE_DIR}")
+  set(BLAS_LIBRARIES ${MKL_LIBRARY})
 else()
-    find_package(CBLAS REQUIRED)
-    set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
-    set(BLAS_INCLUDE_DIRS ${CBLAS_INCLUDE_DIRS})
+  find_package(CBLAS REQUIRED)
+  set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
+  set(BLAS_INCLUDE_DIRS ${CBLAS_INCLUDE_DIRS})
 endif()
 
 
@@ -105,15 +105,6 @@ set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
 
 FetchContent_MakeAvailable(Taskflow)
 
-if(BUILD_PYTHON)
-  FetchContent_Declare(
-    Pybind11
-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
-    GIT_TAG        v2.6.2
-  )
-  FetchContent_MakeAvailable(Pybind11)
-endif()
-
 find_package(OpenMP QUIET)
 
 ##########################
@@ -132,27 +123,27 @@ target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow)
 ## Compile options
 ##########################
 
-if (ENABLE_OPENMP AND OPENMP_FOUND)
-    target_link_libraries(Jet INTERFACE OpenMP::OpenMP_CXX)
+if(ENABLE_OPENMP AND OPENMP_FOUND)
+  target_link_libraries(Jet INTERFACE OpenMP::OpenMP_CXX)
 elseif (ENABLE_OPENMP AND NOT OPENMP_FOUND)
-    message(FATAL_ERROR "\nOpenMP is enabled but could not be found")
+  message(FATAL_ERROR "\nOpenMP is enabled but could not be found")
 endif()
 
 if(ENABLE_SANITIZERS)
-    target_compile_options(Jet INTERFACE -g -fsanitize=address,undefined)
-    target_link_options(Jet INTERFACE -fsanitize=address,undefined)
+  target_compile_options(Jet INTERFACE -g -fsanitize=address,undefined)
+  target_link_options(Jet INTERFACE -fsanitize=address,undefined)
 endif()
 
 if(ENABLE_WARNINGS)
-    target_compile_options(Jet INTERFACE -Wall -Wextra -Werror)
+  target_compile_options(Jet INTERFACE -Wall -Wextra -Werror)
 endif()
 
 if(ENABLE_NATIVE)
-    target_compile_options(Jet INTERFACE -march=native)
+  target_compile_options(Jet INTERFACE -march=native)
 endif()
 
 if(ENABLE_IPO)
-    target_compile_options(Jet INTERFACE -flto)
+  target_compile_options(Jet INTERFACE -flto)
 endif()
 
 ##########################
@@ -174,11 +165,10 @@ message(STATUS "ENABLE_WARNINGS: ${ENABLE_WARNINGS}")
 ##########################
 
 if(BUILD_PYTHON)
-  pybind11_add_module(jet python/src/Python.cpp)
-  target_link_libraries(jet PRIVATE Jet)
+  add_subdirectory(python)
 endif()
 
 if(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(test)
+  enable_testing()
+  add_subdirectory(test)
 endif(BUILD_TESTS)
