@@ -26,14 +26,9 @@ namespace TensorHelpers {
  *
  * @tparam T candidate data type
  */
-template <class T> struct is_supported_data_type {
-
-    static const bool value = (std::is_same_v<T, std::complex<float>> ||
-                               std::is_same_v<T, std::complex<double>>);
-};
-
 template <class T>
-constexpr bool is_supported_data_type_v = is_supported_data_type<T>::value;
+constexpr bool is_supported_data_type = std::is_same_v<T, std::complex<float>> ||
+                                        std::is_same_v<T, std::complex<double>>;
 
 /**
  * @brief Compile-time binding for BLAS GEMM operation (matrix-matrix product).

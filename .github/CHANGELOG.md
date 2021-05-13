@@ -4,7 +4,7 @@
 
 ### Improvements
 
-* Added compile-time type check for Tensor data type
+* `Tensor` class now checks data type at compile-time.
 
 ### Breaking Changes
 
@@ -16,8 +16,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-[Mikhail Andrenkov](https://github.com/Mandrenkov).
-[Jack Brown](https://github.com/brownj85)
+[Mikhail Andrenkov](https://github.com/Mandrenkov), [Jack Brown](https://github.com/brownj85).
 
 ## Release 0.1.0 (current release)
 
