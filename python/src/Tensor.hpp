@@ -22,11 +22,11 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
     using tensor_t = Jet::Tensor<T>;
 
     py::class_<tensor_t>(m, name, R"(
-        Tensor represents an n-rank data structure of complex-valued data for
-        tensor operations. We use the following conventions:
+        This class represents an n-rank data structure of complex-valued data
+        for tensor operations. We use the following conventions:
 
             - "Rank" and "order" are used interchangeably and refer to the
-              number of tensor indices.
+              number of tensor indices.  In general, "rank" will be preferred.
             - "Dimension" refers to the number of elements along a tensor index.
             - "Shape" refers to the dimensions of a tensor; the number of
               dimensions is the rank of the tensor.
@@ -46,7 +46,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             dimensions. The indices of this tensor object default to values from
             the set `?[a-zA-Z]`.
 
-            Params:
+            Args:
                 shape: dimension of each tensor index.
         )")
 
@@ -57,7 +57,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             initialized data values, and a size equal to the product of the
             shape dimensions.
 
-            Params:
+            Args:
                 indices: label of each tensor index.
                 shape: dimension of each tensor index.
         )")
@@ -69,7 +69,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             data values, and a size equal to the product of the shape
             dimensions.
 
-            Params:
+            Args:
                 indices: label of each tensor index.
                 shape: dimension of each tensor index.
                 data: row-major encoded complex data representation.
@@ -78,7 +78,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
         .def(py::init<const tensor_t &>(), py::arg("other"), R"(
             Constructs a copy of a tensor object.
 
-            Params:
+            Args:
                 other: tensor object to copy.
         )")
 
@@ -112,7 +112,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             an index greater than or equal to the size of the tensor is
             undefined behaviour.
 
-            Params:
+            Args:
                 pos: position of the datum to retrieve, encoded as a 1D row-
                      major index (lexicographic ordering).
 
@@ -154,7 +154,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             uniform distribution with support over [-1, 1].  This overload
             enables reproducible random number generation for a given seed.
 
-            Params:
+            Args:
                 seed: seed to supply to the RNG engine.
         )")
 
@@ -164,7 +164,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             and shape must be ordered to map directly such that `indices[i]` has
             size `shape[i]`.
 
-            Params:
+            Args:
                 indices: label of each tensor index.
                 shape: dimension of each tensor index.
         )")
@@ -172,7 +172,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
         .def("get_value", &tensor_t::GetValue, py::arg("indices"), R"(
             Returns the tensor data value at the given n-dimensional index.
 
-            Params:
+            Args:
                 indices: n-dimensional tensor data index.
 
             Returns:
@@ -190,7 +190,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
              py::arg("new_label"), R"(
             Renames the index label at the given position.
 
-            Params:
+            Args:
                 pos: Position of the label.
                 new_label: New label.
         )")
@@ -199,7 +199,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
              py::arg("value"), R"(
             Sets the tensor data value at the given n-dimensional index.
 
-            Params:
+            Args:
                 indices: n-dimensional tensor data index.
                 value: value to set at the data index.
         )");
@@ -210,7 +210,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
     m.def("conj", Jet::Conj<T>, py::arg("tensor"), R"(
             Returns the conjugate of the given tensor object.
 
-            Params:
+            Args:
                 tensor: reference tensor object.
 
             Returns:
@@ -239,7 +239,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
                     C = jet.contract_tensors(A, B);
 
-            Params:
+            Args:
                 A: tensor on the LHS of the contraction.
                 B: tensor on the RHS of the contraction.
 
@@ -250,7 +250,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
     m.def("reshape", Jet::Reshape<T>, py::arg("tensor"), py::arg("shape"), R"(
             Reshapes a tensor object to the given dimensions.
 
-            Params:
+            Args:
                 tensor: tensor object to reshape.
                 shape: index dimensionality of the reshaped tensor object.
             
@@ -279,7 +279,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                     jet.slice_index(A, "j", 1) # Result is a 2x1 tensor
                     jet.slice_index(A, "j", 2) # Result is a 2x1 tensor
 
-            Params:
+            Args:
                 tensor: tensor object to slice.
                 index: index label on which to slice.
                 value: value to slice the index on.
@@ -294,7 +294,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
           py::arg("tensor"), py::arg("indices"), R"(
             Transposes the indices of a tensor object.
 
-            Params:
+            Args:
                 tensor: reference tensor object.
                 indices: desired index ordering, specified as a list of labels.
 
@@ -308,7 +308,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
           py::arg("tensor"), py::arg("ordering"), R"(
             Transposes the indices of a tensor object.
 
-            Params:
+            Args:
                 tensor: reference tensor object.
                 ordering: desired index ordering, specified as a permutation.
 
