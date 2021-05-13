@@ -126,7 +126,7 @@ constexpr void dotuBinding(size_t k, const ComplexPrecision *A_data,
  */
 template <
     typename ComplexPrecision,
-    std::enable_if_t<is_supported_data_type_v<ComplexPrecision>, bool> = true>
+    std::enable_if_t<is_supported_data_type<ComplexPrecision>, bool> = true>
 inline void MultiplyTensorData(const std::vector<ComplexPrecision> &A,
                                const std::vector<ComplexPrecision> &B,
                                std::vector<ComplexPrecision> &C,
