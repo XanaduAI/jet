@@ -37,6 +37,11 @@ gemmBinding(size_t m, size_t n, size_t k, ComplexPrecision alpha,
             ComplexPrecision beta, const ComplexPrecision *A_data,
             const ComplexPrecision *B_data, ComplexPrecision *C_data)
 {
+    static_assert(
+        (std::is_same_v<ComplexPrecision, std::complex<float>> ||
+         std::is_same_v<ComplexPrecision, std::complex<double>>),
+        "Please use complex<float> or complex<double> for Tensor data");
+
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
         cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), &beta,
@@ -45,9 +50,6 @@ gemmBinding(size_t m, size_t n, size_t k, ComplexPrecision alpha,
         cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), &beta,
                     C_data, std::max(1ul, n));
-    else
-        JET_ABORT(
-            "Please use complex<float> or complex<double for Tensor data");
 };
 
 /**
@@ -69,15 +71,17 @@ gemvBinding(size_t m, size_t k, ComplexPrecision alpha, ComplexPrecision beta,
             const ComplexPrecision *A_data, const ComplexPrecision *B_data,
             ComplexPrecision *C_data)
 {
+    static_assert(
+        (std::is_same_v<ComplexPrecision, std::complex<float>> ||
+         std::is_same_v<ComplexPrecision, std::complex<double>>),
+        "Please use complex<float> or complex<double> for Tensor data");
+
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
         cblas_cgemv(CblasRowMajor, CblasNoTrans, m, k, (&alpha), (A_data),
                     std::max(1ul, k), (B_data), 1, (&beta), (C_data), 1);
     else if constexpr (std::is_same_v<ComplexPrecision, std::complex<double>>)
         cblas_zgemv(CblasRowMajor, CblasNoTrans, m, k, (&alpha), (A_data),
                     std::max(1ul, k), (B_data), 1, (&beta), (C_data), 1);
-    else
-        JET_ABORT(
-            "Please use complex<float> or complex<double for Tensor data");
 };
 
 /**
@@ -96,13 +100,15 @@ constexpr void dotuBinding(size_t k, const ComplexPrecision *A_data,
                            const ComplexPrecision *B_data,
                            ComplexPrecision *C_data)
 {
+    static_assert(
+        (std::is_same_v<ComplexPrecision, std::complex<float>> ||
+         std::is_same_v<ComplexPrecision, std::complex<double>>),
+        "Please use complex<float> or complex<double> for Tensor data");
+
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
         cblas_cdotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
     else if constexpr (std::is_same_v<ComplexPrecision, std::complex<double>>)
         cblas_zdotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
-    else
-        JET_ABORT(
-            "Please use complex<float> or complex<double for Tensor data");
 };
 
 /**
