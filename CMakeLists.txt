@@ -98,20 +98,20 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/taskflow/taskflow.git
   GIT_TAG        v3.1.0
 )
-FetchContent_Declare(
-  Pybind11
-  GIT_REPOSITORY https://github.com/pybind/pybind11.git
-  GIT_TAG        v2.6.2
-)
 
-# Don't build the Taskflow tests or examples.
+# Don't build the Taskflow examples or tests.
 set(TF_BUILD_EXAMPLES OFF CACHE INTERNAL "Build Taskflow examples")
 set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
 
+FetchContent_MakeAvailable(Taskflow)
+
 if(BUILD_PYTHON)
-  FetchContent_MakeAvailable(Taskflow Pybind11)
-else()
-  FetchContent_MakeAvailable(Taskflow)
+  FetchContent_Declare(
+    Pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG        v2.6.2
+  )
+  FetchContent_MakeAvailable(Pybind11)
 endif()
 
 find_package(OpenMP QUIET)
