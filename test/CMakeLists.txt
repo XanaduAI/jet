@@ -9,12 +9,7 @@ FetchContent_Declare(
   GIT_TAG        v2.13.1
 )
 
-# FetchContent_MakeAvailable() requires CMake 3.14 or newer.
-FetchContent_GetProperties(Catch2)
-if(NOT Catch2_POPULATED)
-  FetchContent_Populate(Catch2)
-  add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(Catch2)
 
 target_link_libraries(runner Catch2::Catch2)
 
