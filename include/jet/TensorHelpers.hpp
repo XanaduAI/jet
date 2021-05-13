@@ -18,6 +18,24 @@ namespace Jet {
 namespace TensorHelpers {
 
 /**
+ * If T is a supported data type for tensors, this struct provides
+ * the static member constant value equal to true. Otherwise value
+ * is false.
+ *
+ * Supported data types are std::complex<float> and std::complex<double>.
+ *
+ * @tparam T candidate data type
+ */
+template <class T> struct is_supported_data_type {
+
+    static const bool value = (std::is_same_v<T, std::complex<float>> ||
+                               std::is_same_v<T, std::complex<double>>);
+};
+
+template <class T>
+constexpr bool is_supported_data_type_v = is_supported_data_type<T>::value;
+
+/**
  * @brief Compile-time binding for BLAS GEMM operation (matrix-matrix product).
  *
  * @tparam ComplexPrecision Precision of complex data (`%complex<float>` or
@@ -37,11 +55,6 @@ gemmBinding(size_t m, size_t n, size_t k, ComplexPrecision alpha,
             ComplexPrecision beta, const ComplexPrecision *A_data,
             const ComplexPrecision *B_data, ComplexPrecision *C_data)
 {
-    static_assert(
-        (std::is_same_v<ComplexPrecision, std::complex<float>> ||
-         std::is_same_v<ComplexPrecision, std::complex<double>>),
-        "Please use complex<float> or complex<double> for Tensor data");
-
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
         cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), &beta,
@@ -71,11 +84,6 @@ gemvBinding(size_t m, size_t k, ComplexPrecision alpha, ComplexPrecision beta,
             const ComplexPrecision *A_data, const ComplexPrecision *B_data,
             ComplexPrecision *C_data)
 {
-    static_assert(
-        (std::is_same_v<ComplexPrecision, std::complex<float>> ||
-         std::is_same_v<ComplexPrecision, std::complex<double>>),
-        "Please use complex<float> or complex<double> for Tensor data");
-
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
         cblas_cgemv(CblasRowMajor, CblasNoTrans, m, k, (&alpha), (A_data),
                     std::max(1ul, k), (B_data), 1, (&beta), (C_data), 1);
@@ -100,11 +108,6 @@ constexpr void dotuBinding(size_t k, const ComplexPrecision *A_data,
                            const ComplexPrecision *B_data,
                            ComplexPrecision *C_data)
 {
-    static_assert(
-        (std::is_same_v<ComplexPrecision, std::complex<float>> ||
-         std::is_same_v<ComplexPrecision, std::complex<double>>),
-        "Please use complex<float> or complex<double> for Tensor data");
-
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
         cblas_cdotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
     else if constexpr (std::is_same_v<ComplexPrecision, std::complex<double>>)
