@@ -1,4 +1,24 @@
-## Release 0.1.0
+## Release 0.2.0 (development release)
+
+### New features since last release
+
+### Improvements
+
+* Added compile-time type check for Tensor data type
+
+### Breaking Changes
+
+### Bug Fixes
+
+### Documentation
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+[Mikhail Andrenkov](https://github.com/Mandrenkov).
+
+## Release 0.1.0 (current release)
 
 ### New features since last release
 
