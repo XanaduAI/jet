@@ -6,12 +6,12 @@ on:
       - main
     paths:
       - "include/**"
-      - "python/src/**"
+      - "python/**"
       - "test/**"
 
 jobs:
-  format:
-    name: Format
+  format-cpp:
+    name: C++
     runs-on: ubuntu-20.04
 
     steps:
@@ -28,3 +28,29 @@ jobs:
 
       - name: Run formatter
         run: ./bin/format --check include python/src test
+
+  format-python:
+    name: Python
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt -y install python3
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create virtual environment
+        run: |
+          cd python
+          make setup
+
+      - name: Run formatter
+        run: |
+          cd python
+          make format check=1
