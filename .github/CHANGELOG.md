@@ -5,6 +5,7 @@
 ### Improvements
 
 * `Tensor` class now checks data type at compile-time.
+* Running CMake with `-DBUILD_PYTHON=ON` now generates Python bindings within a `jet` package. [(#1)](https://github.com/XanaduAI/jet/pull/1)
 
 ### Breaking Changes
 
