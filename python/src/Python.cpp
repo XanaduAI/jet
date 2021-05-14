@@ -1,8 +1,11 @@
 #include <pybind11/pybind11.h>
 
+#include <Jet.hpp>
+
 #include "PathInfo.hpp"
 #include "Tensor.hpp"
 #include "TensorNetwork.hpp"
+#include "TensorNetworkIO.hpp"
 #include "Version.hpp"
 
 PYBIND11_MODULE(jet, m)
@@ -16,13 +19,18 @@ PYBIND11_MODULE(jet, m)
     AddBindingsForTensor<c_fp32_t>(m, "Tensor32");
     AddBindingsForTensor<c_fp64_t>(m, "Tensor64");
 
-    AddBindingsForTensorNetwork<Jet::Tensor<c_fp32_t>>(m, "TensorNetwork32");
-    AddBindingsForTensorNetwork<Jet::Tensor<c_fp64_t>>(m, "TensorNetwork64");
+    using tensor32_t = Jet::Tensor<c_fp32_t>;
+    using tensor64_t = Jet::Tensor<c_fp64_t>;
 
-    AddBindingsForPathInfo<Jet::Tensor<c_fp32_t>, Jet::Tensor<c_fp64_t>>(m);
+    AddBindingsForTensorNetwork<tensor32_t>(m, "TensorNetwork32");
+    AddBindingsForTensorNetwork<tensor64_t>(m, "TensorNetwork64");
 
-    AddBindingsForTensor<c_fp32_t>(m, "Tensor32");
-    AddBindingsForTensor<c_fp64_t>(m, "Tensor64");
+    AddBindingsForTensorNetworkIO<tensor32_t>(m, "TensorNetworkFile32",
+                                              "TensorNetworkSerializer32");
+    AddBindingsForTensorNetworkIO<tensor64_t>(m, "TensorNetworkFile64",
+                                              "TensorNetworkSerializer64");
+
+    AddBindingsForPathInfo<tensor32_t, tensor64_t>(m);
 
     AddBindingsForVersion(m);
 }
