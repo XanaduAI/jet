@@ -35,7 +35,7 @@ endif
 
 .PHONY: test
 test: $(.VENV_DIR)/requirements_test.txt.touch
-	PYTHONPATH="../build" $(.VENV_BIN)/python -m pytest ./tests $(args)
+	PYTHONPATH="../build/python" $(.VENV_BIN)/python -m pytest ./tests $(args)
 
 .PHONY: clean
 clean:
