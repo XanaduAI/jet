@@ -120,9 +120,8 @@ FetchContent_Declare(
 # FetchContent_MakeAvailable() requires CMake 3.14 or newer.
 FetchContent_GetProperties(spdlog)
 if(NOT spdlog_POPULATED)
-  FetchContent_Populate(spdlog)
-  include_directories(AFTER SYSTEM ${spdlog_SOURCE_DIR}/include)
-  add_subdirectory(${spdlog_SOURCE_DIR})
+    FetchContent_Populate(spdlog)
+    add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR})
 endif()
 
 find_package(OpenMP QUIET)
@@ -177,9 +176,6 @@ if(BUILD_TESTS)
     add_subdirectory(test)
 endif(BUILD_TESTS)
 
-add_executable(logtest ${PROJECT_SOURCE_DIR}/include/logtest.cpp)
-
 if(ENABLE_LOGGING)
     target_compile_options(Jet INTERFACE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
-    #target_compile_options(logtest PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
 endif()
