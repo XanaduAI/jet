@@ -3,13 +3,13 @@
 ##########################
 cmake_minimum_required(VERSION 3.13)
 set(JET_LOGO "
-      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄ 
-      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀ 
-      ██     ██             ██    
-      ██     ███████        ██    
-      ██     ██             ██    
-█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██    
- ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀    
+      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄
+      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀
+      ██     ██             ██
+      ██     ███████        ██
+      ██     ██             ██
+█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██
+ ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀
 ")
 message(${JET_LOGO})
 
@@ -28,6 +28,7 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_OPENMP "Enable OpenMP if supported" OFF)
 option(ENABLE_NATIVE "Enable native build tuning" OFF)
 option(ENABLE_IPO "Enable interprocedural/link-time optimisation" OFF)
+option(ENABLE_LOGGING "Enable fine-grained logging" OFF)
 
 # Build options
 if(NOT CMAKE_BUILD_TYPE)
@@ -51,7 +52,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
     message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
     message(FATAL_ERROR "\nJet requires clang++ at least v5.0")
-  endif() 
+  endif()
 ## AppleClang
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0")
@@ -108,6 +109,22 @@ if(NOT Taskflow_POPULATED)
   add_subdirectory(${taskflow_SOURCE_DIR} ${taskflow_BINARY_DIR})
 endif()
 
+Include(FetchContent)
+
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        v1.8.5
+)
+
+# FetchContent_MakeAvailable() requires CMake 3.14 or newer.
+FetchContent_GetProperties(spdlog)
+if(NOT spdlog_POPULATED)
+  FetchContent_Populate(spdlog)
+  include_directories(AFTER SYSTEM ${spdlog_SOURCE_DIR}/include)
+  add_subdirectory(${spdlog_SOURCE_DIR})
+endif()
+
 find_package(OpenMP QUIET)
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -121,12 +138,12 @@ message(STATUS "ENABLE_IPO: ${ENABLE_IPO}")
 ##########################
 
 add_library(Jet INTERFACE)
-target_include_directories(Jet INTERFACE    
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
+target_include_directories(Jet INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     ${BLAS_INCLUDE_DIRS}
 )
 
-target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow)
+target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow spdlog::spdlog)
 
 ##########################
 ## Compile options
@@ -159,3 +176,10 @@ if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif(BUILD_TESTS)
+
+add_executable(logtest ${PROJECT_SOURCE_DIR}/include/logtest.cpp)
+
+if(ENABLE_LOGGING)
+    target_compile_options(Jet INTERFACE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
+    #target_compile_options(logtest PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
+endif()

@@ -50,6 +50,43 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
 }
 
 /**
+ * Streams a vector to an output stream.
+ *
+ * @tparam T Type of the elements in the vector.
+ * @param os Output stream to be modified.
+ * @param v Vector to be inserted.
+ * @return Reference to the given output stream.
+ */
+template <class T>
+inline std::ostream &operator<<(std::ostream &os, const std::vector<std::pair<T,T>> &v)
+{
+    os << '{';
+    for (size_t i = 0; i < v.size(); i++) {
+        if (i != 0) {
+            os << "  ";
+        }
+        os << v[i].first << ":" << v[i].second;
+    }
+    os << '}';
+    return os;
+}
+
+/**
+ * Converts a vector to an a string.
+ *
+ * @tparam T Type of the elements in the vector.
+ * @param v Vector to be inserted.
+ */
+template <class T>
+inline std::string to_string(const std::vector<T> &v)
+{
+    std::ostringstream oss;
+    oss << v;
+    return oss.str();
+}
+
+
+/**
  * Converts an ID into a unique string index of the form [a-zA-Z][0-9]*.
  *
  * @param id ID to be converted.

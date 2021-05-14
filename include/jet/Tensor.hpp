@@ -22,6 +22,8 @@
 #include "TensorHelpers.hpp"
 #include "Utilities.hpp"
 
+#include "spdlog/spdlog.h"
+
 namespace Jet {
 
 /**
@@ -368,6 +370,7 @@ template <class T = std::complex<float>> class Tensor {
  */
 template <class T> Tensor<T> ContractTensors(Tensor<T> &A, Tensor<T> &B)
 {
+    SPDLOG_DEBUG("\nEntered ContractTensors(" + to_string(A) + ", "+ to_string(B) + ")");
 
     using namespace Jet::Utilities;
     using namespace Jet::TensorHelpers;
@@ -407,6 +410,8 @@ template <class T> Tensor<T> ContractTensors(Tensor<T> &A, Tensor<T> &B)
         At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
         left_dim, right_dim, common_dim);
 
+
+    SPDLOG_DEBUG("Leaving ContractTensors");
     return C;
 }
 
@@ -441,6 +446,7 @@ template <class T>
 Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index_str,
                      size_t index_value)
 {
+    SPDLOG_DEBUG("\nEntered SliceIndex(" + to_string(tensor) + ","+ index_str + "," + std::to_string(index_value) + ")");
 
     std::vector<std::string> new_ordering = tensor.GetIndices();
     auto it = find(new_ordering.begin(), new_ordering.end(), index_str);
@@ -466,6 +472,8 @@ Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index_str,
     for (size_t p = 0; p < projection_size; ++p)
         tensor_sliced[p] = tensor_trans[projection_begin + p];
 
+    SPDLOG_DEBUG("Leaving SliceIndex");
+
     return tensor_sliced;
 }
 
@@ -481,12 +489,16 @@ Tensor<T> Reshape(const Tensor<T> &old_tensor,
                   const std::vector<size_t> &new_shape)
 {
     using namespace Utilities;
+    SPDLOG_DEBUG("\nEntered Reshape(" + to_string(old_tensor) + ","+ to_string(new_shape) + ")");
 
     JET_ABORT_IF_NOT(old_tensor.GetSize() ==
                          TensorHelpers::ShapeToSize(new_shape),
                      "Size is inconsistent between tensors.");
     Tensor<T> new_tensor(new_shape);
     Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
+    
+    SPDLOG_DEBUG("Leaving Reshape");
+
     return new_tensor;
 }
 
@@ -498,10 +510,14 @@ Tensor<T> Reshape(const Tensor<T> &old_tensor,
  */
 template <class T> Tensor<T> Conj(const Tensor<T> &A)
 {
+    SPDLOG_DEBUG("\nEntered Conj(" + to_string(A) + ")");
+
     Tensor<T> A_conj(A.GetIndices(), A.GetShape());
     for (size_t i = 0; i < A.GetSize(); i++) {
         A_conj[i] = std::conj(A[i]);
     }
+    SPDLOG_DEBUG("Leaving Conj");
+
     return A_conj;
 }
 
@@ -518,6 +534,7 @@ Tensor<T> Transpose(const Tensor<T> &A,
                     const std::vector<std::string> &new_indices)
 {
     using namespace Jet::Utilities;
+    SPDLOG_DEBUG("\nEntered Transpose(" + to_string(A)+ "," + to_string(new_indices) + ")");
 
     auto indices_ = A.GetIndices();
     auto shape_ = A.GetShape();
@@ -629,6 +646,7 @@ Tensor<T> Transpose(const Tensor<T> &A,
 
         offset += MAX_RIGHT_DIM;
     }
+    SPDLOG_DEBUG("Leaving Transpose");
 
     return At;
 }
@@ -647,6 +665,9 @@ Tensor<T> Transpose(const Tensor<T> &A,
 template <class T>
 Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
 {
+    using namespace Utilities;
+    SPDLOG_DEBUG("\nEntered Transpose(" + to_string(A)+ "," + to_string(new_ordering) + ")");
+
     const size_t num_indices = A.GetIndices().size();
     JET_ABORT_IF_NOT(num_indices == new_ordering.size(),
                      "Size of ordering must match number of tensor indices.");
@@ -657,6 +678,7 @@ Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
     for (size_t i = 0; i < num_indices; i++) {
         new_indices[i] = old_indices[new_ordering[i]];
     }
+    SPDLOG_DEBUG("Leaving Transpose");
 
     return Transpose(A, new_indices);
 }
@@ -672,11 +694,19 @@ inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
 {
     using namespace Jet::Utilities;
 
-    out << "Size=" << tensor.GetSize() << std::endl;
+    out << "Size=" << tensor.GetShape() << std::endl;
     out << "Indices=" << tensor.GetIndices() << std::endl;
     out << "Data=" << tensor.GetData() << std::endl;
 
     return out;
+}
+
+template <class T>
+inline std::string to_string( const Tensor<T>& tensor )
+{
+    std::ostringstream oss;
+    oss << tensor;
+    return oss.str();
 }
 
 }; // namespace Jet
