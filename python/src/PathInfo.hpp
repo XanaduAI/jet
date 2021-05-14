@@ -11,7 +11,15 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
 {
     c.def(py::init<const Jet::TensorNetwork<Tensor> &,
                    const Jet::PathInfo::path_t &>(),
-          py::arg("tn"), py::arg("path"), R"(Constructs a populated Path)");
+          py::arg("tn"), py::arg("path"), R"(
+            Constructs a populated PathInfo for the given path
+            through a tensor network
+
+            Args:
+                tn: Tensor network
+                path: Pairs of integers representing contraction path through
+                tensor network
+            )");
 
     if constexpr (sizeof...(Tensors) == 0) {
         return;
@@ -26,6 +34,7 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
 
     auto cls = py::class_<Jet::PathInfo>(m, "PathInfo", R"(
         PathInfo represents a contraction path in a Tensor Network)")
+
                    .def(py::init<>(), R"(Constructs an empty path)")
 
                    .def_property_readonly("index_to_size_map",
@@ -50,5 +59,6 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
             Computes total memory required to contract the tensor
             network along this path)");
 
+    // Create bindings for each Tensor type
     bind_constructors<Tensors...>(cls);
 }

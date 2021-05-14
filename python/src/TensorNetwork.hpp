@@ -14,6 +14,15 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
     py::class_<TensorNetwork>(m, name, R"(
         TensorNetwork represents a tensor network)")
 
+        // Constructors
+        // --------------------------------------------------------------------
+
+        .def(py::init<>(), R"(
+            Constructs an empty tensor network)")
+
+        // Properties
+        // --------------------------------------------------------------------
+
         .def_property_readonly("nodes", &TensorNetwork::GetNodes,
                                R"(A list of the nodes in this tensor network)")
 
@@ -30,6 +39,26 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             "num_indices", &TensorNetwork::NumIndices,
             R"(The number of unique indices in this tensor network)")
 
+        // Magic methods
+        // --------------------------------------------------------------------
+
+        .def(
+            "__getitem__",
+            [](const TensorNetwork &tn, TensorNetwork::node_id_t node_id) {
+                return tn.GetNodes()[node_id]
+            },
+            py::arg("node_id"), R"(
+            Returns the tensor network node with the given ID. 
+
+            Params:
+                node_id: ID of the node
+
+            Returns:
+                Tensor network node)")
+
+        // Other
+        // --------------------------------------------------------------------
+
         .def(
             "get_node_ids_by_tag",
             [](const TensorNetwork &tn, const std::string &tag) {
@@ -42,10 +71,26 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
                 return ids;
             },
-            R"(Returns a list of nodes with the given tag.)")
+            R"(Returns a list of IDs of nodes with the given tag.)")
 
         .def("add_tensor", &TensorNetwork::AddTensor,
-             R"(Add tensor to this network, with specified tags)")
+             R"(Add tensor to network.
+                
+                Args:
+                    tensor: Tensor to add
+                    tags: List of string tags to associate to tensor)")
+
+        .def("slice_indices", &TensorNetwork::SliceIndicies,
+             R"(Slices a set of indices. 
+                
+                The value taken along each axis is derived from the provided
+                linear index.
+
+                Args:
+                    indices: list of string indices to be sliced
+                    value: Raveled index value representing the element
+                    to take along each of the indices.
+                )")
 
         .def("contract", &TensorNetwork::Contract,
              R"(Contract tensor network along an optionally provided path)");
