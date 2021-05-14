@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <Jet.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -15,13 +17,13 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
         TensorNetwork represents a tensor network)")
 
         // Constructors
-        // --------------------------------------------------------------------
+        // ---------------------------------------------------------------------
 
         .def(py::init<>(), R"(
             Constructs an empty tensor network)")
 
         // Properties
-        // --------------------------------------------------------------------
+        // ---------------------------------------------------------------------
 
         .def_property_readonly("nodes", &TensorNetwork::GetNodes,
                                R"(A list of the nodes in this tensor network)")
@@ -40,12 +42,13 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             R"(The number of unique indices in this tensor network)")
 
         // Magic methods
-        // --------------------------------------------------------------------
+        // ---------------------------------------------------------------------
 
         .def(
             "__getitem__",
-            [](const TensorNetwork &tn, TensorNetwork::node_id_t node_id) {
-                return tn.GetNodes()[node_id]
+            [](const TensorNetwork &tn,
+               typename TensorNetwork::node_id_t node_id) {
+                return tn.GetNodes()[node_id];
             },
             py::arg("node_id"), R"(
             Returns the tensor network node with the given ID. 
@@ -57,7 +60,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                 Tensor network node)")
 
         // Other
-        // --------------------------------------------------------------------
+        // ---------------------------------------------------------------------
 
         .def(
             "get_node_ids_by_tag",
@@ -80,7 +83,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                     tensor: Tensor to add
                     tags: List of string tags to associate to tensor)")
 
-        .def("slice_indices", &TensorNetwork::SliceIndicies,
+        .def("slice_indices", &TensorNetwork::SliceIndices,
              R"(Slices a set of indices. 
                 
                 The value taken along each axis is derived from the provided
@@ -94,4 +97,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
         .def("contract", &TensorNetwork::Contract,
              R"(Contract tensor network along an optionally provided path)");
+
+    std::string node_class_name = std::string(name) + "Node";
+    py::class_<typename TensorNetwork::Node>(m, node_class_name.c_str());
 }
