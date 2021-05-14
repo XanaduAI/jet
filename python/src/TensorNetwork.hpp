@@ -46,8 +46,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
         .def(
             "__getitem__",
-            [](const TensorNetwork &tn,
-               typename TensorNetwork::node_id_t node_id) {
+            [](const TensorNetwork &tn, size_t node_id) {
                 return tn.GetNodes()[node_id];
             },
             py::arg("node_id"), R"(
