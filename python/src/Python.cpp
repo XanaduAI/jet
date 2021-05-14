@@ -13,13 +13,13 @@ PYBIND11_MODULE(jet, m)
     using c_fp32_t = std::complex<float>;
     using c_fp64_t = std::complex<double>;
 
-    AddBindingsForTensor<c_fp32>(m, "Tensor32");
-    AddBindingsForTensor<c_fp64>(m, "Tensor64");
+    AddBindingsForTensor<c_fp32_t>(m, "Tensor32");
+    AddBindingsForTensor<c_fp64_t>(m, "Tensor64");
 
-    AddBindingsForTensorNetwork<Jet::Tensor<c_fp32>>(m, "TensorNetwork32");
-    AddBindingsForTensorNetwork<Jet::Tensor<c_fp64>>(m, "TensorNetwork64");
+    AddBindingsForTensorNetwork<Jet::Tensor<c_fp32_t>>(m, "TensorNetwork32");
+    AddBindingsForTensorNetwork<Jet::Tensor<c_fp64_t>>(m, "TensorNetwork64");
 
-    AddBindingsForPathInfo<Jet::Tensor<c_fp32>, Jet::Tensor<c_fp64>>(m);
+    AddBindingsForPathInfo<Jet::Tensor<c_fp32_t>, Jet::Tensor<c_fp64_t>>(m);
 
     AddBindingsForVersion(m);
 }

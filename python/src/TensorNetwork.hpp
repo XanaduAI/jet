@@ -44,8 +44,8 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
         .def(
             "__getitem__",
-            [](const TensorNetwork &tn, TensorNetwork::node_id_t node_id) {
-                return tn.GetNodes()[node_id]
+            [](const TensorNetwork &tn, size_t node_id) {
+                return tn.GetNodes()[node_id];
             },
             py::arg("node_id"), R"(
             Returns the tensor network node with the given ID. 
@@ -80,7 +80,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                     tensor: Tensor to add
                     tags: List of string tags to associate to tensor)")
 
-        .def("slice_indices", &TensorNetwork::SliceIndicies,
+        .def("slice_indices", &TensorNetwork::SliceIndices,
              R"(Slices a set of indices. 
                 
                 The value taken along each axis is derived from the provided
