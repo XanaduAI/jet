@@ -41,6 +41,11 @@ namespace Jet {
  *           `complex<double>`).
  */
 template <class T = std::complex<float>> class Tensor {
+
+    static_assert(TensorHelpers::is_supported_data_type<T>,
+                  "Tensor data type must be one of std::complex<float>, "
+                  "std::complex<double>");
+
   public:
     /// Type of the real and imaginary components of the tensor data.
     using scalar_type_t = T;
@@ -154,6 +159,8 @@ template <class T = std::complex<float>> class Tensor {
     {
         indices_ = indices;
         shape_ = shape;
+
+        index_to_dimension_.clear();
         for (size_t i = 0; i < shape_.size(); ++i)
             index_to_dimension_[indices[i]] = shape[i];
     }

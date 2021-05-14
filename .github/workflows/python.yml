@@ -1,0 +1,85 @@
+name: Python
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "README.rst"
+
+jobs:
+  test-ubuntu:
+    name: Build (Python) on Ubuntu
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Install dependencies
+        run: sudo apt install -y libopenblas-dev python3.8-dev
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Initialize build directory
+        run: |
+          mkdir build
+          cd build
+          cmake -DBUILD_PYTHON=ON ../
+
+      - name: Generate Python bindings
+        run: |
+          cd build
+          make -j`nproc`
+
+      - name: Create virtual environment
+        run: |
+          cd python
+          make setup
+
+      - name: Run tests
+        run: |
+          cd python
+          make test
+
+  test-macos:
+    name: Build (Python) on MacOS
+    runs-on: macos-10.15
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Install dependencies
+        run: brew install libomp
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Initialize build directory
+        run: |
+          mkdir build
+          cd build
+          cmake -DBUILD_PYTHON=ON ../
+
+      - name: Generate Python bindings
+        run: |
+          cd build
+          make -j`sysctl -n hw.physicalcpu`
+
+      - name: Create virtual environment
+        run: |
+          cd python
+          make setup
+
+      - name: Run tests
+        run: |
+          cd python
+          make test

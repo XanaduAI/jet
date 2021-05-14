@@ -1,14 +1,16 @@
 .VENV_DIR=.venv
 .VENV_BIN=$(.VENV_DIR)/bin
 
+python=python3
+
 define HELP_BODY
 Please use 'make [target]'.
 
 TARGETS
 
-  setup                       setup virtualenv
-  
-  test                        Test bindings
+  setup [python=<path>]       Set up virtualenv using the Python interpreter at <path>, defaults to $(python)
+
+  test [args=<pytest args>]   Run tests; use with 'args=<pytest args>' to pass test arguments
 
   format [check=1]            Apply formatters; use with 'check=1' to check instead of modify
 
@@ -20,6 +22,7 @@ endef
 help:
 	@: $(info $(HELP_BODY))
 
+.PHONY: setup
 setup: $(.VENV_DIR)/requirements_test.txt.touch
 
 .PHONY: format
@@ -31,15 +34,17 @@ else
 endif
 
 .PHONY: test
-test: $(.TEST_BUILD_DIR)
-	$(.VENV_bin)/python3 pytest
+test: $(.VENV_DIR)/requirements_test.txt.touch
+	PYTHONPATH="../build/python" $(.VENV_BIN)/python -m pytest ./tests $(args)
 
 .PHONY: clean
+clean:
 	rm -rf $(.VENV_DIR)
 
-$(.VENV_DIR)/requirements_test.txt.touch: $(.VENV_DIR) requirements_test.txt
+$(.VENV_DIR)/requirements_test.txt.touch: $(.VENV_DIR)/touch requirements_test.txt
 	$(.VENV_DIR)/bin/pip install -r requirements_test.txt
-	touch $@
+	@touch $@
 
-$(.VENV_DIR):
-	python3 -m venv $@
+$(.VENV_DIR)/touch:
+	$(python) -m venv ${.VENV_DIR}
+	@touch $@
