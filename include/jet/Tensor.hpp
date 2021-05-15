@@ -365,54 +365,53 @@ template <class T = std::complex<float>> class Tensor {
  * @see TODO: Link to documentation
  *
  * @tparam T `%Tensor` data type.
- * @param A Left tensor to contract.
- * @param B Right tensor to contract.
+ * @param tensor_l Left tensor to contract.
+ * @param tensor_r Right tensor to contract.
  */
-template <class T> Tensor<T> ContractTensors(Tensor<T> &A, Tensor<T> &B)
+template <class T> Tensor<T> ContractTensors(Tensor<T> &tensor_l, Tensor<T> &tensor_r)
 {
-    SPDLOG_DEBUG("\nEntered ContractTensors(" + to_string(A) + ", "+ to_string(B) + ")");
+    SPDLOG_DEBUG("Entered ContractTensors(tensor_l=" + to_string(tensor_l) + ",tensor_r="+ to_string(tensor_r) + ")");
 
     using namespace Jet::Utilities;
     using namespace Jet::TensorHelpers;
 
-    auto &&left_indices = VectorSubtraction(A.GetIndices(), B.GetIndices());
-    auto &&right_indices = VectorSubtraction(B.GetIndices(), A.GetIndices());
-    auto &&common_indices = VectorIntersection(A.GetIndices(), B.GetIndices());
+    auto &&left_indices = VectorSubtraction(tensor_l.GetIndices(), tensor_r.GetIndices());
+    auto &&right_indices = VectorSubtraction(tensor_r.GetIndices(), tensor_l.GetIndices());
+    auto &&common_indices = VectorIntersection(tensor_l.GetIndices(), tensor_r.GetIndices());
 
     size_t left_dim = 1, right_dim = 1, common_dim = 1;
     for (size_t i = 0; i < left_indices.size(); ++i) {
-        left_dim *= A.GetIndexToDimension().at(left_indices[i]);
+        left_dim *= tensor_l.GetIndexToDimension().at(left_indices[i]);
     }
     for (size_t i = 0; i < right_indices.size(); ++i) {
-        right_dim *= B.GetIndexToDimension().at(right_indices[i]);
+        right_dim *= tensor_r.GetIndexToDimension().at(right_indices[i]);
     }
     for (size_t i = 0; i < common_indices.size(); ++i) {
-        size_t a_dim = A.GetIndexToDimension().at(common_indices[i]);
+        size_t a_dim = tensor_l.GetIndexToDimension().at(common_indices[i]);
         common_dim *= a_dim;
     }
 
-    auto &&a_new_ordering = VectorUnion(left_indices, common_indices);
-    auto &&b_new_ordering = VectorUnion(common_indices, right_indices);
+    auto &&tensor_l_new_ordering = VectorUnion(left_indices, common_indices);
+    auto &&tensor_r_new_ordering = VectorUnion(common_indices, right_indices);
 
-    auto &&C_indices = VectorUnion(left_indices, right_indices);
-    std::vector<size_t> C_dimensions(C_indices.size());
+    auto &&tensor_c_indices = VectorUnion(left_indices, right_indices);
+    std::vector<size_t> tensor_c_dimensions(tensor_c_indices.size());
     for (size_t i = 0; i < left_indices.size(); ++i)
-        C_dimensions[i] = A.GetIndexToDimension().at(left_indices[i]);
+        tensor_c_dimensions[i] = tensor_l.GetIndexToDimension().at(left_indices[i]);
     for (size_t i = 0; i < right_indices.size(); ++i)
-        C_dimensions[i + left_indices.size()] =
-            B.GetIndexToDimension().at(right_indices[i]);
+        tensor_c_dimensions[i + left_indices.size()] =
+            tensor_r.GetIndexToDimension().at(right_indices[i]);
 
-    Tensor<T> C(C_indices, C_dimensions);
-    auto &&At = Transpose(A, a_new_ordering);
-    auto &&Bt = Transpose(B, b_new_ordering);
+    Tensor<T> tensor_c(tensor_c_indices, tensor_c_dimensions);
+    auto &&tensor_l_t = Transpose(tensor_l, tensor_l_new_ordering);
+    auto &&tensor_r_t = Transpose(tensor_r, tensor_r_new_ordering);
 
     TensorHelpers::MultiplyTensorData<T>(
-        At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
+        tensor_l_t.GetData(), tensor_r_t.GetData(), tensor_c.GetData(), left_indices, right_indices,
         left_dim, right_dim, common_dim);
 
-
-    SPDLOG_DEBUG("Leaving ContractTensors");
-    return C;
+    SPDLOG_DEBUG("Leaving ContractTensors(return=" + to_string(tensor_c) + ")");
+    return tensor_c;
 }
 
 /**
@@ -446,7 +445,7 @@ template <class T>
 Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index_str,
                      size_t index_value)
 {
-    SPDLOG_DEBUG("\nEntered SliceIndex(" + to_string(tensor) + ","+ index_str + "," + std::to_string(index_value) + ")");
+    SPDLOG_DEBUG("Entered SliceIndex(tensor=" + to_string(tensor) + ",index_str="+ index_str + ",index_value=" + std::to_string(index_value) + ")");
 
     std::vector<std::string> new_ordering = tensor.GetIndices();
     auto it = find(new_ordering.begin(), new_ordering.end(), index_str);
@@ -472,7 +471,7 @@ Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index_str,
     for (size_t p = 0; p < projection_size; ++p)
         tensor_sliced[p] = tensor_trans[projection_begin + p];
 
-    SPDLOG_DEBUG("Leaving SliceIndex");
+    SPDLOG_DEBUG("Leaving SliceIndex(return=" + to_string(tensor_sliced) + ")");
 
     return tensor_sliced;
 }
@@ -489,7 +488,7 @@ Tensor<T> Reshape(const Tensor<T> &old_tensor,
                   const std::vector<size_t> &new_shape)
 {
     using namespace Utilities;
-    SPDLOG_DEBUG("\nEntered Reshape(" + to_string(old_tensor) + ","+ to_string(new_shape) + ")");
+    SPDLOG_DEBUG("Entered Reshape(old_tensor=" + to_string(old_tensor) + ",new_shape="+ to_string(new_shape) + ")");
 
     JET_ABORT_IF_NOT(old_tensor.GetSize() ==
                          TensorHelpers::ShapeToSize(new_shape),
@@ -497,7 +496,7 @@ Tensor<T> Reshape(const Tensor<T> &old_tensor,
     Tensor<T> new_tensor(new_shape);
     Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
     
-    SPDLOG_DEBUG("Leaving Reshape");
+    SPDLOG_DEBUG("Leaving Reshape(return=" + to_string(new_tensor) + ")");
 
     return new_tensor;
 }
@@ -506,46 +505,46 @@ Tensor<T> Reshape(const Tensor<T> &old_tensor,
  * @brief Perform conjugation of complex data in `%Tensor`.
  *
  * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
+ * @param tensor Reference `%Tensor` object.
  */
-template <class T> Tensor<T> Conj(const Tensor<T> &A)
+template <class T> Tensor<T> Conj(const Tensor<T> &tensor)
 {
-    SPDLOG_DEBUG("\nEntered Conj(" + to_string(A) + ")");
+    SPDLOG_DEBUG("Entered Conj(tensor=" + to_string(tensor) + ")");
 
-    Tensor<T> A_conj(A.GetIndices(), A.GetShape());
-    for (size_t i = 0; i < A.GetSize(); i++) {
-        A_conj[i] = std::conj(A[i]);
+    Tensor<T> tensor_conj(tensor.GetIndices(), tensor.GetShape());
+    for (size_t i = 0; i < tensor.GetSize(); i++) {
+        tensor_conj[i] = std::conj(tensor[i]);
     }
-    SPDLOG_DEBUG("Leaving Conj");
+    SPDLOG_DEBUG("Leaving Conj(return=" + to_string(tensor_conj) + ")");
 
-    return A_conj;
+    return tensor_conj;
 }
 
 /**
  * @brief Transpose `%Tensor` indices to new ordering.
  *
  * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
+ * @param tensor Reference `%Tensor` object.
  * @param new_indices New `%Tensor` index label ordering.
  * @return Transposed tensor.
  */
 template <class T>
-Tensor<T> Transpose(const Tensor<T> &A,
+Tensor<T> Transpose(const Tensor<T> &tensor,
                     const std::vector<std::string> &new_indices)
 {
     using namespace Jet::Utilities;
-    SPDLOG_DEBUG("\nEntered Transpose(" + to_string(A)+ "," + to_string(new_indices) + ")");
+    SPDLOG_DEBUG("Entered Transpose(tensor=" + to_string(tensor)+ ",new_indices=" + to_string(new_indices) + ")");
 
-    auto indices_ = A.GetIndices();
-    auto shape_ = A.GetShape();
+    auto indices_ = tensor.GetIndices();
+    auto shape_ = tensor.GetShape();
 
     if (new_indices == indices_)
-        return A;
+        return tensor;
 
     std::vector<std::string> old_ordering(indices_);
     std::vector<size_t> old_dimensions(shape_);
     size_t num_indices = old_ordering.size();
-    size_t total_dim = A.GetSize();
+    size_t total_dim = tensor.GetSize();
 
     if (num_indices == 0)
         JET_ABORT("Number of indices cannot be zero.");
@@ -581,7 +580,7 @@ Tensor<T> Transpose(const Tensor<T> &A,
     std::vector<unsigned short int> small_map_old_to_new_position(
         MAX_RIGHT_DIM);
 
-    Tensor<T> At(new_indices, new_dimensions, A.GetData());
+    Tensor<T> tensor_t(new_indices, new_dimensions, tensor.GetData());
     // No combined efficient mapping from old to new positions with actual
     // copies in memory, all in small cache friendly (for old data, not new,
     // which could be very scattered) blocks.
@@ -597,8 +596,8 @@ Tensor<T> Transpose(const Tensor<T> &A,
     // Blocks have size MAX_RIGHT_DIM.
     size_t internal_po = 0;
 
-    auto data = At.GetData().data();
-    auto scratch = A.GetData().data();
+    auto data = tensor_t.GetData().data();
+    auto scratch = tensor.GetData().data();
     // External loop loops over blocks.
     while (true) {
         // If end of entire opration, break.
@@ -646,9 +645,9 @@ Tensor<T> Transpose(const Tensor<T> &A,
 
         offset += MAX_RIGHT_DIM;
     }
-    SPDLOG_DEBUG("Leaving Transpose");
+    SPDLOG_DEBUG("Leaving Transpose(return=" + to_string(tensor_t) + ")");
 
-    return At;
+    return tensor_t;
 }
 
 /**
@@ -663,24 +662,26 @@ Tensor<T> Transpose(const Tensor<T> &A,
  * @return Transposed tensor.
  */
 template <class T>
-Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
+Tensor<T> Transpose(const Tensor<T> &tensor, const std::vector<size_t> &new_ordering)
 {
     using namespace Utilities;
-    SPDLOG_DEBUG("\nEntered Transpose(" + to_string(A)+ "," + to_string(new_ordering) + ")");
+    SPDLOG_DEBUG("Entered Transpose(tensor=" + to_string(tensor)+ ",new_ordering=" + to_string(new_ordering) + ")");
 
-    const size_t num_indices = A.GetIndices().size();
+    const size_t num_indices = tensor.GetIndices().size();
     JET_ABORT_IF_NOT(num_indices == new_ordering.size(),
                      "Size of ordering must match number of tensor indices.");
 
     std::vector<std::string> new_indices(num_indices);
-    const auto &old_indices = A.GetIndices();
+    const auto &old_indices = tensor.GetIndices();
 
     for (size_t i = 0; i < num_indices; i++) {
         new_indices[i] = old_indices[new_ordering[i]];
     }
-    SPDLOG_DEBUG("Leaving Transpose");
 
-    return Transpose(A, new_indices);
+    auto tensor_t = Transpose(tensor, new_indices);
+    SPDLOG_DEBUG("Leaving Transpose(return="+ to_string(tensor_t) + ")");
+
+    return tensor_t;
 }
 
 /**
@@ -693,11 +694,7 @@ template <class T>
 inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
 {
     using namespace Jet::Utilities;
-
-    out << "Size=" << tensor.GetShape() << std::endl;
-    out << "Indices=" << tensor.GetIndices() << std::endl;
-    out << "Data=" << tensor.GetData() << std::endl;
-
+    out << "Tensor[Shape=" << tensor.GetShape() << ",Indices=" << tensor.GetIndices() << "]";
     return out;
 }
 

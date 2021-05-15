@@ -62,6 +62,13 @@ template <class Tensor> class TensorNetwork {
 
         /// Tensor of this node.
         Tensor tensor;
+        
+        const std::string to_string() const{
+            using namespace Utilities;
+            std::ostringstream out;
+            out << "Node[id=" << id << ",name=" << name << ",indices=" << indices << ",tags=" << tags << ",contracted=" << contracted << ",tensor=" << tensor << "]";
+            return out.str();
+        }
     };
 
     /**
@@ -89,6 +96,13 @@ template <class Tensor> class TensorNetwork {
             const set_t lhs_ids(node_ids.begin(), node_ids.end());
             const set_t rhs_ids(other.node_ids.begin(), other.node_ids.end());
             return dim == other.dim && lhs_ids == rhs_ids;
+        }
+
+        const std::string to_string() const{
+            using namespace Utilities;
+            std::ostringstream out;
+            out << "Edge[dim=" << dim << ",node_ids=" << node_ids << "]";
+            return out.str();
         }
     };
 
@@ -167,7 +181,7 @@ template <class Tensor> class TensorNetwork {
                    const std::vector<std::string> &tags) noexcept
     {
         using namespace Utilities;
-        SPDLOG_DEBUG("\nEntered AddTensor(" + to_string(tensor) + ","+ to_string(tags) + ")");
+        SPDLOG_DEBUG("Entered AddTensor(tensor=" + to_string(tensor) + ",tags="+ to_string(tags) + ")");
 
         const auto &indices = tensor.GetIndices();
         const auto name = DeriveNodeName_(indices);
@@ -185,7 +199,7 @@ template <class Tensor> class TensorNetwork {
         AddNodeToIndexMap_(node);
         AddNodeToTagMap_(node);
 
-        SPDLOG_DEBUG("Leaving AddTensor");
+        SPDLOG_DEBUG("Leaving AddTensor()");
     }
 
     /**
@@ -216,7 +230,7 @@ template <class Tensor> class TensorNetwork {
                       unsigned long long value) noexcept
     {
         using namespace Utilities;
-        SPDLOG_DEBUG("\nEntered SliceIndices(" + to_string(indices) + ","+ std::to_string(value) + ")");
+        SPDLOG_DEBUG("Entered SliceIndices(indices=" + to_string(indices) + ",value="+ std::to_string(value) + ")");
 
         std::unordered_map<size_t, std::vector<size_t>> node_to_index_map;
         std::vector<size_t> index_sizes(indices.size());
@@ -286,7 +300,7 @@ template <class Tensor> class TensorNetwork {
         for (const auto &index : indices) {
             index_to_edge_map_.erase(index);
         }
-        SPDLOG_DEBUG("Leaving SliceIndices");
+        SPDLOG_DEBUG("Leaving SliceIndices()");
     }
 
     /**
@@ -307,7 +321,7 @@ template <class Tensor> class TensorNetwork {
     const Tensor &Contract(const path_t &path = {}) noexcept
     {
         using namespace Utilities;
-        SPDLOG_DEBUG("\nEntered Contract(" + to_string(path) + ")");
+        SPDLOG_DEBUG("Entered Contract(path=" + to_string(path) + ")");
 
         JET_ABORT_IF(nodes_.empty(),
                      "An empty tensor network cannot be contracted.");
@@ -332,7 +346,7 @@ template <class Tensor> class TensorNetwork {
             ContractEdges_();
             ContractScalars_();
         }
-        SPDLOG_DEBUG("Leaving Contract");
+        SPDLOG_DEBUG("Leaving Contract(return=" + to_string(nodes_.back().tensor) + ")");
         return nodes_.back().tensor;
     }
 
@@ -359,7 +373,8 @@ template <class Tensor> class TensorNetwork {
     void AddNodeToIndexMap_(const Node &node) noexcept
     {
         using namespace Utilities;
-        SPDLOG_DEBUG("\nEntered AddNodeToIndexMap_(Node:[" + std::to_string(node.id) + node.name + "," + to_string(node.indices) + ","+ to_string(node.tags) + ","+ std::to_string(node.contracted) + "," + to_string(node.tensor) + "])");
+        auto s = node.to_string();
+        SPDLOG_DEBUG("Entered AddNodeToIndexMap_(node=" + s + ")");
 
         const auto &indices = node.indices;
         const auto &shape = node.tensor.GetShape();
@@ -382,7 +397,7 @@ template <class Tensor> class TensorNetwork {
                 index_to_edge_map_.emplace(indices[i], edge);
             }
         }
-        SPDLOG_DEBUG("Leaving AddNodeToIndexMap_");
+        SPDLOG_DEBUG("Leaving AddNodeToIndexMap_()");
     }
 
     /**
@@ -392,12 +407,12 @@ template <class Tensor> class TensorNetwork {
      */
     void AddNodeToTagMap_(const Node &node) noexcept
     {
-        SPDLOG_DEBUG("\nEntered AddNodeToIndexMap_(Node:[" + std::to_string(node.id) + node.name + "," + Utilities::to_string(node.indices) + ","+ Utilities::to_string(node.tags) + ","+ std::to_string(node.contracted) + "," + to_string(node.tensor) + "])");
+        SPDLOG_DEBUG("Entered AddNodeToTagMap_(node=" + node.to_string() + ")");
 
         for (const auto &tag : node.tags) {
             tag_to_nodes_map_.emplace(tag, node.id);
         }
-        SPDLOG_DEBUG("Leaving AddNodeToIndexMap_");
+        SPDLOG_DEBUG("Leaving AddNodeToTagMap_()");
     }
 
     /**
@@ -409,7 +424,7 @@ template <class Tensor> class TensorNetwork {
      */
     size_t ContractNodes_(size_t node_id_1, size_t node_id_2) noexcept
     {
-        SPDLOG_DEBUG("\nEntered ContractNodes_(" + std::to_string(node_id_1) + "," + std::to_string(node_id_2) + ")");
+        SPDLOG_DEBUG("Entered ContractNodes_(node_id_1=" + std::to_string(node_id_1) + ",node_id_2=" + std::to_string(node_id_2) + ")");
 
         // Make sure node 1 has at least as many indices as node 2.
         const size_t node_1_size = nodes_[node_id_1].tensor.GetIndices().size();
@@ -440,8 +455,7 @@ template <class Tensor> class TensorNetwork {
             tensor_3,       // tensor
         };
         nodes_.emplace_back(node_3);
-        SPDLOG_DEBUG("Leaving ContractNodes_");
-
+        SPDLOG_DEBUG("Leaving ContractNodes_(return=" + std::to_string(node_3.id) + ")");
         return node_3.id;
     }
 
@@ -456,7 +470,7 @@ template <class Tensor> class TensorNetwork {
                                          const Node &node_3) noexcept
     {
         using namespace Utilities;
-        SPDLOG_DEBUG("\nEntered UpdateIndexMapAfterContraction_(Node1:[" + std::to_string(node_1.id) + ","+ node_1.name + "," + to_string(node_1.indices) + ","+ to_string(node_1.tags) + ","+ std::to_string(node_1.contracted) + "," + to_string(node_1.tensor) + "],Node2:[" + std::to_string(node_2.id) + ","+ node_2.name + "," + to_string(node_2.indices) + ","+ to_string(node_2.tags) + ","+ std::to_string(node_2.contracted) + "," + to_string(node_2.tensor) + "],Node3:[" + std::to_string(node_3.id) + ","+ node_3.name + "," + to_string(node_3.indices) + ","+ to_string(node_3.tags) + ","+ std::to_string(node_3.contracted) + "," + to_string(node_3.tensor) + "],");
+        SPDLOG_DEBUG("Entered UpdateIndexMapAfterContraction_(node_1=" + node_1.to_string() + ",node_2=" + node_2.to_string() + ",node_3=" + node_3.to_string() + ")");
 
         // Replace the IDs of the contracted nodes with the ID of the new node
         // in the index-to-edge map.
@@ -481,7 +495,7 @@ template <class Tensor> class TensorNetwork {
         for (const auto &index : contracted_indices) {
             index_to_edge_map_.erase(index);
         }
-        SPDLOG_DEBUG("Leaving UpdateIndexMapAfterContraction_");
+        SPDLOG_DEBUG("Leaving UpdateIndexMapAfterContraction_()");
     }
 
     /**
@@ -489,7 +503,7 @@ template <class Tensor> class TensorNetwork {
      */
     void ContractEdges_() noexcept
     {
-        SPDLOG_DEBUG("\nEntered ContractEdges_()");
+        SPDLOG_DEBUG("Entered ContractEdges_()");
 
         // Create a copy of the indices from the index-to-edge map since this
         // map will be modified in the next loop.
@@ -525,7 +539,7 @@ template <class Tensor> class TensorNetwork {
      */
     void ContractScalars_() noexcept
     {
-        SPDLOG_DEBUG("\nEntered ContractScalars_()");
+        SPDLOG_DEBUG("Entered ContractScalars_()");
 
         std::vector<size_t> node_ids;
         for (size_t i = 0; i < nodes_.size(); i++) {
@@ -557,9 +571,10 @@ template <class Tensor> class TensorNetwork {
     std::string
     DeriveNodeName_(const std::vector<std::string> &indices) const noexcept
     {
-        SPDLOG_DEBUG("\nEntered DeriveNodeName_(" + Utilities::to_string(indices) + ")");
-        SPDLOG_DEBUG("Leaving DeriveNodeName_(" + (indices.size() ? Jet::Utilities::JoinStringVector(indices) : "_") + ")");
-        return indices.size() ? Jet::Utilities::JoinStringVector(indices) : "_";
+        SPDLOG_DEBUG("Entered DeriveNodeName_(indices=" + Utilities::to_string(indices) + ")");
+        auto node_name = indices.size() ? Jet::Utilities::JoinStringVector(indices) : "_";
+        SPDLOG_DEBUG("Leaving DeriveNodeName_(return=" + node_name + ")");
+        return node_name;
     }
 };
 
@@ -578,14 +593,25 @@ inline std::ostream &operator<<(std::ostream &out,
     // Overloads the "<<" operator between a std::ostream and std::vector.
     using namespace Jet::Utilities;
 
-    out << "Printing Nodes" << std::endl;
-    for (const auto &node : tn.GetNodes()) {
-        out << node.id << ' ' << node.name << ' ' << node.tags << std::endl;
+    out << "TensorNetwork[Nodes[" << std::endl;
+
+    for (size_t n_idx = 0; n_idx < tn.GetNodes().size(); n_idx++) {
+        out << tn.GetNodes()[n_idx];
+        if(n_idx != tn.GetNodes().size()-1)
+            out << ",";
     }
-    out << "Printing Edges" << std::endl;
-    for (const auto &[index, edge] : tn.GetIndexToEdgeMap()) {
-        out << index << ' ' << edge.dim << ' ' << edge.node_ids << std::endl;
+    out << "],Edges[";
+
+    typename TensorNetwork<Tensor>::index_to_edge_map_t::iterator it = tn.GetIndexToEdgeMap().begin();
+    while(it != tn.GetIndexToEdgeMap().end())
+    {
+        out << "index=" << it.first << "," << it.second << ",";
+        if(std::distance(tn.GetIndexToEdgeMap().begin(), it) != tn.GetIndexToEdgeMap().size()-1)
+            out << ",";
+        it++;
     }
+    out << "]]";
+
     return out;
 }
 

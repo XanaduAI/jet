@@ -41,7 +41,7 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
     os << '{';
     for (size_t i = 0; i < v.size(); i++) {
         if (i != 0) {
-            os << "  ";
+            os << ",";
         }
         os << v[i];
     }
@@ -63,7 +63,7 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<std::pair<T,
     os << '{';
     for (size_t i = 0; i < v.size(); i++) {
         if (i != 0) {
-            os << "  ";
+            os << ",";
         }
         os << v[i].first << ":" << v[i].second;
     }

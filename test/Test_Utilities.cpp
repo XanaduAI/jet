@@ -44,7 +44,7 @@ TEST_CASE("ostream << vector", "[utility]")
     {
         const std::vector<std::string> sky = {"Air", "Clouds"};
         stream << sky;
-        REQUIRE(stream.str() == "{Air  Clouds}");
+        REQUIRE(stream.str() == "{Air,Clouds}");
     }
 }
 
