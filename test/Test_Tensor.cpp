@@ -593,6 +593,51 @@ TEST_CASE("Transpose", "[Tensor]")
     CHECK(tensor_t == Transpose(tensor, std::vector<std::size_t>{1, 0}));
 }
 
+TEST_CASE("AddTensors", "[Tensor]")
+{
+    SECTION("Scalars")
+    {
+        Tensor lhs({}, {}, {1});
+        Tensor rhs({}, {}, {{2, 4}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({}, {}, {{3, 4}});
+        CHECK(have_tensor == want_tensor);
+    }
+
+    SECTION("Vectors")
+    {
+        Tensor lhs({"i"}, {3}, {1, {0, 2}, {3, 0}});
+        Tensor rhs({"i"}, {3}, {1, {0, 2}, {0, 3}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({"i"}, {3}, {2, {0, 4}, {3, 3}});
+        CHECK(have_tensor == want_tensor);
+    }
+
+    SECTION("Matrices")
+    {
+        Tensor lhs({"i", "j"}, {2, 2}, {1, 2, 3, 4});
+        Tensor rhs({"i", "j"}, {2, 2}, {{0, 1}, {0, 2}, {0, 3}, {0, 4}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({"i", "j"}, {2, 2},
+                                 {{1, 1}, {2, 2}, {3, 3}, {4, 4}});
+        CHECK(have_tensor == want_tensor);
+    }
+
+    SECTION("Matrices with swapped indices")
+    {
+        Tensor lhs({"i", "j"}, {2, 2}, {1, 2, 3, 4});
+        Tensor rhs({"j", "i"}, {2, 2}, {{0, 1}, {0, 2}, {0, 3}, {0, 4}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({"i", "j"}, {2, 2},
+                                 {{1, 1}, {2, 3}, {3, 2}, {4, 4}});
+        CHECK(have_tensor == want_tensor);
+    }
+}
+
 TEST_CASE("Reshape", "[Tensor]")
 {
     SECTION("Equal data size")
