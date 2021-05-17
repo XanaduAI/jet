@@ -13,7 +13,6 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
     using TensorNetwork = Jet::TensorNetwork<Tensor>;
     using Node = typename Jet::TensorNetwork<Tensor>::Node;
-    using node_id_t = typename Jet::TensorNetwork<Tensor>::node_id_t;
 
     auto cls =
         py::class_<TensorNetwork>(m, name, R"(
@@ -28,21 +27,19 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             // Properties
             // --------------------------------------------------------------------
 
-            .def_property_readonly(
-                "path", &TensorNetwork::GetPath, R"(
+            .def_property_readonly("path", &TensorNetwork::GetPath, R"(
                 The path by which this tensor network was contracted.
                 Is empty if Contract() has not been called.)")
 
-            .def_property_readonly(
-                "nodes", &TensorNetwork::GetNodes, R"(
+            .def_property_readonly("nodes", &TensorNetwork::GetNodes, R"(
                 A list of the nodes in this tensor network.)")
 
-            .def_property_readonly(
-                "num_tensors", &TensorNetwork::NumTensors, R"(
+            .def_property_readonly("num_tensors", &TensorNetwork::NumTensors,
+                                   R"(
                 The number of tensors in this tensor network)")
 
-            .def_property_readonly(
-                "num_indices", &TensorNetwork::NumIndices, R"(
+            .def_property_readonly("num_indices", &TensorNetwork::NumIndices,
+                                   R"(
                 The number of unique indices in this tensor network)")
 
             // Other
@@ -69,7 +66,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                     tensor: Tensor to add
                     tags: List of string tags to associate to tensor)")
 
-            .def("slice_indices", &TensorNetwork::SliceIndices,R"(
+            .def("slice_indices", &TensorNetwork::SliceIndices, R"(
                 Slices a set of indices. 
                 
                 The value taken along each axis is derived from the provided
@@ -81,8 +78,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                     to take along each of the indices.
                 )")
 
-            .def(
-                "contract", &TensorNetwork::Contract, R"(
+            .def("contract", &TensorNetwork::Contract, R"(
                 Contract tensor network along an optionally provided path)");
 
     py::class_<Node>(cls, (std::string(name) + "Node").c_str())
