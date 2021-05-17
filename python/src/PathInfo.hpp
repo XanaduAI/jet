@@ -73,6 +73,5 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
             Computes total memory required to contract the tensor
             network along this path)");
 
-    // Create bindings for each Tensor type
-    //    bind_constructors<Tensors...>(cls);
+    bind_constructors<Tensors...>(cls);
 }

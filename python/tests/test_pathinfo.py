@@ -2,7 +2,6 @@ import jet
 import pytest
 
 
-@pytest.mark.parametrize("Tensor, TensorNetwork", [(jet.Tensor32, jet.TensorNetwork32), (jet.TensorNetwork64, jet.TensorNetwork64)]) 
 class TestPathInfo:
     def test_default_constructor(self):
         path_info = jet.PathInfo()
@@ -17,5 +16,16 @@ class TestPathInfo:
         assert path_info.total_memory() == 0
 
     def test_constructor(self):
-        pass
+        tn = jet.TensorNetwork64()
 
+        id_a = tn.add_tensor(jet.Tensor64(), ["A"])
+        id_b = tn.add_tensor(jet.Tensor64(), ["B"])
+        id_c = tn.add_tensor(jet.Tensor64(), ["C"])
+
+        path = [(id_a, id_b)]
+
+        path_info = jet.PathInfo(tn, path)
+
+        assert path_info.num_leaves == 3
+        assert path_info.path == [(id_a, id_b)]
+        assert len(path_info.steps) == 4
