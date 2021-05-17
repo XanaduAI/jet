@@ -388,13 +388,6 @@ template <class Tensor> class TensorNetwork {
      */
     size_t ContractNodes_(size_t node_id_1, size_t node_id_2) noexcept
     {
-        // Make sure node 1 has at least as many indices as node 2.
-        const size_t node_1_size = nodes_[node_id_1].tensor.GetIndices().size();
-        const size_t node_2_size = nodes_[node_id_2].tensor.GetIndices().size();
-        if (node_1_size <= node_2_size) {
-            std::swap(node_id_1, node_id_2);
-        }
-
         auto &node_1 = nodes_[node_id_1];
         auto &node_2 = nodes_[node_id_2];
         const auto tensor_3 = ContractTensors(node_1.tensor, node_2.tensor);
