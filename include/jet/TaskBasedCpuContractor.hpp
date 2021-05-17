@@ -19,10 +19,11 @@ namespace Jet {
  * @brief TaskBasedCpuContractor is a tensor network contractor that contracts
  *        tensors concurrently on the CPU using a task-based scheduler.
  *
- * @tparam Tensor Type of the tensors to be contracted.  The only requirement
- *                for this type is that the following function is defined:
+ * @tparam Tensor Type of the tensors to be contracted. The only requirement
+ *                for this type is that the following member functions exist:
  *                \code{.cpp}
- *                Tensor ContractTensors(const Tensor&, const Tensor&);
+ *     static Tensor AddTensors(const Tensor&, const Tensor&);
+ *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
 template <typename Tensor> class TaskBasedCpuContractor {
@@ -243,12 +244,10 @@ template <typename Tensor> class TaskBasedCpuContractor {
         }
         reduced_ = true;
 
-        const auto op = AddTensors<typename Tensor::scalar_type_t>;
-
-        auto reduce_task =
-            taskflow_
-                .reduce(results_.begin(), results_.end(), reduction_result_, op)
-                .name("reduce");
+        auto reduce_task = taskflow_
+                               .reduce(results_.begin(), results_.end(),
+                                       reduction_result_, Tensor::AddTensors)
+                               .name("reduce");
 
         for (auto &result_task : result_tasks_) {
             result_task.precede(reduce_task);
@@ -342,7 +341,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @param step Path step to be used to derive the task name.
      * @return Name of the task.
      */
-    inline std::string DeriveTaskName_(const PathStepInfo &step) const noexcept
+    std::string DeriveTaskName_(const PathStepInfo &step) const noexcept
     {
         return std::to_string(step.id) + ":" + step.name;
     }
@@ -357,14 +356,14 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @param name_2 Name of the second child tensor.
      * @param name_3 Name of the resulting tensor.
      */
-    inline void AddContractionTask_(const std::string &name_1,
-                                    const std::string &name_2,
-                                    const std::string &name_3) noexcept
+    void AddContractionTask_(const std::string &name_1,
+                             const std::string &name_2,
+                             const std::string &name_3) noexcept
     {
         const auto runner = [this, name_1, name_2, name_3]() {
             name_to_tensor_map_[name_3] = std::make_unique<Tensor>(
-                ContractTensors(*name_to_tensor_map_.at(name_1),
-                                *name_to_tensor_map_.at(name_2)));
+                Tensor::ContractTensors(*name_to_tensor_map_.at(name_1),
+                                        *name_to_tensor_map_.at(name_2)));
         };
 
         const auto task_3 = taskflow_.emplace(runner).name(name_3);
