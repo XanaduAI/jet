@@ -29,34 +29,21 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             // --------------------------------------------------------------------
 
             .def_property_readonly(
-                "path", &TensorNetwork::GetPath,
-                R"(The path by which this tensor network was contracted.
+                "path", &TensorNetwork::GetPath, R"(
+                The path by which this tensor network was contracted.
                 Is empty if Contract() has not been called.)")
 
             .def_property_readonly(
-                "num_tensors", &TensorNetwork::NumTensors,
-                R"(The number of tensors in this tensor network)")
+                "nodes", &TensorNetwork::GetNodes, R"(
+                A list of the nodes in this tensor network.)")
 
             .def_property_readonly(
-                "num_indices", &TensorNetwork::NumIndices,
-                R"(The number of unique indices in this tensor network)")
+                "num_tensors", &TensorNetwork::NumTensors, R"(
+                The number of tensors in this tensor network)")
 
-            // Magic methods
-            // --------------------------------------------------------------------
-
-            .def(
-                "__getitem__",
-                [](const TensorNetwork &tn, node_id_t node_id) {
-                    return tn.GetNodes().at(node_id);
-                },
-                py::arg("node_id"), R"(
-                Returns Tensor in the network with the given node id. 
-
-                Params:
-                    node_id: ID of the node
-
-                Returns:
-                    Tensor network node)")
+            .def_property_readonly(
+                "num_indices", &TensorNetwork::NumIndices, R"(
+                The number of unique indices in this tensor network)")
 
             // Other
             // --------------------------------------------------------------------
@@ -75,15 +62,15 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                 },
                 R"(Returns a list of node ids for Tensors associated with the given tag.)")
 
-            .def("add_tensor", &TensorNetwork::AddTensor,
-                 R"(Add tensor to network.
+            .def("add_tensor", &TensorNetwork::AddTensor, R"(
+                Add tensor to network.
                 
                 Args:
                     tensor: Tensor to add
                     tags: List of string tags to associate to tensor)")
 
-            .def("slice_indices", &TensorNetwork::SliceIndices,
-                 R"(Slices a set of indices. 
+            .def("slice_indices", &TensorNetwork::SliceIndices,R"(
+                Slices a set of indices. 
                 
                 The value taken along each axis is derived from the provided
                 linear index.
@@ -95,8 +82,8 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                 )")
 
             .def(
-                "contract", &TensorNetwork::Contract,
-                R"(Contract tensor network along an optionally provided path)");
+                "contract", &TensorNetwork::Contract, R"(
+                Contract tensor network along an optionally provided path)");
 
     py::class_<Node>(cls, (std::string(name) + "Node").c_str())
         .def_readonly("id", &Node::id)

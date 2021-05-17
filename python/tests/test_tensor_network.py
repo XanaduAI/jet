@@ -23,8 +23,8 @@ class TestTensorNetwork:
 
         a_id = tn.add_tensor(a, ["A"])
 
-        assert tn[a_id].tensor == a
-        assert tn[a_id].tags == ["A"]
+        assert tn.nodes[a_id].tensor == a
+        assert tn.nodes[a_id].tags == ["A"]
 
     def test_get_node_ids_by_tag(self, TensorNetwork, Tensor):
         tn = TensorNetwork()
