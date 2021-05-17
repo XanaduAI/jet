@@ -10,8 +10,6 @@ class TestTensorNetwork:
     def test_constructor(self, TensorNetwork, Tensor):
         tn = TensorNetwork()
 
-        assert tn.nodes == []
-
         with pytest.raises(IndexError):
             node = tn[0]
 
@@ -23,10 +21,10 @@ class TestTensorNetwork:
 
         a = Tensor(shape=[1, 1], indices=["a", "b"])
 
-        tn.add_tensor(a, ["A"])
-        a_id = 0
+        a_id = tn.add_tensor(a, ["A"])
 
-        assert tn[a_id] == a
+        assert tn[a_id].tensor == a
+        assert tn[a_id].tags == ["A"]
 
     def test_get_node_ids_by_tag(self, TensorNetwork, Tensor):
         tn = TensorNetwork()
@@ -34,13 +32,10 @@ class TestTensorNetwork:
         a = Tensor()
         b = Tensor()
 
-        tn.add_tensor(a, ["a", "shared_tag"])
-        tn.add_tensor(b, ["b", "shared_tag"])
+        a_id = tn.add_tensor(a, ["a", "shared_tag"])
+        b_id = tn.add_tensor(b, ["b", "shared_tag"])
 
-        assert len(tn.get_node_ids_by_tag("a")) == 1
-        a_id = tn.get_node_ids_by_tag("a")[0]
-
-        assert len(tn.get_node_ids_by_tag("b")) == 1
-        b_id = tn.get_node_ids_by_tag("b")[0]
+        tn.get_node_ids_by_tag("a") == [a_id]
+        tn.get_node_ids_by_tag("b") == [b_id]
 
         assert sorted(tn.get_node_ids_by_tag("shared_tag")) == sorted([a_id, b_id])

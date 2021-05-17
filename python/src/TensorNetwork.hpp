@@ -10,7 +10,9 @@ namespace py = pybind11;
 template <class Tensor>
 void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 {
+
     using TensorNetwork = Jet::TensorNetwork<Tensor>;
+    using Node = typename Jet::TensorNetwork<Tensor>::Node;
     using node_id_t = typename Jet::TensorNetwork<Tensor>::node_id_t;
 
     auto cls =
@@ -25,10 +27,6 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
             // Properties
             // --------------------------------------------------------------------
-
-            .def_property_readonly(
-                "nodes", &TensorNetwork::GetNodes,
-                R"(A list of the nodes in this tensor network)")
 
             .def_property_readonly(
                 "path", &TensorNetwork::GetPath,
@@ -49,16 +47,16 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             .def(
                 "__getitem__",
                 [](const TensorNetwork &tn, node_id_t node_id) {
-                    return tn.GetNodes().at(node_id).tensor;
+                    return tn.GetNodes().at(node_id);
                 },
                 py::arg("node_id"), R"(
-            Returns Tensor in the network with the given node id. 
+                Returns Tensor in the network with the given node id. 
 
-            Params:
-                node_id: ID of the node
+                Params:
+                    node_id: ID of the node
 
-            Returns:
-                Tensor network node)")
+                Returns:
+                    Tensor network node)")
 
             // Other
             // --------------------------------------------------------------------
@@ -99,4 +97,12 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             .def(
                 "contract", &TensorNetwork::Contract,
                 R"(Contract tensor network along an optionally provided path)");
+
+    py::class_<Node>(cls, (std::string(name) + "Node").c_str())
+        .def_readonly("id", &Node::id)
+        .def_readonly("name", &Node::name)
+        .def_readonly("indices", &Node::indices)
+        .def_readonly("tags", &Node::tags)
+        .def_readonly("contracted", &Node::contracted)
+        .def_readonly("tensor", &Node::tensor);
 }
