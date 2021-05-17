@@ -51,14 +51,14 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
                    .def_property_readonly("steps", &Jet::PathInfo::GetSteps, R"(
             The steps of this path)")
 
-                   .def("get_total_flops", &Jet::PathInfo::GetTotalFlops, R"(
+                   .def("total_flops", &Jet::PathInfo::GetTotalFlops, R"(
             Computes total number of floating-point operations needed
             contract the tensor network along this path)")
 
-                   .def("get_total_memory", &Jet::PathInfo::GetTotalMemory, R"(
+                   .def("total_memory", &Jet::PathInfo::GetTotalMemory, R"(
             Computes total memory required to contract the tensor
             network along this path)");
 
     // Create bindings for each Tensor type
-    bind_constructors<Tensors...>(cls);
+    //    bind_constructors<Tensors...>(cls);
 }
