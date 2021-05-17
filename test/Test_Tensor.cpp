@@ -9,14 +9,14 @@
 
 #include "jet/Tensor.hpp"
 
-using c_fp64 = std::complex<double>;
-using c_fp32 = std::complex<float>;
-using data_t = std::vector<c_fp32>;
+using c_fp64_t = std::complex<double>;
+using c_fp32_t = std::complex<float>;
+using data_t = std::vector<c_fp32_t>;
 
-TEMPLATE_TEST_CASE("Tensor::Tensor", "[Tensor]", c_fp32, c_fp64)
+using namespace Jet;
+
+TEMPLATE_TEST_CASE("Tensor::Tensor", "[Tensor]", c_fp32_t, c_fp64_t)
 {
-    using namespace Jet;
-
     SECTION("Tensor") { REQUIRE(std::is_constructible<Tensor<>>::value); }
     SECTION("Tensor<TestType> {}")
     {
@@ -53,7 +53,6 @@ TEMPLATE_TEST_CASE("Tensor::Tensor", "[Tensor]", c_fp32, c_fp64)
 
 TEST_CASE("Tensor instantiation", "[Tensor]")
 {
-    using namespace Jet;
     SECTION("Default constructor")
     {
         Tensor tensor, tensor_cmp;
@@ -89,8 +88,6 @@ TEST_CASE("Tensor instantiation", "[Tensor]")
 
 TEST_CASE("Tensor::GetShape", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         Tensor tensor;
@@ -118,8 +115,6 @@ TEST_CASE("Tensor::GetShape", "[Tensor]")
 
 TEST_CASE("Tensor::GetSize", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         Tensor tensor;
@@ -146,8 +141,6 @@ TEST_CASE("Tensor::GetSize", "[Tensor]")
 
 TEST_CASE("Tensor::GetIndices", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         Tensor tensor;
@@ -167,33 +160,31 @@ TEST_CASE("Tensor::GetIndices", "[Tensor]")
 
 TEST_CASE("Tensor::GetData", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Data: default")
     {
         Tensor tensor;
-        CHECK(tensor.GetScalar() == c_fp32(0, 0));
-        CHECK(tensor.GetData() == std::vector<c_fp32>{{0, 0}});
-        CHECK(tensor.GetValue({}) == c_fp32(0, 0));
+        CHECK(tensor.GetScalar() == c_fp32_t(0, 0));
+        CHECK(tensor.GetData() == std::vector<c_fp32_t>{{0, 0}});
+        CHECK(tensor.GetValue({}) == c_fp32_t(0, 0));
     }
     SECTION("Size: {2,3}, Indices: default, Data: default")
     {
         Tensor tensor({2, 3});
 
-        std::vector<c_fp32> data(2 * 3, c_fp32(0.0, 0.0));
+        std::vector<c_fp32_t> data(2 * 3, c_fp32_t(0.0, 0.0));
 
         CHECK(tensor.GetData() == data);
     }
     SECTION("Size: {2,3}, Indices: {x, y}, Data: default")
     {
         Tensor tensor({"x", "y"}, {2, 3});
-        std::vector<c_fp32> data(2 * 3, c_fp32(0.0, 0.0));
+        std::vector<c_fp32_t> data(2 * 3, c_fp32_t(0.0, 0.0));
 
         CHECK(tensor.GetData() == data);
     }
     SECTION("Size: {2,3}, Indices: {x, y}, Data: [0.5+0.25i]*6")
     {
-        std::vector<c_fp32> data(6, c_fp32(0.5, 0.25));
+        std::vector<c_fp32_t> data(6, c_fp32_t(0.5, 0.25));
         Tensor tensor({"x", "y"}, {2, 3}, data);
         CHECK(tensor.GetData() == data);
     }
@@ -201,8 +192,6 @@ TEST_CASE("Tensor::GetData", "[Tensor]")
 
 TEST_CASE("Tensor::GetIndexToDimension", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default")
     {
         Tensor tensor;
@@ -224,8 +213,6 @@ TEST_CASE("Tensor::GetIndexToDimension", "[Tensor]")
 
 TEST_CASE("Tensor::IsScalar", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default")
     {
         Tensor tensor;
@@ -252,8 +239,6 @@ TEST_CASE("Tensor::IsScalar", "[Tensor]")
 
 TEST_CASE("Tensor::FillRandom", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2, 3};
     std::vector<std::string> t_indices{"a", "b", "c"};
     Tensor tensor1(t_indices, t_shape);
@@ -289,12 +274,10 @@ TEST_CASE("Tensor::FillRandom", "[Tensor]")
 
 TEST_CASE("Tensor::GetValue", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
-    std::vector<c_fp32> data{{0, 0.5}, {1, 0.5}, {2, 0.5},
-                             {3, 0.5}, {4, 0.5}, {5, 0.5}};
+    std::vector<c_fp32_t> data{{0, 0.5}, {1, 0.5}, {2, 0.5},
+                               {3, 0.5}, {4, 0.5}, {5, 0.5}};
 
     Tensor tensor(t_indices, t_shape, data);
 
@@ -308,8 +291,6 @@ TEST_CASE("Tensor::GetValue", "[Tensor]")
 
 TEST_CASE("Tensor::RenameIndex", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<std::string> t_indices_expected{"a", "z"};
@@ -322,25 +303,21 @@ TEST_CASE("Tensor::RenameIndex", "[Tensor]")
 
 TEST_CASE("Tensor::SetValue", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
-    std::vector<c_fp32> data(6, c_fp32(0, 0));
+    std::vector<c_fp32_t> data(6, c_fp32_t(0, 0));
 
-    std::vector<c_fp32> data_expected{{0, 0}, {0, 0}, {0, 0},
-                                      {0, 0}, {0, 0}, {1, 1}};
+    std::vector<c_fp32_t> data_expected{{0, 0}, {0, 0}, {0, 0},
+                                        {0, 0}, {0, 0}, {1, 1}};
 
     Tensor tensor(t_indices, t_shape, data);
 
-    tensor.SetValue({2, 1}, c_fp32(1, 1));
+    tensor.SetValue({2, 1}, c_fp32_t(1, 1));
     CHECK(tensor.GetData() == data_expected);
 }
 
 TEST_CASE("Inline helper ShapeToSize", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape_1{2, 3, 4};
     std::vector<std::size_t> t_shape_2{3, 4, 2};
     std::vector<std::size_t> t_shape_3{2, 2};
@@ -352,14 +329,14 @@ TEST_CASE("Inline helper ShapeToSize", "[Tensor]")
 
 TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Matrix-vector product")
     {
-        std::vector<c_fp32> t_data_left{c_fp32(0.5, 0.0), c_fp32(0.5, 0.0),
-                                        c_fp32(0.5, 0.0), c_fp32(-0.5, 0.0)};
-        std::vector<c_fp32> t_data_right{c_fp32(1.0, 0.0), c_fp32(0.0, 0.0)};
-        std::vector<c_fp32> t_out(2, c_fp32(0, 0));
+        std::vector<c_fp32_t> t_data_left{
+            c_fp32_t(0.5, 0.0), c_fp32_t(0.5, 0.0), c_fp32_t(0.5, 0.0),
+            c_fp32_t(-0.5, 0.0)};
+        std::vector<c_fp32_t> t_data_right{c_fp32_t(1.0, 0.0),
+                                           c_fp32_t(0.0, 0.0)};
+        std::vector<c_fp32_t> t_out(2, c_fp32_t(0, 0));
 
         TensorHelpers::MultiplyTensorData(t_data_left, t_data_right, t_out,
                                           {"i"}, {}, 2, 1, 2);
@@ -384,8 +361,8 @@ TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
         std::vector<std::string> t_indices_common{"b", "c"};
         std::vector<std::string> t_indices_symdiff{"a", "d"};
 
-        std::vector<c_fp32> t_data_left(2 * 3 * 4, c_fp32(0.5, 0.25));
-        std::vector<c_fp32> t_data_right(3 * 4 * 2, c_fp32(0.5, 0.25));
+        std::vector<c_fp32_t> t_data_left(2 * 3 * 4, c_fp32_t(0.5, 0.25));
+        std::vector<c_fp32_t> t_data_right(3 * 4 * 2, c_fp32_t(0.5, 0.25));
 
         const Tensor tensor_left(t_indices_left, t_shape_left, t_data_left);
         const Tensor tensor_right(t_indices_right, t_shape_right, t_data_right);
@@ -398,18 +375,15 @@ TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
             t_indices_left_unique, t_indices_right_unique, rows_a, cols_b,
             rows_cols_ab);
         CHECK(tensor_out.GetData() ==
-              std::vector<c_fp32>{c_fp32(2.25, 3.0), c_fp32(2.25, 3.0),
-                                  c_fp32(2.25, 3.0), c_fp32(2.25, 3.0)});
+              std::vector<c_fp32_t>{c_fp32_t(2.25, 3.0), c_fp32_t(2.25, 3.0),
+                                    c_fp32_t(2.25, 3.0), c_fp32_t(2.25, 3.0)});
     }
 }
 
-TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
+TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32_t, c_fp64_t)
 {
-    using namespace Jet;
-
     SECTION("Random 2x2 (i,j) with 2x1 (i): all permutations")
     {
-
         Tensor<TestType> r_ij({"i", "j"}, {2, 2});
         r_ij.FillRandom();
 
@@ -550,12 +524,10 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
 
 TEST_CASE("Conj", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
-    std::vector<c_fp32> t_data(2 * 3, c_fp32(0.5, 0.25));
-    std::vector<c_fp32> t_data_conj(2 * 3, c_fp32(0.5, -0.25));
+    std::vector<c_fp32_t> t_data(2 * 3, c_fp32_t(0.5, 0.25));
+    std::vector<c_fp32_t> t_data_conj(2 * 3, c_fp32_t(0.5, -0.25));
 
     Tensor tensor(t_indices, t_shape, t_data);
     tensor = Conj(tensor);
@@ -565,19 +537,18 @@ TEST_CASE("Conj", "[Tensor]")
 
 TEST_CASE("SliceIndex", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
-    std::vector<c_fp32> t_data{{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}};
+    std::vector<c_fp32_t> t_data{{1, 0}, {2, 0}, {3, 0},
+                                 {4, 0}, {5, 0}, {6, 0}};
 
     Tensor tensor(t_indices, t_shape, t_data);
 
-    Tensor t_x0({"y"}, {3}, std::vector<c_fp32>{{1, 0}, {2, 0}, {3, 0}});
-    Tensor t_x1({"y"}, {3}, std::vector<c_fp32>{{4, 0}, {5, 0}, {6, 0}});
-    Tensor t_y0({"x"}, {2}, std::vector<c_fp32>{{1, 0}, {4, 0}});
-    Tensor t_y1({"x"}, {2}, std::vector<c_fp32>{{2, 0}, {5, 0}});
-    Tensor t_y2({"x"}, {2}, std::vector<c_fp32>{{3, 0}, {6, 0}});
+    Tensor t_x0({"y"}, {3}, std::vector<c_fp32_t>{{1, 0}, {2, 0}, {3, 0}});
+    Tensor t_x1({"y"}, {3}, std::vector<c_fp32_t>{{4, 0}, {5, 0}, {6, 0}});
+    Tensor t_y0({"x"}, {2}, std::vector<c_fp32_t>{{1, 0}, {4, 0}});
+    Tensor t_y1({"x"}, {2}, std::vector<c_fp32_t>{{2, 0}, {5, 0}});
+    Tensor t_y2({"x"}, {2}, std::vector<c_fp32_t>{{3, 0}, {6, 0}});
 
     CHECK(t_x0 == SliceIndex(tensor, "x", 0));
     CHECK(t_x1 == SliceIndex(tensor, "x", 1));
@@ -589,11 +560,10 @@ TEST_CASE("SliceIndex", "[Tensor]")
 
 TEST_CASE("Transpose", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
-    std::vector<c_fp32> t_data{{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}};
+    std::vector<c_fp32_t> t_data{{1, 0}, {2, 0}, {3, 0},
+                                 {4, 0}, {5, 0}, {6, 0}};
 
     Tensor tensor(t_indices, t_shape, t_data);
     Tensor tensor_t({"y", "x"}, {3, 2},
@@ -605,14 +575,12 @@ TEST_CASE("Transpose", "[Tensor]")
 
 TEST_CASE("Reshape", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Equal data size")
     {
         std::vector<std::size_t> t_shape{2, 3};
         std::vector<std::string> t_indices{"x", "y"};
-        std::vector<c_fp32> t_data{{1, 0}, {2, 0}, {3, 0},
-                                   {4, 0}, {5, 0}, {6, 0}};
+        std::vector<c_fp32_t> t_data{{1, 0}, {2, 0}, {3, 0},
+                                     {4, 0}, {5, 0}, {6, 0}};
 
         Tensor tensor(t_indices, t_shape, t_data);
         Tensor tensor_r({"?a", "?b"}, {3, 2}, t_data);
@@ -623,8 +591,8 @@ TEST_CASE("Reshape", "[Tensor]")
     {
         std::vector<std::size_t> t_shape{2, 3};
         std::vector<std::string> t_indices{"x", "y"};
-        std::vector<c_fp32> t_data{{1, 0}, {2, 0}, {3, 0},
-                                   {4, 0}, {5, 0}, {6, 0}};
+        std::vector<c_fp32_t> t_data{{1, 0}, {2, 0}, {3, 0},
+                                     {4, 0}, {5, 0}, {6, 0}};
 
         Tensor tensor(t_indices, t_shape, t_data);
         Tensor tensor_r({"?a", "?b"}, {3, 2}, t_data);

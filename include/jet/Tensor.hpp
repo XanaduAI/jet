@@ -395,6 +395,56 @@ template <class T = std::complex<float>> class Tensor {
 };
 
 /**
+ * @brief Adds two `%Tensor` objects with the same index sets.
+ *
+ * The resulting tensor will have the same index set as the operand tensors. The
+ * order of the indices follows that of the first argument (i.e., `A`).
+ *
+ * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition of
+ * A and B is a 2x3 tensor C(i,j):
+ * \code{.cpp}
+ *     Tensor A({"i", "j"}, {2, 3}, {0, 1, 2, 3, 4, 5});
+ *     Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
+ *     Tensor C = AddTensors(A, B);  // {5, 6, 7, 9, 10, 11}
+ * \endcode
+ *
+ * @warning The program is aborted if the index sets of the given `%Tensor`
+ *          objects to not match.
+ *
+ * @tparam T `%Tensor` data type.
+ * @param A tensor on the LHS of the addition.
+ * @param B tensor on the RHS of the addition.
+ * @return `%Tensor` object representing the element-wise addition of the given
+ *         tensors.
+ */
+template <class T> Tensor<T> AddTensors(const Tensor<T> &A, const Tensor<T> &B)
+{
+    const auto disjoint_indices =
+        Jet::Utilities::VectorDisjunctiveUnion(A.GetIndices(), B.GetIndices());
+
+    JET_ABORT_IF_NOT(disjoint_indices.empty(),
+                     "Tensor addition with disjoint indices is not supported.");
+
+    const auto &indices = A.GetIndices();
+    const auto &shape = A.GetShape();
+
+    // Align the underlying data vectors of `A` and `B`.
+    const auto &&Bt = Transpose(B, indices);
+
+    Tensor<T> C(indices, shape);
+    const auto size = C.GetSize();
+
+#if defined _OPENMP
+#pragma omp parallel for schedule(static, MAX_RIGHT_DIM)
+#endif
+    for (size_t i = 0; i < size; i++) {
+        C[i] = A[i] + Bt[i];
+    }
+
+    return C;
+}
+
+/**
  * @brief Contracts two `%Tensor` objects over the intersection of their index
  *        sets.
  *
@@ -403,13 +453,13 @@ template <class T = std::complex<float>> class Tensor {
  *
  * Example: Given a 3x2x4 tensor A(i,j,k) and a 2x4x2 tensor B(j,k,l), the
  * common indices are (j,k) and the symmetric difference of the sets is (i,l).
- * The result of the contraction is a tensor 3x2 tensor C(i,l).
+ * The result of the contraction is a 3x2 tensor C(i,l).
  * \code{.cpp}
  *     Tensor A({"i", "j", "k"}, {3, 2, 4});
  *     Tensor B({"j", "k", "l"}, {2, 4, 2});
  *     A.FillRandom();
  *     B.FillRandom();
- *     C = ContractTensors(A, B);
+ *     Tensor C = ContractTensors(A, B);
  * \endcode
  *
  * @see TODO: Link to documentation
@@ -419,9 +469,9 @@ template <class T = std::complex<float>> class Tensor {
  * @param B tensor on the RHS of the contraction.
  * @return `%Tensor` object representing the contraction of the tensors.
  */
-template <class T> Tensor<T> ContractTensors(Tensor<T> &A, Tensor<T> &B)
+template <class T>
+Tensor<T> ContractTensors(const Tensor<T> &A, const Tensor<T> &B)
 {
-
     using namespace Jet::Utilities;
     using namespace Jet::TensorHelpers;
 
@@ -733,5 +783,4 @@ inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
 
     return out;
 }
-
 }; // namespace Jet
