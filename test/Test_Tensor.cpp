@@ -320,7 +320,7 @@ TEST_CASE("Tensor::RenameIndex", "[Tensor]")
     CHECK(tensor.GetIndices() == t_indices_expected);
 }
 
-TEST_CASE("Tensor::SetValue<V>", "[Tensor]")
+TEST_CASE("Tensor::SetValue", "[Tensor]")
 {
     using namespace Jet;
 
@@ -333,7 +333,7 @@ TEST_CASE("Tensor::SetValue<V>", "[Tensor]")
 
     Tensor tensor(t_indices, t_shape, data);
 
-    tensor.SetValue<c_fp32>({2, 1}, c_fp32(1, 1));
+    tensor.SetValue({2, 1}, c_fp32(1, 1));
     CHECK(tensor.GetData() == data_expected);
 }
 
