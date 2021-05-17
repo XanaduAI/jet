@@ -62,7 +62,7 @@ template <class T = std::complex<float>> class Tensor;
  * @tparam T `%Tensor` data type.
  * @param A tensor on the LHS of the addition.
  * @param B tensor on the RHS of the addition.
- * @return `%Tensor` object representing the element-wise addition of the given
+ * @return `%Tensor` object representing the element-wise sum of the given
  *         tensors.
  */
 template <class T> Tensor<T> AddTensors(const Tensor<T> &A, const Tensor<T> &B)

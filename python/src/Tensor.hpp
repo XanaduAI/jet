@@ -217,6 +217,33 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 Conjugate of the given tensor object.
           )");
 
+    m.def("add_tensors", Jet::AddTensors<T>, py::arg("A"), py::arg("B"),
+          R"(
+            Adds two tensor objects with the same index sets. The resulting
+            tensor will have the same indices as the first argument (i.e., `A`).
+
+            Example:
+                Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition
+                of A and B is another 2x3 tensor C(i,j):
+
+                    import jet
+
+                    A = jet.Tensor64(["i", "j"], [2, 3])
+                    B = jet.Tensor64(["i", "j"], [2, 3])
+
+                    A.fill_random()
+                    B.fill_random()
+
+                    C = jet.add_tensors(A, B);
+
+            Args:
+                A: tensor on the LHS of the addition.
+                B: tensor on the RHS of the addition.
+
+            Returns:
+                Tensor object representing the element-wise sum of the tensors.
+          )");
+
     m.def("contract_tensors", Jet::ContractTensors<T>, py::arg("A"),
           py::arg("B"), R"(
             Contracts two tensor objects over the intersection of their index
