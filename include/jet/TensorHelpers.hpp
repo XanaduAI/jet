@@ -72,18 +72,19 @@ gemmBinding(size_t m, size_t n, size_t k, ComplexPrecision alpha,
  * @param A_data Complex data matrix A
  * @param B_data Complex data vector B
  * @param C_data Output data vector
+ * @param transpose Transpose flag for matrix A
  */
 template <typename ComplexPrecision>
 constexpr void
 gemvBinding(size_t m, size_t k, ComplexPrecision alpha, ComplexPrecision beta,
             const ComplexPrecision *A_data, const ComplexPrecision *B_data,
-            ComplexPrecision *C_data)
+            ComplexPrecision *C_data, const CBLAS_TRANSPOSE &transpose)
 {
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
-        cblas_cgemv(CblasRowMajor, CblasNoTrans, m, k, (&alpha), (A_data),
+        cblas_cgemv(CblasRowMajor, transpose, m, k, (&alpha), (A_data),
                     std::max(1ul, k), (B_data), 1, (&beta), (C_data), 1);
     else if constexpr (std::is_same_v<ComplexPrecision, std::complex<double>>)
-        cblas_zgemv(CblasRowMajor, CblasNoTrans, m, k, (&alpha), (A_data),
+        cblas_zgemv(CblasRowMajor, transpose, m, k, (&alpha), (A_data),
                     std::max(1ul, k), (B_data), 1, (&beta), (C_data), 1);
 };
 
@@ -153,12 +154,12 @@ inline void MultiplyTensorData(const std::vector<ComplexPrecision> &A,
     else if (left_indices.size() > 0 && right_indices.size() == 0) {
         size_t m = left_dim;
         size_t k = common_dim;
-        gemvBinding(m, k, alpha, beta, A_data, B_data, C_data);
+        gemvBinding(m, k, alpha, beta, A_data, B_data, C_data, CblasNoTrans);
     }
     else if (left_indices.size() == 0 && right_indices.size() > 0) {
         size_t n = right_dim;
         size_t k = common_dim;
-        gemvBinding(k, n, alpha, beta, B_data, A_data, C_data);
+        gemvBinding(k, n, alpha, beta, B_data, A_data, C_data, CblasTrans);
     }
     else if (left_indices.size() == 0 && right_indices.size() == 0) {
         size_t k = common_dim;
