@@ -32,6 +32,20 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
 template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
 {
 
+    py::class_<Jet::PathStepInfo>(m, "PathStepInfo", R"(
+        PathStepInfo represents the contraction metadata associated
+        with a node in a TensorNetwork)")
+
+        .def_readonly("id", &Jet::PathStepInfo::id)
+        .def_readonly("parent", &Jet::PathStepInfo::parent)
+        .def_readonly("children", &Jet::PathStepInfo::children)
+        .def_readonly("name", &Jet::PathStepInfo::name)
+        .def_readonly("node_indices", &Jet::PathStepInfo::node_indices)
+        .def_readonly("tensor_indices", &Jet::PathStepInfo::tensor_indices)
+        .def_readonly("tags", &Jet::PathStepInfo::tags)
+        .def_readonly("contracted_indices",
+                      &Jet::PathStepInfo::contracted_indices);
+
     auto cls = py::class_<Jet::PathInfo>(m, "PathInfo", R"(
         PathInfo represents a contraction path in a Tensor Network)")
 
