@@ -37,8 +37,8 @@ tensor_t MakeTensor(const indices_t &indices, const shape_t &shape)
     if (!shape.empty()) {
         for (size_t i = 0; i < tensor.GetSize(); i++) {
             const auto index = Jet::Utilities::UnravelIndex(i, shape);
-            tensor.SetValue<complex_t>(
-                index, {static_cast<float>(i), static_cast<float>(2 * i)});
+            tensor.SetValue(index, complex_t{static_cast<float>(i),
+                                             static_cast<float>(2 * i)});
         }
     }
     return tensor;
