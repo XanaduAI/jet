@@ -167,21 +167,20 @@ template <class Tensor> class TensorNetwork {
     node_id_t AddTensor(const Tensor &tensor,
                         const std::vector<std::string> &tags) noexcept
     {
-        const auto &indices = tensor.GetIndices();
-        const auto name = DeriveNodeName_(indices);
+        node_id_t id = nodes_.size();
+        nodes_.emplace_back(Node{
+            id,                                   // id
+            DeriveNodeName_(tensor.GetIndices()), // name
+            tensor.GetIndices(),                  // indices
+            tags,                                 // tags
+            false,                                // contracted
+            tensor                                // tensor
+        });
 
-        const Node node{
-            nodes_.size(), // id
-            name,          // name
-            indices,       // indices
-            tags,          // tags
-            false,         // contracted
-            tensor,        // tensor
-        };
-        nodes_.emplace_back(node);
+        AddNodeToIndexMap_(nodes_[id]);
+        AddNodeToTagMap_(nodes_[id]);
 
-        AddNodeToIndexMap_(node);
-        AddNodeToTagMap_(node);
+        return id;
     }
 
     /**
