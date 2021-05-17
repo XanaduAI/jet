@@ -31,6 +31,21 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             - "Shape" refers to the dimensions of a tensor; the number of
               dimensions is the rank of the tensor.
     )")
+        // Static functions
+        // ---------------------------------------------------------------------
+
+        .def_static("add_tensors", &tensor_t::AddTensors, py::arg("A"),
+                    py::arg("B"), "Alias for add_tensors().")
+
+        .def_static("contract_tensors", &tensor_t::ContractTensors,
+                    py::arg("A"), py::arg("B"), "Alias for contract_tensors().")
+
+        .def_static("reshape", &tensor_t::Reshape, py::arg("tensor"),
+                    py::arg("shape"), "Alias for reshape().")
+
+        .def_static("slice_index", &tensor_t::SliceIndex, py::arg("tensor"),
+                    py::arg("index"), py::arg("value"),
+                    "Alias for slice_index().")
 
         // Constructors
         // ---------------------------------------------------------------------
