@@ -572,54 +572,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
     }
 }
 
-TEST_CASE("ContractTensors exceptional behaviour", "[Tensor]")
-{
-    using namespace Jet;
-
-    SECTION("Contract non complex data: DOTU")
-    {
-        std::vector<std::size_t> t_shape1{2, 2};
-        std::vector<std::size_t> t_shape2{2, 2};
-        std::vector<std::size_t> t_shape3{1};
-
-        std::vector<std::string> t_indices1{"a", "b"};
-        std::vector<std::string> t_indices2{"a", "b"};
-
-        Tensor<std::pair<int, int>> tensor1(t_indices1, t_shape1);
-        Tensor<std::pair<int, int>> tensor2(t_indices2, t_shape2);
-
-        CHECK_THROWS(ContractTensors(tensor1, tensor2));
-    }
-    SECTION("Contract non complex data: GEMM")
-    {
-        std::vector<std::size_t> t_shape1{2, 2};
-        std::vector<std::size_t> t_shape2{2, 2};
-        std::vector<std::size_t> t_shape3{1};
-
-        std::vector<std::string> t_indices1{"a", "b"};
-        std::vector<std::string> t_indices2{"b", "c"};
-
-        Tensor<std::pair<int, int>> tensor1(t_indices1, t_shape1);
-        Tensor<std::pair<int, int>> tensor2(t_indices2, t_shape2);
-
-        CHECK_THROWS(ContractTensors(tensor1, tensor2));
-    }
-    SECTION("Contract non complex data: GEMV")
-    {
-        std::vector<std::size_t> t_shape1{2, 2};
-        std::vector<std::size_t> t_shape2{2};
-        std::vector<std::size_t> t_shape3{1};
-
-        std::vector<std::string> t_indices1{"a", "b"};
-        std::vector<std::string> t_indices2{"b"};
-
-        Tensor<std::pair<int, int>> tensor1(t_indices1, t_shape1);
-        Tensor<std::pair<int, int>> tensor2(t_indices2, t_shape2);
-
-        CHECK_THROWS(ContractTensors(tensor1, tensor2));
-    }
-}
-
 TEST_CASE("Conj", "[Tensor]")
 {
     using namespace Jet;
@@ -674,8 +626,9 @@ TEST_CASE("Transpose", "[Tensor]")
     CHECK(tensor_t == Transpose(tensor, std::vector<std::string>{"y", "x"}));
     CHECK(tensor_t == Transpose(tensor, std::vector<std::size_t>{1, 0}));
 
-    CHECK_THROWS(Transpose(Tensor(), std::vector<std::string>{"y", "x"}));
-    CHECK_THROWS(Transpose(Tensor(), std::vector<std::size_t>{1, 0}));
+    CHECK_THROWS(
+        Transpose(Tensor<c_fp32>(), std::vector<std::string>{"y", "x"}));
+    CHECK_THROWS(Transpose(Tensor<c_fp32>(), std::vector<std::size_t>{1, 0}));
 }
 
 TEST_CASE("Reshape", "[Tensor]")
