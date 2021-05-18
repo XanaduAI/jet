@@ -154,31 +154,33 @@ template <class Tensor> class TensorNetwork {
     size_t NumTensors() const noexcept { return nodes_.size(); }
 
     /**
-     * @brief Adds a tensor with the specified tags.
+     * @brief Adds a tensor with the specified tags and return its
+     * assigned id.
      *
      * @warning This function is not safe for concurrent execution.
      *
      * @param tensor Tensor to be added to this tensor network.
      * @param tags Tags to be associated with the tensor.
+     *
+     * @return node id assigned to tensor
      */
-    void AddTensor(const Tensor &tensor,
-                   const std::vector<std::string> &tags) noexcept
+    node_id_t AddTensor(const Tensor &tensor,
+                        const std::vector<std::string> &tags) noexcept
     {
-        const auto &indices = tensor.GetIndices();
-        const auto name = DeriveNodeName_(indices);
+        node_id_t id = nodes_.size();
+        nodes_.emplace_back(Node{
+            id,                                   // id
+            DeriveNodeName_(tensor.GetIndices()), // name
+            tensor.GetIndices(),                  // indices
+            tags,                                 // tags
+            false,                                // contracted
+            tensor                                // tensor
+        });
 
-        const Node node{
-            nodes_.size(), // id
-            name,          // name
-            indices,       // indices
-            tags,          // tags
-            false,         // contracted
-            tensor,        // tensor
-        };
-        nodes_.emplace_back(node);
+        AddNodeToIndexMap_(nodes_[id]);
+        AddNodeToTagMap_(nodes_[id]);
 
-        AddNodeToIndexMap_(node);
-        AddNodeToTagMap_(node);
+        return id;
     }
 
     /**
@@ -388,13 +390,6 @@ template <class Tensor> class TensorNetwork {
      */
     size_t ContractNodes_(size_t node_id_1, size_t node_id_2) noexcept
     {
-        // Make sure node 1 has at least as many indices as node 2.
-        const size_t node_1_size = nodes_[node_id_1].tensor.GetIndices().size();
-        const size_t node_2_size = nodes_[node_id_2].tensor.GetIndices().size();
-        if (node_1_size <= node_2_size) {
-            std::swap(node_id_1, node_id_2);
-        }
-
         auto &node_1 = nodes_[node_id_1];
         auto &node_2 = nodes_[node_id_2];
         const auto tensor_3 = ContractTensors(node_1.tensor, node_2.tensor);
