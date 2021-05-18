@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <iostream>
+#include <sstream>
 
 /**
  * @brief Macro that prints error message and source location to stderr
@@ -44,6 +45,16 @@
 
 namespace Jet {
 
+class JetException : public std::exception {
+  public:
+    JetException(const std::string &err_msg) noexcept : err_msg(err_msg) {}
+    virtual ~JetException() = default;
+    const char *what() const noexcept { return err_msg.c_str(); }
+
+  private:
+    std::string err_msg;
+};
+
 /**
  * @brief Prints an error message to stderr and calls `std::terminate()`.
  *
@@ -58,10 +69,11 @@ namespace Jet {
 inline void Abort(const char *message, const char *file_name, int line,
                   const char *function_name)
 {
-    std::stringstream err_code;  
-    err_code << "Fatal error in jet/" << file_name << ", line " << line
-              << ", in " << function_name << ": " << message << std::endl;
-    throw err_code.str();
+    std::stringstream err_msg;
+    err_msg << "[" << file_name << "][Line:" << line
+            << "][Method:" << function_name
+            << "]: Fatal error in Jet: " << message;
+    throw JetException(err_msg.str());
 }
 
 }; // namespace Jet

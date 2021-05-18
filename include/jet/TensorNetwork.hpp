@@ -206,7 +206,7 @@ template <class Tensor> class TensorNetwork {
      *              how raveled values are interpreted.
      */
     void SliceIndices(const std::vector<std::string> &indices,
-                      unsigned long long value) noexcept
+                      unsigned long long value)
     {
         std::unordered_map<size_t, std::vector<size_t>> node_to_index_map;
         std::vector<size_t> index_sizes(indices.size());
@@ -216,7 +216,6 @@ template <class Tensor> class TensorNetwork {
             const auto it = index_to_edge_map_.find(indices[i]);
             JET_ABORT_IF(it == index_to_edge_map_.end(),
                          "Sliced index does not exist.");
-
             const auto &edge = it->second;
             index_sizes[i] = edge.dim;
 
@@ -293,7 +292,7 @@ template <class Tensor> class TensorNetwork {
      * @param path Contraction path specified as a list of node ID pairs.
      * @return Tensor associated with the result of the final contraction.
      */
-    const Tensor &Contract(const path_t &path = {}) noexcept
+    const Tensor &Contract(const path_t &path = {})
     {
         JET_ABORT_IF(nodes_.empty(),
                      "An empty tensor network cannot be contracted.");
