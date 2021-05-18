@@ -18,6 +18,19 @@ namespace Jet {
 namespace TensorHelpers {
 
 /**
+ * If T is a supported data type for tensors, this expression will
+ * evaluate to `true`. Otherwise, it will evaluate to `false`.
+ *
+ * Supported data types are std::complex<float> and std::complex<double>.
+ *
+ * @tparam T candidate data type
+ */
+template <class T>
+constexpr bool is_supported_data_type =
+    std::is_same_v<T, std::complex<float>> ||
+    std::is_same_v<T, std::complex<double>>;
+
+/**
  * @brief Compile-time binding for BLAS GEMM operation (matrix-matrix product).
  *
  * @tparam ComplexPrecision Precision of complex data (`%complex<float>` or
@@ -45,9 +58,6 @@ gemmBinding(size_t m, size_t n, size_t k, ComplexPrecision alpha,
         cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), &beta,
                     C_data, std::max(1ul, n));
-    else
-        JET_ABORT(
-            "Please use complex<float> or complex<double for Tensor data");
 };
 
 /**
@@ -62,22 +72,20 @@ gemmBinding(size_t m, size_t n, size_t k, ComplexPrecision alpha,
  * @param A_data Complex data matrix A
  * @param B_data Complex data vector B
  * @param C_data Output data vector
+ * @param transpose Transpose flag for matrix A
  */
 template <typename ComplexPrecision>
 constexpr void
 gemvBinding(size_t m, size_t k, ComplexPrecision alpha, ComplexPrecision beta,
             const ComplexPrecision *A_data, const ComplexPrecision *B_data,
-            ComplexPrecision *C_data)
+            ComplexPrecision *C_data, const CBLAS_TRANSPOSE &transpose)
 {
     if constexpr (std::is_same_v<ComplexPrecision, std::complex<float>>)
-        cblas_cgemv(CblasRowMajor, CblasNoTrans, m, k, (&alpha), (A_data),
+        cblas_cgemv(CblasRowMajor, transpose, m, k, (&alpha), (A_data),
                     std::max(1ul, k), (B_data), 1, (&beta), (C_data), 1);
     else if constexpr (std::is_same_v<ComplexPrecision, std::complex<double>>)
-        cblas_zgemv(CblasRowMajor, CblasNoTrans, m, k, (&alpha), (A_data),
+        cblas_zgemv(CblasRowMajor, transpose, m, k, (&alpha), (A_data),
                     std::max(1ul, k), (B_data), 1, (&beta), (C_data), 1);
-    else
-        JET_ABORT(
-            "Please use complex<float> or complex<double for Tensor data");
 };
 
 /**
@@ -100,9 +108,6 @@ constexpr void dotuBinding(size_t k, const ComplexPrecision *A_data,
         cblas_cdotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
     else if constexpr (std::is_same_v<ComplexPrecision, std::complex<double>>)
         cblas_zdotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
-    else
-        JET_ABORT(
-            "Please use complex<float> or complex<double for Tensor data");
 };
 
 /**
@@ -120,7 +125,9 @@ constexpr void dotuBinding(size_t k, const ComplexPrecision *A_data,
  * @param right_dim Columns in right tensor B and resulting tensor C.
  * @param common_dim Rows in left tensor A and columns in right tensor B.
  */
-template <typename ComplexPrecision>
+template <
+    typename ComplexPrecision,
+    std::enable_if_t<is_supported_data_type<ComplexPrecision>, bool> = true>
 inline void MultiplyTensorData(const std::vector<ComplexPrecision> &A,
                                const std::vector<ComplexPrecision> &B,
                                std::vector<ComplexPrecision> &C,
@@ -147,12 +154,12 @@ inline void MultiplyTensorData(const std::vector<ComplexPrecision> &A,
     else if (left_indices.size() > 0 && right_indices.size() == 0) {
         size_t m = left_dim;
         size_t k = common_dim;
-        gemvBinding(m, k, alpha, beta, A_data, B_data, C_data);
+        gemvBinding(m, k, alpha, beta, A_data, B_data, C_data, CblasNoTrans);
     }
     else if (left_indices.size() == 0 && right_indices.size() > 0) {
         size_t n = right_dim;
         size_t k = common_dim;
-        gemvBinding(k, n, alpha, beta, B_data, A_data, C_data);
+        gemvBinding(k, n, alpha, beta, B_data, A_data, C_data, CblasTrans);
     }
     else if (left_indices.size() == 0 && right_indices.size() == 0) {
         size_t k = common_dim;

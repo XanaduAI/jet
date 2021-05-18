@@ -320,7 +320,7 @@ TEST_CASE("Tensor::RenameIndex", "[Tensor]")
     CHECK(tensor.GetIndices() == t_indices_expected);
 }
 
-TEST_CASE("Tensor::SetValue<V>", "[Tensor]")
+TEST_CASE("Tensor::SetValue", "[Tensor]")
 {
     using namespace Jet;
 
@@ -333,7 +333,7 @@ TEST_CASE("Tensor::SetValue<V>", "[Tensor]")
 
     Tensor tensor(t_indices, t_shape, data);
 
-    tensor.SetValue<c_fp32>({2, 1}, c_fp32(1, 1));
+    tensor.SetValue({2, 1}, c_fp32(1, 1));
     CHECK(tensor.GetData() == data_expected);
 }
 
@@ -460,22 +460,22 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
               Approx(expected_rji_si.GetData()[1].imag()));
 
         CHECK(con_si_rij.GetData()[0].real() ==
-              Approx(expected_rji_si.GetData()[0].real()));
+              Approx(expected_rij_si.GetData()[0].real()));
         CHECK(con_si_rij.GetData()[0].imag() ==
-              Approx(expected_rji_si.GetData()[0].imag()));
+              Approx(expected_rij_si.GetData()[0].imag()));
         CHECK(con_si_rij.GetData()[1].real() ==
-              Approx(expected_rji_si.GetData()[1].real()));
+              Approx(expected_rij_si.GetData()[1].real()));
         CHECK(con_si_rij.GetData()[1].imag() ==
-              Approx(expected_rji_si.GetData()[1].imag()));
+              Approx(expected_rij_si.GetData()[1].imag()));
 
         CHECK(con_si_rji.GetData()[0].real() ==
-              Approx(expected_rij_si.GetData()[0].real()));
+              Approx(expected_rji_si.GetData()[0].real()));
         CHECK(con_si_rji.GetData()[0].imag() ==
-              Approx(expected_rij_si.GetData()[0].imag()));
+              Approx(expected_rji_si.GetData()[0].imag()));
         CHECK(con_si_rji.GetData()[1].real() ==
-              Approx(expected_rij_si.GetData()[1].real()));
+              Approx(expected_rji_si.GetData()[1].real()));
         CHECK(con_si_rji.GetData()[1].imag() ==
-              Approx(expected_rij_si.GetData()[1].imag()));
+              Approx(expected_rji_si.GetData()[1].imag()));
     }
 
     SECTION("Contract T0(a,b) and T1(b) -> T2(a)")
@@ -498,6 +498,30 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
 
         Tensor<TestType> tensor3 = ContractTensors(tensor1, tensor2);
         Tensor<TestType> tensor4({"a"}, {2}, t_data_expect);
+
+        CHECK(tensor3 == tensor4);
+    }
+
+    SECTION("Contract T0(a) and T1(a,b) -> T2(b)")
+    {
+        std::vector<std::size_t> t_shape1{2};
+        std::vector<std::size_t> t_shape2{2, 2};
+        std::vector<std::size_t> t_shape3{2};
+
+        std::vector<std::string> t_indices1{"a"};
+        std::vector<std::string> t_indices2{"a", "b"};
+
+        std::vector<TestType> t_data1{TestType(0.0, 0.0), TestType(1.0, 0.0)};
+        std::vector<TestType> t_data2{TestType(0.0, 0.0), TestType(1.0, 0.0),
+                                      TestType(2.0, 0.0), TestType(3.0, 0.0)};
+        std::vector<TestType> t_data_expect{TestType(2.0, 0.0),
+                                            TestType(3.0, 0.0)};
+
+        Tensor<TestType> tensor1(t_indices1, t_shape1, t_data1);
+        Tensor<TestType> tensor2(t_indices2, t_shape2, t_data2);
+
+        Tensor<TestType> tensor3 = ContractTensors(tensor1, tensor2);
+        Tensor<TestType> tensor4({"b"}, {2}, t_data_expect);
 
         CHECK(tensor3 == tensor4);
     }
