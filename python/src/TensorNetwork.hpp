@@ -47,15 +47,12 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
             .def(
                 "get_node_ids_by_tag",
-                [](const TensorNetwork &tn, const std::string &tag) {
-                    auto [begin, end] = tn.GetTagToNodesMap().equal_range(tag);
-                    std::vector<size_t> nodes;
-
-                    for (auto it = begin; it != end; ++it) {
-                        nodes.push_back(it->second);
+                [](const TensorNetwork &tn) {
+                    std::unordered_map<std::string, std::vector<node_id_t>> tag_to_node_vector_map;
+                    for (const auto& [tag, node_id] : tn.GetTagToNodesMap()) {
+                        tag_to_node_vector_map[tag].emplace_back(node_id);
                     }
-
-                    return nodes;
+                    return tag_to_node_vector_map;
                 },
                 R"(Returns a list of node ids for Tensors associated with the given tag.)")
 

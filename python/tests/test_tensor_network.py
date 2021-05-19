@@ -16,7 +16,7 @@ class TestTensorNetwork:
         assert tn.num_tensors == 0
         assert tn.path == []
 
-    def test_getitem(self, TensorNetwork, Tensor):
+    def test_add_tensor(self, TensorNetwork, Tensor):
         tn = TensorNetwork()
 
         a = Tensor(shape=[1, 1], indices=["a", "b"])

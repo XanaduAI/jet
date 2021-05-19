@@ -17,8 +17,8 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
 
             Args:
                 tn: Tensor network
-                path: Pairs of integers representing contraction path through
-                tensor network
+                path: Pairs of integers representing a contraction path through
+                      the tensor network
             )");
 
     if constexpr (sizeof...(Tensors) > 0) {
@@ -44,8 +44,8 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
                       &Jet::PathStepInfo::contracted_indices);
 
     auto cls =
-        py::class_<Jet::PathInfo>(m, "PathInfo", R"(
-        PathInfo represents a contraction path in a Tensor Network)")
+        py::class_<Jet::PathInfo>(m, "PathInfo",
+                                  "PathInfo represents a contraction path in a tensor network.")
 
             // Constructors
             //-----------------------------------------------------------------
