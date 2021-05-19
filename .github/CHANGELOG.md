@@ -16,7 +16,7 @@
 
 ### Breaking Changes
 
-* Indices are now specified in row-major order. [(#9)](https://github.com/XanaduAI/jet/pull/9)
+* Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
 
