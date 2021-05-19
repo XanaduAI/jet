@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 
 #include "jet/Tensor.hpp"
+#include "jet/Utilities.hpp"
 
 using c_fp64 = std::complex<double>;
 using c_fp32 = std::complex<float>;
@@ -314,17 +315,6 @@ TEST_CASE("Tensor::SetValue", "[Tensor]")
 
     tensor.SetValue({2, 1}, c_fp32(1, 1));
     CHECK(tensor.GetData() == data_expected);
-}
-
-TEST_CASE("Inline helper ShapeToSize", "[Tensor]")
-{
-    std::vector<std::size_t> t_shape_1{2, 3, 4};
-    std::vector<std::size_t> t_shape_2{3, 4, 2};
-    std::vector<std::size_t> t_shape_3{2, 2};
-
-    CHECK(TensorHelpers::ShapeToSize(t_shape_1) == 24);
-    CHECK(TensorHelpers::ShapeToSize(t_shape_2) == 24);
-    CHECK(TensorHelpers::ShapeToSize(t_shape_3) == 4);
 }
 
 TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
@@ -671,6 +661,6 @@ TEST_CASE("Reshape", "[Tensor]")
         Tensor tensor_r({"?a", "?b"}, {3, 2}, t_data);
         CHECK_THROWS_WITH(Reshape(tensor, {3, 3}),
                           Contains("Size is inconsistent between tensors."));
-        CHECK(tensor_r.GetSize() != TensorHelpers::ShapeToSize({3, 3}));
+        CHECK(tensor_r.GetSize() != Jet::Utilities::ShapeToSize({3, 3}));
     }
 }
