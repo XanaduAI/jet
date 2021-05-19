@@ -28,13 +28,6 @@ TEST_CASE("Jet::Abort", "[Abort]")
     using namespace Jet;
     using namespace Catch::Matchers;
 
-    typedef std::function<void(const char *, const char *, int, const char *)>
-        func_type;
-    func_type func = [](const char *message, const char *file_name, int line,
-                        const char *function_name) {
-        Abort(message, file_name, line, function_name);
-    };
-
     std::string message = "Abort message";
     std::string file_name = "MyFile.hpp";
     int line = 1471;
