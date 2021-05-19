@@ -61,7 +61,10 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                 
                 Args:
                     tensor: Tensor to add
-                    tags: List of string tags to associate to tensor)")
+                    tags: List of string tags to associate to tensor
+
+                Returns:
+                    Node ID assigned to tensor)")
 
             .def("slice_indices", &TensorNetwork::SliceIndices, R"(
                 Slices a set of indices. 
