@@ -5,15 +5,13 @@
 #include <sstream>
 
 /**
- * @brief Macro that prints error message and source location to stderr
- * and calls `std::terminate()`
+ * @brief Macro that throws `%JetException` with given message.
  *
  * @param message string literal describing error
  */
 #define JET_ABORT(message) Jet::Abort(message, __FILE__, __LINE__, __func__)
 /**
- * @brief Macro that prints error message and source location to stderr
- * and calls `std::terminate()` if expression evaluates to true
+ * @brief Macro that throws `%JetException` if expression evaluates to true.
  *
  * @param expression an expression
  * @param message string literal describing error
@@ -23,8 +21,8 @@
         JET_ABORT(message);                                                    \
     }
 /**
- * @brief Macro that prints error message and source location to stderr
- * and calls `std::terminate()` if expression evaluates to false
+ * @brief Macro that throws `%JetException` with error message if expression
+ * evaluates to false.
  *
  * @param expression an expression
  * @param message string literal describing error
@@ -35,8 +33,8 @@
     }
 
 /**
- * @brief Macro that prints expression and source location to stderr
- * and calls `std::terminate()` if expression evaluates to false
+ * @brief Macro that throws `%JetException` with the given expression and source
+ * location if expression evaluates to false.
  *
  * @param expression an expression
  */
@@ -45,6 +43,11 @@
 
 namespace Jet {
 
+/**
+ * @brief `%JetException` is the general exception thrown by Jet for runtime
+ * errors.
+ *
+ */
 class JetException : public std::exception {
   public:
     JetException(const std::string &err_msg) noexcept : err_msg(err_msg) {}
@@ -56,7 +59,7 @@ class JetException : public std::exception {
 };
 
 /**
- * @brief Prints an error message to stderr and calls `std::terminate()`.
+ * @brief Throws a `%JetException` with the given error message.
  *
  * This function should not be called directly - use one of the `JET_ASSERT()`
  * or `JET_ABORT()` macros, which provide the source location at compile time.
