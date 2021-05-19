@@ -50,13 +50,15 @@ namespace Jet {
  */
 class JetException : public std::exception {
   public:
-
     /**
-    * @brief Constructs a new `%JetException` exception.
-    *
-    * @param err_msg Error message explaining the exception condition.
-    */
-    explicit JetException(const std::string &err_msg) noexcept : err_msg(err_msg) {}
+     * @brief Constructs a new `%JetException` exception.
+     *
+     * @param err_msg Error message explaining the exception condition.
+     */
+    explicit JetException(const std::string &err_msg) noexcept
+        : err_msg(err_msg)
+    {
+    }
 
     /**
      * @brief Destroy the `%JetException` object.
@@ -64,8 +66,9 @@ class JetException : public std::exception {
     virtual ~JetException() = default;
 
     /**
-     * @brief Returns string containing exception message. Overloaded std::exception method.
-     * 
+     * @brief Returns string containing exception message. Overloaded
+     * std::exception method.
+     *
      * @return const char* Exception message
      */
     const char *what() const noexcept { return err_msg.c_str(); }
