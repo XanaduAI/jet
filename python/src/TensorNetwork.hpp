@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 
@@ -28,6 +29,16 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
             .def(py::init<>(), R"(
             Constructs an empty tensor network)")
+
+            // Magic methods
+            // --------------------------------------------------------------------
+
+            .def("__str__",
+                 [](const TensorNetwork &tn) {
+                     std::stringstream ss;
+                     ss << tn;
+                     return ss.str();
+                 })
 
             // Properties
             // --------------------------------------------------------------------
