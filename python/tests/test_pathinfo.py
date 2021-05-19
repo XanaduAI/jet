@@ -4,6 +4,7 @@ import pytest
 
 class TestPathInfo:
     def test_default_constructor(self):
+        """Tests that the default constructor is called."""
         path_info = jet.PathInfo()
 
         assert path_info.num_leaves == 0

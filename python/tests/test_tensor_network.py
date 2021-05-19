@@ -38,7 +38,7 @@ class TestTensorNetwork:
         tn.get_node_ids_by_tag("a") == [a_id]
         tn.get_node_ids_by_tag("b") == [b_id]
 
-        assert sorted(tn.get_node_ids_by_tag("shared_tag")) == sorted([a_id, b_id])
+        assert set(tn.get_node_ids_by_tag("shared_tag")) == {a_id, b_id}
 
     def test_contract_implicit(self, TensorNetwork, Tensor):
         tn = TensorNetwork()
@@ -73,7 +73,7 @@ class TestTensorNetwork:
         tn = TensorNetwork()
 
         a = Tensor(
-            indices=["A0", "B1", "C2"], shape=[2, 3, 4], data=[i for i in range(0, 24)]
+            indices=["A0", "B1", "C2"], shape=[2, 3, 4], data=range(24)
         )
         b = Tensor(indices=["D3"], shape=[2], data=[0, 1])
 
@@ -88,4 +88,4 @@ class TestTensorNetwork:
         assert node.indices == ["A0", "B1", "C2"]
         assert node.tensor.indices == node.indices
         assert node.tensor.shape == [2, 3, 4]
-        assert node.tensor.data == [i for i in range(0, 24)]
+        assert node.tensor.data == list(range(24))

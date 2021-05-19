@@ -154,8 +154,8 @@ template <class Tensor> class TensorNetwork {
     size_t NumTensors() const noexcept { return nodes_.size(); }
 
     /**
-     * @brief Adds a tensor with the specified tags and return its
-     * assigned id.
+     * @brief Adds a tensor with the specified tags and returns its
+     *        assigned ID.
      *
      * @warning This function is not safe for concurrent execution.
      *

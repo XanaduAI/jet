@@ -21,10 +21,7 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
                 tensor network
             )");
 
-    if constexpr (sizeof...(Tensors) == 0) {
-        return;
-    }
-    else {
+    if constexpr (sizeof...(Tensors) > 0) {
         bind_constructors<Tensors...>(c);
     }
 }
@@ -74,12 +71,12 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
             // Other
             // -----------------------------------------------------------------
             .def("total_flops", &Jet::PathInfo::GetTotalFlops, R"(
-            Computes total number of floating-point operations needed
-            contract the tensor network along this path)")
+            Computes the total number of floating-point operations needed
+            to contract the tensor network along this path)")
 
             .def("total_memory", &Jet::PathInfo::GetTotalMemory, R"(
-            Computes total memory required to contract the tensor
-            network along this path)");
+            Computes the total memory required to contract the tensor
+            network along this path.)");
 
     // Add constructor bindings for each Tensor type
     bind_constructors<Tensors...>(cls);

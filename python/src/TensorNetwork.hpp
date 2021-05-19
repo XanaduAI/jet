@@ -60,7 +60,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                 R"(Returns a list of node ids for Tensors associated with the given tag.)")
 
             .def("add_tensor", &TensorNetwork::AddTensor, R"(
-                Add tensor to network.
+                Adds a tensor to a tensor network.
                 
                 Args:
                     tensor: Tensor to add
@@ -79,7 +79,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                 )")
 
             .def("contract", &TensorNetwork::Contract, R"(
-                Contract tensor network along an optionally provided path)");
+                Contracts a tensor network along an optionally-provided path)");
 
     py::class_<Node>(cls, (std::string(name) + "Node").c_str())
         .def_readonly("id", &Node::id)
