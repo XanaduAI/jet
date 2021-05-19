@@ -614,6 +614,7 @@ TEST_CASE("SliceIndex", "[Tensor]")
 TEST_CASE("Transpose", "[Tensor]")
 {
     using namespace Jet;
+    using namespace Catch::Matchers;
 
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
@@ -626,14 +627,15 @@ TEST_CASE("Transpose", "[Tensor]")
     CHECK(tensor_t == Transpose(tensor, std::vector<std::string>{"y", "x"}));
     CHECK(tensor_t == Transpose(tensor, std::vector<std::size_t>{1, 0}));
 
-    CHECK_THROWS(
-        Transpose(Tensor<c_fp32>(), std::vector<std::string>{"y", "x"}));
-    CHECK_THROWS(Transpose(Tensor<c_fp32>(), std::vector<std::size_t>{1, 0}));
+    CHECK_THROWS_WITH(
+        Transpose(Tensor<c_fp32>(), std::vector<std::string>{"y", "x"}), Contains("Number of indices cannot be zero."));
+    CHECK_THROWS_WITH(Transpose(Tensor<c_fp32>(), std::vector<std::size_t>{1, 0}), Contains("Size of ordering must match number of tensor indices."));
 }
 
 TEST_CASE("Reshape", "[Tensor]")
 {
     using namespace Jet;
+    using namespace Catch::Matchers;
 
     SECTION("Equal data size")
     {
@@ -656,7 +658,7 @@ TEST_CASE("Reshape", "[Tensor]")
 
         Tensor tensor(t_indices, t_shape, t_data);
         Tensor tensor_r({"?a", "?b"}, {3, 2}, t_data);
-        CHECK_THROWS(Reshape(tensor, {3, 3}));
+        CHECK_THROWS_WITH(Reshape(tensor, {3, 3}), Contains("Size is inconsistent between tensors."));
         CHECK(tensor_r.GetSize() != TensorHelpers::ShapeToSize({3, 3}));
     }
 }

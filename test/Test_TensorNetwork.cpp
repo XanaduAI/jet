@@ -179,6 +179,7 @@ TEST_CASE("TensorNetwork::AddTensor", "[TensorNetwork]")
 
 TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
 {
+    using namespace Catch::Matchers;
     TensorNetwork<tensor_t> tn;
 
     const auto tensor_1 = MakeTensor({"A0", "B1", "C2"}, {2, 3, 4});
@@ -326,12 +327,13 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
     }
     SECTION("Slice non-existent index")
     {
-        CHECK_THROWS(tn.SliceIndices({"E0", "B0"}, 0));
+        CHECK_THROWS_WITH(tn.SliceIndices({"E0", "B0"}, 0), Contains("Sliced index does not exist."));
     }
 }
 
 TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 {
+    using namespace Catch::Matchers;
     TensorNetwork<tensor_t> tn;
 
     SECTION("Implicit contraction of network [2]")
@@ -567,7 +569,9 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
         CHECK(have_map == want_map);
     }
 
-    SECTION("Contract empty network") { CHECK_THROWS(tn.Contract()); }
+    SECTION("Contract empty network") {
+        CHECK_THROWS_WITH(tn.Contract(), Contains("An empty tensor network cannot be contracted.")); 
+    }
     SECTION("Invalid node ID 1")
     {
         const auto tensor_1 = MakeTensor({"A0", "B1"}, {2, 3});
@@ -578,7 +582,7 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
         tn.AddTensor(tensor_2, {});
         tn.AddTensor(tensor_3, {});
 
-        CHECK_THROWS(tn.Contract({{10, 2}, {0, 3}}));
+        CHECK_THROWS_WITH(tn.Contract({{10, 2}, {0, 3}}), Contains("Node ID 1 in contraction pair is invalid."));
     }
     SECTION("Invalid node ID 2")
     {
@@ -590,6 +594,6 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
         tn.AddTensor(tensor_2, {});
         tn.AddTensor(tensor_3, {});
 
-        CHECK_THROWS(tn.Contract({{1, 2}, {0, 4}}));
+        CHECK_THROWS_WITH(tn.Contract({{1, 2}, {0, 4}}), Contains("Node ID 2 in contraction pair is invalid."));
     }
 }
