@@ -11,9 +11,8 @@ using namespace Jet::Utilities;
 
 using complex_t = std::complex<double>;
 using matrix_t = std::vector<complex_t>;
-using multi_index_t = std::vector<size_t>;
 
-TEST_CASE("ostream << pair", "[utility]")
+TEST_CASE("ostream << pair", "[Utilities]")
 {
     const std::pair<std::string, int> jet = {"Boeing", 737};
 
@@ -24,7 +23,7 @@ TEST_CASE("ostream << pair", "[utility]")
     REQUIRE(stream.str() == "{Boeing,737}");
 }
 
-TEST_CASE("ostream << vector", "[utility]")
+TEST_CASE("ostream << vector", "[Utilities]")
 {
     std::ostringstream stream;
 
@@ -48,7 +47,7 @@ TEST_CASE("ostream << vector", "[utility]")
     }
 }
 
-TEST_CASE("GenerateStringIndex", "[utility]")
+TEST_CASE("GenerateStringIndex", "[Utilities]")
 {
     SECTION("ID is 0") { CHECK(GenerateStringIndex(0) == "a"); }
     SECTION("ID in (0, 52)") { CHECK(GenerateStringIndex(30) == "E"); }
@@ -63,7 +62,7 @@ TEST_CASE("GenerateStringIndex", "[utility]")
     }
 }
 
-TEST_CASE("Order", "[utility]")
+TEST_CASE("Order", "[Utilities]")
 {
     SECTION("Order 0")
     {
@@ -87,7 +86,7 @@ TEST_CASE("Order", "[utility]")
     }
 }
 
-TEST_CASE("Eye", "[utility]")
+TEST_CASE("Eye", "[Utilities]")
 {
     SECTION("Order 0")
     {
@@ -110,7 +109,7 @@ TEST_CASE("Eye", "[utility]")
     }
 }
 
-TEST_CASE("MultiplySquareMatrices", "[utility]")
+TEST_CASE("MultiplySquareMatrices", "[Utilities]")
 {
     SECTION("Order 0")
     {
@@ -138,7 +137,7 @@ TEST_CASE("MultiplySquareMatrices", "[utility]")
     }
 }
 
-TEST_CASE("Pow", "[utility]")
+TEST_CASE("Pow", "[Utilities]")
 {
     const matrix_t mat = {{0, 1}};
 
@@ -168,7 +167,7 @@ TEST_CASE("Pow", "[utility]")
     }
 }
 
-TEST_CASE("Matrix + Matrix", "[utility]")
+TEST_CASE("Matrix + Matrix", "[Utilities]")
 {
     SECTION("Order 0")
     {
@@ -196,7 +195,7 @@ TEST_CASE("Matrix + Matrix", "[utility]")
     }
 }
 
-TEST_CASE("Matrix - Matrix", "[utility]")
+TEST_CASE("Matrix - Matrix", "[Utilities]")
 {
     SECTION("Order 0")
     {
@@ -224,7 +223,7 @@ TEST_CASE("Matrix - Matrix", "[utility]")
     }
 }
 
-TEST_CASE("Matrix * Scalar", "[utility]")
+TEST_CASE("Matrix * Scalar", "[Utilities]")
 {
     SECTION("Order 0")
     {
@@ -252,7 +251,7 @@ TEST_CASE("Matrix * Scalar", "[utility]")
     }
 }
 
-TEST_CASE("DiagExp", "[utility]")
+TEST_CASE("DiagExp", "[Utilities]")
 {
     SECTION("Order 0")
     {
@@ -277,7 +276,7 @@ TEST_CASE("DiagExp", "[utility]")
     }
 }
 
-TEST_CASE("InVector", "[utility]")
+TEST_CASE("InVector", "[Utilities]")
 {
     SECTION("Vector is empty")
     {
@@ -299,7 +298,7 @@ TEST_CASE("InVector", "[utility]")
     }
 }
 
-TEST_CASE("VectorIntersection", "[utility]")
+TEST_CASE("VectorIntersection", "[Utilities]")
 {
     SECTION("Vectors are disjoint")
     {
@@ -319,7 +318,7 @@ TEST_CASE("VectorIntersection", "[utility]")
     }
 }
 
-TEST_CASE("VectorUnion", "[utility]")
+TEST_CASE("VectorUnion", "[Utilities]")
 {
     SECTION("Vectors are disjoint")
     {
@@ -339,7 +338,7 @@ TEST_CASE("VectorUnion", "[utility]")
     }
 }
 
-TEST_CASE("VectorSubtraction", "[utility]")
+TEST_CASE("VectorSubtraction", "[Utilities]")
 {
     SECTION("Vectors are disjoint")
     {
@@ -359,7 +358,7 @@ TEST_CASE("VectorSubtraction", "[utility]")
     }
 }
 
-TEST_CASE("VectorDisjunctiveUnion", "[utility]")
+TEST_CASE("VectorDisjunctiveUnion", "[Utilities]")
 {
     SECTION("Nothing in common")
     {
@@ -379,7 +378,7 @@ TEST_CASE("VectorDisjunctiveUnion", "[utility]")
     }
 }
 
-TEST_CASE("JoinStringVector", "[utility]")
+TEST_CASE("JoinStringVector", "[Utilities]")
 {
     SECTION("Vector is empty")
     {
@@ -398,7 +397,7 @@ TEST_CASE("JoinStringVector", "[utility]")
     }
 }
 
-TEST_CASE("VectorConcatenation", "[utility]")
+TEST_CASE("VectorConcatenation", "[Utilities]")
 {
     SECTION("Both vectors are empty")
     {
@@ -434,7 +433,7 @@ TEST_CASE("VectorConcatenation", "[utility]")
     }
 }
 
-TEST_CASE("Factorial", "[utility]")
+TEST_CASE("Factorial", "[Utilities]")
 {
     SECTION("Factorial of 0") { CHECK(Factorial(0) == 1); }
     SECTION("Factorial of 1") { CHECK(Factorial(1) == 1); }
@@ -564,7 +563,7 @@ TEST_CASE("SplitStringOnMultipleDelimiters", "[Utilities]")
     }
 }
 
-TEST_CASE("SplitStringOnDelimiterRecursively", "[utility]")
+TEST_CASE("SplitStringOnDelimiterRecursively", "[Utilities]")
 {
     std::vector<std::string> have_tokens;
 
@@ -602,7 +601,7 @@ TEST_CASE("SplitStringOnDelimiterRecursively", "[utility]")
     }
 }
 
-TEST_CASE("ReplaceAllInString", "[utility]")
+TEST_CASE("ReplaceAllInString", "[Utilities]")
 {
     SECTION("Empty string")
     {
@@ -651,7 +650,7 @@ TEST_CASE("ReplaceAllInString", "[utility]")
     }
 }
 
-TEST_CASE("VectorInVector", "[utility]")
+TEST_CASE("VectorInVector", "[Utilities]")
 {
     SECTION("Empty Vector")
     {
@@ -685,7 +684,7 @@ TEST_CASE("VectorInVector", "[utility]")
     }
 }
 
-TEST_CASE("FastCopy", "[utility]")
+TEST_CASE("FastCopy", "[Utilities]")
 {
     std::vector<double> vec1(10);
     for (size_t i = 0; i < vec1.size(); i++) {
