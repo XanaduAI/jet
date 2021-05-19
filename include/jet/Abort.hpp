@@ -93,8 +93,7 @@ inline void Abort(const char *message, const char *file_name, int line,
 {
     std::stringstream err_msg;
     err_msg << "[" << file_name << "][Line:" << line
-            << "][Method:" << function_name
-            << "]: Fatal error in Jet: " << message;
+            << "][Method:" << function_name << "]: Error in Jet: " << message;
     throw JetException(err_msg.str());
 }
 
