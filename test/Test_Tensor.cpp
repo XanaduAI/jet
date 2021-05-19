@@ -591,7 +591,6 @@ TEST_CASE("Transpose", "[Tensor]")
     CHECK(tensor_t == Transpose(tensor, std::vector<std::string>{"y", "x"}));
     CHECK(tensor_t == Transpose(tensor, std::vector<std::size_t>{1, 0}));
 
-
     CHECK_THROWS_WITH(
         Transpose(Tensor<c_fp32>(), std::vector<std::string>{"y", "x"}),
         Contains("Number of indices cannot be zero."));
