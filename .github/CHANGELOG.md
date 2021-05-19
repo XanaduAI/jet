@@ -12,9 +12,11 @@
 
 * `TaskBasedCpuContractor` now stores `Tensor` results. [(#8)](https://github.com/XanaduAI/jet/pull/8)
 
-* `Tensor` class now checks data type at compile-time. [(#4)](https://github.com/XanaduAI/jet/pull/4)
+* `Tensor` now checks data type at compile-time. [(#4)](https://github.com/XanaduAI/jet/pull/4)
 
 ### Breaking Changes
+
+* Indices are now specified in row-major order. [(#9)](https://github.com/XanaduAI/jet/pull/9)
 
 ### Bug Fixes
 
