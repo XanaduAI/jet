@@ -280,7 +280,8 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
 
         const PathInfo path_info(tn, {{0, 1}});
 
-        CHECK_THROWS_WITH(path_info.GetPathStepFlops(20), Contains("Step ID is invalid."));
+        CHECK_THROWS_WITH(path_info.GetPathStepFlops(20),
+                          Contains("Step ID is invalid."));
     }
 }
 
@@ -338,10 +339,18 @@ TEST_CASE("PathInfo::GetTotalFlops()", "[PathInfo]")
         tn.AddTensor(tensor_2, {});
         tn.AddTensor(tensor_3, {});
 
-        CHECK_THROWS_WITH(PathInfo(tn, {{10, 1}, {2, 3}}), Contains("Node ID 1 in contraction path pair is invalid."));
-        CHECK_THROWS_WITH(PathInfo(tn, {{0, 10}, {2, 3}}), Contains("Node ID 2 in contraction path pair is invalid."));
-        CHECK_THROWS_WITH(PathInfo(tn, {{0, 1}, {20, 3}}), Contains("Node ID 1 in contraction path pair is invalid."));
-        CHECK_THROWS_WITH(PathInfo(tn, {{0, 1}, {2, 30}}), Contains("Node ID 2 in contraction path pair is invalid."));
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{10, 1}, {2, 3}}),
+            Contains("Node ID 1 in contraction path pair is invalid."));
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{0, 10}, {2, 3}}),
+            Contains("Node ID 2 in contraction path pair is invalid."));
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{0, 1}, {20, 3}}),
+            Contains("Node ID 1 in contraction path pair is invalid."));
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{0, 1}, {2, 30}}),
+            Contains("Node ID 2 in contraction path pair is invalid."));
     }
 }
 
@@ -407,7 +416,8 @@ TEST_CASE("PathInfo::GetPathStepMemory()", "[PathInfo]")
 
         const PathInfo path_info(tn, {});
 
-        CHECK_THROWS_WITH(path_info.GetPathStepMemory(10), Contains("Step ID is invalid."));
+        CHECK_THROWS_WITH(path_info.GetPathStepMemory(10),
+                          Contains("Step ID is invalid."));
     }
 }
 

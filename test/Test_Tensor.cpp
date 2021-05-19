@@ -482,7 +482,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
     {
         std::vector<std::size_t> t_shape1{2, 2};
         std::vector<std::size_t> t_shape2{2};
-        std::vector<std::size_t> t_shape3{2};
 
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"b"};
@@ -506,7 +505,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
     {
         std::vector<std::size_t> t_shape1{2};
         std::vector<std::size_t> t_shape2{2, 2};
-        std::vector<std::size_t> t_shape3{2};
 
         std::vector<std::string> t_indices1{"a"};
         std::vector<std::string> t_indices2{"a", "b"};
@@ -553,7 +551,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
     {
         std::vector<std::size_t> t_shape1{2, 2};
         std::vector<std::size_t> t_shape2{2, 2};
-        std::vector<std::size_t> t_shape3{1};
 
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"a", "b"};
@@ -628,8 +625,11 @@ TEST_CASE("Transpose", "[Tensor]")
     CHECK(tensor_t == Transpose(tensor, std::vector<std::size_t>{1, 0}));
 
     CHECK_THROWS_WITH(
-        Transpose(Tensor<c_fp32>(), std::vector<std::string>{"y", "x"}), Contains("Number of indices cannot be zero."));
-    CHECK_THROWS_WITH(Transpose(Tensor<c_fp32>(), std::vector<std::size_t>{1, 0}), Contains("Size of ordering must match number of tensor indices."));
+        Transpose(Tensor<c_fp32>(), std::vector<std::string>{"y", "x"}),
+        Contains("Number of indices cannot be zero."));
+    CHECK_THROWS_WITH(
+        Transpose(Tensor<c_fp32>(), std::vector<std::size_t>{1, 0}),
+        Contains("Size of ordering must match number of tensor indices."));
 }
 
 TEST_CASE("Reshape", "[Tensor]")
@@ -658,7 +658,8 @@ TEST_CASE("Reshape", "[Tensor]")
 
         Tensor tensor(t_indices, t_shape, t_data);
         Tensor tensor_r({"?a", "?b"}, {3, 2}, t_data);
-        CHECK_THROWS_WITH(Reshape(tensor, {3, 3}), Contains("Size is inconsistent between tensors."));
+        CHECK_THROWS_WITH(Reshape(tensor, {3, 3}),
+                          Contains("Size is inconsistent between tensors."));
         CHECK(tensor_r.GetSize() != TensorHelpers::ShapeToSize({3, 3}));
     }
 }
