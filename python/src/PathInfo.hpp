@@ -11,7 +11,7 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
 {
     c.def(py::init<const Jet::TensorNetwork<Tensor> &,
                    const Jet::PathInfo::path_t &>(),
-          py::arg("tn"), py::arg("path"), R"(
+          py::arg("tn"), py::arg("path") = Jet::PathInfo::path_t(), R"(
             Constructs a populated PathInfo for the given path
             through a tensor network
 

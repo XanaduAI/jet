@@ -8,27 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-template <class MultiMap> class multimap_proxy {
-
-  public:
-    using key_type = typename MultiMap::key_type;
-    using mapped_type = typename MultiMap::mapped_type;
-
-    multimap_proxy(const MultiMap &map) : map(map){};
-
-    multimap_proxy(MultiMap &&) = delete;
-
-    std::vector<mapped_type> operator[](const key_type &key)
-    {
-        const auto &[begin, end] = map.equal_range(key);
-
-        return std::vector<mapped_type>(begin, end);
-    }
-
-  private:
-    const MultiMap &map;
-};
-
 namespace py = pybind11;
 
 template <class Tensor>
@@ -88,7 +67,8 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             // Other
             // --------------------------------------------------------------------
 
-            .def("add_tensor", &TensorNetwork::AddTensor, R"(
+            .def("add_tensor", &TensorNetwork::AddTensor, py::arg("tensor"),
+                 py::arg("tags") = std::vector<std::string>(), R"(
                 Adds a tensor to a tensor network.
                 
                 Args:
@@ -110,7 +90,8 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                     to take along each of the indices.
                 )")
 
-            .def("contract", &TensorNetwork::Contract, R"(
+            .def("contract", &TensorNetwork::Contract,
+                 py::arg("path") = std::vector<std::pair<size_t, size_t>>(), R"(
                 Contracts a tensor network along an optionally-provided path)");
 
     py::class_<Node>(cls, (std::string(name) + "Node").c_str())

@@ -45,10 +45,10 @@ class TestTensorNetwork:
         a1 = Tensor(indices=["A"], shape=[3], data=[0, 1, 2])
         a2 = Tensor(indices=["A"], shape=[3], data=[0, 1, 2])
 
-        tn.add_tensor(a1, [])
-        tn.add_tensor(a2, [])
+        tn.add_tensor(a1)
+        tn.add_tensor(a2)
 
-        result = tn.contract([])
+        result = tn.contract()
 
         assert result.data == [5]
         assert tn.path == [(0, 1)]
@@ -59,8 +59,8 @@ class TestTensorNetwork:
         a1 = Tensor(indices=["A"], shape=[3], data=[0, 1, 2])
         a2 = Tensor(indices=["A"], shape=[3], data=[0, 1, 2])
 
-        tn.add_tensor(a1, [])
-        tn.add_tensor(a2, [])
+        tn.add_tensor(a1)
+        tn.add_tensor(a2)
 
         result = tn.contract([[0, 1]])
 
@@ -74,8 +74,8 @@ class TestTensorNetwork:
         a = Tensor(indices=["A0", "B1", "C2"], shape=[2, 3, 4], data=range(24))
         b = Tensor(indices=["D3"], shape=[2], data=[0, 1])
 
-        tn.add_tensor(a, [])
-        tn.add_tensor(b, [])
+        tn.add_tensor(a)
+        tn.add_tensor(b)
 
         tn.slice_indices(["D3"], 0)
 
