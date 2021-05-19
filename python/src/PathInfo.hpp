@@ -33,6 +33,13 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
         PathStepInfo represents the contraction metadata associated
         with a node in a TensorNetwork)")
 
+        // Constants
+        // ----------------------------------------------------------------
+        .def_property_readonly("MISSING_ID",
+                               []() { return Jet::PathStepInfo::MISSING_ID; })
+
+        // Instance variables
+        // ----------------------------------------------------------------
         .def_readonly("id", &Jet::PathStepInfo::id)
         .def_readonly("parent", &Jet::PathStepInfo::parent)
         .def_readonly("children", &Jet::PathStepInfo::children)
