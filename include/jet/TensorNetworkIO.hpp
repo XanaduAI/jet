@@ -28,26 +28,25 @@ template <class Tensor> struct TensorNetworkFile {
 };
 
 /**
- * @brief `%invalid_tensor_file` is thrown when the contents of a tensor network
+ * @brief `%TensorFileException` is thrown when the contents of a tensor network
  *        file are invalid.
  */
-class invalid_tensor_file : public std::invalid_argument {
+class TensorFileException : public JetException {
   public:
     /**
-     * @brief Constructs a new `%invalid_tensor_file` exception.
+     * @brief Constructs a new `%TensorFileException` exception.
      *
      * @param what_arg Error message explaining what went wrong while loading a
      *                 tensor network file.
      */
-    explicit invalid_tensor_file(const std::string &what_arg)
-        : std::invalid_argument("Error parsing tensor network file: " +
-                                what_arg){};
+    explicit TensorFileException(const std::string &what_arg)
+        : JetException("Error parsing tensor network file: " + what_arg){};
 
     /**
-     * @see invalid_tensor_file(const std::string&).
+     * @see TensorFileException(const std::string&).
      */
-    explicit invalid_tensor_file(const char *what_arg)
-        : invalid_tensor_file(std::string(what_arg)){};
+    explicit TensorFileException(const char *what_arg)
+        : TensorFileException(std::string(what_arg)){};
 };
 
 /**
@@ -178,7 +177,7 @@ template <class Tensor> class TensorNetworkSerializer {
      * are correct.
      *
      * Throw json::exception if string is invalid json,
-     * invalid_tensor_file if it does not have the correct
+     * TensorFileException if it does not have the correct
      * keys.
      */
     void LoadAndValidateJSON_(const std::string &js_str)
@@ -186,11 +185,11 @@ template <class Tensor> class TensorNetworkSerializer {
         js = json::parse(js_str); // throws json::exception if invalid json
 
         if (!js.is_object()) {
-            throw invalid_tensor_file("root element must be an object.");
+            throw TensorFileException("root element must be an object.");
         }
 
         if (js.find("tensors") == js.end()) {
-            throw invalid_tensor_file("root object must contain 'tensors' key");
+            throw TensorFileException("root object must contain 'tensors' key");
         }
     }
 
@@ -231,7 +230,7 @@ template <class Tensor> class TensorNetworkSerializer {
      * @brief Convert json array of complex values into native
      * format.
      *
-     * Throws invalid_tensor_file exception if any of elements
+     * Throws TensorFileException exception if any of elements
      * of js_data to not encode a complex value.
      */
     template <typename S>
@@ -248,7 +247,7 @@ template <class Tensor> class TensorNetworkSerializer {
             }
         }
         catch (const json::exception &) {
-            throw invalid_tensor_file(
+            throw TensorFileException(
                 "Invalid element at index " + std::to_string(i) +
                 " of tensor " + std::to_string(tensor_index) +
                 ": Could not parse " + js_data[i].dump() + " as complex.");
