@@ -442,127 +442,85 @@ TEST_CASE("Factorial", "[utility]")
     SECTION("Factorial of 10") { CHECK(Factorial(10) == 3628800); }
 }
 
-TEST_CASE("UnravelIndex", "[utility]")
+TEST_CASE("ShapeToSize", "[Utilities]")
 {
-    SECTION("Maximum index sizes is empty")
+    SECTION("Shape has 0 dimensions") { CHECK(ShapeToSize({}) == 1); }
+    SECTION("Shape has 1 dimension") { CHECK(ShapeToSize({3}) == 3); }
+    SECTION("Shape has 2 dimensions") { CHECK(ShapeToSize({2, 3}) == 6); }
+    SECTION("Shape has 3 dimensions")
     {
-        const unsigned long long linear_index = 2;
-        const multi_index_t multi_index_sizes = {};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {2};
-        CHECK(have_index == want_index);
+        CHECK(ShapeToSize({2, 3, 4}) == 24);
+        CHECK(ShapeToSize({3, 4, 2}) == 24);
     }
+}
+
+TEST_CASE("UnravelIndex", "[Utilities]")
+{
+    using multi_index_t = std::vector<size_t>;
+
     SECTION("Linear index of 0 in (2, 3) dimensions")
     {
-        const unsigned long long linear_index = 0;
-        const multi_index_t multi_index_sizes = {2, 3};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {{0, 0}};
-        CHECK(have_index == want_index);
+        CHECK(UnravelIndex(0, {2, 3}) == multi_index_t{0, 0});
     }
     SECTION("Linear index of 1 in (2, 3) dimensions")
     {
-        const unsigned long long linear_index = 1;
-        const multi_index_t multi_index_sizes = {2, 3};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {{1, 0}};
-        CHECK(have_index == want_index);
+        CHECK(UnravelIndex(1, {2, 3}) == multi_index_t{0, 1});
     }
     SECTION("Linear index of 2 in (2, 3) dimensions")
     {
-        const unsigned long long linear_index = 2;
-        const multi_index_t multi_index_sizes = {2, 3};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {{0, 1}};
-        CHECK(have_index == want_index);
+        CHECK(UnravelIndex(2, {2, 3}) == multi_index_t{0, 2});
     }
     SECTION("Linear index of 3 in (2, 3) dimensions")
     {
-        const unsigned long long linear_index = 3;
-        const multi_index_t multi_index_sizes = {2, 3};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {{1, 1}};
-        CHECK(have_index == want_index);
+        CHECK(UnravelIndex(3, {2, 3}) == multi_index_t{1, 0});
     }
     SECTION("Linear index of 4 in (2, 3) dimensions")
     {
-        const unsigned long long linear_index = 4;
-        const multi_index_t multi_index_sizes = {2, 3};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {{0, 2}};
-        CHECK(have_index == want_index);
+        CHECK(UnravelIndex(4, {2, 3}) == multi_index_t{1, 1});
     }
     SECTION("Linear index of 5 in (2, 3) dimensions")
     {
-        const unsigned long long linear_index = 5;
-        const multi_index_t multi_index_sizes = {2, 3};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {{1, 2}};
-        CHECK(have_index == want_index);
+        CHECK(UnravelIndex(5, {2, 3}) == multi_index_t{1, 2});
     }
-    SECTION("Linear index of 6 in (2, 3) dimensions")
-    {
-        const unsigned long long linear_index = 6;
-        const multi_index_t multi_index_sizes = {2, 3};
-        const auto have_index = UnravelIndex(linear_index, multi_index_sizes);
-        const multi_index_t want_index = {{0, 0}};
-        CHECK(have_index == want_index);
-    }
+    // SECTION("Linear index of 6 in (2, 3) dimensions")
+    // {
+    //     const auto linear_index = 6;
+    //     const shape_t shape = {2, 3};
+    //     const multi_index_t have_index = UnravelIndex(linear_index, shape);
+    //     const multi_index_t want_index = {{2, 0}};
+    //     CHECK(have_index == want_index);
+    // }
 }
 
-TEST_CASE("RavelIndex", "[utility]")
+TEST_CASE("RavelIndex", "[Utilities]")
 {
-    SECTION("Maximum index sizes is empty")
+    SECTION("Multi-index of (0, 0) in (2, 3) dimensions")
     {
-        const multi_index_t multi_index = {};
-        const multi_index_t multi_index_sizes = {};
-        const auto have_index = RavelIndex(multi_index, multi_index_sizes);
-        const unsigned long long want_index = 0;
-        CHECK(have_index == want_index);
+        CHECK(RavelIndex({0, 0}, {2, 3}) == 0);
     }
-    SECTION("Multi-index of (0, 0) in (2, 2) dimensions")
+    SECTION("Multi-index of (0, 1) in (2, 3) dimensions")
     {
-        const multi_index_t multi_index = {0, 0};
-        const multi_index_t multi_index_sizes = {2, 2};
-        const auto have_index = RavelIndex(multi_index, multi_index_sizes);
-        const unsigned long long want_index = 0;
-        CHECK(have_index == want_index);
+        CHECK(RavelIndex({0, 1}, {2, 3}) == 1);
     }
-    SECTION("Multi-index of (1, 0) in (2, 2) dimensions")
+    SECTION("Multi-index of (0, 2) in (2, 3) dimensions")
     {
-        const multi_index_t multi_index = {1, 0};
-        const multi_index_t multi_index_sizes = {2, 2};
-        const auto have_index = RavelIndex(multi_index, multi_index_sizes);
-        const unsigned long long want_index = 1;
-        CHECK(have_index == want_index);
+        CHECK(RavelIndex({0, 2}, {2, 3}) == 2);
     }
-    SECTION("Multi-index of (0, 1) in (2, 2) dimensions")
+    SECTION("Multi-index of (1, 0) in (2, 3) dimensions")
     {
-        const multi_index_t multi_index = {0, 1};
-        const multi_index_t multi_index_sizes = {2, 2};
-        const auto have_index = RavelIndex(multi_index, multi_index_sizes);
-        const unsigned long long want_index = 2;
-        CHECK(have_index == want_index);
+        CHECK(RavelIndex({1, 0}, {2, 3}) == 3);
     }
-    SECTION("Multi-index of (1, 1) in (2, 2) dimensions")
+    SECTION("Multi-index of (1, 1) in (2, 3) dimensions")
     {
-        const multi_index_t multi_index = {1, 1};
-        const multi_index_t multi_index_sizes = {2, 2};
-        const auto have_index = RavelIndex(multi_index, multi_index_sizes);
-        const unsigned long long want_index = 3;
-        CHECK(have_index == want_index);
+        CHECK(RavelIndex({1, 1}, {2, 3}) == 4);
     }
-    SECTION("Multi-index of (2, 2) in (2, 2) dimensions")
+    SECTION("Multi-index of (1, 2) in (2, 3) dimensions")
     {
-        const multi_index_t multi_index = {2, 2};
-        const multi_index_t multi_index_sizes = {2, 2};
-        const auto have_index = RavelIndex(multi_index, multi_index_sizes);
-        const unsigned long long want_index = 0;
-        CHECK(have_index == want_index);
+        CHECK(RavelIndex({1, 2}, {2, 3}) == 5);
     }
 }
 
-TEST_CASE("SplitStringOnMultipleDelimiters", "[utility]")
+TEST_CASE("SplitStringOnMultipleDelimiters", "[Utilities]")
 {
     SECTION("Empty string")
     {
