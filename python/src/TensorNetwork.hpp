@@ -5,6 +5,30 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <unordered_map>
+#include <vector>
+
+template <class MultiMap> class multimap_proxy {
+
+  public:
+    using key_type = typename MultiMap::key_type;
+    using mapped_type = typename MultiMap::mapped_type;
+
+    multimap_proxy(const MultiMap &map) : map(map){};
+
+    multimap_proxy(MultiMap &&) = delete;
+
+    std::vector<mapped_type> operator[](const key_type &key)
+    {
+        const auto &[begin, end] = map.equal_range(key);
+
+        return std::vector<mapped_type>(begin, end);
+    }
+
+  private:
+    const MultiMap &map;
+};
+
 namespace py = pybind11;
 
 template <class Tensor>
@@ -12,7 +36,9 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 {
 
     using TensorNetwork = Jet::TensorNetwork<Tensor>;
+    using node_id_t = typename Jet::TensorNetwork<Tensor>::node_id_t;
     using Node = typename Jet::TensorNetwork<Tensor>::Node;
+    using Edge = typename Jet::TensorNetwork<Tensor>::Edge;
 
     auto cls =
         py::class_<TensorNetwork>(m, name, R"(
@@ -26,6 +52,23 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
             // Properties
             // --------------------------------------------------------------------
+
+            .def_property_readonly("index_to_edge_map",
+                                   &TensorNetwork::GetIndexToEdgeMap, R"(
+                A map of indices to edges.)")
+
+            .def_property_readonly(
+                "tag_to_node_id_map",
+                [](const TensorNetwork &tn) {
+                    std::unordered_map<std::string, std::vector<node_id_t>> map;
+
+                    for (const auto &[tag, node_id] : tn.GetTagToNodesMap()) {
+                        map[tag].emplace_back(node_id);
+                    }
+
+                    return map;
+                },
+                R"(Returns a list of node ids for Tensors associated with the given tag)")
 
             .def_property_readonly("path", &TensorNetwork::GetPath, R"(
                 The path by which this tensor network was contracted.
@@ -44,17 +87,6 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 
             // Other
             // --------------------------------------------------------------------
-
-            .def(
-                "get_node_ids_by_tag",
-                [](const TensorNetwork &tn) {
-                    std::unordered_map<std::string, std::vector<node_id_t>> tag_to_node_vector_map;
-                    for (const auto& [tag, node_id] : tn.GetTagToNodesMap()) {
-                        tag_to_node_vector_map[tag].emplace_back(node_id);
-                    }
-                    return tag_to_node_vector_map;
-                },
-                R"(Returns a list of node ids for Tensors associated with the given tag.)")
 
             .def("add_tensor", &TensorNetwork::AddTensor, R"(
                 Adds a tensor to a tensor network.
@@ -88,4 +120,9 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
         .def_readonly("tags", &Node::tags)
         .def_readonly("contracted", &Node::contracted)
         .def_readonly("tensor", &Node::tensor);
+
+    py::class_<Edge>(cls, (std::string(name) + "Edge").c_str())
+        .def_readonly("dim", &Edge::dim)
+        .def_readonly("node_ids", &Edge::node_ids)
+        .def("__eq__", &Edge::operator==);
 }

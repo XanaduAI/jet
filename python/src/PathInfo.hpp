@@ -44,8 +44,9 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
                       &Jet::PathStepInfo::contracted_indices);
 
     auto cls =
-        py::class_<Jet::PathInfo>(m, "PathInfo",
-                                  "PathInfo represents a contraction path in a tensor network.")
+        py::class_<Jet::PathInfo>(
+            m, "PathInfo",
+            "PathInfo represents a contraction path in a tensor network.")
 
             // Constructors
             //-----------------------------------------------------------------
