@@ -19,17 +19,15 @@ namespace Jet {
  * @brief TaskBasedCpuContractor is a tensor network contractor that contracts
  *        tensors concurrently on the CPU using a task-based scheduler.
  *
- * @tparam Tensor Type of the tensors to be contracted.  The only requirement
- *                for this type is that the following function is defined:
+ * @tparam Tensor Type of the tensors to be contracted. The only requirement
+ *                for this type is that the following member functions exist:
  *                \code{.cpp}
- *                Tensor ContractTensors(const Tensor&, const Tensor&);
+ *     static Tensor AddTensors(const Tensor&, const Tensor&);
+ *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
 template <typename Tensor> class TaskBasedCpuContractor {
   public:
-    /// Precision of the Tensor type.
-    using result_t = std::complex<float>;
-
     /// Type of the name-to-task map.
     using name_to_task_map_t = std::unordered_map<std::string, tf::Task>;
 
@@ -47,10 +45,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     /**
      * @brief Constructs a new `%TaskBasedCpuContractor` object.
      */
-    TaskBasedCpuContractor()
-        : reduction_result_(0), memory_(0), flops_(0), reduced_(false)
-    {
-    }
+    TaskBasedCpuContractor() : memory_(0), flops_(0), reduced_(false) {}
 
     /**
      * @brief Returns the name-to-task map of this `%TaskBasedCpuContractor`.
@@ -94,15 +89,12 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Vector of tensors.
      */
-    const std::vector<result_t> &GetResults() const noexcept
-    {
-        return results_;
-    }
+    const std::vector<Tensor> &GetResults() const noexcept { return results_; }
 
     /**
      * @brief Returns the reduction of the final tensor results.
      *
-     * @note This result is only accessible after the future returned b
+     * @note This result is only accessible after the future returned by
      *       Contract() becomes available.
      *
      * @see AddReductionTask()
@@ -110,7 +102,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Tensor at the end of the reduction task.
      */
-    const result_t &GetReductionResult() const noexcept
+    const Tensor &GetReductionResult() const noexcept
     {
         return reduction_result_;
     }
@@ -241,22 +233,26 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @warning Only one reduction task should be added per
      *          `%TaskBasedCpuContractor` instance.
+     *
      * @return Number of created reduction tasks.
      */
     size_t AddReductionTask() noexcept
     {
-        if (reduced_)
+        // Scheduling multiple reduction tasks introduces a race condition.
+        if (reduced_) {
             return 0;
+        }
+        reduced_ = true;
 
         auto reduce_task = taskflow_
                                .reduce(results_.begin(), results_.end(),
-                                       reduction_result_, std::plus<result_t>())
+                                       reduction_result_, Tensor::AddTensors)
                                .name("reduce");
 
         for (auto &result_task : result_tasks_) {
             result_task.precede(reduce_task);
         }
-        reduced_ = true;
+
         return 1;
     }
 
@@ -323,11 +319,11 @@ template <typename Tensor> class TaskBasedCpuContractor {
     /// Tasks that store the results of a contraction in `results_`.
     std::vector<tf::Task> result_tasks_;
 
-    /// Scalar result of each call to AddContractionTasks().
-    std::vector<result_t> results_;
+    /// Result of each call to AddContractionTasks().
+    std::vector<Tensor> results_;
 
     /// Sum over the `results_` elements.
-    result_t reduction_result_;
+    Tensor reduction_result_;
 
     /// Memory required to store the intermediate tensors of a contraction.
     double memory_;
@@ -345,7 +341,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @param step Path step to be used to derive the task name.
      * @return Name of the task.
      */
-    inline std::string DeriveTaskName_(const PathStepInfo &step) const noexcept
+    std::string DeriveTaskName_(const PathStepInfo &step) const noexcept
     {
         return std::to_string(step.id) + ":" + step.name;
     }
@@ -360,14 +356,14 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @param name_2 Name of the second child tensor.
      * @param name_3 Name of the resulting tensor.
      */
-    inline void AddContractionTask_(const std::string &name_1,
-                                    const std::string &name_2,
-                                    const std::string &name_3) noexcept
+    void AddContractionTask_(const std::string &name_1,
+                             const std::string &name_2,
+                             const std::string &name_3) noexcept
     {
         const auto runner = [this, name_1, name_2, name_3]() {
             name_to_tensor_map_[name_3] = std::make_unique<Tensor>(
-                ContractTensors(*name_to_tensor_map_.at(name_1),
-                                *name_to_tensor_map_.at(name_2)));
+                Tensor::ContractTensors(*name_to_tensor_map_.at(name_1),
+                                        *name_to_tensor_map_.at(name_2)));
         };
 
         const auto task_3 = taskflow_.emplace(runner).name(name_3);
@@ -390,7 +386,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     {
         const auto runner = [this, result_id, name]() {
             auto &tensor = *name_to_tensor_map_.at(name);
-            results_[result_id] = tensor.GetScalar();
+            results_[result_id] = tensor;
         };
 
         std::string storage_task_name = name;

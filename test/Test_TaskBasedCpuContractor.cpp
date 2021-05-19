@@ -18,10 +18,9 @@ using complex_t = std::complex<float>;
 using tensor_t = Tensor<complex_t>;
 
 using indices_t = std::vector<std::string>;
-using result_t = TaskBasedCpuContractor<tensor_t>::result_t;
 using shape_t = std::vector<size_t>;
 using task_map_t = std::unordered_map<std::string, std::string>;
-using tensor_map_t = std::unordered_map<std::string, std::vector<result_t>>;
+using tensor_map_t = std::unordered_map<std::string, std::vector<complex_t>>;
 using parents_map_t =
     std::unordered_map<std::string, std::unordered_set<std::string>>;
 
@@ -71,7 +70,7 @@ tensor_map_t GetTensorMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
 {
     tensor_map_t tensor_map;
     for (const auto &[name, tensor_ptr] : tbcc.GetNameToTensorMap()) {
-        std::vector<result_t> tensor_data;
+        std::vector<complex_t> tensor_data;
         if (tensor_ptr.get() != nullptr) {
             tensor_data = tensor_ptr->GetData();
         }
@@ -280,15 +279,15 @@ TEST_CASE("TaskBasedCpuContractor::Contract()", "[TaskBasedCpuContractor]")
     {
         tbcc.Contract().wait();
 
-        const std::vector<result_t> have_results = tbcc.GetResults();
-        const std::vector<result_t> want_results = {};
+        const std::vector<tensor_t> have_results = tbcc.GetResults();
+        const std::vector<tensor_t> want_results = {};
         CHECK(have_results == want_results);
     }
 
     SECTION("Taskflow has a single contraction task")
     {
-        const auto tensor_1 = MakeTensor({"A0"}, {3});
-        const auto tensor_2 = MakeTensor({"A0"}, {3});
+        const auto tensor_1 = MakeTensor({"A0"}, {2});
+        const auto tensor_2 = MakeTensor({"A0", "B1"}, {2, 3});
 
         TensorNetwork<tensor_t> tn;
         tn.AddTensor(tensor_1, {});
@@ -299,8 +298,9 @@ TEST_CASE("TaskBasedCpuContractor::Contract()", "[TaskBasedCpuContractor]")
         tbcc.AddContractionTasks(tn, path_info);
         tbcc.Contract().wait();
 
-        const std::vector<result_t> have_results = tbcc.GetResults();
-        const std::vector<result_t> want_results = {5};
+        const std::vector<tensor_t> have_results = tbcc.GetResults();
+        const std::vector<tensor_t> want_results = {
+            tensor_t({"B1"}, {3}, {3, 4, 5})};
         CHECK(have_results == want_results);
     }
 
@@ -320,8 +320,8 @@ TEST_CASE("TaskBasedCpuContractor::Contract()", "[TaskBasedCpuContractor]")
         tbcc.AddContractionTasks(tn, path_info);
         tbcc.Contract().wait();
 
-        const std::vector<result_t> have_results = tbcc.GetResults();
-        const std::vector<result_t> want_results = {14};
+        const std::vector<tensor_t> have_results = tbcc.GetResults();
+        const std::vector<tensor_t> want_results = {tensor_t({}, {}, {14})};
         CHECK(have_results == want_results);
     }
 
@@ -345,8 +345,9 @@ TEST_CASE("TaskBasedCpuContractor::Contract()", "[TaskBasedCpuContractor]")
         tbcc.AddContractionTasks(tn, path_info_B1);
         tbcc.Contract().wait();
 
-        const std::vector<result_t> have_results = tbcc.GetResults();
-        const std::vector<result_t> want_results = {5, 14};
+        const std::vector<tensor_t> have_results = tbcc.GetResults();
+        const std::vector<tensor_t> want_results = {tensor_t({}, {}, {5}),
+                                                    tensor_t({}, {}, {14})};
         CHECK(have_results == want_results);
     }
 }
@@ -436,8 +437,8 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
 
     SECTION("Results vector is empty")
     {
-        const result_t have_result = tbcc.GetReductionResult();
-        const result_t want_result = 0;
+        const tensor_t have_result = tbcc.GetReductionResult();
+        const tensor_t want_result;
         CHECK(have_result == want_result);
     }
 
@@ -456,8 +457,8 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
         tbcc.AddReductionTask();
         tbcc.Contract().wait();
 
-        const result_t have_result = tbcc.GetReductionResult();
-        const result_t want_result = 5;
+        const tensor_t have_result = tbcc.GetReductionResult();
+        const tensor_t want_result = tensor_t({}, {}, {5});
         CHECK(have_result == want_result);
     }
 
@@ -482,8 +483,8 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
         tbcc.AddReductionTask();
         tbcc.Contract().wait();
 
-        const result_t have_result = tbcc.GetReductionResult();
-        const result_t want_result = 5 + 14;
+        const tensor_t have_result = tbcc.GetReductionResult();
+        const tensor_t want_result = tensor_t({}, {}, {5 + 14});
         CHECK(have_result == want_result);
     }
 
@@ -508,8 +509,8 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
         CHECK(return_val_2 == 0);
         CHECK(return_val_3 == 0);
 
-        const result_t have_result = tbcc.GetReductionResult();
-        const result_t want_result = 5;
+        const tensor_t have_result = tbcc.GetReductionResult();
+        const tensor_t want_result = tensor_t({}, {}, {5});
         CHECK(have_result == want_result);
     }
 }

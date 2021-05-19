@@ -13,10 +13,10 @@ using c_fp64 = std::complex<double>;
 using c_fp32 = std::complex<float>;
 using data_t = std::vector<c_fp32>;
 
+using namespace Jet;
+
 TEMPLATE_TEST_CASE("Tensor::Tensor", "[Tensor]", c_fp32, c_fp64)
 {
-    using namespace Jet;
-
     SECTION("Tensor") { REQUIRE(std::is_constructible<Tensor<>>::value); }
     SECTION("Tensor<TestType> {}")
     {
@@ -53,7 +53,6 @@ TEMPLATE_TEST_CASE("Tensor::Tensor", "[Tensor]", c_fp32, c_fp64)
 
 TEST_CASE("Tensor instantiation", "[Tensor]")
 {
-    using namespace Jet;
     SECTION("Default constructor")
     {
         Tensor tensor, tensor_cmp;
@@ -89,8 +88,6 @@ TEST_CASE("Tensor instantiation", "[Tensor]")
 
 TEST_CASE("Tensor::GetShape", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         Tensor tensor;
@@ -118,8 +115,6 @@ TEST_CASE("Tensor::GetShape", "[Tensor]")
 
 TEST_CASE("Tensor::GetSize", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         Tensor tensor;
@@ -146,8 +141,6 @@ TEST_CASE("Tensor::GetSize", "[Tensor]")
 
 TEST_CASE("Tensor::GetIndices", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         Tensor tensor;
@@ -167,8 +160,6 @@ TEST_CASE("Tensor::GetIndices", "[Tensor]")
 
 TEST_CASE("Tensor::GetData", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Data: default")
     {
         Tensor tensor;
@@ -201,8 +192,6 @@ TEST_CASE("Tensor::GetData", "[Tensor]")
 
 TEST_CASE("Tensor::GetIndexToDimension", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default")
     {
         Tensor tensor;
@@ -224,8 +213,6 @@ TEST_CASE("Tensor::GetIndexToDimension", "[Tensor]")
 
 TEST_CASE("Tensor::IsScalar", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Default")
     {
         Tensor tensor;
@@ -252,8 +239,6 @@ TEST_CASE("Tensor::IsScalar", "[Tensor]")
 
 TEST_CASE("Tensor::FillRandom", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2, 3};
     std::vector<std::string> t_indices{"a", "b", "c"};
     Tensor tensor1(t_indices, t_shape);
@@ -289,8 +274,6 @@ TEST_CASE("Tensor::FillRandom", "[Tensor]")
 
 TEST_CASE("Tensor::GetValue", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<c_fp32> data{{0, 0.5}, {1, 0.5}, {2, 0.5},
@@ -308,8 +291,6 @@ TEST_CASE("Tensor::GetValue", "[Tensor]")
 
 TEST_CASE("Tensor::RenameIndex", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<std::string> t_indices_expected{"a", "z"};
@@ -322,8 +303,6 @@ TEST_CASE("Tensor::RenameIndex", "[Tensor]")
 
 TEST_CASE("Tensor::SetValue", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<c_fp32> data(6, c_fp32(0, 0));
@@ -339,8 +318,6 @@ TEST_CASE("Tensor::SetValue", "[Tensor]")
 
 TEST_CASE("Inline helper ShapeToSize", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape_1{2, 3, 4};
     std::vector<std::size_t> t_shape_2{3, 4, 2};
     std::vector<std::size_t> t_shape_3{2, 2};
@@ -352,8 +329,6 @@ TEST_CASE("Inline helper ShapeToSize", "[Tensor]")
 
 TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Matrix-vector product")
     {
         std::vector<c_fp32> t_data_left{c_fp32(0.5, 0.0), c_fp32(0.5, 0.0),
@@ -405,11 +380,8 @@ TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
 
 TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
 {
-    using namespace Jet;
-
     SECTION("Random 2x2 (i,j) with 2x1 (i): all permutations")
     {
-
         Tensor<TestType> r_ij({"i", "j"}, {2, 2});
         r_ij.FillRandom();
 
@@ -574,8 +546,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
 
 TEST_CASE("Conj", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
     std::vector<c_fp32> t_data(2 * 3, c_fp32(0.5, 0.25));
@@ -589,8 +559,6 @@ TEST_CASE("Conj", "[Tensor]")
 
 TEST_CASE("SliceIndex", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
     std::vector<c_fp32> t_data{{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}};
@@ -613,8 +581,6 @@ TEST_CASE("SliceIndex", "[Tensor]")
 
 TEST_CASE("Transpose", "[Tensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
     std::vector<c_fp32> t_data{{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}};
@@ -627,10 +593,53 @@ TEST_CASE("Transpose", "[Tensor]")
     CHECK(tensor_t == Transpose(tensor, std::vector<std::size_t>{1, 0}));
 }
 
+TEST_CASE("AddTensors", "[Tensor]")
+{
+    SECTION("Scalars")
+    {
+        Tensor lhs({}, {}, {1});
+        Tensor rhs({}, {}, {{2, 4}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({}, {}, {{3, 4}});
+        CHECK(have_tensor == want_tensor);
+    }
+
+    SECTION("Vectors")
+    {
+        Tensor lhs({"i"}, {3}, {1, {0, 2}, {3, 0}});
+        Tensor rhs({"i"}, {3}, {1, {0, 2}, {0, 3}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({"i"}, {3}, {2, {0, 4}, {3, 3}});
+        CHECK(have_tensor == want_tensor);
+    }
+
+    SECTION("Matrices")
+    {
+        Tensor lhs({"i", "j"}, {2, 2}, {1, 2, 3, 4});
+        Tensor rhs({"i", "j"}, {2, 2}, {{0, 1}, {0, 2}, {0, 3}, {0, 4}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({"i", "j"}, {2, 2},
+                                 {{1, 1}, {2, 2}, {3, 3}, {4, 4}});
+        CHECK(have_tensor == want_tensor);
+    }
+
+    SECTION("Matrices with swapped indices")
+    {
+        Tensor lhs({"i", "j"}, {2, 2}, {1, 2, 3, 4});
+        Tensor rhs({"j", "i"}, {2, 2}, {{0, 1}, {0, 2}, {0, 3}, {0, 4}});
+
+        const Tensor have_tensor = AddTensors(lhs, rhs);
+        const Tensor want_tensor({"i", "j"}, {2, 2},
+                                 {{1, 1}, {2, 3}, {3, 2}, {4, 4}});
+        CHECK(have_tensor == want_tensor);
+    }
+}
+
 TEST_CASE("Reshape", "[Tensor]")
 {
-    using namespace Jet;
-
     SECTION("Equal data size")
     {
         std::vector<std::size_t> t_shape{2, 3};
