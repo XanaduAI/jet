@@ -275,7 +275,7 @@ TEST_CASE("Tensor::FillRandom", "[Tensor]")
 
 TEST_CASE("Tensor::GetValue", "[Tensor]")
 {
-    std::vector<std::size_t> t_shape{3, 2};
+    std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<c_fp32> data{{0, 0.5}, {1, 0.5}, {2, 0.5},
                              {3, 0.5}, {4, 0.5}, {5, 0.5}};
@@ -283,11 +283,11 @@ TEST_CASE("Tensor::GetValue", "[Tensor]")
     Tensor tensor(t_indices, t_shape, data);
 
     CHECK(tensor.GetValue({0, 0}) == data[0]);
-    CHECK(tensor.GetValue({1, 0}) == data[1]);
-    CHECK(tensor.GetValue({2, 0}) == data[2]);
-    CHECK(tensor.GetValue({0, 1}) == data[3]);
+    CHECK(tensor.GetValue({0, 1}) == data[1]);
+    CHECK(tensor.GetValue({0, 2}) == data[2]);
+    CHECK(tensor.GetValue({1, 0}) == data[3]);
     CHECK(tensor.GetValue({1, 1}) == data[4]);
-    CHECK(tensor.GetValue({2, 1}) == data[5]);
+    CHECK(tensor.GetValue({1, 2}) == data[5]);
 }
 
 TEST_CASE("Tensor::RenameIndex", "[Tensor]")
@@ -389,8 +389,8 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
             {"j"}, {2},
             {
                 r_ji.GetValue({0, 0}) * s_i.GetValue({0}) +
-                    r_ji.GetValue({0, 1}) * s_i.GetValue({1}),
-                r_ji.GetValue({1, 0}) * s_i.GetValue({0}) +
+                    r_ji.GetValue({1, 0}) * s_i.GetValue({1}),
+                r_ji.GetValue({0, 1}) * s_i.GetValue({0}) +
                     r_ji.GetValue({1, 1}) * s_i.GetValue({1}),
             });
         // R_{j,i} S_i == S_i R_{i,j}
@@ -398,8 +398,8 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
             {"j"}, {2},
             {
                 r_ji.GetValue({0, 0}) * s_i.GetValue({0}) +
-                    r_ji.GetValue({1, 0}) * s_i.GetValue({1}),
-                r_ji.GetValue({0, 1}) * s_i.GetValue({0}) +
+                    r_ji.GetValue({0, 1}) * s_i.GetValue({1}),
+                r_ji.GetValue({1, 0}) * s_i.GetValue({0}) +
                     r_ji.GetValue({1, 1}) * s_i.GetValue({1}),
             });
 

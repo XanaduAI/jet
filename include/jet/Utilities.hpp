@@ -404,8 +404,8 @@ inline size_t Factorial(size_t n)
 /**
  * @brief Returns the size of a shape.
  *
- * @param shape Size of each index dimension.
- * @return Number of elements in the shape.
+ * @param shape Index dimensions.
+ * @return Product of the index dimensions in the shape.
  */
 inline size_t ShapeToSize(const std::vector<size_t> &shape) noexcept
 {
@@ -440,7 +440,6 @@ inline std::vector<size_t> UnravelIndex(unsigned long long index,
 
     std::vector<size_t> multi_index(shape.size());
     for (int i = multi_index.size() - 1; i >= 0; i--) {
-        JET_ABORT_IF(shape[i] == 0, "Index dimension must be greater than 0.");
         multi_index[i] = index % shape[i];
         index /= shape[i];
     }
@@ -450,11 +449,9 @@ inline std::vector<size_t> UnravelIndex(unsigned long long index,
 /**
  * @brief Converts a multi-dimensional index into a linear index.
  *
- * This function is the inverse of UnravelIndex().
+ * @note This function is the inverse of UnravelIndex().
  *
- * @see UnravelIndex().
- *
- * @param index Multi-index to be raveled.
+ * @param index Multi-index to be raveled, expressed in row-major order.
  * @param shape Size of each index dimension.
  * @return Linear index associated with the multi-index.
  */

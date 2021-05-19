@@ -8,6 +8,7 @@
 #include "jet/Utilities.hpp"
 
 using namespace Jet::Utilities;
+using namespace Catch::Matchers;
 
 using complex_t = std::complex<double>;
 using matrix_t = std::vector<complex_t>;
@@ -444,51 +445,53 @@ TEST_CASE("Factorial", "[Utilities]")
 TEST_CASE("ShapeToSize", "[Utilities]")
 {
     SECTION("Shape has 0 dimensions") { CHECK(ShapeToSize({}) == 1); }
-    SECTION("Shape has 1 dimension") { CHECK(ShapeToSize({3}) == 3); }
+    SECTION("Shape has 1 dimension") { CHECK(ShapeToSize({2}) == 2); }
     SECTION("Shape has 2 dimensions") { CHECK(ShapeToSize({2, 3}) == 6); }
-    SECTION("Shape has 3 dimensions")
-    {
-        CHECK(ShapeToSize({2, 3, 4}) == 24);
-        CHECK(ShapeToSize({3, 4, 2}) == 24);
-    }
+    SECTION("Shape has 3 dimensions") { CHECK(ShapeToSize({2, 3, 4}) == 24); }
 }
 
 TEST_CASE("UnravelIndex", "[Utilities]")
 {
     using multi_index_t = std::vector<size_t>;
 
-    SECTION("Linear index of 0 in (2, 3) dimensions")
+    SECTION("Linear index of 0 in empty shape")
+    {
+        CHECK(UnravelIndex(0, {}) == multi_index_t{});
+    }
+    SECTION("Linear index of 0 in collapsed shape")
+    {
+        CHECK_THROWS_WITH(UnravelIndex(0, {1, 0, 1}),
+                          Contains("Linear index does not fit in the shape."));
+    }
+    SECTION("Linear index of 0 in shape (2, 3)")
     {
         CHECK(UnravelIndex(0, {2, 3}) == multi_index_t{0, 0});
     }
-    SECTION("Linear index of 1 in (2, 3) dimensions")
+    SECTION("Linear index of 1 in shape (2, 3)")
     {
         CHECK(UnravelIndex(1, {2, 3}) == multi_index_t{0, 1});
     }
-    SECTION("Linear index of 2 in (2, 3) dimensions")
+    SECTION("Linear index of 2 in shape (2, 3)")
     {
         CHECK(UnravelIndex(2, {2, 3}) == multi_index_t{0, 2});
     }
-    SECTION("Linear index of 3 in (2, 3) dimensions")
+    SECTION("Linear index of 3 in shape (2, 3)")
     {
         CHECK(UnravelIndex(3, {2, 3}) == multi_index_t{1, 0});
     }
-    SECTION("Linear index of 4 in (2, 3) dimensions")
+    SECTION("Linear index of 4 in shape (2, 3)")
     {
         CHECK(UnravelIndex(4, {2, 3}) == multi_index_t{1, 1});
     }
-    SECTION("Linear index of 5 in (2, 3) dimensions")
+    SECTION("Linear index of 5 in shape (2, 3)")
     {
         CHECK(UnravelIndex(5, {2, 3}) == multi_index_t{1, 2});
     }
-    // SECTION("Linear index of 6 in (2, 3) dimensions")
-    // {
-    //     const auto linear_index = 6;
-    //     const shape_t shape = {2, 3};
-    //     const multi_index_t have_index = UnravelIndex(linear_index, shape);
-    //     const multi_index_t want_index = {{2, 0}};
-    //     CHECK(have_index == want_index);
-    // }
+    SECTION("Linear index of 6 in shape (2, 3)")
+    {
+        CHECK_THROWS_WITH(UnravelIndex(6, {2, 3}),
+                          Contains("Linear index does not fit in the shape."));
+    }
 }
 
 TEST_CASE("RavelIndex", "[Utilities]")
