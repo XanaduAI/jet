@@ -1,0 +1,96 @@
+// Copyright 2021 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// IR grammar
+program: (include | declarations | circuit)*
+include: "use" name ";"
+
+// the main circuit
+circuit: statement+
+statement: gatestmt | gate_def | operator_def
+gatestmt: name (params | options_dict) "|" wires ";"
+opstmt: expr "," obs_group";"
+
+gate_def: _GATE name params wires? ":" gatestmt+ _END ";"
+operator_def: _OP name params wires? ":" opstmt+ _END ";"
+
+options_dict: "(" option ("," option)* ")"
+option: name ":" val
+
+obs_group: obs "[" uint "]" ("@" obs "[" uint "]")*
+?obs: name
+
+// list-types
+wires : "[" (uint | range | name) ("," (uint | range | name))* "]"
+params: ["(" val ("," val)* ")"]  // always optional (easier to parse)
+
+// value-types
+?val  : bool | expr
+float : SIGNED_FLOAT
+int   : SIGNED_INT
+uint  : INT
+
+name: CNAME
+bool: TRUE_ | FALSE_
+range: INT ".." INT
+
+?expr: prodexpr
+     | expr "+" prodexpr -> add
+     | expr "-" prodexpr -> sub
+
+?prodexpr: atom
+         | prodexpr "*" atom -> prod
+         | prodexpr "/" atom -> div
+
+?atom: int
+     | float
+     | name -> var
+     | "-" (name | "(" expr ")" | name "(" expr ")") -> neg
+     | "(" expr ")"
+     | name "(" expr ")" -> mathop
+     | PI
+
+// reserved keywords
+PI: "pi"
+
+_GATE: "gate"
+_FUNC: "func"
+_OP: "operator"
+_OUT: "output"
+
+_END: "end"
+
+TRUE_: "true"
+FALSE_: "false"
+
+// declarations
+?declarations: (gate_decl | operator_decl | func_decl | output_decl)
+
+gate_decl: _GATE name "," uint "," uint ";"
+operator_decl: _OP name "," uint "," uint ";"
+func_decl: _FUNC name "," uint ";"
+output_decl: _OUT name ";"
+
+// std imports from common.lark
+%import common.ESCAPED_STRING
+%import common.SIGNED_INT
+%import common.INT
+%import common.SIGNED_FLOAT
+%import common.CPP_COMMENT
+%import common.CNAME
+%import common.WS
+
+// ignore whitespace and comments
+%ignore WS
+%ignore CPP_COMMENT
