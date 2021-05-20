@@ -5,7 +5,6 @@ import pytest
 class TestPathInfo:
     def test_default_constructor(self):
         """Tests that the default constructor is called."""
-        """Tests that the default constructor is called."""
         path_info = jet.PathInfo()
 
         assert path_info.num_leaves == 0
@@ -18,6 +17,7 @@ class TestPathInfo:
         assert path_info.total_memory() == 0
 
     def test_constructor(self):
+        """Tests that the tensor network and path constructor is called."""
         tn = jet.TensorNetwork64()
 
         id_a = tn.add_tensor(jet.Tensor64(), ["A"])
