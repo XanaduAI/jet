@@ -40,99 +40,62 @@ template <class PermuteBackend> class PermuteBase {
 
 class QFPermute : public PermuteBase<QFPermute> {
     using DataType = std::complex<float>;
+    const static size_t zero_ = static_cast<size_t>(0);
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
 
   public:
     QFPermute() : PermuteBase<QFPermute>() {}
 
-
-
-
     /**
-     * @brief Holds the data for index transformation of the permutation operation.
-     * 
+     * @brief Holds the data for index transformation of the permutation
+     * operation.
+     *
      */
-    struct IndexTransform{
+    struct IndexTransform {
         const std::vector<std::string> &pre_indices;
         const std::vector<std::string> &post_indices;
         const std::vector<std::size_t> &pre_shape;
         const std::vector<std::size_t> &post_shape;
         const std::vector<size_t> &index_map;
-        IndexTransform(
-            const std::vector<std::string> &pre_indices,
-            const std::vector<std::string> &post_indices,
-            const std::vector<std::size_t> &pre_shape,
-            const std::vector<std::size_t> &post_shape,
-            const std::vector<size_t> &index_map
-        ) : pre_indices(pre_indices), post_indices(post_indices), pre_shape(pre_shape), post_shape(post_shape), index_map(index_map) {}
+        IndexTransform(const std::vector<std::string> &pre_indices,
+                       const std::vector<std::string> &post_indices,
+                       const std::vector<std::size_t> &pre_shape,
+                       const std::vector<std::size_t> &post_shape,
+                       const std::vector<size_t> &index_map)
+            : pre_indices(pre_indices), post_indices(post_indices),
+              pre_shape(pre_shape), post_shape(post_shape), index_map(index_map)
+        {
+        }
     };
 
     /**
      * @brief Holds details and structures for planning the perumutation.
      *
      */
-    struct PermutePlan{
+    struct PermutePlan {
         const size_t dim_left;
         const size_t dim_right;
         const size_t tensor_size;
-        const size_t pre_dims;
-        const size_t post_dims;
+        // const size_t pre_dims; // dims before permutation
+        // const size_t post_dims; // dims after permutation
         const PermuteType p_type;
 
         const IndexTransform &idx_transform;
 
-        PermutePlan(
-            size_t dim_left, size_t dim_right, size_t tensor_size,
-            size_t pre_dims, size_t post_dims, PermuteType p_type,
-        
-        
-        ) {}
+        PermutePlan(size_t dim_left, size_t dim_right, size_t tensor_size,
+                    PermuteType p_type, const IndexTransform &idx_transform)
+            : dim_left(dim_left), dim_right(dim_right),
+              tensor_size(tensor_size), p_type(p_type),
+              idx_transform(idx_transform)
+        {
+        }
     };
-/*
-    struct PermutePlan {
-        size_t dim_left;
-        size_t dim_right;
-        size_t tensor_dim;
-        size_t old_dimensions;
-        size_t new_dimensions;
-
-        PermuteType type;
-
-        std::vector<std::string> new_ordering;
-        std::vector<std::string> old_ordering;
-
-        std::vector<size_t> map_old_to_new_position;
-
-        PermutePlan(size_t dim_left, size_t dim_right, size_t tensor_dim,
-                    size_t old_dimensions, size_t new_dimensions,
-                    PermuteType type, std::vector<std::string> new_ordering,
-                    std::vector<std::string> old_ordering,
-                    std::vector<size_t> map_old_to_new_position)
-            : dim_left(dim_left), dim_right(dim_right), tensor_dim(tensor_dim),
-              old_dimensions(old_dimensions), new_dimensions(new_dimensions),
-              type(type), new_ordering(new_ordering),
-              old_ordering(old_ordering),
-              map_old_to_new_position(map_old_to_new_position){};
-    };*/
-
-    /**
-
-        PerumutePlan(0,0, total_dim, old_dimensions, new_dimensions, P_TYPE, new_ordering, old_ordering, MAP_OLD_2_NEW)
-
-        precomputed_data.new_ordering = new_ordering;
-        precomputed_data.new_dimensions = new_dimensions;
-        precomputed_data.old_ordering = old_ordering;
-        precomputed_data.old_dimensions = old_dimensions;
-        precomputed_data.total_dim = total_dim;
-     */
-
-
 
     using plan_type = PermutePlan;
 
     /**
-     * @brief Tranpose the tensor data to the new index set.
+     * @brief Transpose the tensor data to the new index set.
      *
      * @note If input and output data arrays are the same, an in-place transpose
      * will be used.
@@ -158,13 +121,13 @@ class QFPermute : public PermuteBase<QFPermute> {
             TransposeInPlace_(data_out, indices_old, indices_new);
         }
         else {
-            auto prec_data = PrecomputeFastTransposeData<DataType>(data_in, shape, current_order, new_order);
-
+            auto prec_data = PrecomputeFastTransposeData<DataType>(
+                data_in, shape, current_order, new_order);
         }
     }
 
     struct PrecomputedQflexTransposeData {
-        std::vector<PermutePlan> transplans;
+        std::vector<PermutePlan> plans;
         size_t total_dim;
         bool no_transpose;
         bool log_2;
@@ -237,10 +200,13 @@ class QFPermute : public PermuteBase<QFPermute> {
         std::size_t dim_left =
             tensor_size / dim_right; // Remember, it's all powers of 2, so OK.
 
-        PermutePlan plan{dim_left,     dim_right,    tensor_size,
-                         dim,          dim,          PermuteType::PermuteRight,
-                         new_ordering, old_ordering, map_old_to_new_position};
-        precomputed_data.transplans.push_back(plan);
+        IndexTransform idx_transform{old_ordering, new_ordering, old_dimensions,
+                                     new_dimensions, map_old_to_new_position};
+
+        PermutePlan plan{dim_left, dim_right, tensor_size,
+                         PermuteType::PermuteRight, idx_transform};
+
+        precomputed_data.plans.push_back(plan);
     }
 
     void PrecomputeLeftTransposeData_(
@@ -288,10 +254,12 @@ class QFPermute : public PermuteBase<QFPermute> {
             tensor_dim / dim_left; // Remember, it's all powers
         // of 2, so OK.
 
-        plan_type plan{dim_left,     dim_right,    tensor_size,
-                         dim,          dim,          PermuteType::PermuteRight,
-                         new_ordering, old_ordering, map_old_to_new_position};
-        precomputed_data.transplans.push_back(plan);
+        IndexTransform idx_tform{old_ordering, new_ordering, old_dimensions,
+                                 new_dimensions, map_old_to_new_position};
+        plan_type plan{dim_left, dim_right, tensor_size,
+                       PermuteType::PermuteRight, idx_tform};
+
+        precomputed_data.plans.push_back(plan);
     }
 
     /**
@@ -365,14 +333,14 @@ class QFPermute : public PermuteBase<QFPermute> {
                                          size_t tensor_dim, T &data_,
                                          T &scratch_copy)
     {
-        if (p_plan.type == PermuteType::PermuteRight) {
+        if (p_plan.p_type == PermuteType::PermuteRight) {
             std::vector<T> temp_data(p_plan.dim_right);
             for (std::size_t pl = 0; pl < p_plan.dim_left; ++pl) {
                 std::size_t offset = pl * p_plan.dim_right;
                 for (std::size_t pr = 0; pr < p_plan.dim_right; ++pr)
                     temp_data[pr] = data_[offset + pr];
                 for (std::size_t pr = 0; pr < p_plan.dim_right; ++pr)
-                    data_[offset + p_plan.map_old_to_new_position[pr]] =
+                    data_[offset + p_plan.idx_transform.index_map[pr]] =
                         temp_data[pr];
             }
         }
@@ -382,7 +350,7 @@ class QFPermute : public PermuteBase<QFPermute> {
             for (std::size_t pl = 0; pl < p_plan.dim_left; ++pl) {
                 std::size_t old_offset = pl * p_plan.dim_right;
                 std::size_t new_offset =
-                    p_plan.map_old_to_new_position[pl] * p_plan.dim_right;
+                    p_plan.idx_transform.index_map[pl] * p_plan.dim_right;
                 std::copy(scratch_copy + old_offset,
                           scratch_copy + old_offset + p_plan.dim_right,
                           data_ + new_offset);
@@ -393,17 +361,21 @@ class QFPermute : public PermuteBase<QFPermute> {
     /*******************************************************************************/
 
     // has to have dimensions that are multiples of 2
-    
+
     template <typename DataType>
     PrecomputedQflexTransposeData
-    PrecomputeFastTransposeData(const std::vector<DataType> &data, const std::vector<size_t> &shape, const std::vector<std::string> &indices, const std::vector<std::string> &new_ordering)
+    PrecomputeFastTransposeData(const std::vector<DataType> &data,
+                                const std::vector<size_t> &shape,
+                                const std::vector<std::string> &indices,
+                                const std::vector<std::string> &new_ordering)
     {
         using namespace Jet::Utilities;
         PrecomputedQflexTransposeData precomputed_data;
 
+        std::cerr << "Should the next line be true?" << std::endl;
         precomputed_data.log_2 = false;
         for (std::size_t i = 0; i < shape.size(); ++i) {
-            if (!is_pow_2(shape[i]) ) {
+            if (!is_pow_2(shape[i])) {
                 precomputed_data.log_2 = false;
                 break;
             }
@@ -432,38 +404,19 @@ class QFPermute : public PermuteBase<QFPermute> {
             }
         }
 
-        PermutePlan plan(
-            static_cast<size_t>(0), 
-            static_cast<size_t>(0), 
-            total_dim, 
-            old_dimensions, 
-            new_dimensions, 
-            PermuteType::None, 
-            new_ordering, 
-            old_ordering, 
-            map_old_to_new_idxpos);
-        precomputed_data.transplans.push_back(plan);
+        IndexTransform idx_tfrm{old_ordering, new_ordering, old_dimensions,
+                                new_dimensions, map_old_to_new_idxpos};
 
+        PermutePlan plan(zero_, zero_, total_dim, PermuteType::None, idx_tfrm);
+        precomputed_data.plans.push_back(plan);
 
-        PermutePlan(
-            size_t dim_left, 
-            size_t dim_right, 
-            size_t tensor_dim,
-            size_t old_dimensions, 
-            size_t new_dimensions,
-            PermuteType type, 
-            std::vector<std::string> new_ordering,
-            std::vector<std::string> old_ordering,
-            std::vector<size_t> map_old_to_new_position
-        )
-
-/*
+        /*
         precomputed_data.new_ordering = new_ordering;
         precomputed_data.new_dimensions = new_dimensions;
         precomputed_data.old_ordering = old_ordering;
         precomputed_data.old_dimensions = old_dimensions;
         precomputed_data.total_dim = total_dim;
-*/
+        */
         if (precomputed_data.log_2 == false) {
             return precomputed_data;
         }
@@ -554,8 +507,9 @@ class QFPermute : public PermuteBase<QFPermute> {
                     new_binary_ordering.begin() + Ll,
                     new_binary_ordering.end());
                 // std::cout << "SECOND FUNCTION TRY " << std::endl;
-                PrecomputeRightTransposeData_(Lr_old_indices, Lr_new_indices, Lr,
-                                             tensor_size, precomputed_data);
+                PrecomputeRightTransposeData_(Lr_old_indices, Lr_new_indices,
+                                              Lr, tensor_size,
+                                              precomputed_data);
                 return precomputed_data;
             }
 
@@ -585,8 +539,8 @@ class QFPermute : public PermuteBase<QFPermute> {
                         new_binary_ordering.begin(),
                         new_binary_ordering.end() - extended_Rr);
                     PrecomputeLeftTransposeData_(Rl_old_indices, Rl_new_indices,
-                                                extended_Rr, tensor_size,
-                                                precomputed_data);
+                                                 extended_Rr, tensor_size,
+                                                 precomputed_data);
                     return precomputed_data;
                 }
             }
@@ -638,7 +592,7 @@ class QFPermute : public PermuteBase<QFPermute> {
                 Rl_zeroth_step[i] = old_binary_ordering[i];
 
             PrecomputeLeftTransposeData_(Rl_zeroth_step, Rl_first_step, Rr,
-                                        tensor_size, precomputed_data);
+                                         tensor_size, precomputed_data);
 
             std::vector<std::string> Lr_first_step = VectorConcatenation(
                 std::vector<std::string>(Rl_first_step.begin() + Ll,
@@ -652,7 +606,7 @@ class QFPermute : public PermuteBase<QFPermute> {
                 std::vector<std::string>(Rr_indices));
 
             PrecomputeRightTransposeData_(Lr_first_step, Lr_second_step, Lr,
-                                         tensor_size, precomputed_data);
+                                          tensor_size, precomputed_data);
             std::vector<std::string> Rl_second_step = VectorConcatenation(
                 std::vector<std::string>(Rl_first_step.begin(),
                                          Rl_first_step.begin() + Ll),
@@ -661,7 +615,7 @@ class QFPermute : public PermuteBase<QFPermute> {
             std::vector<std::string> Rl_third_step(
                 new_binary_ordering.begin(), new_binary_ordering.begin() + Rl);
             PrecomputeLeftTransposeData_(Rl_second_step, Rl_third_step, Rr,
-                                        tensor_size, precomputed_data);
+                                         tensor_size, precomputed_data);
             // done with 3).
             return precomputed_data;
         }
@@ -674,15 +628,14 @@ class QFPermute : public PermuteBase<QFPermute> {
         DataType &data_, const PrecomputedQflexTransposeData &precomputed_data,
         DataType &scratch)
     {
-        for (int plan_i = 0; plan_i < precomputed_data.transplans.size();
-             plan_i++) {
-            auto &dim_right = precomputed_data.transplans[plan_i].dim_right;
-            auto &dim_left = precomputed_data.transplans[plan_i].dim_left;
-            auto &tensor_dim = precomputed_data.transplans[plan_i].tensor_dim;
+        for (int plan_i = 0; plan_i < precomputed_data.plans.size(); plan_i++) {
+            auto &dim_right = precomputed_data.plans[plan_i].dim_right;
+            auto &dim_left = precomputed_data.plans[plan_i].dim_left;
+            auto &tensor_dim = precomputed_data.plans[plan_i].tensor_size;
             auto &map_old_to_new_position =
-                precomputed_data.transplans[plan_i].map_old_to_new_position;
+                precomputed_data.plans[plan_i].idx_transform.index_map; //map_old_to_new_position
 
-            if (precomputed_data.transplans[plan_i].type ==
+            if (precomputed_data.plans[plan_i].p_type ==
                 PermuteType::PermuteRight) {
 #pragma omp parallel
                 {

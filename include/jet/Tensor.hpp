@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Permute.hpp"
 #include "TensorHelpers.hpp"
 #include "Utilities.hpp"
 

@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-
 #include "Abort.hpp"
 
 namespace Jet {
@@ -18,20 +17,28 @@ namespace Utilities {
  * @param value Number to check.
  * @return True if `value` is a power of 2.
  */
-inline bool is_pow_2(size_t value){
+inline bool is_pow_2(size_t value)
+{
     return static_cast<bool>(value && !(value & (value - 1)));
 }
 
 /**
- * @brief Finds the log2 value of a known power of 2, otherwise finds the floor of log2 of the operand.
- * This works by counting the highest set bit in a size_t by examining the number of leading zeros.
- * This value can then be subtracted from the number of bits in the size_t value to yield the log2 value.
- * 
- * @param value Value to calculate log2 of. 
- * @return size_t log2 result of value. If value is a non power-of-2, returns the floor of the log2 operation.
+ * @brief Finds the log2 value of a known power of 2, otherwise finds the floor
+ * of log2 of the operand. This works by counting the highest set bit in a
+ * size_t by examining the number of leading zeros. This value can then be
+ * subtracted from the number of bits in the size_t value to yield the log2
+ * value.
+ *
+ * @param value Value to calculate log2 of.
+ * @return size_t log2 result of value. If value is a non power-of-2, returns
+ * the floor of the log2 operation.
  */
-inline size_t fast_log2(size_t value){
-    return static_cast<size_t>(std::numeric_limits<size_t>::digits - __builtin_clzll((value)) - 1ULL);
+inline size_t fast_log2(size_t value)
+{
+    /// Note: doing this as a define instead with the values hardcoded results
+    /// in the subtraction folded into the limit
+    return static_cast<size_t>(std::numeric_limits<size_t>::digits -
+                               __builtin_clzll((value)) - 1ULL);
 }
 
 /**
@@ -70,6 +77,13 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
     os << '}';
     return os;
 }
+
+const size_t ALPHABET_SIZE_ = 52;
+const std::vector<std::string> ALPHABET_(
+    {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+     "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+     "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"});
 
 /**
  * Converts an ID into a unique string index of the form [a-zA-Z][0-9]*.
