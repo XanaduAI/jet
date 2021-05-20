@@ -276,7 +276,7 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
 
     SECTION("Slice [1, :, 2]")
     {
-        tn.SliceIndices({"A0", "C2"}, 1 + 2 * 2);
+        tn.SliceIndices({"A0", "C2"}, 1 * 4 + 2);
         const auto &node = tn.GetNodes().front();
 
         const std::string have_name = node.name;
@@ -302,7 +302,7 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
 
     SECTION("Slice [1, 2, 3]")
     {
-        tn.SliceIndices({"A0", "B1", "C2"}, 1 + 2 * 2 + 3 * 2 * 3);
+        tn.SliceIndices({"A0", "B1", "C2"}, 1 * 3 * 4 + 2 * 4 + 3);
         const auto &node = tn.GetNodes().front();
 
         const std::string have_name = node.name;

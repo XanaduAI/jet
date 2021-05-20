@@ -16,6 +16,8 @@
 
 ### Breaking Changes
 
+* Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
+
 ### Bug Fixes
 
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with one another. [(#6)](https://github.com/XanaduAI/jet/pull/6)
