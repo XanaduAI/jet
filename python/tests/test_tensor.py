@@ -114,6 +114,15 @@ class TestTensor:
         assert tensor.indices == ["i", "j", "l"]
 
 
+def test_add_tensors():
+    """Tests that a pair of tensors can be added."""
+    tensor_1 = jet.Tensor64(shape=[2, 3], indices=["i", "j"], data=range(6))
+    tensor_2 = jet.Tensor64(shape=[2, 3], indices=["i", "j"], data=range(0, 12, 2))
+    have_tensor = jet.add_tensors(tensor_1, tensor_2)
+    want_tensor = jet.Tensor64(shape=[2, 3], indices=["i", "j"], data=range(0, 18, 3))
+    assert have_tensor == want_tensor
+
+
 def test_conj():
     """Tests that the conjugate of a tensor can be taken."""
     tensor = jet.Tensor64(shape=[1, 2], indices=["i", "j"], data=[1, 2 + 3j])

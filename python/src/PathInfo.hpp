@@ -11,20 +11,17 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
 {
     c.def(py::init<const Jet::TensorNetwork<Tensor> &,
                    const Jet::PathInfo::path_t &>(),
-          py::arg("tn"), py::arg("path"), R"(
+          py::arg("tn"), py::arg("path") = Jet::PathInfo::path_t(), R"(
             Constructs a populated PathInfo for the given path
             through a tensor network
 
             Args:
                 tn: Tensor network
-                path: Pairs of integers representing contraction path through
-                tensor network
+                path: Pairs of integers representing a contraction path through
+                      the tensor network
             )");
 
-    if constexpr (sizeof...(Tensors) == 0) {
-        return;
-    }
-    else {
+    if constexpr (sizeof...(Tensors) > 0) {
         bind_constructors<Tensors...>(c);
     }
 }
@@ -36,6 +33,13 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
         PathStepInfo represents the contraction metadata associated
         with a node in a TensorNetwork)")
 
+        // Constants
+        // ----------------------------------------------------------------
+        .def_property_readonly("MISSING_ID",
+                               []() { return Jet::PathStepInfo::MISSING_ID; })
+
+        // Instance variables
+        // ----------------------------------------------------------------
         .def_readonly("id", &Jet::PathStepInfo::id)
         .def_readonly("parent", &Jet::PathStepInfo::parent)
         .def_readonly("children", &Jet::PathStepInfo::children)
@@ -47,8 +51,9 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
                       &Jet::PathStepInfo::contracted_indices);
 
     auto cls =
-        py::class_<Jet::PathInfo>(m, "PathInfo", R"(
-        PathInfo represents a contraction path in a Tensor Network)")
+        py::class_<Jet::PathInfo>(
+            m, "PathInfo",
+            "PathInfo represents a contraction path in a tensor network.")
 
             // Constructors
             //-----------------------------------------------------------------
@@ -74,12 +79,12 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
             // Other
             // -----------------------------------------------------------------
             .def("total_flops", &Jet::PathInfo::GetTotalFlops, R"(
-            Computes total number of floating-point operations needed
-            contract the tensor network along this path)")
+            Computes the total number of floating-point operations needed
+            to contract the tensor network along this path)")
 
             .def("total_memory", &Jet::PathInfo::GetTotalMemory, R"(
-            Computes total memory required to contract the tensor
-            network along this path)");
+            Computes the total memory required to contract the tensor
+            network along this path.)");
 
     // Add constructor bindings for each Tensor type
     bind_constructors<Tensors...>(cls);

@@ -20,18 +20,19 @@ namespace Jet {
  * `index_to_edge_map_`.  The contraction path followed by a call to Contract()
  * is stored in the `path_` member.
  *
- * @tparam Tensor Type of the tensor in the tensor network.  If `tensor` is an
- *                instance of `%Tensor`, the following expressions should be
- *                valid:
+ * @tparam Tensor Type of the tensor in the tensor network.  The only
+ *                requirement for this type is that the following member
+ *                functions exist:
  *                \code{.cpp}
- *                std::vector<std::string> indices = tensor.GetIndices();
- *                std::vector<std::size_t> shape = tensor.GetShape();
+ *     std::vector<std::string> GetIndices();
+ *     std::vector<std::size_t> GetShape();
  *
- *                tensor.InitIndicesAndShape(new_indices, new_shape);
+ *     void InitIndicesAndShape(const std::vector<std::string>&,
+ *                              const std::vector<std::size_t>&);
  *
- *                Tensor shaped_tensor = Reshape(tensor, new_shape);
- *                Tensor sliced_tensor = Slice(tensor, index, value);
- *                Tensor contracted_tensor = ContractTensors(tensor, tensor);
+ *     static Tensor Reshape(const Tensor&, const std::vector<std::string>&);
+ *     static Tensor SliceIndex(const Tensor&, const std::string&, size_t);
+ *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
 template <class Tensor> class TensorNetwork {
@@ -154,15 +155,15 @@ template <class Tensor> class TensorNetwork {
     size_t NumTensors() const noexcept { return nodes_.size(); }
 
     /**
-     * @brief Adds a tensor with the specified tags and return its
-     * assigned id.
+     * @brief Adds a tensor with the specified tags and returns its
+     *        assigned ID.
      *
      * @warning This function is not safe for concurrent execution.
      *
      * @param tensor Tensor to be added to this tensor network.
      * @param tags Tags to be associated with the tensor.
      *
-     * @return node id assigned to tensor
+     * @return Node ID assigned to the tensor.
      */
     node_id_t AddTensor(const Tensor &tensor,
                         const std::vector<std::string> &tags) noexcept
@@ -252,9 +253,9 @@ template <class Tensor> class TensorNetwork {
                 tensor_shape.erase(tensor_shape.begin() + offset);
                 tensor_indices.erase(tensor_indices.begin() + offset);
 
-                tensor = SliceIndex(tensor, sliced_index, sliced_value);
+                tensor = Tensor::SliceIndex(tensor, sliced_index, sliced_value);
                 if (!tensor_indices.empty()) {
-                    tensor = Reshape(tensor, tensor_shape);
+                    tensor = Tensor::Reshape(tensor, tensor_shape);
                 }
 
                 // Erase the sliced index from the tensor.
@@ -392,7 +393,8 @@ template <class Tensor> class TensorNetwork {
     {
         auto &node_1 = nodes_[node_id_1];
         auto &node_2 = nodes_[node_id_2];
-        const auto tensor_3 = ContractTensors(node_1.tensor, node_2.tensor);
+        const auto tensor_3 =
+            Tensor::ContractTensors(node_1.tensor, node_2.tensor);
 
         node_1.contracted = true;
         node_2.contracted = true;

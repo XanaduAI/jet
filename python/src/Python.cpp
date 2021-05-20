@@ -16,21 +16,21 @@ PYBIND11_MODULE(jet, m)
     using c_fp32_t = std::complex<float>;
     using c_fp64_t = std::complex<double>;
 
+    using Tensor32 = Jet::Tensor<c_fp32_t>;
+    using Tensor64 = Jet::Tensor<c_fp64_t>;
+
     AddBindingsForTensor<c_fp32_t>(m, "Tensor32");
     AddBindingsForTensor<c_fp64_t>(m, "Tensor64");
 
-    using tensor32_t = Jet::Tensor<c_fp32_t>;
-    using tensor64_t = Jet::Tensor<c_fp64_t>;
+    AddBindingsForTensorNetwork<Tensor32>(m, "TensorNetwork32");
+    AddBindingsForTensorNetwork<Tensor64>(m, "TensorNetwork64");
 
-    AddBindingsForTensorNetwork<tensor32_t>(m, "TensorNetwork32");
-    AddBindingsForTensorNetwork<tensor64_t>(m, "TensorNetwork64");
+    AddBindingsForTensorNetworkIO<Tensor32>(m, "TensorNetworkFile32",
+                                            "TensorNetworkSerializer32");
+    AddBindingsForTensorNetworkIO<Tensor64>(m, "TensorNetworkFile64",
+                                            "TensorNetworkSerializer64");
 
-    AddBindingsForTensorNetworkIO<tensor32_t>(m, "TensorNetworkFile32",
-                                              "TensorNetworkSerializer32");
-    AddBindingsForTensorNetworkIO<tensor64_t>(m, "TensorNetworkFile64",
-                                              "TensorNetworkSerializer64");
-
-    AddBindingsForPathInfo<tensor32_t, tensor64_t>(m);
+    AddBindingsForPathInfo<Tensor32, Tensor64>(m);
 
     AddBindingsForVersion(m);
 }

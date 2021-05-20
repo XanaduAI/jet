@@ -31,6 +31,21 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             - "Shape" refers to the dimensions of a tensor; the number of
               dimensions is the rank of the tensor.
     )")
+        // Static functions
+        // ---------------------------------------------------------------------
+
+        .def_static("add_tensors", &tensor_t::AddTensors, py::arg("A"),
+                    py::arg("B"), "Alias for add_tensors().")
+
+        .def_static("contract_tensors", &tensor_t::ContractTensors,
+                    py::arg("A"), py::arg("B"), "Alias for contract_tensors().")
+
+        .def_static("reshape", &tensor_t::Reshape, py::arg("tensor"),
+                    py::arg("shape"), "Alias for reshape().")
+
+        .def_static("slice_index", &tensor_t::SliceIndex, py::arg("tensor"),
+                    py::arg("index"), py::arg("value"),
+                    "Alias for slice_index().")
 
         // Constructors
         // ---------------------------------------------------------------------
@@ -215,6 +230,33 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
             Returns:
                 Conjugate of the given tensor object.
+          )");
+
+    m.def("add_tensors", Jet::AddTensors<T>, py::arg("A"), py::arg("B"),
+          R"(
+            Adds two tensor objects with the same index sets. The resulting
+            tensor will have the same indices as the first argument (i.e., `A`).
+
+            Example:
+                Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition
+                of A and B is another 2x3 tensor C(i,j):
+
+                    import jet
+
+                    A = jet.Tensor64(["i", "j"], [2, 3])
+                    B = jet.Tensor64(["i", "j"], [2, 3])
+
+                    A.fill_random()
+                    B.fill_random()
+
+                    C = jet.add_tensors(A, B);
+
+            Args:
+                A: tensor on the LHS of the addition.
+                B: tensor on the RHS of the addition.
+
+            Returns:
+                Tensor object representing the element-wise sum of the tensors.
           )");
 
     m.def("contract_tensors", Jet::ContractTensors<T>, py::arg("A"),
