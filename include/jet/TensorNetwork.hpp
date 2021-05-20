@@ -163,7 +163,7 @@ template <class Tensor> class TensorNetwork {
      * @param tensor Tensor to be added to this tensor network.
      * @param tags Tags to be associated with the tensor.
      *
-     * @return node id assigned to tensor
+     * @return Node ID assigned to the tensor.
      */
     node_id_t AddTensor(const Tensor &tensor,
                         const std::vector<std::string> &tags) noexcept

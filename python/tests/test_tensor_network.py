@@ -68,7 +68,6 @@ class TestTensorNetwork:
         assert tn.path == [(0, 1)]
 
     def test_slice(self, TensorNetwork, Tensor):
-
         tn = TensorNetwork()
 
         a = Tensor(indices=["A0", "B1", "C2"], shape=[2, 3, 4], data=range(24))
