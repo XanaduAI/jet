@@ -1,13 +1,14 @@
 #pragma once
 
-#include <Jet.hpp>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
+
 #include <pybind11/complex.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <sstream>
-#include <unordered_map>
-#include <vector>
+#include <Jet.hpp>
 
 namespace py = pybind11;
 
