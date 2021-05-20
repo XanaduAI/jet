@@ -17,6 +17,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from ir.program import IRProgram, Statement, GateDeclaration, OutputDeclaration
 
+
 def find_number_of_modes(xir):
     """Helper function to find the number of modes in an XIR program"""
     wires = set()

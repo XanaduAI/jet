@@ -33,7 +33,7 @@ p = Path(__file__).parent / "ir.lark"
 with p.open("r") as _f:
     ir_grammar = _f.read()
 
-ir_parser = Lark(ir_grammar, start="program", parser='lalr')
+ir_parser = Lark(ir_grammar, start="program", parser="lalr")
 
 
 class IRTransformer(Transformer):
@@ -216,7 +216,6 @@ class IRTransformer(Transformer):
     def output_decl(self, args):
         decl = OutputDeclaration(*args)
         self._program._declarations["output"].append(decl)
-
 
     #########
     # maths

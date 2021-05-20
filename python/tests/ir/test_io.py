@@ -68,6 +68,7 @@ def create_sf_prog(num_of_wires: int, ops: List[Tuple]):
 
     return prog
 
+
 class TestXIRToStrawberryFields:
     """Unit tests for the XIR to Strawberry Fields conversion"""
 
@@ -76,7 +77,6 @@ class TestXIRToStrawberryFields:
         irprog = create_ir_prog(data=[])
         with pytest.raises(ValueError, match="XIR program is empty and cannot be transformed"):
             to_program(irprog)
-
 
     def test_gate_not_defined(self):
         """Test unknown gate raises error"""
@@ -87,7 +87,6 @@ class TestXIRToStrawberryFields:
 
         with pytest.raises(NameError, match="operation 'not_a_real_gate' not defined"):
             to_program(irprog)
-
 
     def test_gates_no_args(self):
         """Test that gates without arguments work"""
@@ -142,7 +141,6 @@ class TestStrawberryFieldsToXIR:
         assert irprog.operators == dict()
         assert irprog.variables == set()
         assert irprog._called_ops == set()
-
 
     @pytest.mark.parametrize("add_decl", [True, False])
     def test_gates_no_args(self, add_decl):

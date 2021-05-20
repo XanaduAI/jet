@@ -58,6 +58,7 @@ class OperatorStmt:
 
         return f"{pref}, {terms_as_string}"
 
+
 class Declaration:
     """TODO"""
 
@@ -127,12 +128,7 @@ class IRProgram:
         self._include = []
         self._statements = []
 
-        self._declarations = {
-            "gate": [],
-            "func": [],
-            "output": [],
-            "operator": []
-        }
+        self._declarations = {"gate": [], "func": [], "output": [], "operator": []}
 
         self._gates = dict()
         self._operators = dict()
@@ -188,21 +184,15 @@ class IRProgram:
         """TODO"""
         if name in self._gates:
             warnings.warn("Gate already defined. Replacing old definition with new definiton.")
-        self._gates[name] = {
-            "params": params,
-            "wires": wires,
-            "statements": statements
-        }
+        self._gates[name] = {"params": params, "wires": wires, "statements": statements}
 
-    def add_operator(self, name: str, params: List[str], wires: Tuple, statements: List[OperatorStmt]):
+    def add_operator(
+        self, name: str, params: List[str], wires: Tuple, statements: List[OperatorStmt]
+    ):
         """TODO"""
         if name in self._operators:
             warnings.warn("Operator already defined. Replacing old definition with new definiton.")
-        self._operators[name] = {
-            "params": params,
-            "wires": wires,
-            "statements": statements
-        }
+        self._operators[name] = {"params": params, "wires": wires, "statements": statements}
 
     def serialize(self, minimize: bool = False) -> str:
         """Serialize an IRProgram returning an XIR script

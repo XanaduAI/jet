@@ -17,6 +17,7 @@
 import re
 from typing import List, Tuple
 
+
 def beautify_math(numstr: List[str]) -> List[str]:
     """Simplifies specified substrings and removes unnecessary parantheses
 
@@ -65,27 +66,28 @@ def remove_paranth(numstr: List[str]) -> List[str]:
             continue
 
         pre = []
-        dels = [0, len(n)+1]
+        dels = [0, len(n) + 1]
 
         # expand string with "+" so that outer parantheses can be removed,
         # then store all indices where unnecessary mathing parantheses are found
         n = "+" + n + "+"
         for j, char in enumerate(n):
             if char == "(":
-                pre.append((n[j-1], j))
+                pre.append((n[j - 1], j))
             if char == ")":
                 p = pre.pop()
-                if p[0] in ("+", "-", "(") and n[j+1] in ("+", "-", ")"):
+                if p[0] in ("+", "-", "(") and n[j + 1] in ("+", "-", ")"):
                     dels.extend([p[1], j])
 
         # delete all unnecessary mathing parantheses found int the previous step
         new_str = ""
         dels = sorted(dels)
         for j in range(len(dels) - 1):
-            new_str += n[dels[j]+1:dels[j+1]]
+            new_str += n[dels[j] + 1 : dels[j + 1]]
         numstr[i] = new_str
 
     return numstr
+
 
 def check_wires(wires: Tuple, stmts: List):
     """Check that declared wires are the same as the wires used in statements
@@ -118,7 +120,7 @@ def strip(script: str) -> str:
 
 
 # TODO: fix so that the order of declarations, definitions, and statements does not matter
-def is_equal(circuit_1: str, circuit_2: str, check_decl: bool=True):
+def is_equal(circuit_1: str, circuit_2: str, check_decl: bool = True):
     """TODO"""
     clist_1 = strip(circuit_1).split(";")
     clist_2 = strip(circuit_2).split(";")
@@ -127,14 +129,14 @@ def is_equal(circuit_1: str, circuit_2: str, check_decl: bool=True):
     while i < len(clist_1) and j < len(clist_2):
         i, j = i + 1, j + 1
         if not check_decl:
-            if is_decl(clist_1[i-1]):
+            if is_decl(clist_1[i - 1]):
                 j -= 1
                 continue
-            elif is_decl(clist_2[j-1]):
+            elif is_decl(clist_2[j - 1]):
                 i -= 1
                 continue
 
-        if clist_1[i-1].strip().lower() != clist_2[j-1].strip().lower():
+        if clist_1[i - 1].strip().lower() != clist_2[j - 1].strip().lower():
             return False
     return True
 
