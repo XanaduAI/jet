@@ -18,32 +18,48 @@ TARGETS
 
 endef
 
+
 .PHONY: help
 help:
 	@: $(info $(HELP_BODY))
 
+
 .PHONY: setup
-setup: $(.VENV_DIR)/requirements_test.txt.touch
+setup: $(.VENV_DIR)/touch
+
 
 .PHONY: format
-format:
+format: $(.VENV_DIR)/requirements.txt.touch
 ifdef check
-	$(.VENV_BIN)/black --check tests && $(.VENV_BIN)/isort --profile black --check-only tests
+	$(.VENV_BIN)/black --check tests
+	$(.VENV_BIN)/isort --profile black --check-only tests
 else
-	$(.VENV_BIN)/black tests && $(.VENV_BIN)/isort --profile black tests
+	$(.VENV_BIN)/black tests
+	$(.VENV_BIN)/isort --profile black tests
 endif
 
+
+.PHONY: build
+build: $(.VENV_DIR)/requirements.txt.touch
+	$(.VENV_BIN)/python -m build -n ..
+	rm -rf quantum_jet.egg-info
+
+
 .PHONY: test
-test: $(.VENV_DIR)/requirements_test.txt.touch
-	PYTHONPATH="../build/python" $(.VENV_BIN)/python -m pytest ./tests $(args)
+test: build
+	$(.VENV_BIN)/pip install $(wildcard ../dist/*.whl)
+	$(.VENV_BIN)/python -I -m pytest ./tests $(args)
+
 
 .PHONY: clean
 clean:
 	rm -rf $(.VENV_DIR)
 
-$(.VENV_DIR)/requirements_test.txt.touch: $(.VENV_DIR)/touch requirements_test.txt
-	$(.VENV_DIR)/bin/pip install -r requirements_test.txt
+
+$(.VENV_DIR)/requirements.txt.touch: $(.VENV_DIR)/touch requirements.txt
+	$(.VENV_DIR)/bin/pip install -r requirements.txt
 	@touch $@
+
 
 $(.VENV_DIR)/touch:
 	$(python) -m venv ${.VENV_DIR}
