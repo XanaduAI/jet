@@ -15,6 +15,7 @@
 """Integration tests for the IR"""
 
 import pytest
+
 from xir import XIRTransformer, xir_parser
 from xir.program import XIRProgram
 from xir.utils import is_equal

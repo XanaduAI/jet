@@ -17,6 +17,7 @@
 from decimal import Decimal
 
 import pytest
+
 from xir.program import (
     FuncDeclaration,
     GateDeclaration,

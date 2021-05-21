@@ -15,6 +15,7 @@
 """Unit test for the utils module"""
 
 import pytest
+
 from xir.utils import is_equal
 
 script_1 = """
