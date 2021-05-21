@@ -20,9 +20,8 @@ from typing import List, Tuple
 import pytest
 import strawberryfields as sf
 from strawberryfields import ops
-
 from xir.interfaces.strawberryfields_io import to_program, to_xir
-from xir.program import GateDeclaration, XIRProgram, Statement
+from xir.program import GateDeclaration, Statement, XIRProgram
 
 
 def create_ir_prog(
