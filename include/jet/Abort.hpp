@@ -5,13 +5,13 @@
 #include <sstream>
 
 /**
- * @brief Macro that throws `%JetException` with given message.
+ * @brief Macro that throws `%Exception` with given message.
  *
  * @param message string literal describing error
  */
 #define JET_ABORT(message) Jet::Abort(message, __FILE__, __LINE__, __func__)
 /**
- * @brief Macro that throws `%JetException` if expression evaluates to true.
+ * @brief Macro that throws `%Exception` if expression evaluates to true.
  *
  * @param expression an expression
  * @param message string literal describing error
@@ -21,7 +21,7 @@
         JET_ABORT(message);                                                    \
     }
 /**
- * @brief Macro that throws `%JetException` with error message if expression
+ * @brief Macro that throws `%Exception` with error message if expression
  * evaluates to false.
  *
  * @param expression an expression
@@ -33,7 +33,7 @@
     }
 
 /**
- * @brief Macro that throws `%JetException` with the given expression and source
+ * @brief Macro that throws `%Exception` with the given expression and source
  * location if expression evaluates to false.
  *
  * @param expression an expression
@@ -44,26 +44,25 @@
 namespace Jet {
 
 /**
- * @brief `%JetException` is the general exception thrown by Jet for runtime
+ * @brief `%Exception` is the general exception thrown by Jet for runtime
  * errors.
  *
  */
-class JetException : public std::exception {
+class Exception : public std::exception {
   public:
     /**
-     * @brief Constructs a new `%JetException` exception.
+     * @brief Constructs a new `%Exception` exception.
      *
      * @param err_msg Error message explaining the exception condition.
      */
-    explicit JetException(const std::string &err_msg) noexcept
-        : err_msg(err_msg)
+    explicit Exception(const std::string &err_msg) noexcept : err_msg(err_msg)
     {
     }
 
     /**
-     * @brief Destroys the `%JetException` object.
+     * @brief Destroys the `%Exception` object.
      */
-    virtual ~JetException() = default;
+    virtual ~Exception() = default;
 
     /**
      * @brief Returns a string containing the exception message. Overrides
@@ -78,7 +77,7 @@ class JetException : public std::exception {
 };
 
 /**
- * @brief Throws a `%JetException` with the given error message.
+ * @brief Throws an `%Exception` with the given error message.
  *
  * This function should not be called directly - use one of the `JET_ASSERT()`
  * or `JET_ABORT()` macros, which provide the source location at compile time.
@@ -94,7 +93,7 @@ inline void Abort(const char *message, const char *file_name, int line,
     std::stringstream err_msg;
     err_msg << "[" << file_name << "][Line:" << line
             << "][Method:" << function_name << "]: Error in Jet: " << message;
-    throw JetException(err_msg.str());
+    throw Exception(err_msg.str());
 }
 
 }; // namespace Jet

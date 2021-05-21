@@ -31,7 +31,7 @@ template <class Tensor> struct TensorNetworkFile {
  * @brief `%TensorFileException` is thrown when the contents of a tensor network
  *        file are invalid.
  */
-class TensorFileException : public JetException {
+class TensorFileException : public Exception {
   public:
     /**
      * @brief Constructs a new `%TensorFileException` exception.
@@ -40,7 +40,7 @@ class TensorFileException : public JetException {
      *                 tensor network file.
      */
     explicit TensorFileException(const std::string &what_arg)
-        : JetException("Error parsing tensor network file: " + what_arg){};
+        : Exception("Error parsing tensor network file: " + what_arg){};
 
     /**
      * @see TensorFileException(const std::string&).

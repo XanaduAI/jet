@@ -9,25 +9,22 @@
 
 using namespace Jet;
 
-TEST_CASE("Jet::JetException", "[Abort]")
+TEST_CASE("Jet::Exception", "[Abort]")
 {
-    SECTION("JetException::JetException(message)")
+    SECTION("Exception::Exception(message)")
     {
-        JetException ex("Message");
+        Exception ex("Message");
         CHECK(std::string(ex.what()) == "Message");
     }
-    SECTION("Throw JetException")
+    SECTION("Throw Exception")
     {
-        CHECK_THROWS_AS(throw JetException("Thrown message"), JetException);
-        CHECK_THROWS_WITH(throw JetException("Thrown message"),
-                          "Thrown message");
+        CHECK_THROWS_AS(throw Exception("Thrown message"), Exception);
+        CHECK_THROWS_WITH(throw Exception("Thrown message"), "Thrown message");
     }
 }
 
 TEST_CASE("Jet::Abort", "[Abort]")
 {
-    using namespace Catch::Matchers;
-
     std::string message = "Abort message";
     std::string file_name = "MyFile.hpp";
     int line = 1471;
@@ -35,30 +32,28 @@ TEST_CASE("Jet::Abort", "[Abort]")
 
     CHECK_THROWS_AS(
         Abort(message.c_str(), file_name.c_str(), line, function_name.c_str()),
-        JetException);
+        Exception);
     CHECK_THROWS_WITH(
         Abort(message.c_str(), file_name.c_str(), line, function_name.c_str()),
-        Contains(message));
+        Catch::Matchers::Contains(message));
     CHECK_THROWS_WITH(
         Abort(message.c_str(), file_name.c_str(), line, function_name.c_str()),
-        Contains(file_name));
+        Catch::Matchers::Contains(file_name));
     CHECK_THROWS_WITH(
         Abort(message.c_str(), file_name.c_str(), line, function_name.c_str()),
-        Contains(std::to_string(line)));
+        Catch::Matchers::Contains(std::to_string(line)));
     CHECK_THROWS_WITH(
         Abort(message.c_str(), file_name.c_str(), line, function_name.c_str()),
-        Contains(function_name));
+        Catch::Matchers::Contains(function_name));
 }
 
 TEST_CASE("Abort Macros", "[Abort]")
 {
-    using namespace Catch::Matchers;
-
     SECTION("JET_ASSERT")
     {
         auto assert_lambda = [](bool a) { JET_ASSERT(a); };
         CHECK_NOTHROW(assert_lambda(true));
-        CHECK_THROWS_AS(assert_lambda(false), JetException);
+        CHECK_THROWS_AS(assert_lambda(false), Exception);
     }
     SECTION("JET_ABORT_IF_NOT")
     {
@@ -66,7 +61,7 @@ TEST_CASE("Abort Macros", "[Abort]")
             JET_ABORT_IF_NOT(a, msg.c_str());
         };
         CHECK_NOTHROW(abort_if_not_lambda(true, "No abort"));
-        CHECK_THROWS_AS(abort_if_not_lambda(false, "Abort"), JetException);
+        CHECK_THROWS_AS(abort_if_not_lambda(false, "Abort"), Exception);
     }
     SECTION("JET_ABORT_IF")
     {
@@ -74,11 +69,11 @@ TEST_CASE("Abort Macros", "[Abort]")
             JET_ABORT_IF(a, msg.c_str());
         };
         CHECK_NOTHROW(abort_if_lambda(false, "No abort"));
-        CHECK_THROWS_AS(abort_if_lambda(true, "Abort"), JetException);
+        CHECK_THROWS_AS(abort_if_lambda(true, "Abort"), Exception);
     }
     SECTION("JET_ABORT")
     {
         auto abort_lambda = [](std::string msg) { JET_ABORT(msg.c_str()); };
-        CHECK_THROWS_AS(abort_lambda("Abort"), JetException);
+        CHECK_THROWS_AS(abort_lambda("Abort"), Exception);
     }
 }
