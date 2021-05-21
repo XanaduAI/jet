@@ -2,13 +2,13 @@
 
 ### New features since last release
 
-* Exceptions now favoured in-place of `std::terminate`, with `JetException` as base type. Replaces `std::invalid_argument` base type of `TensorNetworkIO`. [(#3)](https://github.com/XanaduAI/jet/pull/3)
-
 * Python bindings are now available for the `Tensor` class. [(#2)](https://github.com/XanaduAI/jet/pull/2)
 
 * Running CMake with `-DBUILD_PYTHON=ON` now generates Python bindings within a `jet` package. [(#1)](https://github.com/XanaduAI/jet/pull/1)
 
 ### Improvements
+
+* Exceptions are now favoured in place of `std::terminate` with `JetException` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
 * `TaskBasedCpuContractor` now stores `Tensor` results. [(#8)](https://github.com/XanaduAI/jet/pull/8)
 
