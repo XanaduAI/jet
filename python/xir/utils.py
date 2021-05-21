@@ -121,7 +121,15 @@ def strip(script: str) -> str:
 
 # TODO: fix so that the order of declarations, definitions, and statements does not matter
 def is_equal(circuit_1: str, circuit_2: str, check_decl: bool = True):
-    """TODO"""
+    """Check that two circuit scripts are equal.
+
+    Args:
+        circuit_1 (str): first script to be compared
+        circuit_2 (str): second script to be compared to the first
+
+    Returns:
+        bool: whether circuit_1 and circuit_2 are semantically equivalent
+    """
     clist_1 = strip(circuit_1).split(";")
     clist_2 = strip(circuit_2).split(";")
 
@@ -142,7 +150,14 @@ def is_equal(circuit_1: str, circuit_2: str, check_decl: bool = True):
 
 
 def is_decl(line: str) -> bool:
-    """TODO"""
+    """Whether an XIR line is a declaration or an include statement
+
+    Args:
+        line (str): a single line from an XIR script
+
+    Returns:
+        bool: whether the line is a declaration or an include statement
+    """
     if not set(line.split()).isdisjoint({"gate", "output", "operator", "use"}):
         return True
     return False
