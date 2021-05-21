@@ -179,6 +179,7 @@ TEST_CASE("TensorNetwork::AddTensor", "[TensorNetwork]")
 
 TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
 {
+    using namespace Catch::Matchers;
     TensorNetwork<tensor_t> tn;
 
     const auto tensor_1 = MakeTensor({"A0", "B1", "C2"}, {2, 3, 4});
@@ -275,7 +276,7 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
 
     SECTION("Slice [1, :, 2]")
     {
-        tn.SliceIndices({"A0", "C2"}, 1 + 2 * 2);
+        tn.SliceIndices({"A0", "C2"}, 1 * 4 + 2);
         const auto &node = tn.GetNodes().front();
 
         const std::string have_name = node.name;
@@ -301,7 +302,7 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
 
     SECTION("Slice [1, 2, 3]")
     {
-        tn.SliceIndices({"A0", "B1", "C2"}, 1 + 2 * 2 + 3 * 2 * 3);
+        tn.SliceIndices({"A0", "B1", "C2"}, 1 * 3 * 4 + 2 * 4 + 3);
         const auto &node = tn.GetNodes().front();
 
         const std::string have_name = node.name;
@@ -324,10 +325,16 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
         const data_t want_tensor_data = {{23, 46}};
         CHECK(have_tensor_data == want_tensor_data);
     }
+    SECTION("Slice non-existent index")
+    {
+        CHECK_THROWS_WITH(tn.SliceIndices({"E0", "B0"}, 0),
+                          Contains("Sliced index does not exist."));
+    }
 }
 
 TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 {
+    using namespace Catch::Matchers;
     TensorNetwork<tensor_t> tn;
 
     SECTION("Implicit contraction of network [2]")
@@ -561,5 +568,40 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
         const index_to_edge_map_t want_map = {{"D3", {2, {4}}},
                                               {"A0", {2, {4}}}};
         CHECK(have_map == want_map);
+    }
+
+    SECTION("Contract empty network")
+    {
+        CHECK_THROWS_WITH(
+            tn.Contract(),
+            Contains("An empty tensor network cannot be contracted."));
+    }
+    SECTION("Invalid node ID 1")
+    {
+        const auto tensor_1 = MakeTensor({"A0", "B1"}, {2, 3});
+        const auto tensor_2 = MakeTensor({"C2", "B1"}, {2, 3});
+        const auto tensor_3 = MakeTensor({"C2", "D3"}, {2, 2});
+
+        tn.AddTensor(tensor_1, {});
+        tn.AddTensor(tensor_2, {});
+        tn.AddTensor(tensor_3, {});
+
+        CHECK_THROWS_WITH(
+            tn.Contract({{10, 2}, {0, 3}}),
+            Contains("Node ID 1 in contraction pair is invalid."));
+    }
+    SECTION("Invalid node ID 2")
+    {
+        const auto tensor_1 = MakeTensor({"A0", "B1"}, {2, 3});
+        const auto tensor_2 = MakeTensor({"C2", "B1"}, {2, 3});
+        const auto tensor_3 = MakeTensor({"C2", "D3"}, {2, 2});
+
+        tn.AddTensor(tensor_1, {});
+        tn.AddTensor(tensor_2, {});
+        tn.AddTensor(tensor_3, {});
+
+        CHECK_THROWS_WITH(
+            tn.Contract({{1, 2}, {0, 4}}),
+            Contains("Node ID 2 in contraction pair is invalid."));
     }
 }

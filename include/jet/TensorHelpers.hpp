@@ -167,18 +167,5 @@ inline void MultiplyTensorData(const std::vector<ComplexPrecision> &A,
     }
 }
 
-/**
- * @brief Calulate the size of data from the tensor size.
- *
- * @param tensor_shape Size of each tensor index label.
- */
-inline size_t ShapeToSize(const std::vector<size_t> &tensor_shape)
-{
-    size_t total_dim = 1;
-    for (const auto &dim : tensor_shape)
-        total_dim *= dim;
-    return total_dim;
-}
-
 }; // namespace TensorHelpers
 }; // namespace Jet
