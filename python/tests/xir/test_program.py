@@ -14,17 +14,18 @@
 
 """Unit tests for the program class"""
 
-import pytest
 from decimal import Decimal
 
-from ..program import (
-    IRProgram,
-    GateDeclaration,
-    OutputDeclaration,
+import pytest
+
+from xir.program import (
     FuncDeclaration,
+    GateDeclaration,
+    IRProgram,
     OperatorDeclaration,
-    Statement,
     OperatorStmt,
+    OutputDeclaration,
+    Statement,
 )
 
 
@@ -189,7 +190,10 @@ class TestSerialize:
         res = irprog.serialize()
 
         wires_str = ", ".join(str(w) for w in wires)
-        assert res == f"gate {name}[{wires_str}]:\n    rz(0.13) | [0];\n    cnot | [0, 1];\nend;"
+        assert (
+            res
+            == f"gate {name}[{wires_str}]:\n    rz(0.13) | [0];\n    cnot | [0, 1];\nend;"
+        )
 
     @pytest.mark.parametrize("name", ["ry", "toffoli"])
     @pytest.mark.parametrize("params", [["a", "b"]])
@@ -207,7 +211,10 @@ class TestSerialize:
         res = irprog.serialize()
 
         params_str = ", ".join(str(p) for p in params)
-        assert res == f"gate {name}({params_str}):\n    rz(0.13) | [0];\n    cnot | [0, 1];\nend;"
+        assert (
+            res
+            == f"gate {name}({params_str}):\n    rz(0.13) | [0];\n    cnot | [0, 1];\nend;"
+        )
 
     @pytest.mark.parametrize("name", ["mygate", "a_beautiful_gate"])
     def test_gates_no_params_and_no_wires(self, name):
@@ -246,7 +253,10 @@ class TestSerialize:
 
         params_str = ", ".join(str(p) for p in params)
         wires_str = ", ".join(str(w) for w in wires)
-        assert res == f"operator {name}({params_str})[{wires_str}]:\n    42, X[0] @ Y[1];\nend;"
+        assert (
+            res
+            == f"operator {name}({params_str})[{wires_str}]:\n    42, X[0] @ Y[1];\nend;"
+        )
 
     @pytest.mark.parametrize("name", ["H", "my_op"])
     @pytest.mark.parametrize("wires", [(0, 1), (0,), (0, 2, 42)])
@@ -311,7 +321,12 @@ class TestIRProgram:
         assert irprog.statements == []
         assert irprog.include == []
         assert irprog.statements == []
-        assert irprog.declarations == {"gate": [], "func": [], "output": [], "operator": []}
+        assert irprog.declarations == {
+            "gate": [],
+            "func": [],
+            "output": [],
+            "operator": [],
+        }
 
         assert irprog.gates == dict()
         assert irprog.operators == dict()
@@ -353,7 +368,9 @@ class TestIRProgram:
         wires = (0,)
         irprog.add_gate("rot", params, wires, statements)
 
-        assert irprog.gates == {"rot": {"params": params, "wires": wires, "statements": statements}}
+        assert irprog.gates == {
+            "rot": {"params": params, "wires": wires, "statements": statements}
+        }
 
         # check that gate is replaced, with a warning, if added again
         params = ["a", "b", "c"]
@@ -361,7 +378,9 @@ class TestIRProgram:
         with pytest.warns(Warning, match="Gate already defined"):
             irprog.add_gate("rot", params, wires, statements)
 
-        assert irprog.gates == {"rot": {"params": params, "wires": wires, "statements": statements}}
+        assert irprog.gates == {
+            "rot": {"params": params, "wires": wires, "statements": statements}
+        }
 
         # check that a second gate can be added and the former is kept
         params_2 = []

@@ -16,7 +16,7 @@
 
 import pytest
 
-from ..utils import is_equal
+from xir.utils import is_equal
 
 script_1 = """
 gate Sgate, 2, 1;

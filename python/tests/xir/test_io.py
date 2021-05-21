@@ -14,15 +14,15 @@
 
 """Tests for the interfaces module"""
 
-import pytest
 from decimal import Decimal
 from typing import List, Tuple
 
+import pytest
 import strawberryfields as sf
 from strawberryfields import ops
 
-from ..program import GateDeclaration, IRProgram, Statement
-from ..interfaces.strawberryfields_io import to_program, to_xir
+from xir.interfaces.strawberryfields_io import to_program, to_xir
+from xir.program import GateDeclaration, IRProgram, Statement
 
 
 def create_ir_prog(
@@ -75,7 +75,9 @@ class TestXIRToStrawberryFields:
     def test_empty_irprogram(self):
         """Test that converting an empty XIR program raises an error"""
         irprog = create_ir_prog(data=[])
-        with pytest.raises(ValueError, match="XIR program is empty and cannot be transformed"):
+        with pytest.raises(
+            ValueError, match="XIR program is empty and cannot be transformed"
+        ):
             to_program(irprog)
 
     def test_gate_not_defined(self):
@@ -135,7 +137,12 @@ class TestStrawberryFieldsToXIR:
         assert irprog.statements == []
         assert irprog.include == []
         assert irprog.statements == []
-        assert irprog.declarations == {"gate": [], "func": [], "output": [], "operator": []}
+        assert irprog.declarations == {
+            "gate": [],
+            "func": [],
+            "output": [],
+            "operator": [],
+        }
 
         assert irprog.gates == dict()
         assert irprog.operators == dict()

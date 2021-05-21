@@ -14,11 +14,11 @@
 
 """Integration tests for the IR"""
 
-from ..program import IRProgram
 import pytest
 
-from .. import ir_parser, IRTransformer
-from ..utils import is_equal
+from xir import IRTransformer, ir_parser
+from xir.program import IRProgram
+from xir.utils import is_equal
 
 
 def parse_script(circuit: str) -> IRProgram:
@@ -82,7 +82,9 @@ sample(observable: o(0.2), shots: 1000) | [0, 1];
 class TestParser:
     """Integration tests for parsing, and serializing, XIR scripts"""
 
-    @pytest.mark.parametrize("circuit", [qubit_script, photonics_script, photonics_script_no_decl])
+    @pytest.mark.parametrize(
+        "circuit", [qubit_script, photonics_script, photonics_script_no_decl]
+    )
     def test_parse_and_serialize(self, circuit):
         """Test parsing and serializing an XIR script.
 
