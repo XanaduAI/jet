@@ -4,15 +4,22 @@
 
 #include <catch2/catch.hpp>
 
-#include "jet/Permute.hpp"
+#include "jet/Permute/Permute.hpp"
 
 using namespace Jet;
 using namespace Jet::Utilities;
 using data_t = std::complex<float>;
 
-TEST_CASE("Permute::GenerateBinaryReorderingMap", "[Permute]")
+
+TEST_CASE("NaivePermute::Transpose", "[Permute]")
 {
-    QFPermute qfp;
+    NaivePermute permuter;
+}
+
+
+TEST_CASE("QFlexPermute::GenerateBinaryReorderingMap", "[Permute]")
+{
+    QFlexPermute qfp;
 
     std::vector<size_t> data_pos_map_out(16, 0);
     

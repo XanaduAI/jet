@@ -7,45 +7,20 @@
 #include <utility>
 #include <vector>
 
-#include "Abort.hpp"
-#include "Utilities.hpp"
+#include "../Abort.hpp"
+#include "../Utilities.hpp"
+
+#include "Base.hpp"
 
 namespace Jet {
 
-/**
- * @brief Interface for tensor permutation backend.
- *
- * @tparam PermuteBackend
- */
-template <class PermuteBackend> class PermuteBase {
-  protected:
-    using DataType = std::complex<float>;
-
-    // Ensure derived type recognised as friend for CRTP
-    friend PermuteBackend;
-
-  public:
-    PermuteBase() = default;
-
-    void Transpose(const std::vector<DataType> &data_in,
-                   const std::vector<size_t> &shape,
-                   std::vector<DataType> &data_out,
-                   const std::vector<std::string> &current_order,
-                   const std::vector<std::string> &new_order)
-    {
-        static_cast<PermuteBackend &>(*this).Transpose(
-            data_in, data_out, current_order, new_order);
-    }
-};
-
-class QFPermute : public PermuteBase<QFPermute> {
-    using DataType = std::complex<float>;
+class QFlexPermute : public PermuteBase<QFlexPermute> {
     const static size_t zero_ = static_cast<size_t>(0);
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
 
   public:
-    QFPermute() : PermuteBase<QFPermute>() {}
+    QFlexPermute() : PermuteBase<QFlexPermute>() {}
 
     /**
      * @brief Holds the data for index transformation of the permutation
@@ -53,19 +28,31 @@ class QFPermute : public PermuteBase<QFPermute> {
      *
      */
     struct IndexTransform {
-        const std::vector<std::string> &pre_indices;
-        const std::vector<std::string> &post_indices;
-        const std::vector<std::size_t> &pre_shape;
-        const std::vector<std::size_t> &post_shape;
-        const std::vector<size_t> &index_map;
-        IndexTransform(const std::vector<std::string> &pre_indices,
-                       const std::vector<std::string> &post_indices,
-                       const std::vector<std::size_t> &pre_shape,
-                       const std::vector<std::size_t> &post_shape,
-                       const std::vector<size_t> &index_map)
+        const std::vector<std::string> pre_indices;
+        const std::vector<std::string> post_indices;
+        const std::vector<std::size_t> pre_shape;
+        const std::vector<std::size_t> post_shape;
+        const std::vector<size_t> index_map;
+        IndexTransform(const std::vector<std::string> &pre_indices={},
+                       const std::vector<std::string> &post_indices={},
+                       const std::vector<std::size_t> &pre_shape={},
+                       const std::vector<std::size_t> &post_shape={},
+                       const std::vector<size_t> &index_map={})
             : pre_indices(pre_indices), post_indices(post_indices),
               pre_shape(pre_shape), post_shape(post_shape), index_map(index_map)
         {
+        }
+        friend std::ostream& operator<< ( std::ostream &os, const IndexTransform &idx_tform ) 
+        {
+            using namespace Utilities;
+            os << "[IndexTransform=";
+            os << "[PreIDX   ]=" << idx_tform.pre_indices << "\n" ;
+            os << "[PostIDX  ]=" << idx_tform.post_indices << "\n" ;
+            os << "[PreShape ]=" << idx_tform.pre_shape << "\n" ;
+            os << "[PostShape]=" << idx_tform.post_shape << "\n" ;
+            os << "[IndexMap ]=" << idx_tform.index_map << "\n" ;
+            os << "]";
+            return os;
         }
     };
 
@@ -83,14 +70,45 @@ class QFPermute : public PermuteBase<QFPermute> {
 
         const IndexTransform &idx_transform;
 
-        PermutePlan(size_t dim_left, size_t dim_right, size_t tensor_size,
-                    PermuteType p_type, const IndexTransform &idx_transform)
+        PermutePlan(size_t dim_left=0, size_t dim_right=0, size_t tensor_size=0,
+                    PermuteType p_type=PermuteType::None, const IndexTransform &idx_transform = {})
             : dim_left(dim_left), dim_right(dim_right),
               tensor_size(tensor_size), p_type(p_type),
               idx_transform(idx_transform)
         {
         }
+
+        friend std::ostream& operator<< ( std::ostream &os, const PermutePlan &plan ) 
+        {
+            os << "[L="<< plan.dim_left << "][R=" << plan.dim_right << "]\n";
+            os << "[Size=" << plan.tensor_size << "][Type=" << static_cast<size_t>(plan.p_type) << "]\n";
+            os << "[Idx_TForm=" << plan.idx_transform << "]\n";
+            return os;
+        }
+
     };
+
+    struct PrecomputedQflexTransposeData {
+        std::vector<PermutePlan> plans;
+        size_t total_dim;
+        bool no_transpose;
+        bool log_2;
+
+        PrecomputedQflexTransposeData() : plans({}), total_dim(0), no_transpose(true), log_2(false)
+        {
+        }
+
+        friend std::ostream& operator<< ( std::ostream &os, const PrecomputedQflexTransposeData &qftd ) 
+        {
+            using namespace Utilities;
+            os << "[DimTotal="<< qftd.plans << "]\n";
+            os << "[Tpose="<< qftd.no_transpose << "]\n";
+            os << "[Log2="<< qftd.log_2 << "]\n";
+            os << "[Plans="<< qftd.plans << "]\n";
+            return os;
+        }
+    };
+
 
     using plan_type = PermutePlan;
 
@@ -105,43 +123,33 @@ class QFPermute : public PermuteBase<QFPermute> {
      * @param current_order Existing index order of tensor.
      * @param new_order New index order of the `data_out` tensor data.
      */
+    template<class DataType>
     void Transpose(const std::vector<DataType> &data_in,
                    const std::vector<size_t> &shape,
                    std::vector<DataType> &data_out,
                    const std::vector<std::string> &current_order,
                    const std::vector<std::string> &new_order)
     {
-        if (&data_in == &data_out) {
-            std::vector<size_t> indices_old(current_order.size());
-            std::vector<size_t> indices_new(current_order.size());
-            for (size_t i = 0; i < indices_old.size(); i++) {
-                indices_old[i] = i;
-                indices_new[i] = new_order.size() - (i + 1);
-            }
-            TransposeInPlace_(data_out, indices_old, indices_new);
-        }
-        else {
+        std::cout << "I am here 1" << std::endl;
+            std::cout << "I am here 2a" << std::endl;
+
             auto prec_data = PrecomputeFastTransposeData<DataType>(
                 data_in, shape, current_order, new_order);
-        }
-    }
 
-    struct PrecomputedQflexTransposeData {
-        std::vector<PermutePlan> plans;
-        size_t total_dim;
-        bool no_transpose;
-        bool log_2;
-    };
 
-    void TransposeInPlace_(std::vector<DataType> &data,
-                           const std::vector<size_t> &current_order,
-                           const std::vector<size_t> &new_order)
-    {
-        data[0] *= 10;
-        for (auto &a : current_order)
-            std::cout << a << std::endl;
-        for (auto &a : new_order)
-            std::cout << a << std::endl;
+            PrecomputedQflexTransposeData precomputed_data_a =
+                PrecomputeFastTransposeData(data_in, shape, current_order, new_order);
+
+
+
+            auto data_scratch = data_in;
+            data_out = data_in;
+            FastPermute<DataType>(data_out, prec_data, data_scratch);
+
+            std::cout << prec_data;
+
+            std::cout << "I am here 3b" << std::endl;
+
     }
 
     /**
@@ -175,11 +183,11 @@ class QFPermute : public PermuteBase<QFPermute> {
         std::vector<std::size_t> old_dimensions(num_indices, dim);
         std::vector<std::size_t> new_dimensions(num_indices, dim);
 
-        std::size_t total_dim = 1;
+        std::size_t total_dim = 1; // replace with tensor_size?
         for (std::size_t i = 0; i < num_indices; ++i) {
             total_dim *= old_dimensions[i];
         }
-
+        /// NOTE: Look into better way to run comparisons here
         for (std::size_t i = 0; i < num_indices; ++i) {
             for (std::size_t j = 0; j < num_indices; ++j) {
                 if (old_ordering[i] == new_ordering[j]) {
@@ -263,7 +271,7 @@ class QFPermute : public PermuteBase<QFPermute> {
     }
 
     /**
-     * @brief TODO: Figure out what this does
+     * @brief Generate mappings from current data indices to permuted data indices in row-major form.
      *
      * @param map_old_to_new_idxpos
      * @param map_old_to_new_position
@@ -284,13 +292,13 @@ class QFPermute : public PermuteBase<QFPermute> {
             map_old_to_new_position.size()) {
             JET_ABORT("Size of map must be equal to 2^num_indices");
         }
-
+        ///NOTE: The following is already defined elsewhere. Pull in instead of recalcing?
         // Define super dimensions. See _naive_reorder().
         std::vector<std::size_t> old_dimensions(num_indices, dim);
         std::vector<std::size_t> new_dimensions(num_indices, dim);
         std::vector<std::size_t> old_super_dimensions(num_indices);
         std::vector<std::size_t> new_super_dimensions(num_indices);
-        old_super_dimensions[num_indices - 1] = 1;
+        old_super_dimensions[num_indices - 1] = 1; // these are the strides for each dim
         new_super_dimensions[num_indices - 1] = 1;
 
         if (num_indices >= 2)
@@ -302,7 +310,7 @@ class QFPermute : public PermuteBase<QFPermute> {
         // Iterate and generate map.
         std::vector<std::size_t> old_counter(num_indices, 0);
 
-        /// This will not vectorise --- needs to be refactored
+        /// This will not vectorise --- needs to be refactored. Also used elsewhere
         while (true) {
             std::size_t po{0}, pn{0}; // Position of the data, old and new.
 
@@ -328,13 +336,13 @@ class QFPermute : public PermuteBase<QFPermute> {
     }
 
     // Can data_ and scratch_copy be declared as restrict?
-    template <typename T>
+    template<class DataType>
     void PrecomputedLeftOrRightTranspose(const PermutePlan &p_plan,
-                                         size_t tensor_dim, T &data_,
-                                         T &scratch_copy)
+                                         size_t tensor_dim, std::vector<DataType> &data_,
+                                         std::vector<DataType> &scratch_copy)
     {
         if (p_plan.p_type == PermuteType::PermuteRight) {
-            std::vector<T> temp_data(p_plan.dim_right);
+            std::vector<DataType> temp_data(p_plan.dim_right);
             for (std::size_t pl = 0; pl < p_plan.dim_left; ++pl) {
                 std::size_t offset = pl * p_plan.dim_right;
                 for (std::size_t pr = 0; pr < p_plan.dim_right; ++pr)
@@ -362,7 +370,7 @@ class QFPermute : public PermuteBase<QFPermute> {
 
     // has to have dimensions that are multiples of 2
 
-    template <typename DataType>
+    template<class DataType>
     PrecomputedQflexTransposeData
     PrecomputeFastTransposeData(const std::vector<DataType> &data,
                                 const std::vector<size_t> &shape,
@@ -373,7 +381,7 @@ class QFPermute : public PermuteBase<QFPermute> {
         PrecomputedQflexTransposeData precomputed_data;
 
         std::cerr << "Should the next line be true?" << std::endl;
-        precomputed_data.log_2 = false;
+        precomputed_data.log_2 = true;
         for (std::size_t i = 0; i < shape.size(); ++i) {
             if (!is_pow_2(shape[i])) {
                 precomputed_data.log_2 = false;
@@ -439,7 +447,7 @@ class QFPermute : public PermuteBase<QFPermute> {
             }
             binary_groups[old_ordering[i]] = group;
         }
-        // Create old and new binary ordering in letters.
+        // Create old and new binary ordering in letters. Is this necessary?
         std::vector<std::string> old_binary_ordering(num_binary_indices);
         std::vector<std::string> new_binary_ordering(num_binary_indices);
         std::size_t binary_position = 0;
@@ -622,13 +630,12 @@ class QFPermute : public PermuteBase<QFPermute> {
     }
 
     /*******************************************************************************/
-
     template <class DataType>
-    void FastTransposeWithPrecomputedDataOpenMPNoInit(
-        DataType &data_, const PrecomputedQflexTransposeData &precomputed_data,
-        DataType &scratch)
+    void FastPermute(
+        std::vector<DataType> &data_, const PrecomputedQflexTransposeData &precomputed_data,
+        std::vector<DataType> &scratch)
     {
-        for (int plan_i = 0; plan_i < precomputed_data.plans.size(); plan_i++) {
+        for (size_t plan_i = 0; plan_i < precomputed_data.plans.size(); plan_i++) {
             auto &dim_right = precomputed_data.plans[plan_i].dim_right;
             auto &dim_left = precomputed_data.plans[plan_i].dim_left;
             auto &tensor_dim = precomputed_data.plans[plan_i].tensor_size;
