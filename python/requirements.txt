@@ -1,3 +1,6 @@
 black
+build
+cmake>=3.14
 isort>5
 pytest>=5,<6
+wheel
