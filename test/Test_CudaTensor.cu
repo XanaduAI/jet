@@ -337,10 +337,10 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
         CudaTensor r_ij({"i", "j"}, {2, 2});
         r_ij.FillRandom();
-        Tensor r_ij_host = static_cast<Tensor<c_fp32_host>>(r_ij);
+        Tensor<c_fp32_host> r_ij_host = static_cast<Tensor<c_fp32_host>>(r_ij);
 
         CudaTensor r_ji({"j", "i"}, {2, 2}, r_ij.GetData());
-        Tensor r_ji_host = static_cast<Tensor<c_fp32_host>>(r_ji);
+        Tensor<c_fp32_host> r_ji_host = static_cast<Tensor<c_fp32_host>>(r_ji);
 
 
         CudaTensor s_i({"i"}, {2});
@@ -352,12 +352,12 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CudaTensor con_rij_si = ContractTensors(r_ij, s_i);
         CudaTensor con_rji_si = ContractTensors(r_ji, s_i);
 
-        Tensor con_si_rij_host = static_cast<Tensor<c_fp32_host>>(con_si_rij);
-        Tensor con_si_rji_host = static_cast<Tensor<c_fp32_host>>(con_si_rji);
-        Tensor con_rij_si_host = static_cast<Tensor<c_fp32_host>>(con_rij_si);
-        Tensor con_rji_si_host = static_cast<Tensor<c_fp32_host>>(con_rji_si);
+        Tensor<c_fp32_host> con_si_rij_host = static_cast<Tensor<c_fp32_host>>(con_si_rij);
+        Tensor<c_fp32_host> con_si_rji_host = static_cast<Tensor<c_fp32_host>>(con_si_rji);
+        Tensor<c_fp32_host> con_rij_si_host = static_cast<Tensor<c_fp32_host>>(con_rij_si);
+        Tensor<c_fp32_host> con_rji_si_host = static_cast<Tensor<c_fp32_host>>(con_rji_si);
 
-        Tensor expected_rij_si_host(
+        Tensor<c_fp32_host> expected_rij_si_host(
             {"j"}, {2},
             {
                 r_ji_host.GetValue({0, 0}) * s_i_host.GetValue({0}) +
@@ -443,8 +443,8 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CudaTensor tensor2(t_indices2, t_shape2, t_data2);
         CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
 
-        Tensor tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
-        Tensor tensor4_host({"a"}, {2}, t_data_expect);
+        Tensor<c_fp32_host> tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
+        Tensor<c_fp32_host> tensor4_host({"a"}, {2}, t_data_expect);
 
         CHECK(tensor3_host == tensor4_host);
     }
@@ -467,8 +467,8 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
         CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
 
-        Tensor tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
-        Tensor tensor4_host(t_indices3, t_shape3,
+        Tensor<c_fp32_host> tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
+        Tensor<c_fp32_host> tensor4_host(t_indices3, t_shape3,
                                  {c_fp32_host(2.25, 3.0), c_fp32_host(2.25, 3.0),
                                   c_fp32_host(2.25, 3.0), c_fp32_host(2.25, 3.0)});
 
@@ -491,7 +491,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
         CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
         auto tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
-        Tensor tensor4_host({}, {}, {c_fp32_host(4.0, 0.0)});
+        Tensor<c_fp32_host> tensor4_host({}, {}, {c_fp32_host(4.0, 0.0)});
 
         CHECK(tensor3_host == tensor4_host);
     }

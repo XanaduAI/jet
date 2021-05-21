@@ -109,6 +109,56 @@ FetchContent_MakeAvailable(Taskflow)
 
 find_package(OpenMP QUIET)
 
+if(ENABLE_CUTENSOR)
+    SET(CUDA_SEPARABLE_COMPILATION ON)
+    
+    enable_language(CUDA)
+
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 60)
+    endif()
+
+    find_package(CUDA REQUIRED)
+
+    find_library(CURAND_LIB
+        NAMES   curand libcurand curand_static libcurand_static
+        HINTS   /usr/lib 
+                /usr/local/cuda 
+                /usr/local/lib 
+                /opt 
+                lib 
+                lib64
+                ${CUDAToolkit_LIBRARY_DIR}
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib64)
+
+    find_library(CUTENSOR_LIB
+        NAMES   cutensor.so.1.3.0 libcutensor.so.1.3.0
+        HINTS   /usr/lib 
+                /usr/local/cuda 
+                /usr/local/lib 
+                /opt 
+                lib 
+                lib64
+                ${CUDAToolkit_LIBRARY_DIR}
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib64)
+
+    find_file(CUTENSOR_INC
+        NAMES   cutensor.h 
+        HINTS   /usr/include 
+                /usr/local/cuda 
+                /usr/local/include 
+                /opt 
+                include 
+                ${CUDAToolkit_INCLUDE_DIRS}
+                ${CUDA_TOOLKIT_ROOT_DIR}/include)
+
+    if(NOT CUTENSOR_LIB OR NOT CUTENSOR_INC)
+        message(FATAL_ERROR "Unable to find cutensor installation. Please ensure v1.3.0+ is correctly installed.")
+    endif()
+endif()
+
 ##########################
 ## Create Jet target
 ##########################
@@ -144,6 +194,9 @@ if(ENABLE_IPO)
 endif()
 if (ENABLE_FPIC)
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fPIC>)
+endif()
+if (ENABLE_CUTENSOR)
+    target_link_libraries(Jet INTERFACE ${CUTENSOR_LIB} ${CURAND_LIB})
 endif()
 
 ##########################

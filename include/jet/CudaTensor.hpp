@@ -1,226 +1,142 @@
 #pragma once
 
 #include <algorithm>
+#include <memory>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "cutt.h"
+#include "Tensor.hpp"
+#include "Utilities.hpp"
+
 #include <cuComplex.h>
-#include <cublas_v2.h>
 #include <cuda_runtime.h>
+#include <curand.h>
+#include <cutensor.h>
+
+#define HANDLE_ERROR(x)                                                        \
+    {                                                                          \
+        const auto err = x;                                                    \
+        if (err != CUTENSOR_STATUS_SUCCESS) {                                  \
+            printf("Error: %s\n", cutensorGetErrorString(err));                \
+            return err;                                                        \
+        }                                                                      \
+    };
+
+#define HANDLE_CUDA_ERROR(x)                                                   \
+    {                                                                          \
+        const auto err = x;                                                    \
+        if (err != cudaSuccess) {                                              \
+            printf("Error: %s\n", cudaGetErrorString(err));                    \
+            return err;                                                        \
+        }                                                                      \
+    };
 
 namespace Jet {
 
-template <typename T> bool InVector(const T &s, const std::vector<T> &v)
-{
-    if (std::find(v.cbegin(), v.cend(), s) != v.cend())
-        return true;
-    else
-        return false;
-}
-
-template <typename T>
-std::vector<T> VectorIntersection(const std::vector<T> &v,
-                                  const std::vector<T> &w)
-{
-    std::vector<T> temp;
-    for (auto it = v.cbegin(); it != v.cend(); ++it) {
-        if (InVector(*it, w))
-            temp.push_back(*it);
-    }
-    return temp;
-}
-
-template <typename T>
-std::vector<T> VectorUnion(const std::vector<T> &v, const std::vector<T> &w)
-{
-    std::vector<T> temp(v);
-    for (auto it = w.cbegin(); it != w.cend(); ++it) {
-        if (!InVector(*it, v))
-            temp.push_back(*it);
-    }
-    return temp;
-}
-
-template <typename T>
-std::vector<T> VectorSubtraction(const std::vector<T> &v,
-                                 const std::vector<T> &w)
-{
-    std::vector<T> temp;
-    for (auto it = v.cbegin(); it != v.cend(); ++it) {
-        if (!InVector(*it, w))
-            temp.push_back(*it);
-    }
-    return temp;
-}
-
-void CUDAMatrixMultiply(float *A, float *B, float *C, int A_row, int A_col,
-                        int B_col)
-{
-    cublasHandle_t handle;
-    cublasCreate(&handle);
-    const float alpha = 1;
-    const float beta = 0;
-
-    cublasOperation_t transa = CUBLAS_OP_N;
-    cublasOperation_t transb = CUBLAS_OP_N;
-    int m = A_row;
-    int n = B_col;
-    int k = A_col;
-    int lda = A_row;
-    int ldb = A_col;
-    int ldc = A_row;
-
-    cublasSgemm(handle, transa, transb, m, n, k, &alpha, A, lda, B, ldb, &beta,
-                C, ldc);
-}
-
-void CUDAMatrixMultiply(cuFloatComplex *A, cuFloatComplex *B, cuFloatComplex *C,
-                        int A_row, int A_col, int B_col)
-{
-    cublasHandle_t handle;
-    cublasCreate(&handle);
-    cuFloatComplex alpha;
-    alpha.x = 1.;
-    alpha.y = 0.;
-    cuFloatComplex beta;
-    beta.x = 0.;
-    beta.y = 0.;
-
-    cublasOperation_t transa = CUBLAS_OP_N;
-    cublasOperation_t transb = CUBLAS_OP_N;
-    int m = A_row;
-    int n = B_col;
-    int k = A_col;
-    int lda = A_row;
-    int ldb = A_col;
-    int ldc = A_row;
-
-    cublasCgemm(handle, transa, transb, m, n, k, &alpha, A, lda, B, ldb, &beta,
-                C, ldc);
-}
-
-template <typename T> class CudaTensor {
+template <class T = cuComplex> class CudaTensor {
 
   private:
     T *data_;
-    size_t n_row_;
-    size_t n_col_;
 
-    std::vector<size_t> shape_;
     std::vector<std::string> indices_;
-    std::unordered_map<std::string, size_t> ind_to_axes_;
-    size_t upper_rank_;
+    std::vector<size_t> shape_;
+    std::unordered_map<std::string, size_t> index_to_dimension_;
+    std::unordered_map<std::string, size_t> index_to_axes_;
 
-    T *data_transpose_;
+  public:
 
-    void SetShapeAndUpperRank(const std::vector<size_t> &shape,
-                              int upper_rank = -1)
+    using scalar_type_t = T;
+    using scalar_type_t_precision = decltype(std::declval<T>().x);
 
+    void SetIndicesShapeAndMemory(const std::vector<std::string> &indices,
+                                  const std::vector<size_t> &shape)
     {
-        size_t rank = shape.size();
-        size_t n_row = 1;
-        size_t n_col = 1;
-        if (upper_rank >= 0)
-            upper_rank_ = upper_rank;
-        else
-            upper_rank_ = rank / 2;
-
-        for (size_t i = 0; i < upper_rank_; ++i)
-            n_row *= shape[i];
-        for (size_t i = upper_rank_; i < rank; ++i)
-            n_col *= shape[i];
         shape_ = shape;
-        n_row_ = n_row;
-        n_col_ = n_col;
-        indices_ = std::vector<std::string>(shape.size(), "?");
-    }
+        indices_ = indices;
+        index_to_dimension_.clear();
+        index_to_axes_.clear();
 
-    void SetMemory(bool store_transpose)
-    {
-        cudaMalloc(&data_, GetRows() * GetCols() * sizeof(T));
-        if (store_transpose) {
-            cudaMalloc(&data_transpose_, GetRows() * GetCols() * sizeof(T));
+        for (std::size_t i = 0; i < shape_.size(); ++i) {
+            index_to_dimension_[indices[i]] = shape[i];
+            index_to_axes_[indices[i]] = i;
         }
+        cudaMalloc(&data_, Jet::Utilities::ShapeToSize(shape_) * sizeof(T));
     }
 
-    void SetIndicesShapeAndMemory(const std::vector<size_t> &indices,
-                                  const std::vector<size_t> &shape,
-                                  bool store_transpose, int upper_rank)
-    {
-
-        SetShapeAndUpperRank(shape, upper_rank);
-        SetMemory(store_transpose);
-        SetIndices(indices);
+    CudaTensor() {
+        cuComplex h_dat({0.0,0.0});
+        cudaMalloc(&data_, 1);
+        cudaMemcpy(data_, &h_dat, sizeof(T), cudaMemcpyHostToDevice);
     }
 
-    CudaTensor() {}
-    CudaTensor(const std::vector<size_t> &indices,
-               const std::vector<size_t> &shape, bool store_transpose = true,
-               int upper_rank = -1)
+    CudaTensor(const std::vector<std::string> &indices,
+               const std::vector<size_t> &shape) 
     {
-        SetIndicesShapeAndMemory(indices, shape, store_transpose, upper_rank);
+        SetIndicesShapeAndMemory(indices, shape);
+    }
+
+    CudaTensor(const std::vector<std::string> &indices,
+               const std::vector<size_t> &shape, const std::vector<T> data) : 
+               CudaTensor(indices, shape)
+    {
+        cudaMemcpy(data_, data.data(), sizeof(T)*data.size(), cudaMemcpyHostToDevice);
+    }
+
+    CudaTensor(const std::vector<std::string> &indices,
+               const std::vector<size_t> &shape, const T* data) : 
+               CudaTensor(indices, shape)
+    {
+        cudaMemcpy(data_, data, sizeof(T)*Jet::Utilities::ShapeToSize(shape), cudaMemcpyHostToDevice);
+    }
+
+    CudaTensor(const std::vector<size_t> &shape) : CudaTensor()
+    {
+        using namespace Utilities;
+        std::vector<std::string> indices(shape.size());
+        for (size_t i = 0; i < indices.size(); i++) {
+            indices[i] = "?" + GenerateStringIndex(i);
+        }
+        SetIndicesShapeAndMemory(indices, shape);
     }
 
     ~CudaTensor()
     {
-        if (data_ != NULL) {
-            cudaFree(data_);
-        }
-        if (data_transpose_ != NULL) {
-            cudaFree(data_transpose_);
-        }
+        cudaFree(data_);
     }
+
+    const std::vector<std::string> &GetIndices() const { return indices_; }
 
     std::vector<size_t>
     ConvertIndicesToAxes(const std::vector<std::string> &indices) const
     {
+        using namespace Utilities;
+        std::cout << "ConvertIndicesToAxes" << std::endl;
+        std::cout << "indices = " << indices << std::endl;
+        for (auto i : index_to_axes_) {
+            std::cout << "i.first = " << i.first << std::endl;
+            std::cout << "i.second = " << i.second << std::endl;
+        }
+
         std::vector<size_t> axes(indices.size());
         for (size_t i = 0; i < indices.size(); i++) {
-            axes[i] = ind_to_axes_.at(indices[i]);
+            axes[i] = index_to_axes_.at(indices[i]);
         }
         return axes;
     }
 
-    void SetIndices(const std::vector<std::string> &indices)
-    {
-        indices_ = indices;
-        auto &&shape = GetShape();
-        if (shape.size() != indices.size()) {
-            // skip all axes that have size 1, we assume these are here
-            // for no reason and that the indices are in order of non-size-one
-            // axes
-            size_t counter = 0;
-            for (int i = 0; i < shape.size(); i++) {
-                if (shape[i] != 1) {
-                    ind_to_axes_.insert(
-                        std::pair<std::string, size_t>(indices[counter], i));
-                    counter++;
-                }
-            }
-        }
-        for (size_t i = 0; i < indices.size(); i++) {
-            ind_to_axes_.insert(std::pair<std::string, size_t>(indices[i], i));
-        }
-    }
-
-    const std::vector<std::string> &GetIndices() const { return indices_; }
-    const std::unordered_map<std::string, size_t> &GetIndexToAxesMap() const
-    {
-        return ind_to_axes_;
-    }
+    // const std::vector<std::string> &GetIndices() const { return indices_; }
 
     void Clear_()
     {
-        if (data_ != NULL) {
-            cudaFree(data_);
-            data_ = NULL;
-        }
-        if (data_transpose_ != NULL) {
-            cudaFree(data_transpose_);
-            data_transpose_ = NULL;
-        }
+        index_to_dimension_.clear();
+        index_to_axes_.clear();
+        shape_.clear();
+        indices_.clear();
+ #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+        cudaFree(data_);
+        data_ = nullptr;
     }
 
     void Move_(CudaTensor &&other)
@@ -228,269 +144,346 @@ template <typename T> class CudaTensor {
         Clear_();
         indices_ = std::move(other.indices_);
         shape_ = std::move(other.shape_);
-        ind_to_axes_ = std::move(other.ind_to_axes_);
+        index_to_dimension_ = std::move(other.index_to_dimension_);
+        index_to_axes_ = std::move(other.index_to_axes_);
         data_ = other.data_;
-        data_transpose_ = other.data_transpose_;
-        n_row_ = other.n_row_;
-        n_col_ = other.n_col_;
-        upper_rank_ = other.upper_rank_;
-        other.data_ = NULL;
-        other.data_transpose_ = NULL;
+        other.data_ = nullptr;
     }
 
     CudaTensor(CudaTensor &&other) { Move_(std::move(other)); }
 
-    CudaTensor(const CudaTensor &other) = delete;
+    CudaTensor(const CudaTensor &other) {
+        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        cudaMemcpy(data_, other.GetData(), sizeof(T) * GetSize(),
+                   cudaMemcpyDeviceToDevice);
+    }
+
     void operator=(const CudaTensor &) = delete;
 
     T *GetData() { return data_; }
-
-    T *GetData() { return data_; }
-
-    T *GetTransposeData() { return data_transpose_; }
+    const T *GetData() const { return data_; }
 
     const std::vector<size_t> &GetShape() const { return shape_; }
 
-    size_t GetUpperRank() const { return upper_rank_; }
+    size_t GetSize()
+    {
+        std::size_t total_dim = 1;
+        for (std::size_t i = 0; i < shape_.size(); ++i)
+            total_dim *= shape_[i];
+        return total_dim;
+    }
 
-    size_t GetSize() { return n_row_ * n_col_; }
-
-    size_t GetRows() { return n_row_; }
-
-    size_t GetCols() { return n_col_; }
-
-    void CopyHostDataToGpu(T *host_tensor)
+    inline void CopyHostDataToGpu(T *host_tensor)
     {
         cudaMemcpy(data_, host_tensor, sizeof(T) * GetSize(),
                    cudaMemcpyHostToDevice);
     }
 
-    void CopyGpuDataToHost(T *host_tensor)
+    inline void CopyGpuDataToHost(T *host_tensor)
     {
         cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
                    cudaMemcpyDeviceToHost);
     }
-};
 
-template <typename T>
-void Transpose(CudaTensor<T> &a, CudaTensor<T> &trans_a,
-               std::vector<size_t> &new_indices)
-{
-    cuttHandle plan;
-    (cuttPlan(&plan, a.GetShape().size(), a.GetShape(), new_indices, sizeof(T),
-              0));
-    (cuttExecute(plan, a.GetData(), trans_a.GetData()));
-    (cuttDestroy(plan));
-}
+    inline void CopyGpuDataToGpu(T *host_tensor)
+    {
+        cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
+                   cudaMemcpyDeviceToDevice);
+    }
 
-struct CudaTransposePlan {
-    bool no_transpose;
-    cuttHandle plan;
-    std::vector<size_t> axes;
-    std::vector<size_t> output_shape;
-    size_t output_urank;
+    inline void AsyncCopyHostDataToGpu(T *host_tensor, cudaStream_t stream = 0)
+    {
+
+        cudaMemcpyAsync(data_, host_tensor, sizeof(T) * GetSize(),
+                        cudaMemcpyHostToDevice, stream);
+    }
+
+    inline void AsyncCopyGpuDataToHost(T *host_tensor, cudaStream_t stream = 0)
+    {
+        cudaMemcpyAsync(host_tensor, data_, sizeof(T) * GetSize(),
+                        cudaMemcpyDeviceToHost, stream);
+    }
+
+    const std::unordered_map<std::string, size_t> &GetIndexToDimension() const
+    {
+        return index_to_dimension_;
+    }
+
+    explicit operator Tensor<std::complex<scalar_type_t_precision>>(){
+        std::vector<std::complex<scalar_type_t_precision>> host_data(GetSize(), {0.0,0.0});
+        CopyGpuDataToHost( reinterpret_cast<T*>(host_data.data()));
+
+        std::vector<size_t> revShape;
+
+        revShape.resize(GetShape().size());    // allocate space
+
+        std::reverse_copy(GetShape().begin(), GetShape().end(), revShape.begin());
+
+        return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), revShape, host_data);
+        //return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), GetShape(), host_data);
+    }
+
+    /**
+     * @brief Randomly assign values to `%Tensor` object data. This method
+     * will allow for reproducible random number generation with a given seed.
+     *
+     * @param seed Seed the RNG with a given value.
+     */
+    void FillRandom(size_t seed)
+    {
+        static curandGenerator_t rng;
+        curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT);
+        curandSetPseudoRandomGeneratorSeed(rng, seed);
+        curandGenerateUniform(rng, reinterpret_cast<scalar_type_t_precision*>(data_), 2*GetSize());
+    }
+
+    /**
+     * @brief Randomly assign values to `%CudaTensor` object data.
+     *
+     */
+    void FillRandom()
+    {
+        static curandGenerator_t rng;
+        curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT);
+        curandSetPseudoRandomGeneratorSeed(rng, std::random_device{}());
+        curandGenerateUniform(rng, reinterpret_cast<scalar_type_t_precision*>(data_), 2*GetSize());
+    }
+
+    /**
+     * @brief Change `%CudaTensor` index label at given location.
+     *
+     * @param ind Location of `%CudaTensor` index label.
+     * @param new_string New `%CudaTensor` index label.
+     */
+    void RenameIndex(size_t ind, std::string new_string)
+    {
+        std::string old_string = GetIndices()[ind];
+
+        indices_[ind] = new_string;
+        index_to_dimension_[new_string] = index_to_dimension_[old_string];
+        index_to_dimension_.erase(old_string);
+    }
+
 };
 
 struct CudaContractionPlan {
 
-    CudaTransposePlan trans_a_plan;
-    CudaTransposePlan trans_b_plan;
-
-    std::vector<size_t> axes_a;
-    std::vector<size_t> axes_b;
-
-    std::vector<size_t> output_shape;
-    size_t output_urank;
+    cutensorHandle_t handle;
+    cutensorContractionPlan_t plan;
+    size_t work_size;
+    void *work;
 };
 
-template <typename T>
-CudaTransposePlan GetTransposePlan(CudaTensor<T> &input,
-                                   const std::vector<size_t> &axes,
-                                   int new_urank = -1)
+template <class T = cuComplex>
+CudaContractionPlan GetCudaContractionPlan(CudaTensor<T> &a_tensor,
+                                           CudaTensor<T> &b_tensor,
+                                           CudaTensor<T> &c_tensor)
 {
-    bool no_transpose = true;
-    for (size_t i = 0; i < input.GetShape().size(); ++i) {
-        if (axes[i] != i) {
-            no_transpose = false;
-            break;
+    using namespace Jet::Utilities;
+
+    cudaDataType_t data_type = CUDA_C_32F;
+    cutensorComputeType_t compute_type = CUTENSOR_C_MIN_32F;
+
+    const auto &a_indices = a_tensor.GetIndices();
+    const auto &b_indices = b_tensor.GetIndices();
+    const auto &c_indices = c_tensor.GetIndices();
+
+    std::unordered_map<std::string, int> index_to_mode_map;
+    std::unordered_map<int, int64_t> mode_to_dimension_map;
+
+    for (size_t i = 0; i < a_indices.size(); i++) {
+        if (!index_to_mode_map.count(a_indices[i])) {
+            index_to_mode_map[a_indices[i]] = i;
+            mode_to_dimension_map[i] = static_cast<int64_t>(
+                a_tensor.GetIndexToDimension().at(a_indices[i]));
         }
     }
 
-    CudaTransposePlan transpose_plan;
-    transpose_plan.no_transpose = no_transpose;
-    if (no_transpose)
-        return transpose_plan;
-
-    std::vector<int> dim_old(input.GetShape().size());
-    std::vector<int> axes_int(axes.size());
-    for (int i = 0; i < axes.size(); i++) {
-        axes_int[i] = axes[i];
-    }
-    for (int i = 0; i < dim_old.size(); i++) {
-        dim_old[i] = input.GetShape()[i];
+    size_t stride = a_indices.size();
+    for (size_t i = 0; i < b_indices.size(); i++) {
+        if (!index_to_mode_map.count(b_indices[i])) {
+            index_to_mode_map[b_indices[i]] = stride + i;
+            mode_to_dimension_map[stride + i] = static_cast<int64_t>(
+                b_tensor.GetIndexToDimension().at(b_indices[i]));
+        }
     }
 
-    auto rank = dim_old.size();
-    std::vector<size_t> dim_new(rank);
-    for (size_t r = 0; r < rank; ++r) {
-        dim_new[r] = dim_old[axes[r]];
+    std::vector<int> a_modes(a_indices.size());
+    std::vector<int> b_modes(b_indices.size());
+    std::vector<int> c_modes(c_indices.size());
+
+    for (size_t i = 0; i < a_indices.size(); i++) {
+        a_modes[i] = index_to_mode_map[a_indices[i]];
+    }
+    for (size_t i = 0; i < b_indices.size(); i++) {
+        b_modes[i] = index_to_mode_map[b_indices[i]];
+    }
+    for (size_t i = 0; i < c_indices.size(); i++) {
+        c_modes[i] = index_to_mode_map[c_indices[i]];
     }
 
-    cuttHandle plan;
-    cuttPlan(&plan, rank, dim_old.data(), axes_int.data(), sizeof(T), 0);
-    transpose_plan.plan = plan;
-    transpose_plan.axes = axes;
-    transpose_plan.output_urank =
-        (new_urank == -1) ? input.GetUpperRank() : new_urank;
-    transpose_plan.output_shape = dim_new;
-    return transpose_plan;
+    std::vector<int64_t> c_dimensions;
+    for (auto mode : c_modes)
+        c_dimensions.push_back(mode_to_dimension_map[mode]);
+    std::vector<int64_t> a_dimensions;
+    for (auto mode : a_modes)
+        a_dimensions.push_back(mode_to_dimension_map[mode]);
+    std::vector<int64_t> b_dimensions;
+    for (auto mode : b_modes)
+        b_dimensions.push_back(mode_to_dimension_map[mode]);
+
+    size_t a_elements = 1;
+    for (auto mode : a_modes)
+        a_elements *= mode_to_dimension_map[mode];
+
+    size_t b_elements = 1;
+    for (auto mode : b_modes)
+        b_elements *= mode_to_dimension_map[mode];
+
+    size_t c_elements = 1;
+    for (auto mode : c_modes)
+        c_elements *= mode_to_dimension_map[mode];
+
+    cutensorHandle_t handle;
+    cutensorInit(&handle);
+
+    cutensorTensorDescriptor_t a_descriptor;
+    cutensorInitTensorDescriptor(&handle, &a_descriptor, a_modes.size(),
+                                 a_dimensions.data(), nullptr, /*stride*/
+                                 data_type, CUTENSOR_OP_IDENTITY);
+
+    cutensorTensorDescriptor_t b_descriptor;
+    cutensorInitTensorDescriptor(&handle, &b_descriptor, b_modes.size(),
+                                 b_dimensions.data(), nullptr, /*stride*/
+                                 data_type, CUTENSOR_OP_IDENTITY);
+
+    cutensorTensorDescriptor_t c_descriptor;
+    cutensorInitTensorDescriptor(&handle, &c_descriptor, c_modes.size(),
+                                 c_dimensions.data(), nullptr, /*stride*/
+                                 data_type, CUTENSOR_OP_IDENTITY);
+
+    uint32_t a_alignment_requirement;
+    cutensorGetAlignmentRequirement(&handle, a_tensor.GetData(), &a_descriptor,
+                                    &a_alignment_requirement);
+
+    uint32_t b_alignment_requirement;
+    cutensorGetAlignmentRequirement(&handle, b_tensor.GetData(), &b_descriptor,
+                                    &b_alignment_requirement);
+
+    uint32_t c_alignment_requirement;
+    cutensorGetAlignmentRequirement(&handle, c_tensor.GetData(), &c_descriptor,
+                                    &c_alignment_requirement);
+
+    cutensorContractionDescriptor_t descriptor;
+    cutensorInitContractionDescriptor(
+        &handle, &descriptor, &a_descriptor, a_modes.data(),
+        a_alignment_requirement, &b_descriptor, b_modes.data(),
+        b_alignment_requirement, &c_descriptor, c_modes.data(),
+        c_alignment_requirement, &c_descriptor, c_modes.data(),
+        c_alignment_requirement, compute_type);
+
+    cutensorContractionFind_t find;
+    cutensorInitContractionFind(&handle, &find, CUTENSOR_ALGO_DEFAULT);
+
+    uint64_t work_size = 0;
+    cutensorContractionGetWorkspace(&handle, &descriptor, &find,
+                                    CUTENSOR_WORKSPACE_RECOMMENDED, &work_size);
+
+    void *work = nullptr;
+    if (work_size > 0) {
+        if (cudaSuccess != cudaMalloc(&work, work_size)) {
+            work = nullptr;
+            work_size = 0;
+        }
+    }
+
+    /**************************
+     * Create Contraction Plan
+     **************************/
+
+    cutensorContractionPlan_t plan;
+    cutensorInitContractionPlan(&handle, &plan, &descriptor, &find, work_size);
+
+    CudaContractionPlan cplan;
+    cplan.plan = plan;
+    cplan.work = work;
+    cplan.handle = handle;
+    cplan.work_size = work_size;
+
+    return cplan;
+}
+
+void ContractTensorsWithoutAllocation(CudaTensor<cuComplex> &a,
+                                      CudaTensor<cuComplex> &b,
+                                      CudaTensor<cuComplex> &c,
+                                      CudaContractionPlan &c_plan,
+                                      cudaStream_t stream = 0)
+{
+    using namespace Utilities;
+
+    cuComplex alpha;
+    alpha.x = 1.0f;
+    alpha.y = 0.0f;
+
+    cuComplex beta;
+    beta.x = 0.f;
+    beta.y = 0.f;
+
+    cutensorContraction(&c_plan.handle, &c_plan.plan, (void *)&alpha,
+                        a.GetData(), b.GetData(), (void *)&beta, c.GetData(),
+                        c.GetData(), c_plan.work, c_plan.work_size, stream);
 }
 
 template <typename T>
-CudaContractionPlan GetContractionPlan(CudaTensor<T> &a, CudaTensor<T> &b,
-                                       const std::vector<size_t> &axes_a,
-                                       const std::vector<size_t> &axes_b)
+CudaTensor<T> ContractTensors(CudaTensor<T> &a_tensor, CudaTensor<T> &b_tensor)
 {
-    //    using namespace Jet::Utilities;
-    auto &shape_a = a.GetShape();
-    auto &shape_b = b.GetShape();
+    using namespace Utilities;
 
-    auto a_rank = shape_a.size();
-    auto b_rank = shape_b.size();
+    auto &&left_indices =
+        VectorSubtraction(a_tensor.GetIndices(), b_tensor.GetIndices());
+    auto &&right_indices =
+        VectorSubtraction(b_tensor.GetIndices(), a_tensor.GetIndices());
 
-    std::vector<size_t> shape_c;
-    const size_t rank_row_c = a_rank - axes_a.size();
-    const size_t rank_col_c = b_rank - axes_b.size();
-    shape_c.resize(rank_row_c + rank_col_c);
+    std::size_t left_dim = 1;
+    std::size_t right_dim = 1;
 
-    std::vector<size_t> trans_axes_a;
-    std::vector<size_t> trans_axes_b;
-    size_t urank_a;
-    size_t urank_b;
-
-    {
-        const size_t rank = a_rank;
-        const size_t rank_row = rank - axes_a.size();
-        const size_t rank_col = axes_a.size();
-        size_t v[rank];
-        for (size_t i = 0; i < rank; ++i)
-            v[i] = i;
-        for (size_t i = 0; i < rank_col; ++i)
-            v[axes_a[i]] = rank;
-        std::sort(v, v + rank);
-        for (size_t i = 0; i < rank_col; ++i)
-            v[rank_row + i] = axes_a[i];
-
-        trans_axes_a.resize(rank);
-        trans_axes_a.assign(v, v + rank);
-
-        urank_a = rank_row;
-
-        for (size_t i = 0; i < rank_row; ++i)
-            shape_c[i] = shape_a[v[i]];
+    for (std::size_t i = 0; i < left_indices.size(); ++i) {
+        left_dim *= a_tensor.GetIndexToDimension().at(left_indices[i]);
+    }
+    for (std::size_t i = 0; i < right_indices.size(); ++i) {
+        right_dim *= b_tensor.GetIndexToDimension().at(right_indices[i]);
     }
 
-    {
-        const size_t rank = b_rank;
-        const size_t rank_row = axes_b.size();
-        const size_t rank_col = rank - axes_b.size();
-        size_t v[rank];
-        for (size_t i = 0; i < rank; ++i)
-            v[i] = i;
-        for (size_t i = 0; i < rank_row; ++i)
-            v[axes_b[i]] = 0;
-        std::sort(v, v + rank);
-        for (size_t i = 0; i < rank_row; ++i)
-            v[i] = axes_b[i];
+    auto &&c_indices = VectorUnion(left_indices, right_indices);
+    std::vector<std::size_t> c_shape(c_indices.size());
+    for (std::size_t i = 0; i < left_indices.size(); ++i)
+        c_shape[i] = a_tensor.GetIndexToDimension().at(left_indices[i]);
+    for (std::size_t i = 0; i < right_indices.size(); ++i)
+        c_shape[i + left_indices.size()] =
+            b_tensor.GetIndexToDimension().at(right_indices[i]);
 
-        // trans_axes_b.assign(rank, v);
-        trans_axes_b.resize(rank);
-        trans_axes_b.assign(v, v + rank);
-        urank_b = rank_row;
-
-        for (size_t i = 0; i < rank_col; ++i)
-            shape_c[i + rank_row_c] = shape_b[v[i + rank_row]];
-    }
-
-    CudaContractionPlan contraction_plan;
-    contraction_plan.output_shape = shape_c;
-    contraction_plan.output_urank = rank_row_c;
-    contraction_plan.trans_a_plan = GetTransposePlan(a, trans_axes_a, urank_a);
-    contraction_plan.trans_b_plan = GetTransposePlan(b, trans_axes_b, urank_b);
-    contraction_plan.axes_a = axes_a;
-    contraction_plan.axes_b = axes_b;
-    return contraction_plan;
+    CudaTensor<T> c_tensor(c_indices, c_shape);
+    auto plan = GetCudaContractionPlan(a_tensor, b_tensor, c_tensor);
+    ContractTensorsWithoutAllocation(a_tensor, b_tensor, c_tensor, plan);
+    return c_tensor;
 }
 
 template <typename T>
-CudaContractionPlan GetContractionPlan(CudaTensor<T> &a, CudaTensor<T> &b)
+CudaTensor<T> Reshape(const CudaTensor<T> &old_tens,
+                      const std::vector<size_t> &new_shape)
 {
-    auto &a_indices = a.GetIndices();
-    auto &b_indices = b.GetIndices();
-
-    auto &&contracted_indices = VectorIntersection(a_indices, b_indices);
-    auto &&c_indices = VectorSubtraction(VectorUnion(a_indices, b_indices),
-                                         contracted_indices);
-
-    std::vector<size_t> &&axes_a = a.ConvertIndicesToAxes(contracted_indices);
-    std::vector<size_t> &&axes_b = b.ConvertIndicesToAxes(contracted_indices);
-
-    return GetContractionPlan(a, b, axes_a, axes_b);
+    JET_ABORT("Reshape is not supported in this class yet");
+    // dummy return
+    return CudaTensor<T>();
 }
 
 template <typename T>
-void Contract(CudaTensor<T> &a, CudaTensor<T> &b, CudaTensor<T> &c,
-              const CudaContractionPlan &contraction_plan)
+CudaTensor<T> SliceIndex(const CudaTensor<T> &tens,
+                         const std::string &index_str, std::size_t index_value)
 {
-    int first_rows = 1;
-    int first_cols = 1;
-    int second_cols = 1;
-    T *first;
-    T *second;
-
-    if (!contraction_plan.trans_a_plan.no_transpose) {
-        auto rank = contraction_plan.trans_a_plan.output_shape.size();
-        auto &shape = contraction_plan.trans_a_plan.output_shape;
-        auto &urank = contraction_plan.trans_a_plan.output_urank;
-        for (size_t i = 0; i < urank; ++i)
-            first_rows *= shape[i];
-        for (size_t i = urank; i < rank; ++i)
-            first_cols *= shape[i];
-
-        (cuttExecute(contraction_plan.trans_a_plan.plan, a.GetData(),
-                     a.GetTransposeData()));
-        first = a.GetTransposeData();
-    }
-    else {
-        first_rows = a.GetRows();
-        first_cols = a.GetCols();
-        first = a.GetData();
-    }
-
-    if (!contraction_plan.trans_b_plan.no_transpose) {
-        auto rank = contraction_plan.trans_a_plan.output_shape.size();
-        auto &shape = contraction_plan.trans_a_plan.output_shape;
-        auto &urank = contraction_plan.trans_a_plan.output_urank;
-        for (size_t i = urank; i < rank; ++i)
-            second_cols *= shape[i];
-        (cuttExecute(contraction_plan.trans_b_plan.plan, b.GetData(),
-                     b.GetTransposeData()));
-        second = b.GetTransposeData();
-    }
-    else {
-        second_cols = b.GetCols();
-        second = b.GetData();
-    }
-
-    CUDAMatrixMultiply(first, second, c.GetData(), first_rows, first_cols,
-                       second_cols);
-
-    if (!contraction_plan.trans_a_plan.no_transpose) {
-        (cuttDestroy(contraction_plan.trans_a_plan.plan));
-    }
-    if (!contraction_plan.trans_b_plan.no_transpose) {
-        (cuttDestroy(contraction_plan.trans_b_plan.plan));
-    }
+    JET_ABORT("SliceIndex is not supported in this class yet");
+    // dummy return
+    return CudaTensor<T>();
 }
 
 }; // namespace Jet

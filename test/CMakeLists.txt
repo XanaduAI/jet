@@ -28,6 +28,24 @@ target_sources(runner PRIVATE Test_Abort.cpp
                               Test_TensorNetworkIO.cpp
                               Test_Utilities.cpp)
 
+# Ensure CUDA modules only tested if enabled and available
+if(ENABLE_CUTENSOR)
+    add_library(test_cutensor OBJECT Test_CudaTensor.cu )
+    set_target_properties(test_cutensor PROPERTIES  CUDA_SEPARABLE_COMPILATION  ON
+                                                    POSITION_INDEPENDENT_CODE   ON
+                                                    CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true;>)
+
+    target_include_directories(test_cutensor SYSTEM PRIVATE ${CUDA_INCLUDE_DIRS})
+    target_link_libraries(test_cutensor Catch2::Catch2 Jet)
+    target_link_libraries(runner test_cutensor ${CUDA_LIBRARIES} ${CUTENSOR_LIB})
+
+    set_target_properties(runner PROPERTIES         CUDA_SEPARABLE_COMPILATION  ON
+                                                    POSITION_INDEPENDENT_CODE   ON
+                                                    CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+endif()
+
 target_link_libraries(runner Jet)
 
 # Run all tests which are not hidden.
