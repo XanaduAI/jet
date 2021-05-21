@@ -61,15 +61,15 @@ class JetException : public std::exception {
     }
 
     /**
-     * @brief Destroy the `%JetException` object.
+     * @brief Destroys the `%JetException` object.
      */
     virtual ~JetException() = default;
 
     /**
-     * @brief Returns string containing exception message. Overloaded
-     * std::exception method.
+     * @brief Returns a string containing the exception message. Overrides
+     *        the `std::exception` method.
      *
-     * @return const char* Exception message
+     * @return Exception message.
      */
     const char *what() const noexcept { return err_msg.c_str(); }
 

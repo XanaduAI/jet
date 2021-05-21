@@ -3,15 +3,15 @@
 #include <unordered_map>
 #include <vector>
 
-#include "jet/Abort.hpp"
 #include <catch2/catch.hpp>
+
+#include "jet/Abort.hpp"
 
 using namespace Jet;
 
 TEST_CASE("Jet::JetException", "[Abort]")
 {
-    using namespace Jet;
-    SECTION("JetException::JetException(message)", "[Abort]")
+    SECTION("JetException::JetException(message)")
     {
         JetException ex("Message");
         CHECK(std::string(ex.what()) == "Message");
@@ -23,9 +23,9 @@ TEST_CASE("Jet::JetException", "[Abort]")
                           "Thrown message");
     }
 }
+
 TEST_CASE("Jet::Abort", "[Abort]")
 {
-    using namespace Jet;
     using namespace Catch::Matchers;
 
     std::string message = "Abort message";
@@ -52,13 +52,12 @@ TEST_CASE("Jet::Abort", "[Abort]")
 
 TEST_CASE("Abort Macros", "[Abort]")
 {
-    using namespace Jet;
     using namespace Catch::Matchers;
 
     SECTION("JET_ASSERT")
     {
         auto assert_lambda = [](bool a) { JET_ASSERT(a); };
-        CHECK_NOTHROW(assert_lambda);
+        CHECK_NOTHROW(assert_lambda(true));
         CHECK_THROWS_AS(assert_lambda(false), JetException);
     }
     SECTION("JET_ABORT_IF_NOT")
