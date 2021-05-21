@@ -8,10 +8,9 @@
 #include "TensorNetworkIO.hpp"
 #include "Version.hpp"
 
-PYBIND11_MODULE(jet, m)
+PYBIND11_MODULE(bindings, m)
 {
-    m.doc() = "Jet is a library for simulating quantum circuits using tensor "
-              "network contractions.";
+    m.doc() = "Python bindings for the C++ tensor network contraction headers.";
 
     using c_fp32_t = std::complex<float>;
     using c_fp64_t = std::complex<double>;
