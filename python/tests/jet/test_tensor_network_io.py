@@ -1,11 +1,14 @@
 import re
 
-import jet
 import pytest
+
+import jet
+import jet.bindings
 
 
 @pytest.mark.parametrize(
-    "TensorNetworkFile", [jet.TensorNetworkFile32, jet.TensorNetworkFile64]
+    "TensorNetworkFile",
+    [jet.bindings.TensorNetworkFile32, jet.bindings.TensorNetworkFile64],
 )
 def test_tensor_network_file(TensorNetworkFile):
     """Tests that a tensor network file can be constructed."""
@@ -17,8 +20,16 @@ def test_tensor_network_file(TensorNetworkFile):
 @pytest.mark.parametrize(
     "Tensor, TensorNetwork, TensorNetworkSerializer",
     [
-        (jet.Tensor32, jet.TensorNetwork32, jet.TensorNetworkSerializer32),
-        (jet.Tensor64, jet.TensorNetwork64, jet.TensorNetworkSerializer64),
+        (
+            jet.bindings.Tensor32,
+            jet.bindings.TensorNetwork32,
+            jet.bindings.TensorNetworkSerializer32,
+        ),
+        (
+            jet.bindings.Tensor64,
+            jet.bindings.TensorNetwork64,
+            jet.bindings.TensorNetworkSerializer64,
+        ),
     ],
 )
 class TestTensorNetworkSerializer:
