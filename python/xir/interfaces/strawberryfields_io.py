@@ -15,7 +15,7 @@
 from decimal import Decimal
 import strawberryfields as sf
 from strawberryfields import ops
-from ir.program import IRProgram, Statement, GateDeclaration, OutputDeclaration
+from xir.program import XIRProgram, Statement, GateDeclaration, OutputDeclaration
 
 
 def find_number_of_modes(xir):
@@ -31,7 +31,7 @@ def to_program(xir, **kwargs):
     """Convert an IR Program to a Strawberry Fields Program.
 
     Args:
-        xir (IRProgram): the input XIR program object
+        xir (XIRProgram): the input XIR program object
 
     Kwargs:
         name (str): name of the resulting Strawberry Fields program
@@ -106,10 +106,10 @@ def to_xir(prog, **kwargs):
         version (str): Version number for the program. Default is 0.1.0.
 
     Returns:
-        IRProgram
+        XIRProgram
     """
     version = kwargs.get("version", "0.1.0")
-    xir = IRProgram(version=version)
+    xir = XIRProgram(version=version)
 
     # fill in the quantum circuit
     for cmd in prog.circuit:

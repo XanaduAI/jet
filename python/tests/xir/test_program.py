@@ -14,32 +14,33 @@
 
 """Unit tests for the program class"""
 
-import pytest
 from decimal import Decimal
 
-from ..program import (
-    IRProgram,
-    GateDeclaration,
-    OutputDeclaration,
+import pytest
+
+from xir.program import (
     FuncDeclaration,
+    GateDeclaration,
+    XIRProgram,
     OperatorDeclaration,
-    Statement,
     OperatorStmt,
+    OutputDeclaration,
+    Statement,
 )
 
 
 class TestSerialize:
-    """Unit tests for the serialize method of the IRProgram"""
+    """Unit tests for the serialize method of the XIRProgram"""
 
     def test_empty_program(self):
         """Test serializing an empty program"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         res = irprog.serialize()
         assert res == ""
 
     def test_includes(self):
         """Test serializing the included libraries statement"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._include.extend(["xstd", "randomlib"])
         res = irprog.serialize()
         assert res == "use xstd;\nuse randomlib;"
@@ -55,7 +56,7 @@ class TestSerialize:
         """Test serializing gate declarations"""
         decl = GateDeclaration(name, num_params=num_params, num_wires=num_wires)
 
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._declarations["gate"].append(decl)
         res = irprog.serialize()
         assert res == f"gate {name}, {num_params}, {num_wires};"
@@ -66,7 +67,7 @@ class TestSerialize:
         """Test serializing function declarations"""
         decl = FuncDeclaration(name, num_params=num_params)
 
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._declarations["func"].append(decl)
         res = irprog.serialize()
         assert res == f"func {name}, {num_params};"
@@ -78,7 +79,7 @@ class TestSerialize:
         """Test serializing operator declarations"""
         decl = OperatorDeclaration(name, num_params=num_params, num_wires=num_wires)
 
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._declarations["operator"].append(decl)
         res = irprog.serialize()
         assert res == f"operator {name}, {num_params}, {num_wires};"
@@ -88,7 +89,7 @@ class TestSerialize:
         """Test serializing output declarations"""
         decl = OutputDeclaration(name)
 
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._declarations["output"].append(decl)
         res = irprog.serialize()
         assert res == f"output {name};"
@@ -104,7 +105,7 @@ class TestSerialize:
         """Test serializing general (gate) statements"""
         stmt = Statement(name, params, wires)
 
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._statements.append(stmt)
         res = irprog.serialize()
 
@@ -118,7 +119,7 @@ class TestSerialize:
         """Test serializing general (gate) statements without parameters"""
         stmt = Statement(name, [], wires)
 
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._statements.append(stmt)
         res = irprog.serialize()
 
@@ -129,7 +130,7 @@ class TestSerialize:
     @pytest.mark.parametrize("wires", [(0, 1), (0,), (0, 2, 42)])
     def test_operator_stmt(self, pref, wires):
         """Test serializing operator statements"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
 
         xyz = "XYZ"
         terms = [(xyz[i], w) for i, w in enumerate(wires)]
@@ -155,7 +156,7 @@ class TestSerialize:
     @pytest.mark.parametrize("wires", [(0, 1), (0,), (0, 2, 42)])
     def test_gates_params_and_wires(self, name, params, wires):
         """Test serializing gates with parameters and wires declared"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._gates[name] = {
             "params": params,
             "wires": wires,
@@ -177,7 +178,7 @@ class TestSerialize:
     @pytest.mark.parametrize("wires", [(0, 1), (0,), (0, 2, 42)])
     def test_gates_no_params(self, name, wires):
         """Test serializing gates with no parameters"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._gates[name] = {
             "params": [],
             "wires": wires,
@@ -195,7 +196,7 @@ class TestSerialize:
     @pytest.mark.parametrize("params", [["a", "b"]])
     def test_gates_no_wires(self, name, params):
         """Test serializing gates without declared wires"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._gates[name] = {
             "params": params,
             "wires": (),
@@ -212,7 +213,7 @@ class TestSerialize:
     @pytest.mark.parametrize("name", ["mygate", "a_beautiful_gate"])
     def test_gates_no_params_and_no_wires(self, name):
         """Test serializing gates with no parameters and without declared wires"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
 
         irprog._gates[name] = {
             "params": [],
@@ -234,7 +235,7 @@ class TestSerialize:
     @pytest.mark.parametrize("wires", [(0, 1), (0,), (0, 2, 42)])
     def test_operators_params_and_wires(self, name, params, wires):
         """Test serializing operators with parameters and wires declared"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._operators[name] = {
             "params": params,
             "wires": wires,
@@ -254,7 +255,7 @@ class TestSerialize:
         """Test serializing operators with no parameters"""
         xyz = "XYZ"
 
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._operators[name] = {
             "params": [],
             "wires": wires,
@@ -271,7 +272,7 @@ class TestSerialize:
     @pytest.mark.parametrize("params", [["a", "b"]])
     def test_operators_no_wires(self, name, params):
         """Test serializing operators without declared wires"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         irprog._operators[name] = {
             "params": params,
             "wires": (),
@@ -287,7 +288,7 @@ class TestSerialize:
     @pytest.mark.parametrize("name", ["my_op", "op2"])
     def test_operators_no_params_and_no_wires(self, name):
         """Test serializing operators with no parameters and without declared wires"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
 
         irprog._operators[name] = {
             "params": [],
@@ -301,11 +302,11 @@ class TestSerialize:
 
 
 class TestIRProgram:
-    """Unit tests for the IRProgram class"""
+    """Unit tests for the XIRProgram class"""
 
     def test_empty_initialize(self):
         """Test initializing an empty program"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
 
         assert irprog.version == "0.1.0"
         assert irprog.statements == []
@@ -319,8 +320,8 @@ class TestIRProgram:
         assert irprog._called_ops == set()
 
     def test_repr(self):
-        irprog = IRProgram()
-        assert irprog.__repr__() == f"<IRProgram: version=0.1.0>"
+        irprog = XIRProgram()
+        assert irprog.__repr__() == f"<XIRProgram: version=0.1.0>"
 
     @pytest.mark.parametrize(
         "version",
@@ -331,19 +332,19 @@ class TestIRProgram:
     )
     def test_version(self, version):
         """Test that the correct version is passed"""
-        irprog = IRProgram(version=version)
+        irprog = XIRProgram(version=version)
         assert irprog.version == version
-        assert irprog.__repr__() == f"<IRProgram: version={version}>"
+        assert irprog.__repr__() == f"<XIRProgram: version={version}>"
 
     @pytest.mark.parametrize("version", ["4.2", "0.1.2.3", "abc", 42, 0.2])
     def test_invalid_version(self, version):
         """Test that error is raised when passing invalid version numbers"""
         with pytest.raises((ValueError, TypeError), match="Invalid version number"):
-            IRProgram(version=version)
+            XIRProgram(version=version)
 
     def test_add_gate(self):
         """Test that the add_gate function works"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         statements = [
             Statement("rx", ["x"], (0,)),
             Statement("ry", ["y"], (0,)),
@@ -376,7 +377,7 @@ class TestIRProgram:
 
     def test_add_operator(self):
         """Test that the add_operator function works"""
-        irprog = IRProgram()
+        irprog = XIRProgram()
         statements = [
             OperatorStmt(13, [("X", 0), ("Y", 1)]),
             OperatorStmt(-2, [("ABC", 1), ("D", 0)]),

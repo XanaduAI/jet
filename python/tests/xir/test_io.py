@@ -14,15 +14,15 @@
 
 """Tests for the interfaces module"""
 
-import pytest
 from decimal import Decimal
 from typing import List, Tuple
 
+import pytest
 import strawberryfields as sf
 from strawberryfields import ops
 
-from ..program import GateDeclaration, IRProgram, Statement
-from ..interfaces.strawberryfields_io import to_program, to_xir
+from xir.interfaces.strawberryfields_io import to_program, to_xir
+from xir.program import GateDeclaration, XIRProgram, Statement
 
 
 def create_ir_prog(
@@ -30,13 +30,13 @@ def create_ir_prog(
     external_libs: List[str] = None,
     include_decl: bool = True,
     version: str = None,
-) -> IRProgram:
-    """Create an IRProgram object used for testing"""
+) -> XIRProgram:
+    """Create an XIRProgram object used for testing"""
     # if no version number is passed, use the default one (by not specifying it)
     if version is None:
-        irprog = IRProgram()
+        irprog = XIRProgram()
     else:
-        irprog = IRProgram(version=version)
+        irprog = XIRProgram(version=version)
 
     # add the statements to the program
     stmts = [Statement(n, p, w) for n, p, w in data]

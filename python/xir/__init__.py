@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .parser import IRTransformer, ir_parser
+from .parser import XIRTransformer, xir_parser

@@ -19,7 +19,7 @@ from typing import Union, List, Dict, Set, Tuple, Sequence
 
 from .utils import strip
 
-"""This module contains the IRProgram class and classes for the Xanadu IR"""
+"""This module contains the XIRProgram class and classes for the Xanadu IR"""
 
 
 class Statement:
@@ -111,7 +111,7 @@ class OutputDeclaration(Declaration):
     """Output declarations"""
 
 
-class IRProgram:
+class XIRProgram:
     """TODO"""
 
     def __init__(self, version: str = "0.1.0"):
@@ -138,7 +138,7 @@ class IRProgram:
 
     def __repr__(self) -> str:
         """TODO"""
-        return f"<IRProgram: version={self._version}>"
+        return f"<XIRProgram: version={self._version}>"
 
     @property
     def version(self) -> str:
@@ -195,7 +195,7 @@ class IRProgram:
         self._operators[name] = {"params": params, "wires": wires, "statements": statements}
 
     def serialize(self, minimize: bool = False) -> str:
-        """Serialize an IRProgram returning an XIR script
+        """Serialize an XIRProgram returning an XIR script
 
         Args:
             minimize (bool): whether to strip whitespace and newlines from file

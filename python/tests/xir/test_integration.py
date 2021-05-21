@@ -14,17 +14,17 @@
 
 """Integration tests for the IR"""
 
-from ..program import IRProgram
 import pytest
 
-from .. import ir_parser, IRTransformer
-from ..utils import is_equal
+from xir import XIRTransformer, xir_parser
+from xir.program import XIRProgram
+from xir.utils import is_equal
 
 
-def parse_script(circuit: str) -> IRProgram:
-    """Parse and transform a circuit XIR script and return an IRProgram"""
-    tree = ir_parser.parse(circuit)
-    return IRTransformer().transform(tree)
+def parse_script(circuit: str) -> XIRProgram:
+    """Parse and transform a circuit XIR script and return an XIRProgram"""
+    tree = xir_parser.parse(circuit)
+    return XIRTransformer().transform(tree)
 
 
 photonics_script = """
