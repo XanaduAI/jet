@@ -16,7 +16,7 @@ message(${JET_LOGO})
 project("Jet"
         VERSION 0.1.0
         DESCRIPTION "A task-based tensor network contraction engine"
-        LANGUAGES CXX C
+        LANGUAGES CXX
 )
 
 ##########################
@@ -28,6 +28,8 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_OPENMP "Enable OpenMP if supported" OFF)
 option(ENABLE_NATIVE "Enable native build tuning" OFF)
 option(ENABLE_IPO "Enable interprocedural/link-time optimisation" OFF)
+option(ENABLE_CUTENSOR "Build with CuTensor GPU support" OFF)
+option(ENABLE_FPIC "Build with relocatable object support" OFF)
 
 # Build options
 option(BUILD_PYTHON "Generate Python bindings" OFF)
@@ -123,27 +125,25 @@ target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow)
 ## Compile options
 ##########################
 
-if(ENABLE_OPENMP AND OPENMP_FOUND)
-  target_link_libraries(Jet INTERFACE OpenMP::OpenMP_CXX)
+if (ENABLE_OPENMP AND OPENMP_FOUND)
+    target_link_libraries(Jet INTERFACE OpenMP::OpenMP_CXX)
 elseif (ENABLE_OPENMP AND NOT OPENMP_FOUND)
-  message(FATAL_ERROR "\nOpenMP is enabled but could not be found")
+    message(FATAL_ERROR "\nOpenMP is enabled but could not be found")
 endif()
-
 if(ENABLE_SANITIZERS)
-  target_compile_options(Jet INTERFACE -g -fsanitize=address,undefined)
-  target_link_options(Jet INTERFACE -fsanitize=address,undefined)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-g;-fsanitize=address,undefined>)
 endif()
-
 if(ENABLE_WARNINGS)
-  target_compile_options(Jet INTERFACE -Wall -Wextra -Werror)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
 endif()
-
 if(ENABLE_NATIVE)
-  target_compile_options(Jet INTERFACE -march=native)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:march=native>)
 endif()
-
 if(ENABLE_IPO)
-  target_compile_options(Jet INTERFACE -flto)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-flto>)
+endif()
+if (ENABLE_FPIC)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fPIC>)
 endif()
 
 ##########################
