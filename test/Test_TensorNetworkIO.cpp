@@ -28,19 +28,19 @@ TEMPLATE_TEST_CASE("TensorNetworkSerializer::operator()",
     SECTION("json string with array root")
     {
         CHECK_THROWS_AS(TensorNetworkSerializer<tensor_t>()("[]"),
-                        invalid_tensor_file);
+                        TensorFileException);
     }
     SECTION("json string with no keys")
     {
         CHECK_THROWS_AS(TensorNetworkSerializer<tensor_t>()("{}"),
-                        invalid_tensor_file);
+                        TensorFileException);
     }
 
     SECTION("json string path key only")
     {
         CHECK_THROWS_AS(
             TensorNetworkSerializer<tensor_t>()(R"({"path": [[0,1]]})"),
-            invalid_tensor_file);
+            TensorFileException);
     }
 
     SECTION("json string with invalid complex number")

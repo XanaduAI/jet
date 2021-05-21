@@ -402,61 +402,72 @@ inline size_t Factorial(size_t n)
 }
 
 /**
- * Converts a linear index to a multi-dimensional index (modulo the highest
- * value representable by the index dimensions), written in increasing order of
- * index weight.
+ * @brief Returns the size of a shape.
  *
- * Example: To compute the multi-index (i, j) of an element in a 2 x 2 matrix
- *          given a linear index of 3 in the array storing the matrix,
- *          `multi_index_sizes` would be {2, 2} and the result `{1, 0}`.
+ * @param shape Index dimensions.
+ * @return Product of the index dimensions in the shape.
+ */
+inline size_t ShapeToSize(const std::vector<size_t> &shape) noexcept
+{
+    size_t size = 1;
+    for (const auto &dim : shape) {
+        size *= dim;
+    }
+    return size;
+}
+
+/**
+ * @brief Converts a linear index into a multi-dimensional index.
  *
- * @warning If the given list of index dimension sizes is empty, the provided
- *          linear index is returned (wrapped in a vector of size 1).
+ * The multi-dimensional index is written in row-major order.
  *
- * @param linear_index Linear index to be unraveled.
- * @param multi_index_sizes Maximum size of each index dimension.
+ * Example: To compute the multi-index (i, j) of an element in a 2x2 matrix
+ *          given a linear index of 2, `shape` would be {2, 2} and the result
+ *          would be `{1, 0}`.
+ *          \code{.cpp}
+ *     std::vector<size_t> multi_index = UnravelIndex(2, {2, 2});  // {1, 0}
+ *          \endcode
+ *
+ * @param index Linear index to be unraveled.
+ * @param shape Size of each index dimension.
  * @return Multi-index associated with the linear index.
  */
-inline std::vector<size_t>
-UnravelIndex(unsigned long long linear_index,
-             const std::vector<size_t> &multi_index_sizes)
+inline std::vector<size_t> UnravelIndex(unsigned long long index,
+                                        const std::vector<size_t> &shape)
 {
-    if (multi_index_sizes.empty()) {
-        return {linear_index};
-    }
+    const size_t size = ShapeToSize(shape);
+    JET_ABORT_IF(size <= index, "Linear index does not fit in the shape.");
 
-    std::vector<size_t> multi_index(multi_index_sizes.size());
-    multi_index[0] = linear_index % multi_index_sizes[0];
-
-    for (size_t i = 1; i < multi_index.size(); i++) {
-        linear_index -= multi_index[i - 1];
-        linear_index /= multi_index_sizes[i - 1];
-        multi_index[i] = linear_index % multi_index_sizes[i];
+    std::vector<size_t> multi_index(shape.size());
+    for (int i = multi_index.size() - 1; i >= 0; i--) {
+        multi_index[i] = index % shape[i];
+        index /= shape[i];
     }
     return multi_index;
 }
 
 /**
- * Converts a multi-dimensional index into a linear index.
+ * @brief Converts a multi-dimensional index into a linear index.
  *
- * @see UnravelIndex
+ * @note This function is the inverse of UnravelIndex().
  *
- * @param multi_index Multi-index to be raveled.
- * @param multi_index_sizes Maximum size of each index dimension.
- * @return Smallest linear index associated with the multi-index.
+ * @param index Multi-index to be raveled, expressed in row-major order.
+ * @param shape Size of each index dimension.
+ * @return Linear index associated with the multi-index.
  */
-inline unsigned long long
-RavelIndex(const std::vector<size_t> &multi_index,
-           const std::vector<size_t> &multi_index_sizes)
+inline unsigned long long RavelIndex(const std::vector<size_t> &index,
+                                     const std::vector<size_t> &shape)
 {
-    JET_ABORT_IF_NOT(multi_index.size() == multi_index_sizes.size(),
-                     "Size of multi-index and index dimensions must match.");
+    JET_ABORT_IF_NOT(index.size() == shape.size(),
+                     "Number of index and shape dimensions must match.");
+
+    size_t multiplier = 1;
 
     unsigned long long linear_index = 0;
-    size_t multiplier = 1;
-    for (size_t i = 0; i < multi_index_sizes.size(); i++) {
-        linear_index += (multi_index[i] % multi_index_sizes[i]) * multiplier;
-        multiplier *= multi_index_sizes[i];
+    for (int i = index.size() - 1; i >= 0; i--) {
+        JET_ABORT_IF(index[i] >= shape[i], "Index does not fit in the shape.");
+        linear_index += index[i] * multiplier;
+        multiplier *= shape[i];
     }
     return linear_index;
 }
