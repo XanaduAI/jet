@@ -155,31 +155,33 @@ template <class Tensor> class TensorNetwork {
     size_t NumTensors() const noexcept { return nodes_.size(); }
 
     /**
-     * @brief Adds a tensor with the specified tags.
+     * @brief Adds a tensor with the specified tags and returns its
+     *        assigned ID.
      *
      * @warning This function is not safe for concurrent execution.
      *
      * @param tensor Tensor to be added to this tensor network.
      * @param tags Tags to be associated with the tensor.
+     *
+     * @return Node ID assigned to the tensor.
      */
-    void AddTensor(const Tensor &tensor,
-                   const std::vector<std::string> &tags) noexcept
+    node_id_t AddTensor(const Tensor &tensor,
+                        const std::vector<std::string> &tags) noexcept
     {
-        const auto &indices = tensor.GetIndices();
-        const auto name = DeriveNodeName_(indices);
+        node_id_t id = nodes_.size();
+        nodes_.emplace_back(Node{
+            id,                                   // id
+            DeriveNodeName_(tensor.GetIndices()), // name
+            tensor.GetIndices(),                  // indices
+            tags,                                 // tags
+            false,                                // contracted
+            tensor                                // tensor
+        });
 
-        const Node node{
-            nodes_.size(), // id
-            name,          // name
-            indices,       // indices
-            tags,          // tags
-            false,         // contracted
-            tensor,        // tensor
-        };
-        nodes_.emplace_back(node);
+        AddNodeToIndexMap_(nodes_[id]);
+        AddNodeToTagMap_(nodes_[id]);
 
-        AddNodeToIndexMap_(node);
-        AddNodeToTagMap_(node);
+        return id;
     }
 
     /**
