@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 
 #include "jet/Tensor.hpp"
+#include "jet/Utilities.hpp"
 
 using c_fp64 = std::complex<double>;
 using c_fp32 = std::complex<float>;
@@ -274,7 +275,7 @@ TEST_CASE("Tensor::FillRandom", "[Tensor]")
 
 TEST_CASE("Tensor::GetValue", "[Tensor]")
 {
-    std::vector<std::size_t> t_shape{3, 2};
+    std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<c_fp32> data{{0, 0.5}, {1, 0.5}, {2, 0.5},
                              {3, 0.5}, {4, 0.5}, {5, 0.5}};
@@ -282,11 +283,11 @@ TEST_CASE("Tensor::GetValue", "[Tensor]")
     Tensor tensor(t_indices, t_shape, data);
 
     CHECK(tensor.GetValue({0, 0}) == data[0]);
-    CHECK(tensor.GetValue({1, 0}) == data[1]);
-    CHECK(tensor.GetValue({2, 0}) == data[2]);
-    CHECK(tensor.GetValue({0, 1}) == data[3]);
+    CHECK(tensor.GetValue({0, 1}) == data[1]);
+    CHECK(tensor.GetValue({0, 2}) == data[2]);
+    CHECK(tensor.GetValue({1, 0}) == data[3]);
     CHECK(tensor.GetValue({1, 1}) == data[4]);
-    CHECK(tensor.GetValue({2, 1}) == data[5]);
+    CHECK(tensor.GetValue({1, 2}) == data[5]);
 }
 
 TEST_CASE("Tensor::RenameIndex", "[Tensor]")
@@ -314,17 +315,6 @@ TEST_CASE("Tensor::SetValue", "[Tensor]")
 
     tensor.SetValue({2, 1}, c_fp32(1, 1));
     CHECK(tensor.GetData() == data_expected);
-}
-
-TEST_CASE("Inline helper ShapeToSize", "[Tensor]")
-{
-    std::vector<std::size_t> t_shape_1{2, 3, 4};
-    std::vector<std::size_t> t_shape_2{3, 4, 2};
-    std::vector<std::size_t> t_shape_3{2, 2};
-
-    CHECK(TensorHelpers::ShapeToSize(t_shape_1) == 24);
-    CHECK(TensorHelpers::ShapeToSize(t_shape_2) == 24);
-    CHECK(TensorHelpers::ShapeToSize(t_shape_3) == 4);
 }
 
 TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
@@ -399,8 +389,8 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
             {"j"}, {2},
             {
                 r_ji.GetValue({0, 0}) * s_i.GetValue({0}) +
-                    r_ji.GetValue({0, 1}) * s_i.GetValue({1}),
-                r_ji.GetValue({1, 0}) * s_i.GetValue({0}) +
+                    r_ji.GetValue({1, 0}) * s_i.GetValue({1}),
+                r_ji.GetValue({0, 1}) * s_i.GetValue({0}) +
                     r_ji.GetValue({1, 1}) * s_i.GetValue({1}),
             });
         // R_{j,i} S_i == S_i R_{i,j}
@@ -408,8 +398,8 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
             {"j"}, {2},
             {
                 r_ji.GetValue({0, 0}) * s_i.GetValue({0}) +
-                    r_ji.GetValue({1, 0}) * s_i.GetValue({1}),
-                r_ji.GetValue({0, 1}) * s_i.GetValue({0}) +
+                    r_ji.GetValue({0, 1}) * s_i.GetValue({1}),
+                r_ji.GetValue({1, 0}) * s_i.GetValue({0}) +
                     r_ji.GetValue({1, 1}) * s_i.GetValue({1}),
             });
 
@@ -454,7 +444,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
     {
         std::vector<std::size_t> t_shape1{2, 2};
         std::vector<std::size_t> t_shape2{2};
-        std::vector<std::size_t> t_shape3{2};
 
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"b"};
@@ -478,7 +467,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
     {
         std::vector<std::size_t> t_shape1{2};
         std::vector<std::size_t> t_shape2{2, 2};
-        std::vector<std::size_t> t_shape3{2};
 
         std::vector<std::string> t_indices1{"a"};
         std::vector<std::string> t_indices2{"a", "b"};
@@ -525,7 +513,6 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c_fp32, c_fp64)
     {
         std::vector<std::size_t> t_shape1{2, 2};
         std::vector<std::size_t> t_shape2{2, 2};
-        std::vector<std::size_t> t_shape3{1};
 
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"a", "b"};
@@ -581,6 +568,8 @@ TEST_CASE("SliceIndex", "[Tensor]")
 
 TEST_CASE("Transpose", "[Tensor]")
 {
+    using namespace Catch::Matchers;
+
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
     std::vector<c_fp32> t_data{{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}};
@@ -591,6 +580,13 @@ TEST_CASE("Transpose", "[Tensor]")
 
     CHECK(tensor_t == Transpose(tensor, std::vector<std::string>{"y", "x"}));
     CHECK(tensor_t == Transpose(tensor, std::vector<std::size_t>{1, 0}));
+
+    CHECK_THROWS_WITH(
+        Transpose(Tensor<c_fp32>(), std::vector<std::string>{"y", "x"}),
+        Contains("Number of indices cannot be zero."));
+    CHECK_THROWS_WITH(
+        Transpose(Tensor<c_fp32>(), std::vector<std::size_t>{1, 0}),
+        Contains("Size of ordering must match number of tensor indices."));
 }
 
 TEST_CASE("AddTensors", "[Tensor]")
@@ -640,6 +636,8 @@ TEST_CASE("AddTensors", "[Tensor]")
 
 TEST_CASE("Reshape", "[Tensor]")
 {
+    using namespace Catch::Matchers;
+
     SECTION("Equal data size")
     {
         std::vector<std::size_t> t_shape{2, 3};
@@ -661,6 +659,8 @@ TEST_CASE("Reshape", "[Tensor]")
 
         Tensor tensor(t_indices, t_shape, t_data);
         Tensor tensor_r({"?a", "?b"}, {3, 2}, t_data);
-        CHECK(tensor_r.GetSize() != TensorHelpers::ShapeToSize({3, 3}));
+        CHECK_THROWS_WITH(Reshape(tensor, {3, 3}),
+                          Contains("Size is inconsistent between tensors."));
+        CHECK(tensor_r.GetSize() != Jet::Utilities::ShapeToSize({3, 3}));
     }
 }

@@ -154,7 +154,7 @@ class PathInfo {
      * @return Number of floating-point multiplications and additions needed to
      *         compute the tensor associated with the path step.
      */
-    double GetPathStepFlops(size_t id) const noexcept
+    double GetPathStepFlops(size_t id) const
     {
         JET_ABORT_IF_NOT(id < steps_.size(), "Step ID is invalid.");
 
@@ -208,7 +208,7 @@ class PathInfo {
      *
      * @return Number of elements in the tensor associated with the path step.
      */
-    double GetPathStepMemory(size_t id) const noexcept
+    double GetPathStepMemory(size_t id) const
     {
         JET_ABORT_IF_NOT(id < steps_.size(), "Step ID is invalid.");
 
