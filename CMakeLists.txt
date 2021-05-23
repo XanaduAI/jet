@@ -3,13 +3,13 @@
 ##########################
 cmake_minimum_required(VERSION 3.14)
 set(JET_LOGO "
-      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄ 
-      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀ 
-      ██     ██             ██    
-      ██     ███████        ██    
-      ██     ██             ██    
-█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██    
- ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀    
+      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄
+      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀
+      ██     ██             ██
+      ██     ███████        ██
+      ██     ██             ██
+█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██
+ ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀
 ")
 message(${JET_LOGO})
 
@@ -52,7 +52,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
     message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
     message(FATAL_ERROR "\nJet requires clang++ at least v5.0")
-  endif() 
+  endif()
 ## AppleClang
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0")
@@ -120,7 +120,7 @@ find_package(OpenMP QUIET)
 
 add_library(Jet INTERFACE)
 target_include_directories(Jet INTERFACE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     ${BLAS_INCLUDE_DIRS}
 )
 
@@ -179,10 +179,3 @@ if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(test)
 endif(BUILD_TESTS)
-
-
-#add_executable(permute ${PROJECT_SOURCE_DIR}/examples/PermuteExample.cpp)
-#target_link_libraries(permute Jet)
-
-add_executable(slice ${PROJECT_SOURCE_DIR}/examples/slice_test.cpp)
-target_link_libraries(slice Jet)
