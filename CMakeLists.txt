@@ -105,7 +105,14 @@ set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
 
 FetchContent_MakeAvailable(Taskflow)
 
+FetchContent_Declare(
+  hptt
+  GIT_REPOSITORY https://github.com/springer13/hptt
+)
+FetchContent_MakeAvailable(hptt)
+
 find_package(OpenMP QUIET)
+
 
 ##########################
 ## Create Jet target
@@ -117,7 +124,7 @@ target_include_directories(Jet INTERFACE
     ${BLAS_INCLUDE_DIRS}
 )
 
-target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow)
+target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow hptt)
 
 ##########################
 ## Compile options
@@ -172,3 +179,10 @@ if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(test)
 endif(BUILD_TESTS)
+
+
+#add_executable(permute ${PROJECT_SOURCE_DIR}/examples/PermuteExample.cpp)
+#target_link_libraries(permute Jet)
+
+add_executable(slice ${PROJECT_SOURCE_DIR}/examples/slice_test.cpp)
+target_link_libraries(slice Jet)

@@ -21,11 +21,13 @@ include(CTest)
 include(Catch)
 
 target_sources(runner PRIVATE Test_PathInfo.cpp
+                              Test_Permute.cpp
                               Test_TaskBasedCpuContractor.cpp
                               Test_Tensor.cpp
                               Test_TensorNetwork.cpp
                               Test_TensorNetworkIO.cpp
-                              Test_Utilities.cpp)
+                              Test_Utilities.cpp
+)
 
 target_link_libraries(runner Jet)
 
