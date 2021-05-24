@@ -42,7 +42,7 @@ TEST_CASE("DefaultPermute::Transpose", "[Permute]")
                              {"b", "a", "d", "c"},
                              index_expected) == data_expected);
 }
-
+/*
 TEST_CASE("Hptt::Transpose", "[Permute]")
 {
     HpttPermute permuter;
@@ -60,7 +60,7 @@ TEST_CASE("Hptt::Transpose", "[Permute]")
     // CHECK(permuter.Transpose<std::complex<float>>(data_pos_map_expect_03,
     // shape, index_tform,index_expected)==data_pos_map_expect_03);
 }
-
+*/
 /*
 TEST_CASE("QFlexPermute::GenerateBinaryReorderingMap", "[Permute]")
 {

@@ -579,7 +579,7 @@ TEST_CASE("SliceIndex", "[Tensor]")
     CHECK(t_y2 == SliceIndex(tensor, "y", 2));
 }
 
-TEST_CASE("Transpose", "[Tensor]")
+TEST_CASE("Transpose", "[Tensor1]")
 {
     std::vector<std::size_t> t_shape{2, 3};
     std::vector<std::string> t_indices{"x", "y"};
