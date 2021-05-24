@@ -271,24 +271,18 @@ Tensor<T> Transpose(const Tensor<T> &A,
                     const std::vector<std::string> &new_indices)
 {
     using namespace Jet::Utilities;
-    /*if (fast_log2(A.GetSize())) {
-        HpttPermute<T> log2_permuter;
-        //QFlexPermute log2_permuter;
-        data_T = log2_permuter.Transpose(
-            A.GetData(), A.GetShape(), A.GetIndices(), new_indices);
-    }*/
-
-    DefaultPermute default_permuter;
-
+    
     std::vector<size_t> new_shape(A.GetShape().size());
     for (size_t i = 0; i < new_indices.size(); i++)
         new_shape[i] = A.GetIndexToDimension().at(new_indices[i]);
 
-    std::vector<T> data_T = default_permuter.Transpose<T>(
-        A.GetData(), A.GetShape(), A.GetIndices(), new_indices);
+    /*if (fast_log2(A.GetSize())) {
+        QFlexPermute log2_permuter;
+        return Tensor<T>{new_indices, std::move(new_shape), std::move(log2_permuter.Transpose(A.GetData(), A.GetShape(), A.GetIndices(), new_indices))};
+    }*/
 
-    std::cout << data_T << std::endl;
-    return Tensor<T>{new_indices, new_shape, data_T};
+    DefaultPermute default_permuter;
+    return Tensor<T>{new_indices, std::move(new_shape), std::move(default_permuter.Transpose<T>(A.GetData(), A.GetShape(), A.GetIndices(), new_indices))};
 }
 
 /**

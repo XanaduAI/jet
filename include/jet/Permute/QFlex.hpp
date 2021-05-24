@@ -33,11 +33,11 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         const std::vector<std::size_t> pre_shape;
         const std::vector<std::size_t> post_shape;
         const std::vector<size_t> index_map;
-        IndexTransform(const std::vector<std::string> &pre_indices = {},
-                       const std::vector<std::string> &post_indices = {},
-                       const std::vector<std::size_t> &pre_shape = {},
-                       const std::vector<std::size_t> &post_shape = {},
-                       const std::vector<size_t> &index_map = {})
+        IndexTransform(const std::vector<std::string> pre_indices = {},
+                       const std::vector<std::string> post_indices = {},
+                       const std::vector<std::size_t> pre_shape = {},
+                       const std::vector<std::size_t> post_shape = {},
+                       const std::vector<size_t> index_map = {})
             : pre_indices(pre_indices), post_indices(post_indices),
               pre_shape(pre_shape), post_shape(post_shape), index_map(index_map)
         {
@@ -129,27 +129,30 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
      * @param new_order New index order of the `data_out` tensor data.
      */
     template <class DataType>
-    void Transpose(const std::vector<DataType> &data_in,
+    std::vector<DataType> Transpose(const std::vector<DataType> &data_in,
                    const std::vector<size_t> &shape,
-                   std::vector<DataType> &data_out,
                    const std::vector<std::string> &current_order,
                    const std::vector<std::string> &new_order)
     {
-
+        using namespace Jet::Utilities;
         auto prec_data = PrecomputeFastTransposeData<DataType>(
             data_in, shape, current_order, new_order);
 
-        PrecomputedQflexTransposeData precomputed_data_a =
-            PrecomputeFastTransposeData(data_in, shape, current_order,
-                                        new_order);
+        //PrecomputedQflexTransposeData precomputed_data_a =
+        //    PrecomputeFastTransposeData(data_in, shape, current_order,
+        //                                new_order);
 
         std::cerr << "START HERE!! THE CLASSIC VERSION WORKS FINE HERE!!!"
                   << std::endl;
-        auto data_scratch = data_in;
-        data_out = data_in;
+
+        std::cout << "precomputed_data_a="<< prec_data << std::endl;
+        auto data_scratch(data_in);
+        auto data_out(data_in);
         FastPermute<DataType>(data_out, prec_data, data_scratch);
 
         std::cout << prec_data;
+        std::cout << data_out;
+        return data_out;
     }
 
     /**
@@ -168,7 +171,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         std::size_t num_indices_right, size_t tensor_size,
         PrecomputedQflexTransposeData &precomputed_data)
     {
-        std::cout << num_indices_right << std::endl;
+        std::cout << "PrecomputeRightTransposeData_[num_indices_right]="<< num_indices_right << std::endl;
 
         // Don't do anything if there is nothing to reorder.
         if (new_ordering == old_ordering) {
@@ -223,7 +226,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         std::size_t num_indices_right, size_t tensor_size,
         PrecomputedQflexTransposeData &precomputed_data)
     {
-        std::cout << num_indices_right << std::endl;
+        std::cout << "PrecomputeLeftTransposeData_[num_indices_right]="<< num_indices_right << std::endl;
 
         // Don't do anything if there is nothing to reorder.
         if (new_ordering == old_ordering) {
@@ -491,7 +494,6 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         // Now special cases, before the default L-R-L worst case.
         // Tensor doesn't have enough size to pass MAX_RIGHT_DIM => only one R.
         if (num_binary_indices <= fast_log2(MAX_RIGHT_DIM)) {
-            // std::cout << "FIRST FUNCTION TRY " << std::endl;
             PrecomputeRightTransposeData_(
                 old_binary_ordering, new_binary_ordering, num_binary_indices,
                 tensor_size, precomputed_data);
@@ -521,7 +523,6 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                 std::vector<std::string> Lr_new_indices(
                     new_binary_ordering.begin() + Ll,
                     new_binary_ordering.end());
-                // std::cout << "SECOND FUNCTION TRY " << std::endl;
                 PrecomputeRightTransposeData_(Lr_old_indices, Lr_new_indices,
                                               Lr, tensor_size,
                                               precomputed_data);
@@ -638,7 +639,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
 
     /*******************************************************************************/
     template <class DataType>
-    void FastPermute(std::vector<DataType> &data_,
+    std::vector<DataType> FastPermute(std::vector<DataType> &data_,
                      const PrecomputedQflexTransposeData &precomputed_data,
                      std::vector<DataType> &scratch)
     {
@@ -687,6 +688,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                 }
             }
         }
+        return data_;
     }
 };
 
