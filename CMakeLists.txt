@@ -179,6 +179,3 @@ if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(test)
 endif(BUILD_TESTS)
-
-add_executable(permute ${PROJECT_SOURCE_DIR}/examples/PermuteExample.cpp)
-target_link_libraries(permute Jet)
