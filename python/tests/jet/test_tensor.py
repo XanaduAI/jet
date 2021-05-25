@@ -1,10 +1,9 @@
 import pytest
 
 import jet
-import jet.bindings
 
 
-@pytest.mark.parametrize("Tensor", [jet.bindings.Tensor32, jet.bindings.Tensor64])
+@pytest.mark.parametrize("Tensor", [jet.Tensor32, jet.Tensor64])
 class TestTensor:
     def test_default_constructor(self, Tensor):
         """Tests that the default constructor is called."""

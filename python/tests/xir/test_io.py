@@ -75,9 +75,7 @@ class TestXIRToStrawberryFields:
     def test_empty_irprogram(self):
         """Test that converting an empty XIR program raises an error"""
         irprog = create_xir_prog(data=[])
-        with pytest.raises(
-            ValueError, match="XIR program is empty and cannot be transformed"
-        ):
+        with pytest.raises(ValueError, match="XIR program is empty and cannot be transformed"):
             to_program(irprog)
 
     def test_gate_not_defined(self):

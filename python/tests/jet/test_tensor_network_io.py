@@ -3,7 +3,6 @@ import re
 import pytest
 
 import jet
-import jet.bindings
 
 
 @pytest.mark.parametrize("TensorNetworkFile", [jet.TensorNetworkFile32, jet.TensorNetworkFile64])
@@ -18,14 +17,14 @@ def test_tensor_network_file(TensorNetworkFile):
     "Tensor, TensorNetwork, TensorNetworkSerializer",
     [
         (
-            jet.bindings.Tensor32,
-            jet.bindings.TensorNetwork32,
-            jet.bindings.TensorNetworkSerializer32,
+            jet.Tensor32,
+            jet.TensorNetwork32,
+            jet.TensorNetworkSerializer32,
         ),
         (
-            jet.bindings.Tensor64,
-            jet.bindings.TensorNetwork64,
-            jet.bindings.TensorNetworkSerializer64,
+            jet.Tensor64,
+            jet.TensorNetwork64,
+            jet.TensorNetworkSerializer64,
         ),
     ],
 )

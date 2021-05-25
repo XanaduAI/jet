@@ -82,9 +82,7 @@ sample(observable: o(0.2), shots: 1000) | [0, 1];
 class TestParser:
     """Integration tests for parsing, and serializing, XIR scripts"""
 
-    @pytest.mark.parametrize(
-        "circuit", [qubit_script, photonics_script, photonics_script_no_decl]
-    )
+    @pytest.mark.parametrize("circuit", [qubit_script, photonics_script, photonics_script_no_decl])
     def test_parse_and_serialize(self, circuit):
         """Test parsing and serializing an XIR script.
 

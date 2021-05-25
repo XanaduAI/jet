@@ -1,14 +1,13 @@
 import pytest
 
 import jet
-import jet.bindings
 
 
 @pytest.mark.parametrize(
     "TensorNetwork, Tensor",
     [
-        (jet.bindings.TensorNetwork32, jet.bindings.Tensor32),
-        (jet.bindings.TensorNetwork64, jet.bindings.Tensor64),
+        (jet.TensorNetwork32, jet.Tensor32),
+        (jet.TensorNetwork64, jet.Tensor64),
     ],
 )
 class TestTensorNetwork:
