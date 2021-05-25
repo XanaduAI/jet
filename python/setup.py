@@ -51,7 +51,7 @@ with open("../include/jet/Version.hpp", "r") as f:
     version = f"{major}.{minor}.{patch}"
 
 requirements = [
-    "lark>=0.11.0",
+    "lark-parser>=0.11.0",
     "StrawberryFields==0.18.0",
 ]
 
