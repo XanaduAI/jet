@@ -26,17 +26,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Initialize build directory
-        run: |
-          mkdir build
-          cd build
-          cmake -DBUILD_PYTHON=ON ../
-
-      - name: Generate Python bindings
-        run: |
-          cd build
-          make -j`nproc`
-
       - name: Create virtual environment
         run: |
           cd python
@@ -62,17 +51,6 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Initialize build directory
-        run: |
-          mkdir build
-          cd build
-          cmake -DBUILD_PYTHON=ON ../
-
-      - name: Generate Python bindings
-        run: |
-          cd build
-          make -j`sysctl -n hw.physicalcpu`
 
       - name: Create virtual environment
         run: |
