@@ -1,3 +1,5 @@
 black
 isort>5
+lark
 pytest>=5,<6
+strawberryfields
