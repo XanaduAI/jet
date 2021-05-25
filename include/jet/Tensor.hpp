@@ -264,10 +264,11 @@ Tensor<T> Transpose(const Tensor<T> &A,
 {
     using namespace Jet::Utilities;
 
-    if (A.GetIndices().size() == 0)
-        JET_ABORT("Number of indices cannot be zero.");
     if (A.GetIndices() == new_indices)
         return A;
+
+    if (A.GetIndices().size() == 0)
+        JET_ABORT("Number of indices cannot be zero.");
 
     std::vector<size_t> new_shape(A.GetShape().size());
     for (size_t i = 0; i < new_indices.size(); i++)
