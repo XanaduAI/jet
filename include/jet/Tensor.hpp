@@ -272,25 +272,36 @@ Tensor<T> Transpose(const Tensor<T> &A,
 {
     using namespace Jet::Utilities;
 
-    if(A.GetIndices() == new_indices)
+    if (A.GetIndices() == new_indices)
         return A;
 
     std::vector<size_t> new_shape(A.GetShape().size());
     for (size_t i = 0; i < new_indices.size(); i++)
         new_shape[i] = A.GetIndexToDimension().at(new_indices[i]);
-    
+
     if (is_pow_2(A.GetSize())) {
         QFlexPermute log2_permuter;
+        /*QFlexPermute log2_permuter;
         std::vector<T> data(A.GetData());
         std::vector<T> scratch(data);
-        QFlexPermute::PrecomputedQflexTransposeData precomputed_data_a = log2_permuter.PrecomputeFastTransposeData(data, A.GetShape(), A.GetIndices(), new_indices);
+        QFlexPermute::PrecomputedQflexTransposeData precomputed_data_a =
+        log2_permuter.PrecomputeFastTransposeData(data, A.GetShape(),
+        A.GetIndices(), new_indices);
 
         log2_permuter.FastTranspose(data, precomputed_data_a, scratch);
-        return Tensor<T>{new_indices, std::move(new_shape), std::move(data)};
+        */
+        return Tensor<T>{
+            new_indices, std::move(new_shape),
+            std::move(log2_permuter.Transpose<T>(A.GetData(), A.GetShape(),
+                                                 A.GetIndices(), new_indices))};
+        // return Tensor<T>{new_indices, std::move(new_shape), std::move(data)};
     }
 
     DefaultPermute default_permuter;
-    return Tensor<T>{new_indices, std::move(new_shape), std::move(default_permuter.Transpose<T>(A.GetData(), A.GetShape(), A.GetIndices(), new_indices))};
+    return Tensor<T>{
+        new_indices, std::move(new_shape),
+        std::move(default_permuter.Transpose<T>(A.GetData(), A.GetShape(),
+                                                A.GetIndices(), new_indices))};
 }
 
 /**

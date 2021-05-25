@@ -34,14 +34,13 @@ namespace Jet {
 
 const std::unordered_map<std::size_t, std::size_t> LOG_2_TABLE(
     {{2, 1},          {4, 2},           {8, 3},          {16, 4},
-        {32, 5},         {64, 6},          {128, 7},        {256, 8},
-        {512, 9},        {1024, 10},       {2048, 11},      {4096, 12},
-        {8192, 13},      {16384, 14},      {32768, 15},     {65536, 16},
-        {131072, 17},    {262144, 18},     {524288, 19},    {1048576, 20},
-        {2097152, 21},   {4194304, 22},    {8388608, 23},   {16777216, 24},
-        {33554432, 25},  {67108864, 26},   {134217728, 27}, {268435456, 28},
-        {536870912, 29}, {1073741824, 30}, {1073741824, 30}});
-
+     {32, 5},         {64, 6},          {128, 7},        {256, 8},
+     {512, 9},        {1024, 10},       {2048, 11},      {4096, 12},
+     {8192, 13},      {16384, 14},      {32768, 15},     {65536, 16},
+     {131072, 17},    {262144, 18},     {524288, 19},    {1048576, 20},
+     {2097152, 21},   {4194304, 22},    {8388608, 23},   {16777216, 24},
+     {33554432, 25},  {67108864, 26},   {134217728, 27}, {268435456, 28},
+     {536870912, 29}, {1073741824, 30}, {1073741824, 30}});
 
 class QFlexPermute : public PermuteBase<QFlexPermute> {
     const static size_t zero_ = static_cast<size_t>(0);
@@ -50,6 +49,21 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
 
   public:
     QFlexPermute() : PermuteBase<QFlexPermute>() {}
+
+    template <class DataType>
+    std::vector<DataType> Transpose(const std::vector<DataType> &data_,
+                                    const std::vector<size_t> &shape,
+                                    const std::vector<std::string> &old_indices,
+                                    const std::vector<std::string> &new_indices)
+
+    {
+        std::vector<DataType> data(data_);
+        std::vector<DataType> scratch(data_);
+        PrecomputedQflexTransposeData precomputed_data_a =
+            PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
+        FastTranspose(data, precomputed_data_a, scratch);
+        return data;
+    }
 
     void GenerateBinaryReorderingMap(
         const std::vector<std::size_t> &map_old_to_new_idxpos,
@@ -610,15 +624,15 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
     }
 
     template <typename DataType>
-    void FastTranspose(
-        std::vector<DataType> &data_in,
-        const PrecomputedQflexTransposeData &precomputed_data,
-        std::vector<DataType> &scratch_in)
+    void FastTranspose(std::vector<DataType> &data_in,
+                       const PrecomputedQflexTransposeData &precomputed_data,
+                       std::vector<DataType> &scratch_in)
     {
         auto data_ = data_in.data();
         auto scratch = scratch_in.data();
 
-        for (size_t p_i = 0; p_i < precomputed_data.types.size(); p_i++) {//Type is empty, hence no transpose
+        for (size_t p_i = 0; p_i < precomputed_data.types.size();
+             p_i++) { // Type is empty, hence no transpose
             auto &dim_right = precomputed_data.dim_right[p_i];
             auto &dim_left = precomputed_data.dim_left[p_i];
             auto &tensor_dim = precomputed_data.tensor_dim[p_i];
@@ -879,9 +893,9 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         // Now special cases, before the default L-R-L worst case.
         // Tensor doesn't have enough size to pass MAX_RIGHT_DIM => only one R.
         if (num_binary_indices <= LOG_2_TABLE.at(MAX_RIGHT_DIM)) {
-            PrecomputeRightTransposeData(
-                old_binary_ordering, new_binary_ordering,
-                tensor_size, precomputed_data);
+            PrecomputeRightTransposeData(old_binary_ordering,
+                                         new_binary_ordering, tensor_size,
+                                         precomputed_data);
             return precomputed_data;
         }
         // Reordering needs only one right move or one left move.
@@ -938,8 +952,8 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                     std::vector<std::string> Rl_new_indices(
                         new_binary_ordering.begin(),
                         new_binary_ordering.end() - extended_Rr);
-                    PrecomputeLeftTransposeData(Rl_old_indices, Rl_new_indices, tensor_size,
-                                                precomputed_data);
+                    PrecomputeLeftTransposeData(Rl_old_indices, Rl_new_indices,
+                                                tensor_size, precomputed_data);
                     return precomputed_data;
                 }
             }
