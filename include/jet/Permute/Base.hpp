@@ -10,25 +10,14 @@
 namespace Jet {
 
 /**
- * Cache friendly size (for complex<float>) to move things around.
- */
-#ifndef MAX_RIGHT_DIM
-#define MAX_RIGHT_DIM 1024
-#endif
-
-/**
- * Smallest size of cache friendly blocks (for complex<float>).
- */
-#ifndef MIN_RIGHT_DIM
-#define MIN_RIGHT_DIM 32
-#endif
-
-/**
  * @brief Interface for tensor permutation backend.
  *
  * @tparam PermuteBackend
  */
 template <class PermuteBackend> class PermuteBase {
+  private:
+    static constexpr size_t MAX_RIGHT_DIM = 1024;
+
   protected:
     // Ensure derived type recognised as friend for CRTP
     friend PermuteBackend;

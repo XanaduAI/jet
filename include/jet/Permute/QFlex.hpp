@@ -16,33 +16,12 @@
 #include <cblas.h>
 #endif
 
-/**
- * Cache friendly size (for complex<float>) to move things around.
- */
-#ifndef MAX_RIGHT_DIM
-#define MAX_RIGHT_DIM 1024
-#endif
-
-/**
- * Smallest size of cache friendly blocks (for complex<float>).
- */
-#ifndef MIN_RIGHT_DIM
-#define MIN_RIGHT_DIM 32
-#endif
-
 namespace Jet {
 
-const std::unordered_map<std::size_t, std::size_t> LOG_2_TABLE(
-    {{2, 1},          {4, 2},           {8, 3},          {16, 4},
-     {32, 5},         {64, 6},          {128, 7},        {256, 8},
-     {512, 9},        {1024, 10},       {2048, 11},      {4096, 12},
-     {8192, 13},      {16384, 14},      {32768, 15},     {65536, 16},
-     {131072, 17},    {262144, 18},     {524288, 19},    {1048576, 20},
-     {2097152, 21},   {4194304, 22},    {8388608, 23},   {16777216, 24},
-     {33554432, 25},  {67108864, 26},   {134217728, 27}, {268435456, 28},
-     {536870912, 29}, {1073741824, 30}, {1073741824, 30}});
-
 class QFlexPermute : public PermuteBase<QFlexPermute> {
+    static constexpr size_t MAX_RIGHT_DIM = 1024;
+    static constexpr size_t MIN_RIGHT_DIM = 32;
+
     const static size_t zero_ = static_cast<size_t>(0);
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
@@ -239,251 +218,6 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         }
     }
 
-    template <class DataType>
-    void TransposeInPlace(std::vector<DataType> &data,
-                          const std::vector<size_t> &shape_,
-                          const std::vector<std::string> &old_indices,
-                          const std::vector<std::string> &new_ordering,
-                          DataType *scratch_copy)
-    {
-        using namespace Utilities;
-
-        if (new_ordering.empty() && old_indices.empty()) {
-            return;
-        }
-
-        bool new_ordering_in_indices =
-            VectorInVector(new_ordering, old_indices);
-        bool indices_in_new_ordering =
-            VectorInVector(old_indices, new_ordering);
-
-        if (!new_ordering_in_indices || !indices_in_new_ordering) {
-            JET_ABORT("new_ordering must be a reordering of current indices");
-        }
-
-        for (std::size_t i = 0; i < shape_.size(); ++i) {
-            if (LOG_2_TABLE.find(shape_[i]) == LOG_2_TABLE.end()) {
-                JET_ABORT("Failed to run pow2 transpose with non pow2 data");
-            }
-        }
-        FastTransposeInPlace(new_ordering, scratch_copy);
-    }
-
-    template <class DataType>
-    void FastTransposeInPlace(std::vector<DataType> &data,
-                              const std::vector<std::string> &indices_,
-                              const std::vector<std::size_t> &shape_,
-                              const std::vector<std::string> &new_ordering,
-                              std::vector<DataType> &scratch_copy)
-    {
-        using namespace Jet::Utilities;
-        // Create binary orderings.
-        std::vector<std::string> old_ordering(indices_);
-        std::vector<std::size_t> old_dimensions(shape_);
-        std::size_t num_indices = old_ordering.size();
-        std::size_t total_dim = 1;
-        for (std::size_t i = 0; i < num_indices; ++i)
-            total_dim *= old_dimensions[i];
-        // Create map_old_to_new_idxpos from old to new indices, and
-        // new_dimensions.
-        std::vector<std::size_t> map_old_to_new_idxpos(num_indices);
-        std::vector<std::size_t> new_dimensions(num_indices);
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            for (std::size_t j = 0; j < num_indices; ++j) {
-                if (old_ordering[i] == new_ordering[j]) {
-                    map_old_to_new_idxpos[i] = j;
-                    new_dimensions[j] = old_dimensions[i];
-                    break;
-                }
-            }
-        }
-        // Create binary orderings:
-        std::vector<std::size_t> old_logs(num_indices);
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            old_logs[i] = LOG_2_TABLE.at(old_dimensions[i]);
-        }
-        std::size_t num_binary_indices = LOG_2_TABLE.at(total_dim);
-        // Create map from old letter to new group of letters.
-        std::unordered_map<std::string, std::vector<std::string>> binary_groups;
-        std::size_t alphabet_position = 0;
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            std::vector<std::string> group(old_logs[i]);
-            for (std::size_t j = 0; j < old_logs[i]; ++j) {
-                group[j] = ALPHABET_[alphabet_position];
-                ++alphabet_position;
-            }
-            binary_groups[old_ordering[i]] = group;
-        }
-        // Create old and new binary ordering in letters.
-        std::vector<std::string> old_binary_ordering(num_binary_indices);
-        std::vector<std::string> new_binary_ordering(num_binary_indices);
-        std::size_t binary_position = 0;
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            std::string old_index = old_ordering[i];
-            for (std::size_t j = 0; j < binary_groups[old_index].size(); ++j) {
-                old_binary_ordering[binary_position] =
-                    binary_groups[old_index][j];
-                ++binary_position;
-            }
-        }
-        binary_position = 0;
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            std::string new_index = new_ordering[i];
-            for (std::size_t j = 0; j < binary_groups[new_index].size(); ++j) {
-                new_binary_ordering[binary_position] =
-                    binary_groups[new_index][j];
-                ++binary_position;
-            }
-        }
-        // Up to here, I have created old_binary_ordering and
-        // new_binary_ordering.
-
-        // Change _indices and _dimensions, as well as _index_to_dimension.
-        // This is common to all cases, special or default (worst case).
-        std::cerr << "FIX_HERE_A" << std::endl;
-        // InitIndicesAndShape(new_ordering, new_dimensions);
-
-        // Now special cases, before the default L-R-L worst case.
-        // Tensor doesn't have enough size to pass MAX_RIGHT_DIM => only one R.
-        if (num_binary_indices <= LOG_2_TABLE.at(MAX_RIGHT_DIM)) {
-            RightTransposeInPlace(data, old_binary_ordering,
-                                  new_binary_ordering, num_binary_indices);
-            return;
-        }
-        // Reordering needs only one right move or one left move.
-        // Left moves might benefit a lot from being applied on shorter strings,
-        // up to L10. Computation times are L4>L5>L6>...>L10. I'll consider
-        // all of these cases.
-        {
-            if (new_binary_ordering.size() < LOG_2_TABLE.at(MAX_RIGHT_DIM))
-                JET_ABORT(
-                    "New ordering is too small to be used at this point.");
-
-            std::size_t Lr = LOG_2_TABLE.at(MAX_RIGHT_DIM);
-            std::size_t Ll = new_binary_ordering.size() - Lr;
-            std::size_t Rr = LOG_2_TABLE.at(MIN_RIGHT_DIM);
-            std::vector<std::string> Ll_old_indices(
-                old_binary_ordering.begin(), old_binary_ordering.begin() + Ll);
-            std::vector<std::string> Ll_new_indices(
-                new_binary_ordering.begin(), new_binary_ordering.begin() + Ll);
-            // Only one R10.
-            if (Ll_old_indices == Ll_new_indices) {
-                std::vector<std::string> Lr_old_indices(
-                    old_binary_ordering.begin() + Ll,
-                    old_binary_ordering.end());
-                std::vector<std::string> Lr_new_indices(
-                    new_binary_ordering.begin() + Ll,
-                    new_binary_ordering.end());
-                RightTransposeInPlace(data, Lr_old_indices, Lr_new_indices, Lr);
-                return;
-            }
-
-            if (Rr == 0)
-                JET_ABORT("Rr move cannot be zero.");
-
-            // TODO: This loop has been tested to make sure that extended_Rr is
-            // consistent with its previous implementation. However, no
-            // simulations so far seem to use this loop, so I cannot check it!
-            //
-            // Only one L\nu move.
-            // for (long int i = 5; i >= -1; --i) {
-            //  long int extended_Rr = Rr + i;
-            for (std::size_t i = 7; i--;) {
-                std::size_t extended_Rr = Rr + i - 1;
-                std::vector<std::string> Rr_old_indices(
-                    old_binary_ordering.end() - extended_Rr,
-                    old_binary_ordering.end());
-                std::vector<std::string> Rr_new_indices(
-                    new_binary_ordering.end() - extended_Rr,
-                    new_binary_ordering.end());
-                if (Rr_old_indices == Rr_new_indices) {
-                    std::vector<std::string> Rl_old_indices(
-                        old_binary_ordering.begin(),
-                        old_binary_ordering.end() - extended_Rr);
-                    std::vector<std::string> Rl_new_indices(
-                        new_binary_ordering.begin(),
-                        new_binary_ordering.end() - extended_Rr);
-                    LeftTransposeInPlace(data, Rl_old_indices, Rl_new_indices,
-                                         extended_Rr, scratch_copy);
-                    return;
-                }
-            }
-        }
-
-        // Worst case.
-        {
-            // There are two boundaries, L and R.
-            // The worst case is the following. It can be optimized, in order to
-            // do work early and maybe save the later steps. Think about that,
-            // but first let's have something that already works: 1) L5 All
-            // indices that are to the left of R and need to end up to its
-            //    right are placed in the bucket.
-            // 2) R10 All indices to the right of R are placed in their final
-            // ordering. 3) L5 All indices to the left of L are placed in their
-            // final ordering. Then hardcode special cases. Add conditional to
-            // _left_reorder and _right_reorder, so that they don't do anything
-            // when not needed. Debug from here!
-
-            if (new_binary_ordering.size() < LOG_2_TABLE.at(MAX_RIGHT_DIM))
-                JET_ABORT(
-                    "New ordering is too small to be used at this point.");
-            if (new_binary_ordering.size() < LOG_2_TABLE.at(MIN_RIGHT_DIM))
-                JET_ABORT(
-                    "New ordering is too small to be used at this point.");
-
-            std::size_t Lr = LOG_2_TABLE.at(MAX_RIGHT_DIM);
-            std::size_t Ll = new_binary_ordering.size() - Lr;
-            std::size_t Rr = LOG_2_TABLE.at(MIN_RIGHT_DIM);
-            std::size_t Rl = new_binary_ordering.size() - Rr;
-            // Helper vectors that can be reused.
-            std::vector<std::string> Lr_indices(Lr), Ll_indices(Ll),
-                Rr_indices(Rr), Rl_indices(Rl);
-            for (std::size_t i = 0; i < Rr; ++i)
-                Rr_indices[i] = new_binary_ordering[i + Rl];
-            for (std::size_t i = 0; i < Rl; ++i)
-                Rl_indices[i] = old_binary_ordering[i];
-            std::vector<std::string> Rr_new_in_Rl_old =
-                VectorIntersection(Rl_indices, Rr_indices);
-            std::vector<std::string> Rl_old_not_in_Rr_new =
-                VectorIntersection(Rl_indices, Rr_new_in_Rl_old);
-            std::vector<std::string> Rl_first_step =
-                VectorIntersection(Rl_old_not_in_Rr_new, Rr_new_in_Rl_old);
-            std::vector<std::string> Rl_zeroth_step(Rl);
-            for (std::size_t i = 0; i < Rl; ++i)
-                Rl_zeroth_step[i] = old_binary_ordering[i];
-            LeftTransposeInPlace(data, Rl_zeroth_step, Rl_first_step, Rr,
-                                 scratch_copy);
-
-            // Done with 1).
-            // Let's go with 2).
-            std::vector<std::string> Lr_first_step = VectorConcatenation(
-                std::vector<std::string>(Rl_first_step.begin() + Ll,
-                                         Rl_first_step.end()),
-                std::vector<std::string>(old_binary_ordering.begin() + Rl,
-                                         old_binary_ordering.end()));
-            Rr_indices = std::vector<std::string>(
-                new_binary_ordering.begin() + Rl, new_binary_ordering.end());
-            std::vector<std::string> Lr_second_step = VectorConcatenation(
-                VectorSubtraction(Lr_first_step, Rr_indices),
-                std::vector<std::string>(Rr_indices));
-            RightTransposeInPlace(data, Lr_first_step, Lr_second_step, Lr);
-            // Done with 2).
-            // Let's go with 3).
-            std::vector<std::string> Rl_second_step = VectorConcatenation(
-                std::vector<std::string>(Rl_first_step.begin(),
-                                         Rl_first_step.begin() + Ll),
-                std::vector<std::string>(Lr_second_step.begin(),
-                                         Lr_second_step.begin() + Lr - Rr));
-            std::vector<std::string> Rl_thrid_step(
-                new_binary_ordering.begin(), new_binary_ordering.begin() + Rl);
-            LeftTransposeInPlace(data, Rl_second_step, Rl_thrid_step, Rr,
-                                 scratch_copy);
-            // done with 3).
-
-            scratch_copy = nullptr;
-        }
-    }
-
     enum class TransposeType { LeftTranspose, RightTranspose };
 
     struct PrecomputedQflexTransposeData {
@@ -500,7 +234,6 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         std::vector<std::string> old_ordering;
         std::vector<std::size_t> old_dimensions;
         bool no_transpose;
-        bool log_2;
     };
 
     template <typename DataType>
@@ -800,11 +533,10 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         using namespace Jet::Utilities;
         PrecomputedQflexTransposeData precomputed_data;
 
-        precomputed_data.log_2 = true;
         for (std::size_t i = 0; i < shape.size(); ++i) {
-            if (LOG_2_TABLE.find(shape[i]) == LOG_2_TABLE.end()) {
-                precomputed_data.log_2 = false;
-                break;
+            if (!is_pow_2(shape[i])) {
+                JET_ABORT("Fast transpose should not be called with non "
+                          "power-of-2 data");
             }
         }
 
@@ -835,16 +567,12 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         precomputed_data.old_dimensions = old_dimensions;
         precomputed_data.total_dim = total_dim;
 
-        if (precomputed_data.log_2 == false) {
-            return precomputed_data;
-        }
-
         // Create binary orderings:
         std::vector<std::size_t> old_logs(num_indices);
         for (std::size_t i = 0; i < num_indices; ++i) {
-            old_logs[i] = LOG_2_TABLE.at(old_dimensions[i]);
+            old_logs[i] = fast_log2(old_dimensions[i]);
         }
-        std::size_t num_binary_indices = LOG_2_TABLE.at(total_dim);
+        std::size_t num_binary_indices = fast_log2(total_dim);
         // Create map from old letter to new group of letters.
         std::unordered_map<std::string, std::vector<std::string>> binary_groups;
         std::size_t alphabet_position = 0;
@@ -892,7 +620,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
 
         // Now special cases, before the default L-R-L worst case.
         // Tensor doesn't have enough size to pass MAX_RIGHT_DIM => only one R.
-        if (num_binary_indices <= LOG_2_TABLE.at(MAX_RIGHT_DIM)) {
+        if (num_binary_indices <= fast_log2(MAX_RIGHT_DIM)) {
             PrecomputeRightTransposeData(old_binary_ordering,
                                          new_binary_ordering, tensor_size,
                                          precomputed_data);
@@ -903,13 +631,13 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         // up to L10. Computation times are L4>L5>L6>...>L10. I'll consider
         // all of these cases.
         {
-            if (new_binary_ordering.size() < LOG_2_TABLE.at(MAX_RIGHT_DIM))
+            if (new_binary_ordering.size() < fast_log2(MAX_RIGHT_DIM))
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
 
-            std::size_t Lr = LOG_2_TABLE.at(MAX_RIGHT_DIM);
+            constexpr std::size_t Lr = fast_log2(MAX_RIGHT_DIM);
             std::size_t Ll = new_binary_ordering.size() - Lr;
-            std::size_t Rr = LOG_2_TABLE.at(MIN_RIGHT_DIM);
+            constexpr std::size_t Rr = fast_log2(MIN_RIGHT_DIM);
             std::vector<std::string> Ll_old_indices(
                 old_binary_ordering.begin(), old_binary_ordering.begin() + Ll);
             std::vector<std::string> Ll_new_indices(
@@ -973,16 +701,16 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
             // _left_reorder and _right_reorder, so that they don't do anything
             // when not needed. Debug from here!
 
-            if (new_binary_ordering.size() < LOG_2_TABLE.at(MAX_RIGHT_DIM))
+            if (new_binary_ordering.size() < fast_log2(MAX_RIGHT_DIM))
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
-            if (new_binary_ordering.size() < LOG_2_TABLE.at(MIN_RIGHT_DIM))
+            if (new_binary_ordering.size() < fast_log2(MIN_RIGHT_DIM))
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
 
-            std::size_t Lr = LOG_2_TABLE.at(MAX_RIGHT_DIM);
+            constexpr std::size_t Lr = fast_log2(MAX_RIGHT_DIM);
             std::size_t Ll = new_binary_ordering.size() - Lr;
-            std::size_t Rr = LOG_2_TABLE.at(MIN_RIGHT_DIM);
+            constexpr std::size_t Rr = fast_log2(MIN_RIGHT_DIM);
             std::size_t Rl = new_binary_ordering.size() - Rr;
             // Helper vectors that can be reused.
             std::vector<std::string> Lr_indices(Lr), Ll_indices(Ll),

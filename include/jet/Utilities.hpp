@@ -17,7 +17,7 @@ namespace Utilities {
  * @param value Number to check.
  * @return True if `value` is a power of 2.
  */
-inline bool is_pow_2(size_t value)
+constexpr inline bool is_pow_2(size_t value)
 {
     return static_cast<bool>(value && !(value & (value - 1)));
 }
@@ -33,7 +33,7 @@ inline bool is_pow_2(size_t value)
  * @return size_t log2 result of value. If value is a non power-of-2, returns
  * the floor of the log2 operation.
  */
-inline size_t fast_log2(size_t value)
+constexpr inline size_t fast_log2(size_t value)
 {
     /// Note: doing this as a define instead with the values hardcoded results
     /// in the subtraction folded into the limit

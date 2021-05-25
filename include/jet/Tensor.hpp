@@ -1,19 +1,5 @@
 #pragma once
 
-/**
- * Cache friendly size (for complex<float>) to move things around.
- */
-#ifndef MAX_RIGHT_DIM
-#define MAX_RIGHT_DIM 1024
-#endif
-
-/**
- * Smallest size of cache friendly blocks (for complex<float>).
- */
-#ifndef MIN_RIGHT_DIM
-#define MIN_RIGHT_DIM 32
-#endif
-
 #include <complex>
 #include <random>
 #include <string>
@@ -83,11 +69,15 @@ template <class T> Tensor<T> AddTensors(const Tensor<T> &A, const Tensor<T> &B)
     Tensor<T> C(indices, shape);
     const auto size = C.GetSize();
 
+    auto c_ptr = C.GetData().data();
+    auto a_ptr = A.GetData().data();
+    auto bt_ptr = Bt.GetData().data();
+
 #if defined _OPENMP
-#pragma omp parallel for schedule(static, MAX_RIGHT_DIM)
+#pragma omp parallel for // schedule(static, MAX_RIGHT_DIM)
 #endif
     for (size_t i = 0; i < size; i++) {
-        C[i] = A[i] + Bt[i];
+        c_ptr[i] = a_ptr[i] + bt_ptr[i];
     }
 
     return C;
@@ -208,14 +198,16 @@ Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index,
     Tensor<T> tensor_sliced(sliced_indices, sliced_dimensions);
     size_t projection_size = tensor_sliced.GetSize();
     size_t projection_begin = projection_size * value;
-    auto data_ptr = tensor_trans.GetData();
+
+    auto data_ptr = tensor_trans.GetData().data();
+    auto tensor_sliced_ptr = tensor_sliced.GetData().data();
 
 #if defined _OPENMP
-    int max_right_dim = 1024;
-#pragma omp parallel for schedule(static, max_right_dim)
+    // int max_right_dim = 1024;
+#pragma omp parallel for // schedule(static, max_right_dim)
 #endif
     for (size_t p = 0; p < projection_size; ++p)
-        tensor_sliced[p] = tensor_trans[projection_begin + p];
+        tensor_sliced_ptr[p] = data_ptr[projection_begin + p];
 
     return tensor_sliced;
 }
