@@ -1,17 +1,3 @@
-# Copyright 2021 Xanadu Quantum Technologies Inc.
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import os
 import re
 import sys
@@ -25,7 +11,7 @@ from setuptools.command.build_ext import build_ext
 
 
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=""):
+    def __init__(self, name, sourcedir=".."):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
 
@@ -57,7 +43,7 @@ class CMakeBuild(build_ext):
 
 
 # Hack to get the Jet version number without including the Python package.
-with open("include/jet/Version.hpp", "r") as f:
+with open("../include/jet/Version.hpp", "r") as f:
     contents = f.read()
     major = re.search(r"MAJOR_VERSION\s*=\s*(\d+)", contents).group(1)
     minor = re.search(r"MINOR_VERSION\s*=\s*(\d+)", contents).group(1)
@@ -79,14 +65,13 @@ info = {
     "include_package_data": True,
     "install_requires": requirements,
     "license": "Apache License 2.0",
-    "long_description": open("README.rst", encoding="utf-8").read(),
+    "long_description": open("../README.rst", encoding="utf-8").read(),
     "long_description_content_type": "text/x-rst",
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",
     "name": "quantum-jet",
     "package_data": {"xir": ["ir.lark"]},
-    "package_dir": {"": "python"},
-    "packages": find_packages(where="python"),
+    "packages": find_packages(where="."),
     "provides": ["jet", "xir"],
     "url": "https://github.com/XanaduAI/jet",
     "version": version,
