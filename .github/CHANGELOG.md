@@ -14,6 +14,8 @@
 
 ### Improvements
 
+* Tensor network contractions are now significantly faster than initial release. [(#12)](https://github.com/XanaduAI/jet/pull/12)
+
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
 * `TaskBasedCpuContractor` now stores `Tensor` results. [(#8)](https://github.com/XanaduAI/jet/pull/8)
@@ -25,6 +27,8 @@
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
+
+* The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with one another. [(#6)](https://github.com/XanaduAI/jet/pull/6)
 
