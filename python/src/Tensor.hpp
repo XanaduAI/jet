@@ -188,7 +188,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             Returns the tensor data value at the given n-dimensional index.
 
             Args:
-                indices: n-dimensional tensor data index.
+                indices: n-dimensional tensor data index in row-major order.
 
             Returns:
                 Complex data value at the given index.
@@ -215,7 +215,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             Sets the tensor data value at the given n-dimensional index.
 
             Args:
-                indices: n-dimensional tensor data index.
+                indices: n-dimensional tensor data index in row-major order.
                 value: value to set at the data index.
         )");
 

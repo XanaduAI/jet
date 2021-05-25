@@ -268,6 +268,21 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
         const double want_flops = (4 * 5) * (6 + 5);
         CHECK(have_flops == want_flops);
     }
+    SECTION("Path step with invalid ID")
+    {
+        using namespace Catch::Matchers;
+
+        const auto tensor_1 = MakeTensor({"A0", "B1", "C2"}, {2, 3, 4});
+        const auto tensor_2 = MakeTensor({"A0", "B1", "C3"}, {2, 3, 5});
+
+        tn.AddTensor(tensor_1, {});
+        tn.AddTensor(tensor_2, {});
+
+        const PathInfo path_info(tn, {{0, 1}});
+
+        CHECK_THROWS_WITH(path_info.GetPathStepFlops(20),
+                          Contains("Step ID is invalid."));
+    }
 }
 
 TEST_CASE("PathInfo::GetTotalFlops()", "[PathInfo]")
@@ -310,6 +325,32 @@ TEST_CASE("PathInfo::GetTotalFlops()", "[PathInfo]")
         const double have_flops = path_info.GetTotalFlops();
         const double want_flops = 12 * (2 + 1) + 20 * (3 + 2);
         CHECK(have_flops == want_flops);
+    }
+
+    SECTION("Path has invalid node ID")
+    {
+        using namespace Catch::Matchers;
+
+        const auto tensor_1 = MakeTensor({"A0", "B1"}, {4, 2});
+        const auto tensor_2 = MakeTensor({"B1", "C2"}, {2, 3});
+        const auto tensor_3 = MakeTensor({"C2", "D3"}, {3, 5});
+
+        tn.AddTensor(tensor_1, {});
+        tn.AddTensor(tensor_2, {});
+        tn.AddTensor(tensor_3, {});
+
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{10, 1}, {2, 3}}),
+            Contains("Node ID 1 in contraction path pair is invalid."));
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{0, 10}, {2, 3}}),
+            Contains("Node ID 2 in contraction path pair is invalid."));
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{0, 1}, {20, 3}}),
+            Contains("Node ID 1 in contraction path pair is invalid."));
+        CHECK_THROWS_WITH(
+            PathInfo(tn, {{0, 1}, {2, 30}}),
+            Contains("Node ID 2 in contraction path pair is invalid."));
     }
 }
 
@@ -364,6 +405,19 @@ TEST_CASE("PathInfo::GetPathStepMemory()", "[PathInfo]")
         const double have_memory = path_info.GetPathStepMemory(0);
         const double want_memory = 120;
         CHECK(have_memory == want_memory);
+    }
+    SECTION("Request invalid ID")
+    {
+        using namespace Catch::Matchers;
+
+        const auto tensor =
+            MakeTensor({"A0", "B1", "C2", "D3", "E4"}, {1, 2, 3, 4, 5});
+        tn.AddTensor(tensor, {});
+
+        const PathInfo path_info(tn, {});
+
+        CHECK_THROWS_WITH(path_info.GetPathStepMemory(10),
+                          Contains("Step ID is invalid."));
     }
 }
 

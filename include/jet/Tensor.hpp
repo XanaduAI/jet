@@ -227,7 +227,7 @@ Tensor<T> Reshape(const Tensor<T> &old_tensor,
     using namespace Utilities;
 
     JET_ABORT_IF_NOT(old_tensor.GetSize() ==
-                         TensorHelpers::ShapeToSize(new_shape),
+                         Jet::Utilities::ShapeToSize(new_shape),
                      "Size is inconsistent between tensors.");
     Tensor<T> new_tensor(new_shape);
     Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
@@ -393,7 +393,7 @@ template <class T> class Tensor {
      * @param shape Dimension of each `%Tensor` index.
      */
     Tensor(const std::vector<size_t> &shape)
-        : data_(TensorHelpers::ShapeToSize(shape))
+        : data_(Jet::Utilities::ShapeToSize(shape))
     {
         using namespace Utilities;
         std::vector<std::string> indices(shape.size());
@@ -415,7 +415,7 @@ template <class T> class Tensor {
      */
     Tensor(const std::vector<std::string> &indices,
            const std::vector<size_t> &shape)
-        : data_(TensorHelpers::ShapeToSize(shape))
+        : data_(Jet::Utilities::ShapeToSize(shape))
     {
         InitIndicesAndShape(indices, shape);
     }
@@ -601,7 +601,7 @@ template <class T> class Tensor {
     /**
      * @brief Sets the `%Tensor` data value at the given n-dimensional index.
      *
-     * @param indices n-dimensional `%Tensor` data index.
+     * @param indices n-dimensional `%Tensor` data index in row-major order.
      * @param value Data value to set at given index.
      */
     void SetValue(const std::vector<size_t> &indices, const T &value)
@@ -612,7 +612,7 @@ template <class T> class Tensor {
     /**
      * @brief Returns the `%Tensor` data value at the given n-dimensional index.
      *
-     * @param indices n-dimensional `%Tensor` data index.
+     * @param indices n-dimensional `%Tensor` data index in row-major order.
      *
      * @returns Complex data value.
      */
@@ -648,7 +648,7 @@ template <class T> class Tensor {
      *
      * @return Number of data elements.
      */
-    size_t GetSize() const { return TensorHelpers::ShapeToSize(shape_); }
+    size_t GetSize() const { return Jet::Utilities::ShapeToSize(shape_); }
 
     /**
      * @brief Returns a single scalar value from the `%Tensor` object.

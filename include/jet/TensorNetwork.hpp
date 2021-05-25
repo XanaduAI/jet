@@ -155,31 +155,33 @@ template <class Tensor> class TensorNetwork {
     size_t NumTensors() const noexcept { return nodes_.size(); }
 
     /**
-     * @brief Adds a tensor with the specified tags.
+     * @brief Adds a tensor with the specified tags and returns its
+     *        assigned ID.
      *
      * @warning This function is not safe for concurrent execution.
      *
      * @param tensor Tensor to be added to this tensor network.
      * @param tags Tags to be associated with the tensor.
+     *
+     * @return Node ID assigned to the tensor.
      */
-    void AddTensor(const Tensor &tensor,
-                   const std::vector<std::string> &tags) noexcept
+    node_id_t AddTensor(const Tensor &tensor,
+                        const std::vector<std::string> &tags) noexcept
     {
-        const auto &indices = tensor.GetIndices();
-        const auto name = DeriveNodeName_(indices);
+        node_id_t id = nodes_.size();
+        nodes_.emplace_back(Node{
+            id,                                   // id
+            DeriveNodeName_(tensor.GetIndices()), // name
+            tensor.GetIndices(),                  // indices
+            tags,                                 // tags
+            false,                                // contracted
+            tensor                                // tensor
+        });
 
-        const Node node{
-            nodes_.size(), // id
-            name,          // name
-            indices,       // indices
-            tags,          // tags
-            false,         // contracted
-            tensor,        // tensor
-        };
-        nodes_.emplace_back(node);
+        AddNodeToIndexMap_(nodes_[id]);
+        AddNodeToTagMap_(nodes_[id]);
 
-        AddNodeToIndexMap_(node);
-        AddNodeToTagMap_(node);
+        return id;
     }
 
     /**
@@ -207,7 +209,7 @@ template <class Tensor> class TensorNetwork {
      *              how raveled values are interpreted.
      */
     void SliceIndices(const std::vector<std::string> &indices,
-                      unsigned long long value) noexcept
+                      unsigned long long value)
     {
         std::unordered_map<size_t, std::vector<size_t>> node_to_index_map;
         std::vector<size_t> index_sizes(indices.size());
@@ -217,7 +219,6 @@ template <class Tensor> class TensorNetwork {
             const auto it = index_to_edge_map_.find(indices[i]);
             JET_ABORT_IF(it == index_to_edge_map_.end(),
                          "Sliced index does not exist.");
-
             const auto &edge = it->second;
             index_sizes[i] = edge.dim;
 
@@ -294,7 +295,7 @@ template <class Tensor> class TensorNetwork {
      * @param path Contraction path specified as a list of node ID pairs.
      * @return Tensor associated with the result of the final contraction.
      */
-    const Tensor &Contract(const path_t &path = {}) noexcept
+    const Tensor &Contract(const path_t &path = {})
     {
         JET_ABORT_IF(nodes_.empty(),
                      "An empty tensor network cannot be contracted.");
