@@ -196,8 +196,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                                     map_old_to_new_position);
 
         std::size_t dim_right = total_dim;
-        std::size_t dim_left =
-            data.size() / dim_right;
+        std::size_t dim_left = data.size() / dim_right;
         {
 
             std::vector<DataType> temp_data(dim_right);
