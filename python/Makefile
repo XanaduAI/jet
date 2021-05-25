@@ -10,9 +10,11 @@ TARGETS
 
   setup [python=<path>]       Set up virtualenv using the Python interpreter at <path>, defaults to $(python)
 
-  test [args=<pytest args>]   Run tests; use with 'args=<pytest args>' to pass test arguments
+  build                       Create source distribution and wheel
 
   format [check=1]            Apply formatters; use with 'check=1' to check instead of modify
+
+  test [args=<pytest args>]   Run tests; use with 'args=<pytest args>' to pass test arguments
 
   clean                       Remove all build artifacts
 
@@ -41,19 +43,22 @@ endif
 
 .PHONY: build
 build: $(.VENV_DIR)/requirements.txt.touch
-	$(.VENV_BIN)/python -m build -n ..
+	$(.VENV_BIN)/python -m build
+	@# Delete the .egg-info artifact to prevent pip from assuming the package was installed.
+	@# See https://github.com/pypa/pip/issues/6558 for more details.
 	rm -rf quantum_jet.egg-info
 
 
 .PHONY: test
 test: build
-	$(.VENV_BIN)/pip install $(wildcard ../dist/*.whl)
+	$(.VENV_BIN)/pip install $(wildcard dist/*.whl) --upgrade
+	@# The -I flag ensures the installed `jet` package is imported instead of the local one.
 	$(.VENV_BIN)/python -I -m pytest ./tests $(args)
 
 
 .PHONY: clean
 clean:
-	rm -rf $(.VENV_DIR)
+	rm -rf $(.VENV_DIR) build dist
 
 
 $(.VENV_DIR)/requirements.txt.touch: $(.VENV_DIR)/touch requirements.txt
