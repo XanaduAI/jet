@@ -87,8 +87,8 @@ class TestTensor:
         """Tests that the value of a tensor at a multi-dimensional index can be retrieved."""
         tensor = Tensor(shape=[2, 2], indices=["i", "j"], data=range(4))
         assert tensor.get_value(indices=[0, 0]) == 0
-        assert tensor.get_value(indices=[1, 0]) == 1
-        assert tensor.get_value(indices=[0, 1]) == 2
+        assert tensor.get_value(indices=[0, 1]) == 1
+        assert tensor.get_value(indices=[1, 0]) == 2
         assert tensor.get_value(indices=[1, 1]) == 3
 
     def test_set_value(self, Tensor):

@@ -33,10 +33,10 @@ setup: $(.VENV_DIR)/touch
 .PHONY: format
 format: $(.VENV_DIR)/requirements.txt.touch
 ifdef check
-	$(.VENV_BIN)/black --check tests
+	$(.VENV_BIN)/black -l 100 --check tests
 	$(.VENV_BIN)/isort --profile black --check-only tests
 else
-	$(.VENV_BIN)/black tests
+	$(.VENV_BIN)/black -l 100 tests
 	$(.VENV_BIN)/isort --profile black tests
 endif
 

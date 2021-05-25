@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This module contains the IRTransformer and ir_parser"""
+"""This module contains the XIRTransformer and xir_parser"""
 from decimal import Decimal
 from pathlib import Path
 from lark import Lark, Transformer
 
 from .program import (
-    IRProgram,
+    XIRProgram,
     Statement,
     OperatorStmt,
     GateDeclaration,
@@ -33,10 +33,10 @@ p = Path(__file__).parent / "ir.lark"
 with p.open("r") as _f:
     ir_grammar = _f.read()
 
-ir_parser = Lark(ir_grammar, start="program", parser="lalr")
+xir_parser = Lark(ir_grammar, start="program", parser="lalr")
 
 
-class IRTransformer(Transformer):
+class XIRTransformer(Transformer):
     """Transformer for processing the Lark parse tree.
 
     Transformers visit each node of the tree, and run the appropriate method on it according to the
@@ -44,7 +44,7 @@ class IRTransformer(Transformer):
     """
 
     def __init__(self, *args, **kwargs):
-        self._program = IRProgram()
+        self._program = XIRProgram()
         super().__init__(self, *args, **kwargs)
 
     def program(self, args):
@@ -56,7 +56,7 @@ class IRTransformer(Transformer):
         * The final measurement (0 or 1)
 
         Returns:
-            IRProgram: program containing all parsed data
+            XIRProgram: program containing all parsed data
         """
         # assert all stmts are handled
         assert all(a == None for a in args)

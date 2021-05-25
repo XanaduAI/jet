@@ -19,11 +19,20 @@ from typing import Union, List, Dict, Set, Tuple, Sequence
 
 from .utils import strip
 
-"""This module contains the IRProgram class and classes for the Xanadu IR"""
+"""This module contains the XIRProgram class and classes for the Xanadu IR"""
 
 
 class Statement:
-    """TODO"""
+    """A general statement consisting of a name, optional parameters and wires
+
+    This is used for gate statements (e.g. ``rx(0.13) | [0]``) or output statements
+    (e.g. ``sample(shots: 1000) | [0, 1]``).
+
+    Args:
+        name (str): name of the statement
+        params (list, Dict): parameters for the statement (can be empty)
+        wires (tuple): the wires on which the statement is applied
+    """
 
     def __init__(self, name: str, params: Union[List, Dict], wires: Tuple):
         self.name = name
@@ -45,7 +54,12 @@ class Statement:
 
 
 class OperatorStmt:
-    """TODO"""
+    """Operator statements to be used in operator definitions
+
+    Args:
+        pref (Decimal, int, str): prefactor to the operator terms
+        terms (list): list of operators and the wire(s) they are applied to
+    """
 
     def __init__(self, pref: Union[Decimal, int, str], terms: List):
         self.pref = pref
@@ -60,7 +74,11 @@ class OperatorStmt:
 
 
 class Declaration:
-    """TODO"""
+    """General declaration for declaring operators, gates, functions and outputs
+
+    Args:
+        name (str): name of the declaration
+    """
 
     def __init__(self, name: str):
         self.name = name
@@ -70,7 +88,13 @@ class Declaration:
 
 
 class OperatorDeclaration(Declaration):
-    """Quantum operator declarations"""
+    """Quantum operator declarations
+
+    Args:
+        name (str): name of the operator
+        num_params (int): number of parameters that the operator uses
+        num_wires (int): number of wires that the operator is applied to
+    """
 
     def __init__(self, name: str, num_params: int, num_wires: int):
         self.num_params = num_params
@@ -83,7 +107,13 @@ class OperatorDeclaration(Declaration):
 
 
 class GateDeclaration(Declaration):
-    """Quantum gate declarations"""
+    """Quantum gate declarations
+
+    Args:
+        name (str): name of the gate
+        num_params (int): number of parameters that the gate uses
+        num_wires (int): number of wires that the gate is applied to
+    """
 
     def __init__(self, name: str, num_params: int, num_wires: int):
         self.num_params = num_params
@@ -96,7 +126,12 @@ class GateDeclaration(Declaration):
 
 
 class FuncDeclaration(Declaration):
-    """Function declarations"""
+    """Function declarations
+
+    Args:
+        name (str): name of the function
+        num_params (int): number of parameters that the function uses
+    """
 
     def __init__(self, name: str, num_params: int):
         self.num_params = num_params
@@ -108,11 +143,19 @@ class FuncDeclaration(Declaration):
 
 
 class OutputDeclaration(Declaration):
-    """Output declarations"""
+    """Output declarations
+
+    Args:
+        name (str): name of the output declaration
+    """
 
 
-class IRProgram:
-    """TODO"""
+class XIRProgram:
+    """Main XIR program containing all parsed information
+
+    Args:
+        version (str): Version number of the program. Must follow SemVer style (MAJOR.MINOR.PATCH).
+    """
 
     def __init__(self, version: str = "0.1.0"):
         if not isinstance(version, str):
@@ -137,65 +180,123 @@ class IRProgram:
         self._called_ops = set()
 
     def __repr__(self) -> str:
-        """TODO"""
-        return f"<IRProgram: version={self._version}>"
+        return f"<XIRProgram: version={self._version}>"
 
     @property
     def version(self) -> str:
-        """TODO"""
+        """Version number of the program
+
+        Returns:
+            str: program version number
+        """
         return self._version
 
     @property
     def include(self) -> List[str]:
-        """TODO"""
+        """Included XIR libraries/files used in the program
+
+        Returns:
+            list[str]: included libraries/files
+        """
         return self._include
 
     @property
     def statements(self) -> List[Statement]:
-        """TODO"""
+        """Statements in the program
+
+        Returns:
+            list[Statement]: a list of all statements
+        """
         return self._statements
 
     @property
     def declarations(self) -> Dict[str, List]:
-        """TODO"""
+        """Declarations in the program
+
+        Returns:
+            dict[str, list]: a dictionary of all declarations sorted into the following keys:
+            'gate', 'func', 'output' and 'operator'
+        """
         return self._declarations
 
     @property
     def gates(self) -> Dict[str, Dict[str, Sequence]]:
-        """TODO"""
+        """All user-defined gates in the program
+
+        Returns:
+            dict[str, dict]: a dictionary of all user-defined gates, each gate consisting of a name
+            as well as a dictionary containing parameters, wires and statements
+        """
         return self._gates
 
     @property
     def operators(self) -> Dict[str, Dict[str, Sequence]]:
-        """TODO"""
+        """All user-defined operators in the program
+
+        Returns:
+            dict[str, dict]: a dictionary of all user-defined operators, each operator consisting of
+            a name as well as a dictionary containing parameters, wires and statements
+        """
         return self._operators
 
     @property
     def variables(self) -> Set[str]:
-        """TODO"""
+        """Free parameter variables used when defining gates and operators
+
+        Returns:
+            set[str]: all variables as strings contained in a set
+        """
         return self._variables
 
     @property
     def called_ops(self) -> Set[str]:
-        """TODO"""
+        """Functions that are called at any point inside the script
+
+        Returns:
+            set[str]: all functions as strings contained in a set
+        """
         return self._called_ops
 
-    def add_gate(self, name: str, params: List[str], wires: Tuple, statements: List[Statement]):
-        """TODO"""
+    def add_gate(
+        self, name: str, params: List[str], wires: Tuple, statements: List[Statement]
+    ):
+        """Adds a gate to the program
+
+        Args:
+            name (str): name of the gate
+            params (str): parameters used in the gate
+            wires (str): wires that the gate is applied to
+            statements (list[Statement]): statements that the gate applies
+        """
         if name in self._gates:
-            warnings.warn("Gate already defined. Replacing old definition with new definiton.")
+            warnings.warn(
+                "Gate already defined. Replacing old definition with new definiton."
+            )
         self._gates[name] = {"params": params, "wires": wires, "statements": statements}
 
     def add_operator(
         self, name: str, params: List[str], wires: Tuple, statements: List[OperatorStmt]
     ):
-        """TODO"""
+        """Adds an operator to the program
+
+        Args:
+            name (str): name of the operator
+            params (str): parameters used in the operator
+            wires (str): wires that the operator is applied to
+            statements (list[OperatorStmt]): statements that the operator applies
+        """
         if name in self._operators:
-            warnings.warn("Operator already defined. Replacing old definition with new definiton.")
-        self._operators[name] = {"params": params, "wires": wires, "statements": statements}
+            warnings.warn(
+                "Operator already defined. Replacing old definition with new definiton."
+            )
+        self._operators[name] = {
+            "params": params,
+            "wires": wires,
+            "statements": statements,
+        }
 
     def serialize(self, minimize: bool = False) -> str:
-        """Serialize an IRProgram returning an XIR script
+        """Serialize an XIRProgram returning an XIR script
 
         Args:
             minimize (bool): whether to strip whitespace and newlines from file

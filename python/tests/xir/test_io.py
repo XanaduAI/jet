@@ -22,21 +22,21 @@ import strawberryfields as sf
 from strawberryfields import ops
 
 from xir.interfaces.strawberryfields_io import to_program, to_xir
-from xir.program import GateDeclaration, IRProgram, Statement
+from xir.program import GateDeclaration, Statement, XIRProgram
 
 
-def create_ir_prog(
+def create_xir_prog(
     data: List[Tuple],
     external_libs: List[str] = None,
     include_decl: bool = True,
     version: str = None,
-) -> IRProgram:
-    """Create an IRProgram object used for testing"""
+) -> XIRProgram:
+    """Create an XIRProgram object used for testing"""
     # if no version number is passed, use the default one (by not specifying it)
     if version is None:
-        irprog = IRProgram()
+        irprog = XIRProgram()
     else:
-        irprog = IRProgram(version=version)
+        irprog = XIRProgram(version=version)
 
     # add the statements to the program
     stmts = [Statement(n, p, w) for n, p, w in data]
@@ -74,7 +74,7 @@ class TestXIRToStrawberryFields:
 
     def test_empty_irprogram(self):
         """Test that converting an empty XIR program raises an error"""
-        irprog = create_ir_prog(data=[])
+        irprog = create_xir_prog(data=[])
         with pytest.raises(
             ValueError, match="XIR program is empty and cannot be transformed"
         ):
@@ -85,7 +85,7 @@ class TestXIRToStrawberryFields:
         circuit_data = [
             ("not_a_real_gate", [Decimal("0.42")], (1, 2, 3)),
         ]
-        irprog = create_ir_prog(data=circuit_data)
+        irprog = create_xir_prog(data=circuit_data)
 
         with pytest.raises(NameError, match="operation 'not_a_real_gate' not defined"):
             to_program(irprog)
@@ -95,7 +95,7 @@ class TestXIRToStrawberryFields:
         circuit_data = [
             ("Vac", [], (0,)),
         ]
-        irprog = create_ir_prog(data=circuit_data)
+        irprog = create_xir_prog(data=circuit_data)
 
         sfprog = to_program(irprog)
 
@@ -110,7 +110,7 @@ class TestXIRToStrawberryFields:
             ("Sgate", [Decimal("0.1"), Decimal("0.2")], (0,)),
             ("Sgate", [Decimal("0.3")], (1,)),
         ]
-        irprog = create_ir_prog(data=circuit_data)
+        irprog = create_xir_prog(data=circuit_data)
         sfprog = to_program(irprog)
 
         assert len(sfprog) == 2

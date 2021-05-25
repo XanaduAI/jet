@@ -6,10 +6,7 @@ import jet
 import jet.bindings
 
 
-@pytest.mark.parametrize(
-    "TensorNetworkFile",
-    [jet.bindings.TensorNetworkFile32, jet.bindings.TensorNetworkFile64],
-)
+@pytest.mark.parametrize("TensorNetworkFile", [jet.TensorNetworkFile32, jet.TensorNetworkFile64])
 def test_tensor_network_file(TensorNetworkFile):
     """Tests that a tensor network file can be constructed."""
     tnf = TensorNetworkFile()

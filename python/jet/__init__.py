@@ -1,7 +1,7 @@
-# The existence of a Python binding is proof that it is intended to be exposed.
+# The existence of a Python binding is proof of its intention to be exposed.
 from .bindings import *
 
-# The default Python floating-point type occupies 64 bits.
+# Python floating-point numbers, by default, are 64 bits wide.
 Tensor = Tensor64
 TensorNetwork = TensorNetwork64
 TensorNetworkFile = TensorNetworkFile64
