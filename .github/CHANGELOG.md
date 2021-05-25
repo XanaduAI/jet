@@ -30,6 +30,8 @@
 
 ### Documentation
 
+* The license comment headers at the top of the IR source files have been removed. [(#14)](https://github.com/XanaduAI/jet/pull/14)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
