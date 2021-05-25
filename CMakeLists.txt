@@ -37,6 +37,8 @@ if(NOT CMAKE_BUILD_TYPE)
             "Default build type: Release" FORCE)
 endif()
 
+option(ENABLE_HPTT "Enable support for hptt tensor transpose backend" OFF)
+
 ##########################
 ## Enfore Compiler Support
 ##########################
@@ -105,11 +107,13 @@ set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
 
 FetchContent_MakeAvailable(Taskflow)
 
-FetchContent_Declare(
-  hptt
-  GIT_REPOSITORY https://github.com/springer13/hptt
-)
-FetchContent_MakeAvailable(hptt)
+if(ENABLE_HPTT)
+  FetchContent_Declare(
+    hptt
+    GIT_REPOSITORY https://github.com/springer13/hptt
+  )
+  FetchContent_MakeAvailable(hptt)
+endif()
 
 find_package(OpenMP QUIET)
 
@@ -124,7 +128,7 @@ target_include_directories(Jet INTERFACE
     ${BLAS_INCLUDE_DIRS}
 )
 
-target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow hptt)
+target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow)
 
 ##########################
 ## Compile options
@@ -152,8 +156,13 @@ endif()
 if(ENABLE_IPO)
   target_compile_options(Jet INTERFACE -flto)
 endif()
+
 if(MKL_FOUND)
   target_compile_options(Jet INTERFACE -DENABLE_MKL)
+endif()
+
+if(ENABLE_HPTT)
+  target_link_libraries(Jet INTERFACE hptt)
 endif()
 
 ##########################
