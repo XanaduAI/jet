@@ -71,7 +71,7 @@ info = {
     "maintainer_email": "software@xanadu.ai",
     "name": "quantum-jet",
     "package_data": {"xir": ["ir.lark"]},
-    "packages": find_packages(where="."),
+    "packages": find_packages(where=".", exclude=["src", "tests"]),
     "provides": ["jet", "xir"],
     "url": "https://github.com/XanaduAI/jet",
     "version": version,
