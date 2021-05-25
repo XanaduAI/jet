@@ -195,26 +195,22 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         GenerateBinaryReorderingMap(map_old_to_new_idxpos,
                                     map_old_to_new_position);
 
-        // With the map_old_to_new_position, we are ready to reorder within
-        // small chuncks.
         std::size_t dim_right = total_dim;
         std::size_t dim_left =
-            data.size() / dim_right; // Remember, it's all powers of 2, so OK.
+            data.size() / dim_right;
         {
-            // For some reason, allocating these spaces and using them is about
-            // 2 times faster than bringing a pointer to a scratch space and
-            // using different chunks of it.
-            DataType *temp_data = new DataType[dim_right];
+
+            std::vector<DataType> temp_data(dim_right);
+            auto temp_data_ptr = temp_data.data();
+
             for (std::size_t pl = 0; pl < dim_left; ++pl) {
                 std::size_t offset = pl * dim_right;
                 for (std::size_t pr = 0; pr < dim_right; ++pr)
-                    *(temp_data + pr) = *(data_ + offset + pr);
+                    *(temp_data_ptr + pr) = *(data_ + offset + pr);
                 for (std::size_t pr = 0; pr < dim_right; ++pr)
                     *(data_ + offset + map_old_to_new_position[pr]) =
-                        *(temp_data + pr);
+                        *(temp_data_ptr + pr);
             }
-            delete[] temp_data;
-            temp_data = nullptr;
         }
     }
 
@@ -279,8 +275,6 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         const PrecomputedQflexTransposeData &precomputed_data,
         std::vector<DataType> &scratch)
     {
-        // tensor_data.InitIndicesAndShape(precomputed_data.new_ordering,
-        //                           precomputed_data.new_dimensions);
 
         for (int i = 0; i < precomputed_data.dim_left.size(); i++) {
             PrecomputedLeftOrRightTranspose(
@@ -298,8 +292,6 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         std::vector<DataType> &scratch_in)
     {
         auto scratch = scratch_in.data();
-        // tensor.InitIndicesAndShape(precomputed_data.new_ordering,
-        //                           precomputed_data.new_dimensions);
 
         for (int p_i = 0; p_i < precomputed_data.types.size(); p_i++) {
             auto &dim_right = precomputed_data.dim_right[p_i];
@@ -310,14 +302,15 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
             auto data_ = tensor_data;
 
             if (precomputed_data.types[p_i] == TransposeType::RightTranspose) {
-
+#if defined _OPENMP
 #pragma omp parallel
+#endif
                 {
-
                     DataType *temp_data = new DataType[dim_right];
+#if defined _OPENMP
 #pragma omp for schedule(static)
+#endif
                     for (std::size_t pl = 0; pl < dim_left; ++pl) {
-
                         std::size_t offset = pl * dim_right;
                         for (std::size_t pr = 0; pr < dim_right; ++pr)
                             *(temp_data + pr) = *(data_ + offset + pr);
@@ -325,23 +318,23 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                             *(data_ + offset + map_old_to_new_position[pr]) =
                                 *(temp_data + pr);
                     }
-
                     delete[] temp_data;
                 }
-                // auto delete_task = taskflow_.emplace([this, temp_data]{
-                // delete[] temp_data;
-                // });
-                // FirstPrecedesSecond_(transpose_tasks,delete_task);
             }
             else {
+#if defined _OPENMP
 #pragma omp parallel for schedule(static, MAX_RIGHT_DIM)
+#endif
                 for (std::size_t p = 0; p < tensor_dim; ++p) {
                     *(scratch + p) = *(data_ + p);
                 }
-
+#if defined _OPENMP
 #pragma omp parallel
+#endif
                 {
+#if defined _OPENMP
 #pragma omp for schedule(static)
+#endif
                     for (std::size_t pl = 0; pl < dim_left; ++pl) {
                         std::size_t old_offset = pl * dim_right;
                         std::size_t new_offset =
@@ -373,13 +366,15 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                 precomputed_data.map_old_to_new_position[p_i];
 
             if (precomputed_data.types[p_i] == TransposeType::RightTranspose) {
-
+#if defined _OPENMP
 #pragma omp parallel
+#endif
                 {
                     DataType *temp_data = new DataType[dim_right];
+#if defined _OPENMP
 #pragma omp for schedule(static)
+#endif
                     for (std::size_t pl = 0; pl < dim_left; ++pl) {
-
                         std::size_t offset = pl * dim_right;
                         for (std::size_t pr = 0; pr < dim_right; ++pr)
                             *(temp_data + pr) = *(data_ + offset + pr);
@@ -387,23 +382,23 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                             *(data_ + offset + map_old_to_new_position[pr]) =
                                 *(temp_data + pr);
                     }
-
                     delete[] temp_data;
                 }
-                // auto delete_task = taskflow_.emplace([this, temp_data]{
-                // delete[] temp_data;
-                // });
-                // FirstPrecedesSecond_(transpose_tasks,delete_task);
             }
             else {
+#if defined _OPENMP
 #pragma omp parallel for schedule(static, MAX_RIGHT_DIM)
+#endif
                 for (std::size_t p = 0; p < tensor_dim; ++p) {
                     *(scratch + p) = *(data_ + p);
                 }
-
+#if defined _OPENMP
 #pragma omp parallel
+#endif
                 {
+#if defined _OPENMP
 #pragma omp for schedule(static)
+#endif
                     for (std::size_t pl = 0; pl < dim_left; ++pl) {
                         std::size_t old_offset = pl * dim_right;
                         std::size_t new_offset =
