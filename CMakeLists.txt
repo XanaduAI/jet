@@ -152,6 +152,9 @@ endif()
 if(ENABLE_IPO)
   target_compile_options(Jet INTERFACE -flto)
 endif()
+if(MKL_FOUND)
+  target_compile_options(Jet INTERFACE -DENABLE_MKL)
+endif()
 
 ##########################
 ## Report
