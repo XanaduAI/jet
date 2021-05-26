@@ -26,14 +26,14 @@ namespace Jet {
  *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
-template <typename Tensor> class TaskBasedCpuContractor {
+template <typename TensorType> class TaskBasedCpuContractor {
   public:
     /// Type of the name-to-task map.
     using name_to_task_map_t = std::unordered_map<std::string, tf::Task>;
 
     /// Type of the name-to-tensor map.
     using name_to_tensor_map_t =
-        std::unordered_map<std::string, std::unique_ptr<Tensor>>;
+        std::unordered_map<std::string, std::unique_ptr<TensorType>>;
 
     /// Type of the name-to-parents map.
     using name_to_parents_map_t =
@@ -89,7 +89,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Vector of tensors.
      */
-    const std::vector<Tensor> &GetResults() const noexcept { return results_; }
+    const std::vector<TensorType> &GetResults() const noexcept { return results_; }
 
     /**
      * @brief Returns the reduction of the final tensor results.
@@ -102,7 +102,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Tensor at the end of the reduction task.
      */
-    const Tensor &GetReductionResult() const noexcept
+    const TensorType &GetReductionResult() const noexcept
     {
         return reduction_result_;
     }
@@ -140,7 +140,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @return Number of contraction tasks that are shared with previous calls
      *         to this function.
      */
-    size_t AddContractionTasks(const TensorNetwork<Tensor> &tn,
+    size_t AddContractionTasks(const TensorNetwork<TensorType> &tn,
                                const PathInfo &path_info) noexcept
     {
         const auto &path = path_info.GetPath();
@@ -185,13 +185,13 @@ template <typename Tensor> class TaskBasedCpuContractor {
             if (step_1_id < num_leaves) {
                 const auto &tensor = nodes[step_1_id].tensor;
                 name_to_tensor_map_.try_emplace(
-                    name_1, std::make_unique<Tensor>(tensor));
+                    name_1, std::make_unique<TensorType>(tensor));
             }
 
             if (step_2_id < num_leaves) {
                 const auto &tensor = nodes[step_2_id].tensor;
                 name_to_tensor_map_.try_emplace(
-                    name_2, std::make_unique<Tensor>(tensor));
+                    name_2, std::make_unique<TensorType>(tensor));
             }
 
             name_to_tensor_map_.try_emplace(name_3, nullptr);
@@ -244,9 +244,13 @@ template <typename Tensor> class TaskBasedCpuContractor {
         }
         reduced_ = true;
 
+        auto reduce_func = [] (const TensorType& a, const TensorType& b) {
+            return a.AddTensors(b);
+        };
+
         auto reduce_task = taskflow_
                                .reduce(results_.begin(), results_.end(),
-                                       reduction_result_, Tensor::AddTensors)
+                                       reduction_result_, reduce_func)
                                .name("reduce");
 
         for (auto &result_task : result_tasks_) {
@@ -320,10 +324,10 @@ template <typename Tensor> class TaskBasedCpuContractor {
     std::vector<tf::Task> result_tasks_;
 
     /// Result of each call to AddContractionTasks().
-    std::vector<Tensor> results_;
+    std::vector<TensorType> results_;
 
     /// Sum over the `results_` elements.
-    Tensor reduction_result_;
+    TensorType reduction_result_;
 
     /// Memory required to store the intermediate tensors of a contraction.
     double memory_;
@@ -361,8 +365,8 @@ template <typename Tensor> class TaskBasedCpuContractor {
                              const std::string &name_3) noexcept
     {
         const auto runner = [this, name_1, name_2, name_3]() {
-            name_to_tensor_map_[name_3] = std::make_unique<Tensor>(
-                Tensor::ContractTensors(*name_to_tensor_map_.at(name_1),
+            name_to_tensor_map_[name_3] = std::make_unique<TensorType>(
+                TensorType::ContractTensors(*name_to_tensor_map_.at(name_1),
                                         *name_to_tensor_map_.at(name_2)));
         };
 
@@ -419,9 +423,9 @@ template <typename Tensor> class TaskBasedCpuContractor {
  * @param tbcc Task-based CPU contractor with the taskflow to be inserted.
  * @return Reference to the given output stream.
  */
-template <class Tensor>
+template <class TensorType>
 inline std::ostream &operator<<(std::ostream &out,
-                                const TaskBasedCpuContractor<Tensor> &tbcc)
+                                const TaskBasedCpuContractor<TensorType> &tbcc)
 {
     const auto &taskflow = tbcc.GetTaskflow();
     taskflow.dump(out);
