@@ -12,14 +12,14 @@ PYBIND11_MODULE(bindings, m)
 {
     m.doc() = "Python bindings for the C++ tensor network contraction headers.";
 
-    using c_fp32_t = std::complex<float>;
-    using c_fp64_t = std::complex<double>;
+    using c64_t = std::complex<float>;
+    using c128_t = std::complex<double>;
 
-    using TensorC64 = Jet::Tensor<c_fp32_t>;
-    using TensorC128 = Jet::Tensor<c_fp64_t>;
+    using TensorC64 = Jet::Tensor<c64_t>;
+    using TensorC128 = Jet::Tensor<c128_t>;
 
-    AddBindingsForTensor<c_fp32_t>(m, "TensorC64");
-    AddBindingsForTensor<c_fp64_t>(m, "TensorC128");
+    AddBindingsForTensor<c64_t>(m, "TensorC64");
+    AddBindingsForTensor<c128_t>(m, "TensorC128");
 
     AddBindingsForTensorNetwork<TensorC64>(m, "TensorNetworkC64");
     AddBindingsForTensorNetwork<TensorC128>(m, "TensorNetworkC128");
