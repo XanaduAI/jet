@@ -141,7 +141,8 @@ TEST_CASE("CudaTensor::GetData", "[CudaTensor]")
     {
         CudaTensor tensor;
         std::vector<c_fp32_host> host_data_buffer(1);
-        tensor.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(host_data_buffer.data()));
+        auto ptr = reinterpret_cast<c_fp32_dev*>(host_data_buffer.data());
+        tensor.CopyGpuDataToHost(ptr);
         CHECK(host_data_buffer == std::vector<c_fp32_host>{{0, 0}});
     }
     SECTION("Size: {2,3}, Indices: {x, y}, Data: [0.5+0.25i]*6")
@@ -178,7 +179,6 @@ TEST_CASE("CudaTensor::GetIndexToDimension", "[CudaTensor]")
         CHECK(tensor.GetIndexToDimension() == i2d);
     }
 }
-
 
 TEST_CASE("CudaTensor::FillRandom", "[CudaTensor]")
 {
@@ -306,6 +306,7 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
 TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]"){
     using namespace Jet;
     SECTION("CudaTensor<cuComplex> to Tensor<complex<float>>"){
+
         CudaTensor<c_fp32_dev> tensor_dev({"i"}, {2}, {{2,0},{0,1}});
         Tensor<c_fp32_host> tensor_host({"i"}, {2}, {{2,0},{0,1}});
         auto tensor_cast = static_cast<Tensor<std::complex<float>>>(tensor_dev);
@@ -334,14 +335,12 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
     SECTION("Random 2x2 (i,j) with 2x1 (i): all permutations")
     {
-
         CudaTensor r_ij({"i", "j"}, {2, 2});
         r_ij.FillRandom();
         Tensor<c_fp32_host> r_ij_host = static_cast<Tensor<c_fp32_host>>(r_ij);
 
         CudaTensor r_ji({"j", "i"}, {2, 2}, r_ij.GetData());
         Tensor<c_fp32_host> r_ji_host = static_cast<Tensor<c_fp32_host>>(r_ji);
-
 
         CudaTensor s_i({"i"}, {2});
         s_i.FillRandom();
@@ -374,6 +373,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
                 r_ji_host.GetValue({0, 1}) * s_i_host.GetValue({0}) +
                     r_ji_host.GetValue({1, 1}) * s_i_host.GetValue({1}),
             });
+
 /*
         std::cout << "#####################" << std::endl;
         std::cout << con_si_rij_host << std::endl;

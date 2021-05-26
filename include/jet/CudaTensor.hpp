@@ -7,31 +7,57 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Abort.hpp"
 #include "Tensor.hpp"
 #include "Utilities.hpp"
 
 #include <cuComplex.h>
 #include <cuda_runtime.h>
+#include <cuda.h>
 #include <curand.h>
 #include <cutensor.h>
 
-#define HANDLE_ERROR(x)                                                        \
-    {                                                                          \
-        const auto err = x;                                                    \
-        if (err != CUTENSOR_STATUS_SUCCESS) {                                  \
-            printf("Error: %s\n", cutensorGetErrorString(err));                \
-            return err;                                                        \
-        }                                                                      \
-    };
 
-#define HANDLE_CUDA_ERROR(x)                                                   \
-    {                                                                          \
-        const auto err = x;                                                    \
-        if (err != cudaSuccess) {                                              \
-            printf("Error: %s\n", cudaGetErrorString(err));                    \
-            return err;                                                        \
-        }                                                                      \
-    };
+#include <string_view>
+// https://stackoverflow.com/questions/81870/is-it-possible-to-print-a-variables-type-in-standard-c
+    template <typename T>
+    constexpr auto type_name() noexcept {
+    std::string_view name = "Error: unsupported compiler", prefix, suffix;
+    #ifdef __clang__
+        name = __PRETTY_FUNCTION__;
+        prefix = "auto type_name() [T = ";
+        suffix = "]";
+    #elif defined(__GNUC__)
+        name = __PRETTY_FUNCTION__;
+        prefix = "constexpr auto type_name() [with T = ";
+        suffix = "]";
+    #endif
+        name.remove_prefix(prefix.size());
+        name.remove_suffix(suffix.size());
+        return name;
+    }
+
+inline void ThrowCudaError(cudaError_t &err){
+    auto s = std::string(cudaGetErrorString(err));
+    if(s != "no error"){
+        throw Jet::Exception(s);
+    }
+}
+
+size_t RowOrderToColumnOrder(size_t row_order_linear_index, const std::vector<size_t> & sizes){
+    using namespace Jet::Utilities;
+    auto unraveled_index = UnravelIndex(row_order_linear_index, sizes);
+    size_t column_order_linear_index = 0;
+    int d = sizes.size();
+    for (int k = 0; k < d; k++){
+        size_t multiplier = 1;
+        for (int l = 0; l < k-1; l++){
+            multiplier *= sizes[l];
+        }
+        column_order_linear_index += unraveled_index[k]*multiplier; 
+    }
+    return column_order_linear_index;
+}
 
 namespace Jet {
 
@@ -66,8 +92,8 @@ template <class T = cuComplex> class CudaTensor {
     }
 
     CudaTensor() {
-        cuComplex h_dat({0.0,0.0});
-        cudaMalloc(&data_, 1);
+        cuComplex h_dat({.x=0.0,.y=0.0});
+        cudaMalloc(&data_, sizeof(T));
         cudaMemcpy(data_, &h_dat, sizeof(T), cudaMemcpyHostToDevice);
     }
 
@@ -175,33 +201,37 @@ template <class T = cuComplex> class CudaTensor {
 
     inline void CopyHostDataToGpu(T *host_tensor)
     {
-        cudaMemcpy(data_, host_tensor, sizeof(T) * GetSize(),
+        cudaError_t retcode = cudaMemcpy(data_, host_tensor, sizeof(T) * GetSize(),
                    cudaMemcpyHostToDevice);
+        ThrowCudaError(retcode);
     }
 
     inline void CopyGpuDataToHost(T *host_tensor)
     {
-        cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
-                   cudaMemcpyDeviceToHost);
+        cudaError_t retcode = cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost);
+
+        ThrowCudaError(retcode);
     }
 
     inline void CopyGpuDataToGpu(T *host_tensor)
     {
-        cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
+        cudaError_t retcode = cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
                    cudaMemcpyDeviceToDevice);
+        ThrowCudaError(retcode);
     }
 
     inline void AsyncCopyHostDataToGpu(T *host_tensor, cudaStream_t stream = 0)
     {
-
-        cudaMemcpyAsync(data_, host_tensor, sizeof(T) * GetSize(),
+        cudaError_t retcode = cudaMemcpyAsync(data_, host_tensor, sizeof(T) * GetSize(),
                         cudaMemcpyHostToDevice, stream);
+        ThrowCudaError(retcode);
     }
 
     inline void AsyncCopyGpuDataToHost(T *host_tensor, cudaStream_t stream = 0)
     {
-        cudaMemcpyAsync(host_tensor, data_, sizeof(T) * GetSize(),
+        cudaError_t retcode = cudaMemcpyAsync(host_tensor, data_, sizeof(T) * GetSize(),
                         cudaMemcpyDeviceToHost, stream);
+        ThrowCudaError(retcode);
     }
 
     const std::unordered_map<std::string, size_t> &GetIndexToDimension() const
@@ -210,17 +240,21 @@ template <class T = cuComplex> class CudaTensor {
     }
 
     explicit operator Tensor<std::complex<scalar_type_t_precision>>(){
-        std::vector<std::complex<scalar_type_t_precision>> host_data(GetSize(), {0.0,0.0});
+        std::vector<std::complex<scalar_type_t_precision>> 
+            host_data(GetSize(), {0.0,0.0});
+        std::vector<std::complex<scalar_type_t_precision>> host_data_reshape(host_data);
+        using namespace Jet::Utilities;
+
         CopyGpuDataToHost( reinterpret_cast<T*>(host_data.data()));
 
-        std::vector<size_t> revShape;
+        /*for(size_t i = 0; i < GetSize(); i++){
+            std::cout << i << std::endl;
+            host_data_reshape[i] = host_data[RowOrderToColumnOrder(i, GetShape())];
+        }
+        return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), GetShape(), host_data_reshape);
+        */
+        return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), GetShape(), host_data);
 
-        revShape.resize(GetShape().size());    // allocate space
-
-        std::reverse_copy(GetShape().begin(), GetShape().end(), revShape.begin());
-
-        return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), revShape, host_data);
-        //return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), GetShape(), host_data);
     }
 
     /**
