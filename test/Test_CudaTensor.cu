@@ -149,7 +149,7 @@ TEST_CASE("CudaTensor::GetData", "[CudaTensor]")
         std::vector<c_fp32_dev> data(6, c_fp32_dev{.x=0.5, .y=0.25});
         CudaTensor tensor({"x", "y"}, {2, 3}, data.data());
 
-        std::vector<c_fp32_host> host_data_complex(6, {{0.5, 0.25}});
+        std::vector<c_fp32_host> host_data_complex(6, {0.5, 0.25});
         std::vector<c_fp32_host> host_data_buffer(6);
         tensor.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(host_data_buffer.data()));
         CHECK(host_data_buffer == host_data_complex);
@@ -193,8 +193,8 @@ TEST_CASE("CudaTensor::FillRandom", "[CudaTensor]")
     {
         tensor1.FillRandom();
         tensor2.FillRandom();
-        Tensor<c_fp32_host> tensor1_host = static_cast<Tensor<c_fp32_host>>(tensor1);
-        Tensor<c_fp32_host> tensor2_host = static_cast<Tensor<c_fp32_host>>(tensor2);
+        Tensor<c_fp32_host> tensor1_host(tensor1);
+        Tensor<c_fp32_host> tensor2_host(tensor2);
         CHECK(tensor1_host != tensor2_host);
     }
     SECTION("Size: {3,2,3}, Indices: {a,b,c}, Data: FillRandom(7)")
@@ -233,7 +233,7 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
         CHECK(tensor.GetShape().empty());
         CHECK(tensor.GetSize() == 1);
         std::vector<c_fp32_host> host_data(1);
-        std::vector<c_fp32_host> host_data_expect(1,{{0,0}});
+        std::vector<c_fp32_host> host_data_expect(1, {0,0});
 
         tensor.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(host_data.data()));
         CHECK(host_data == host_data_expect);
@@ -366,7 +366,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
                     r_ji_host.GetValue({1, 1}) * s_i_host.GetValue({1}),
             });
         // R_{j,i} S_i == S_i R_{i,j}
-        Tensor expected_rji_si_host(
+        Tensor<c_fp32_host> expected_rji_si_host(
             {"j"}, {2},
             {
                 r_ji_host.GetValue({0, 0}) * s_i_host.GetValue({0}) +
@@ -374,7 +374,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
                 r_ji_host.GetValue({0, 1}) * s_i_host.GetValue({0}) +
                     r_ji_host.GetValue({1, 1}) * s_i_host.GetValue({1}),
             });
-
+/*
         std::cout << "#####################" << std::endl;
         std::cout << con_si_rij_host << std::endl;
         std::cout << con_si_rji_host << std::endl;
@@ -384,7 +384,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         std::cout << expected_rij_si_host << std::endl;
         std::cout << expected_rji_si_host << std::endl;
         std::cout << "#####################" << std::endl;
-
+*/
         CHECK(con_rij_si_host.GetData()[0].real() ==
               Approx(expected_rij_si_host.GetData()[0].real()));
         CHECK(con_rij_si_host.GetData()[0].imag() ==
