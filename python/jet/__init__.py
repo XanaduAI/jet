@@ -4,6 +4,17 @@ import numpy as np
 from .bindings import *
 
 
+def TaskBasedCpuContractor(*args, **kwargs):
+    """Contructs a task-based CPU contractor with the specified NumPy data type."""
+    dt = kwargs.pop("dtype", "complex128")
+    if np.dtype(dt) == np.complex64:
+        return TaskBasedCpuContractorC64(*args, **kwargs)
+    elif np.dtype(dt) == np.complex128:
+        return TaskBasedCpuContractorC128(*args, **kwargs)
+    else:
+        raise TypeError(f"Data type '{dt}' is not supported.")
+
+
 def Tensor(*args, **kwargs):
     """Contructs a tensor with the specified NumPy data type."""
     dt = kwargs.pop("dtype", "complex128")
