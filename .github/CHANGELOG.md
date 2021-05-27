@@ -24,6 +24,8 @@
 
 ### Breaking Changes
 
+* Python bindings for `complex<float>` and `complex<double>` specializations are now suffixed with `C64` and `C128`, respectively. [(#15)](https://github.com/XanaduAI/jet/pull/15)
+
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
@@ -31,6 +33,8 @@
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with one another. [(#6)](https://github.com/XanaduAI/jet/pull/6)
 
 ### Documentation
+
+* The license comment headers at the top of the IR source files have been removed. [(#14)](https://github.com/XanaduAI/jet/pull/14)
 
 ### Contributors
 

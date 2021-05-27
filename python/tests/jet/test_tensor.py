@@ -3,7 +3,7 @@ import pytest
 import jet
 
 
-@pytest.mark.parametrize("Tensor", [jet.Tensor32, jet.Tensor64])
+@pytest.mark.parametrize("Tensor", [jet.TensorC64, jet.TensorC128])
 class TestTensor:
     def test_default_constructor(self, Tensor):
         """Tests that the default constructor is called."""
