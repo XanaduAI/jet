@@ -10,10 +10,10 @@ template <class> struct Type;
 
 template <> struct Type<std::complex<float>> {
     inline static const std::string suffix = "C64";
-    inline static const std::string dtype = "c8";
+    inline static const std::string dtype = "complex64";
 };
 
 template <> struct Type<std::complex<double>> {
     inline static const std::string suffix = "C128";
-    inline static const std::string dtype = "c16";
+    inline static const std::string dtype = "complex128";
 };
