@@ -37,8 +37,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
         .def_static("add_tensors", &Tensor::AddTensors, py::arg("A"),
                     py::arg("B"), "Alias for add_tensors().")
 
-        .def_static("contract_tensors", &Tensor::ContractTensors,
-                    py::arg("A"), py::arg("B"), "Alias for contract_tensors().")
+        .def_static("contract_tensors", &Tensor::ContractTensors, py::arg("A"),
+                    py::arg("B"), "Alias for contract_tensors().")
 
         .def_static("reshape", &Tensor::Reshape, py::arg("tensor"),
                     py::arg("shape"), "Alias for reshape().")
@@ -100,7 +100,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
         // Properties
         // ---------------------------------------------------------------------
 
-        .def_property("shape", &Tensor::GetShape, &tensor_t::SetShape,
+        .def_property("shape", &Tensor::GetShape, &Tensor::SetShape,
                       "List containing the dimension of each tensor index.")
 
         .def_property_readonly("index_to_dimension_map",
