@@ -1,48 +1,71 @@
 #pragma once
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "../Abort.hpp"
-#include "Base.hpp"
-
-#if defined ENABLE_MKL
-#include <mkl.h>
-#else
-#include <cblas.h>
-#endif
 
 namespace Jet {
 
-class QFlexPermute : public PermuteBase<QFlexPermute> {
-    static constexpr size_t MAX_RIGHT_DIM = 1024;
-    static constexpr size_t MIN_RIGHT_DIM = 32;
-
-    const static size_t zero_ = static_cast<size_t>(0);
+template<size_t blocksize=1024, size_t min_dims=32>
+class QFlexPermuter {
+    static constexpr size_t blocksize_ = blocksize;
+    static constexpr size_t min_dims_ = min_dims;
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
 
+  private:
+    struct PrecomputedQflexTransposeData {
+
+        std::vector<std::vector<size_t>> map_old_to_new_position;
+        std::vector<size_t> dim_left;
+        std::vector<size_t> dim_right;
+        std::vector<size_t> tensor_dim;
+        std::vector<PermuteType> types;
+
+        std::vector<std::string> new_ordering;
+        std::vector<std::size_t> new_dimensions;
+        std::vector<std::string> old_ordering;
+        std::vector<std::size_t> old_dimensions;
+        bool no_transpose;
+        size_t total_dim;
+    };
+
   public:
-    QFlexPermute() : PermuteBase<QFlexPermute>() {}
+    QFlexPermuter() {}
 
     template <class DataType>
     std::vector<DataType> Transpose(const std::vector<DataType> &data_,
                                     const std::vector<size_t> &shape,
                                     const std::vector<std::string> &old_indices,
-                                    const std::vector<std::string> &new_indices)
+                                    const std::vector<std::string> &new_indices
+                                    )
 
     {
         std::vector<DataType> data(data_);
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data_a =
-            PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
+        PrecomputedQflexTransposeData precomputed_data_a = PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
         FastTranspose(data, precomputed_data_a, scratch);
         return data;
     }
+
+    template <class DataType>
+    void Transpose(const std::vector<DataType> &data_,
+                                    const std::vector<size_t> &shape,
+                                    std::vector<DataType> &data_out,
+                                    const std::vector<std::string> &old_indices,
+                                    const std::vector<std::string> &new_indices
+                                    )
+
+    {
+        data_out = data_;
+        std::vector<DataType> scratch(data_);
+        PrecomputedQflexTransposeData precomputed_data_a =
+            recomputeFastTransposeData(data_out, shape, old_indices, new_indices);
+        FastTranspose(data_out, precomputed_data_a, scratch);
+    }
+
 
     void GenerateBinaryReorderingMap(
         const std::vector<std::size_t> &map_old_to_new_idxpos,
@@ -102,35 +125,17 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         }
     }
 
-    enum class TransposeType { LeftTranspose, RightTranspose };
-
-    struct PrecomputedQflexTransposeData {
-
-        std::vector<std::vector<size_t>> map_old_to_new_position;
-        std::vector<size_t> dim_left;
-        std::vector<size_t> dim_right;
-        std::vector<size_t> tensor_dim;
-        std::vector<TransposeType> types;
-
-        size_t total_dim;
-        std::vector<std::string> new_ordering;
-        std::vector<std::size_t> new_dimensions;
-        std::vector<std::string> old_ordering;
-        std::vector<std::size_t> old_dimensions;
-        bool no_transpose;
-    };
-
     template <typename DataType>
     void PrecomputedLeftOrRightTranspose(
         const std::vector<std::size_t> &map_old_to_new_position,
         size_t dim_left, size_t dim_right, size_t tensor_dim,
-        TransposeType type, std::vector<DataType> &data_in,
+        PermuteType type, std::vector<DataType> &data_in,
         std::vector<DataType> &scratch)
     {
         auto data_ = data_in.data();
         auto scratch_copy = scratch.data();
 
-        if (type == TransposeType::RightTranspose) {
+        if (type == PermuteType::PermuteRight) {
             DataType *temp_data = new DataType[dim_right];
             for (std::size_t pl = 0; pl < dim_left; ++pl) {
                 std::size_t offset = pl * dim_right;
@@ -160,7 +165,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
     template <typename DataType>
     void FastTranspose(std::vector<DataType> &data_in,
                        const PrecomputedQflexTransposeData &precomputed_data,
-                       std::vector<DataType> &scratch_in)
+                       std::vector<DataType> &scratch_in) //const size_t blocksize)
     {
         auto data_ = data_in.data();
         auto scratch = scratch_in.data();
@@ -173,7 +178,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
             auto &map_old_to_new_position =
                 precomputed_data.map_old_to_new_position[p_i];
 
-            if (precomputed_data.types[p_i] == TransposeType::RightTranspose) {
+            if (precomputed_data.types[p_i] == PermuteType::PermuteRight) {
 #if defined _OPENMP
 #pragma omp parallel
 #endif
@@ -195,7 +200,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
             }
             else {
 #if defined _OPENMP
-#pragma omp parallel for schedule(static, MAX_RIGHT_DIM)
+#pragma omp parallel for schedule(static, blocksize)
 #endif
                 for (std::size_t p = 0; p < tensor_dim; ++p) {
                     *(scratch + p) = *(data_ + p);
@@ -270,7 +275,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         precomputed_data.tensor_dim.push_back(tensor_size);
         precomputed_data.map_old_to_new_position.push_back(
             map_old_to_new_position);
-        precomputed_data.types.push_back(TransposeType::RightTranspose);
+        precomputed_data.types.push_back(PermuteType::PermuteRight);
     }
 
     void
@@ -322,7 +327,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         precomputed_data.tensor_dim.push_back(tensor_dim);
         precomputed_data.map_old_to_new_position.push_back(
             map_old_to_new_position);
-        precomputed_data.types.push_back(TransposeType::LeftTranspose);
+        precomputed_data.types.push_back(PermuteType::PermuteLeft);
     }
 
     // has to have dimensions that are multiples of 2
@@ -332,6 +337,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
                                 const std::vector<size_t> &shape,
                                 const std::vector<std::string> &old_indices,
                                 const std::vector<std::string> &new_ordering)
+                                //const size_t blocksize, const size_t min_dims)
     {
         using namespace Jet::Utilities;
         PrecomputedQflexTransposeData precomputed_data;
@@ -420,7 +426,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
 
         // Now special cases, before the default L-R-L worst case.
         // Tensor doesn't have enough size to pass MAX_RIGHT_DIM => only one R.
-        if (num_binary_indices <= fast_log2(MAX_RIGHT_DIM)) {
+        if (num_binary_indices <= fast_log2(blocksize_)) {
             PrecomputeRightTransposeData(old_binary_ordering,
                                          new_binary_ordering, tensor_size,
                                          precomputed_data);
@@ -431,13 +437,13 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         // up to L10. Computation times are L4>L5>L6>...>L10. I'll consider
         // all of these cases.
         {
-            if (new_binary_ordering.size() < fast_log2(MAX_RIGHT_DIM))
+            if (new_binary_ordering.size() < fast_log2(blocksize_))
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
 
-            constexpr std::size_t Lr = fast_log2(MAX_RIGHT_DIM);
+            constexpr std::size_t Lr = fast_log2(blocksize_);
             std::size_t Ll = new_binary_ordering.size() - Lr;
-            constexpr std::size_t Rr = fast_log2(MIN_RIGHT_DIM);
+            constexpr std::size_t Rr = fast_log2(min_dims);
             std::vector<std::string> Ll_old_indices(
                 old_binary_ordering.begin(), old_binary_ordering.begin() + Ll);
             std::vector<std::string> Ll_new_indices(
@@ -494,16 +500,16 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
             // _left_reorder and _right_reorder, so that they don't do anything
             // when not needed. Debug from here!
 
-            if (new_binary_ordering.size() < fast_log2(MAX_RIGHT_DIM))
+            if (new_binary_ordering.size() < fast_log2(blocksize_))
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
-            if (new_binary_ordering.size() < fast_log2(MIN_RIGHT_DIM))
+            if (new_binary_ordering.size() < fast_log2(min_dims_))
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
 
-            constexpr std::size_t Lr = fast_log2(MAX_RIGHT_DIM);
+            constexpr std::size_t Lr = fast_log2(blocksize_);
             std::size_t Ll = new_binary_ordering.size() - Lr;
-            constexpr std::size_t Rr = fast_log2(MIN_RIGHT_DIM);
+            constexpr std::size_t Rr = fast_log2(min_dims_);
             std::size_t Rl = new_binary_ordering.size() - Rr;
             // Helper vectors that can be reused.
             std::vector<std::string> Lr_indices(Lr), Ll_indices(Ll),

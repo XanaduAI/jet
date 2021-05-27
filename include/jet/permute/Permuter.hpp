@@ -14,16 +14,16 @@ namespace Jet {
  *
  * @tparam PermuteBackend
  */
-template <class PermuteBackend> class PermuteBase {
+template <class PermuterBackend> class Permuter {
   private:
-    static constexpr size_t MAX_RIGHT_DIM = 1024;
+    const size_t blocksize;
+    PermuterBackend permuter_b_;
 
   protected:
-    // Ensure derived type recognised as friend for CRTP
-    friend PermuteBackend;
+    friend PermuterBackend;
 
   public:
-    PermuteBase() = default;
+    Permuter(size_t blocksize=1024) : blocksize(blocksize) {}
 
     template <class DataType>
     void Transpose(const std::vector<DataType> &data_in,
@@ -32,8 +32,7 @@ template <class PermuteBackend> class PermuteBase {
                    const std::vector<std::string> &current_order,
                    const std::vector<std::string> &new_order)
     {
-        static_cast<PermuteBackend &>(*this).Transpose(
-            data_in, shape, data_out, current_order, new_order);
+        permuter_b_.Transpose(data_in, shape, data_out, current_order, new_order, blocksize);
     }
 
     template <class DataType>
@@ -43,8 +42,7 @@ template <class PermuteBackend> class PermuteBase {
               const std::vector<std::string> &current_order,
               const std::vector<std::string> &new_order)
     {
-        static_cast<PermuteBackend &>(*this).Transpose(
-            data_in, shape, current_order, new_order);
+        permuter_b_.Transpose(data_in, shape, current_order, new_order, blocksize);
     }
 };
 
