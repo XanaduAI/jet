@@ -13,14 +13,14 @@ using namespace Jet;
 using complex_t = std::complex<float>;
 using tensor_t = Tensor<complex_t>;
 
-using data_t = std::vector<complex_t>;
-using indices_t = std::vector<std::string>;
-using index_to_edge_map_t = TensorNetwork<tensor_t>::index_to_edge_map_t;
-using path_t = TensorNetwork<tensor_t>::path_t;
-using shape_t = std::vector<size_t>;
-using tag_to_node_ids_map_t =
+using data = std::vector<complex_t>;
+using indices = std::vector<std::string>;
+using index_to_edge_map = TensorNetwork<tensor_t>::index_to_edge_map;
+using path = TensorNetwork<tensor_t>::path;
+using shape = std::vector<size_t>;
+using tag_to_node_ids_map =
     std::unordered_map<std::string, std::vector<size_t>>;
-using tags_t = std::vector<std::string>;
+using tags = std::vector<std::string>;
 
 namespace {
 /**
@@ -31,7 +31,7 @@ namespace {
  * @return Tensor with the given indices and shape.  Each element in the tensor
  *         is populated with the value of its linear index.
  */
-tensor_t MakeTensor(const indices_t &indices, const shape_t &shape)
+tensor_t MakeTensor(const indices &indices, const shape &shape)
 {
     tensor_t tensor(indices, shape);
     if (!shape.empty()) {
@@ -50,9 +50,9 @@ tensor_t MakeTensor(const indices_t &indices, const shape_t &shape)
  * @param tn Tensor network holding the tag-to-nodes map.
  * @return Modified tag-to-nodes map with a defined `==` operator.
  */
-tag_to_node_ids_map_t GetTagToNodeIDsMap(const TensorNetwork<tensor_t> &tn)
+tag_to_node_ids_map GetTagToNodeIDsMap(const TensorNetwork<tensor_t> &tn)
 {
-    tag_to_node_ids_map_t tag_map;
+    tag_to_node_ids_map tag_map;
     for (const auto &[tag, node_id] : tn.GetTagToNodesMap()) {
         tag_map[tag].emplace_back(node_id);
     }
@@ -106,8 +106,8 @@ TEST_CASE("TensorNetwork::AddTensor", "[TensorNetwork]")
         const auto &node = tn.GetNodes().front();
         CHECK(node.id == 0);
         CHECK(node.name == "_");
-        CHECK(node.indices == indices_t{});
-        CHECK(node.tags == tags_t{});
+        CHECK(node.indices == indices{});
+        CHECK(node.tags == tags{});
         CHECK(node.contracted == false);
 
         CHECK(tn.GetIndexToEdgeMap().empty());
@@ -124,18 +124,18 @@ TEST_CASE("TensorNetwork::AddTensor", "[TensorNetwork]")
         const auto &node = tn.GetNodes().front();
         CHECK(node.id == 0);
         CHECK(node.name == "A0B1");
-        CHECK(node.indices == indices_t{"A0", "B1"});
-        CHECK(node.tags == tags_t{"chaotic", "neutral"});
+        CHECK(node.indices == indices{"A0", "B1"});
+        CHECK(node.tags == tags{"chaotic", "neutral"});
         CHECK(node.contracted == false);
 
-        const index_to_edge_map_t have_edge_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_edge_map = {{"A0", {2, {0}}},
-                                                   {"B1", {3, {0}}}};
+        const index_to_edge_map have_edge_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_edge_map = {{"A0", {2, {0}}},
+                                                 {"B1", {3, {0}}}};
         CHECK(have_edge_map == want_edge_map);
 
-        const tag_to_node_ids_map_t have_tag_map = GetTagToNodeIDsMap(tn);
-        const tag_to_node_ids_map_t want_tag_map = {{"chaotic", {0}},
-                                                    {"neutral", {0}}};
+        const tag_to_node_ids_map have_tag_map = GetTagToNodeIDsMap(tn);
+        const tag_to_node_ids_map want_tag_map = {{"chaotic", {0}},
+                                                  {"neutral", {0}}};
         CHECK(have_tag_map == want_tag_map);
     }
 
@@ -152,26 +152,26 @@ TEST_CASE("TensorNetwork::AddTensor", "[TensorNetwork]")
             const auto &node = tn.GetNodes()[0];
             CHECK(node.id == 0);
             CHECK(node.name == "C2D3");
-            CHECK(node.indices == indices_t{"C2", "D3"});
-            CHECK(node.tags == tags_t{"bot", "mid"});
+            CHECK(node.indices == indices{"C2", "D3"});
+            CHECK(node.tags == tags{"bot", "mid"});
             CHECK(node.contracted == false);
         }
         {
             const auto &node = tn.GetNodes()[1];
             CHECK(node.id == 1);
             CHECK(node.name == "D3E4");
-            CHECK(node.indices == indices_t{"D3", "E4"});
-            CHECK(node.tags == tags_t{"mid", "top"});
+            CHECK(node.indices == indices{"D3", "E4"});
+            CHECK(node.tags == tags{"mid", "top"});
             CHECK(node.contracted == false);
         }
 
-        const index_to_edge_map_t have_edge_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_edge_map = {{"D3", {4, {0, 1}}},
-                                                   {"E4", {2, {1}}}};
+        const index_to_edge_map have_edge_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_edge_map = {{"D3", {4, {0, 1}}},
+                                                 {"E4", {2, {1}}}};
         CHECK(have_edge_map == want_edge_map);
 
-        const tag_to_node_ids_map_t have_tag_map = GetTagToNodeIDsMap(tn);
-        const tag_to_node_ids_map_t want_tag_map = {
+        const tag_to_node_ids_map have_tag_map = GetTagToNodeIDsMap(tn);
+        const tag_to_node_ids_map want_tag_map = {
             {"bot", {0}}, {"mid", {0, 1}}, {"top", {1}}};
         CHECK(have_tag_map == want_tag_map);
     }
@@ -197,20 +197,20 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
         const std::string want_name = "A0B1C2";
         CHECK(have_name == want_name);
 
-        const indices_t have_node_indices = node.indices;
-        const indices_t want_node_indices = {"A0", "B1", "C2"};
+        const indices have_node_indices = node.indices;
+        const indices want_node_indices = {"A0", "B1", "C2"};
         CHECK(have_node_indices == want_node_indices);
 
-        const indices_t have_tensor_indices = node.tensor.GetIndices();
-        const indices_t want_tensor_indices = {"A0", "B1", "C2"};
+        const indices have_tensor_indices = node.tensor.GetIndices();
+        const indices want_tensor_indices = {"A0", "B1", "C2"};
         CHECK(have_tensor_indices == want_tensor_indices);
 
-        const shape_t have_tensor_shape = node.tensor.GetShape();
-        const shape_t want_tensor_shape = {2, 3, 4};
+        const shape have_tensor_shape = node.tensor.GetShape();
+        const shape want_tensor_shape = {2, 3, 4};
         CHECK(have_tensor_shape == want_tensor_shape);
 
-        const data_t have_tensor_data = node.tensor.GetData();
-        const data_t want_tensor_data = {
+        const data have_tensor_data = node.tensor.GetData();
+        const data want_tensor_data = {
             {0, 0},   {1, 2},   {2, 4},   {3, 6},   {4, 8},   {5, 10},
             {6, 12},  {7, 14},  {8, 16},  {9, 18},  {10, 20}, {11, 22},
             {12, 24}, {13, 26}, {14, 28}, {15, 30}, {16, 32}, {17, 34},
@@ -227,22 +227,22 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
         const std::string want_name = "A0(0)B1C2";
         CHECK(have_name == want_name);
 
-        const indices_t have_node_indices = node.indices;
-        const indices_t want_node_indices = {"A0(0)", "B1", "C2"};
+        const indices have_node_indices = node.indices;
+        const indices want_node_indices = {"A0(0)", "B1", "C2"};
         CHECK(have_node_indices == want_node_indices);
 
-        const indices_t have_tensor_indices = node.tensor.GetIndices();
-        const indices_t want_tensor_indices = {"B1", "C2"};
+        const indices have_tensor_indices = node.tensor.GetIndices();
+        const indices want_tensor_indices = {"B1", "C2"};
         CHECK(have_tensor_indices == want_tensor_indices);
 
-        const shape_t have_tensor_shape = node.tensor.GetShape();
-        const shape_t want_tensor_shape = {3, 4};
+        const shape have_tensor_shape = node.tensor.GetShape();
+        const shape want_tensor_shape = {3, 4};
         CHECK(have_tensor_shape == want_tensor_shape);
 
-        const data_t have_tensor_data = node.tensor.GetData();
-        const data_t want_tensor_data = {{0, 0},  {1, 2},  {2, 4},   {3, 6},
-                                         {4, 8},  {5, 10}, {6, 12},  {7, 14},
-                                         {8, 16}, {9, 18}, {10, 20}, {11, 22}};
+        const data have_tensor_data = node.tensor.GetData();
+        const data want_tensor_data = {{0, 0},  {1, 2},  {2, 4},   {3, 6},
+                                       {4, 8},  {5, 10}, {6, 12},  {7, 14},
+                                       {8, 16}, {9, 18}, {10, 20}, {11, 22}};
         CHECK(have_tensor_data == want_tensor_data);
     }
 
@@ -255,22 +255,22 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
         const std::string want_name = "A0(1)B1C2";
         CHECK(have_name == want_name);
 
-        const indices_t have_node_indices = node.indices;
-        const indices_t want_node_indices = {"A0(1)", "B1", "C2"};
+        const indices have_node_indices = node.indices;
+        const indices want_node_indices = {"A0(1)", "B1", "C2"};
         CHECK(have_node_indices == want_node_indices);
 
-        const indices_t have_tensor_indices = node.tensor.GetIndices();
-        const indices_t want_tensor_indices = {"B1", "C2"};
+        const indices have_tensor_indices = node.tensor.GetIndices();
+        const indices want_tensor_indices = {"B1", "C2"};
         CHECK(have_tensor_indices == want_tensor_indices);
 
-        const shape_t have_tensor_shape = node.tensor.GetShape();
-        const shape_t want_tensor_shape = {3, 4};
+        const shape have_tensor_shape = node.tensor.GetShape();
+        const shape want_tensor_shape = {3, 4};
         CHECK(have_tensor_shape == want_tensor_shape);
 
-        const data_t have_tensor_data = node.tensor.GetData();
-        const data_t want_tensor_data = {
-            {12, 24}, {13, 26}, {14, 28}, {15, 30}, {16, 32}, {17, 34},
-            {18, 36}, {19, 38}, {20, 40}, {21, 42}, {22, 44}, {23, 46}};
+        const data have_tensor_data = node.tensor.GetData();
+        const data want_tensor_data = {{12, 24}, {13, 26}, {14, 28}, {15, 30},
+                                       {16, 32}, {17, 34}, {18, 36}, {19, 38},
+                                       {20, 40}, {21, 42}, {22, 44}, {23, 46}};
         CHECK(have_tensor_data == want_tensor_data);
     }
 
@@ -283,20 +283,20 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
         const std::string want_name = "A0(1)B1C2(2)";
         CHECK(have_name == want_name);
 
-        const indices_t have_node_indices = node.indices;
-        const indices_t want_node_indices = {"A0(1)", "B1", "C2(2)"};
+        const indices have_node_indices = node.indices;
+        const indices want_node_indices = {"A0(1)", "B1", "C2(2)"};
         CHECK(have_node_indices == want_node_indices);
 
-        const indices_t have_tensor_indices = node.tensor.GetIndices();
-        const indices_t want_tensor_indices = {"B1"};
+        const indices have_tensor_indices = node.tensor.GetIndices();
+        const indices want_tensor_indices = {"B1"};
         CHECK(have_tensor_indices == want_tensor_indices);
 
-        const shape_t have_tensor_shape = node.tensor.GetShape();
-        const shape_t want_tensor_shape = {3};
+        const shape have_tensor_shape = node.tensor.GetShape();
+        const shape want_tensor_shape = {3};
         CHECK(have_tensor_shape == want_tensor_shape);
 
-        const data_t have_tensor_data = node.tensor.GetData();
-        const data_t want_tensor_data = {{14, 28}, {18, 36}, {22, 44}};
+        const data have_tensor_data = node.tensor.GetData();
+        const data want_tensor_data = {{14, 28}, {18, 36}, {22, 44}};
         CHECK(have_tensor_data == want_tensor_data);
     }
 
@@ -309,20 +309,20 @@ TEST_CASE("TensorNetwork::SliceIndices", "[TensorNetwork]")
         const std::string want_name = "A0(1)B1(2)C2(3)";
         CHECK(have_name == want_name);
 
-        const indices_t have_node_indices = node.indices;
-        const indices_t want_node_indices = {"A0(1)", "B1(2)", "C2(3)"};
+        const indices have_node_indices = node.indices;
+        const indices want_node_indices = {"A0(1)", "B1(2)", "C2(3)"};
         CHECK(have_node_indices == want_node_indices);
 
-        const indices_t have_tensor_indices = node.tensor.GetIndices();
-        const indices_t want_tensor_indices = {};
+        const indices have_tensor_indices = node.tensor.GetIndices();
+        const indices want_tensor_indices = {};
         CHECK(have_tensor_indices == want_tensor_indices);
 
-        const shape_t have_tensor_shape = node.tensor.GetShape();
-        const shape_t want_tensor_shape = {};
+        const shape have_tensor_shape = node.tensor.GetShape();
+        const shape want_tensor_shape = {};
         CHECK(have_tensor_shape == want_tensor_shape);
 
-        const data_t have_tensor_data = node.tensor.GetData();
-        const data_t want_tensor_data = {{23, 46}};
+        const data have_tensor_data = node.tensor.GetData();
+        const data want_tensor_data = {{23, 46}};
         CHECK(have_tensor_data == want_tensor_data);
     }
     SECTION("Slice non-existent index")
@@ -344,12 +344,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 
         const auto result = tn.Contract();
 
-        const path_t have_path = tn.GetPath();
-        const path_t want_path = {};
+        const path have_path = tn.GetPath();
+        const path want_path = {};
         CHECK(have_path == want_path);
 
-        const data_t have_tensor_data = result.GetData();
-        const data_t want_tensor_data = {{0, 0}, {1, 2}};
+        const data have_tensor_data = result.GetData();
+        const data want_tensor_data = {{0, 0}, {1, 2}};
         CHECK(have_tensor_data == want_tensor_data);
 
         const auto &nodes = tn.GetNodes();
@@ -358,8 +358,8 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
             CHECK(nodes[0].contracted == false);
         }
 
-        const index_to_edge_map_t have_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_map = {{"A0", {2, {0}}}};
+        const index_to_edge_map have_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_map = {{"A0", {2, {0}}}};
         CHECK(have_map == want_map);
     }
 
@@ -373,12 +373,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 
         const auto result = tn.Contract();
 
-        const path_t have_path = tn.GetPath();
-        const path_t want_path = {{0, 1}};
+        const path have_path = tn.GetPath();
+        const path want_path = {{0, 1}};
         CHECK(have_path == want_path);
 
-        const data_t have_tensor_data = {result.GetValue({})};
-        const data_t want_tensor_data = {{-15, 20}};
+        const data have_tensor_data = {result.GetValue({})};
+        const data want_tensor_data = {{-15, 20}};
         CHECK(have_tensor_data == want_tensor_data);
 
         const auto &nodes = tn.GetNodes();
@@ -391,12 +391,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
             const auto &node = nodes[2];
             CHECK(node.id == 2);
             CHECK(node.name == "_");
-            CHECK(node.indices == indices_t{});
+            CHECK(node.indices == indices{});
             CHECK(node.contracted == false);
         }
 
-        const index_to_edge_map_t have_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_map = {};
+        const index_to_edge_map have_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_map = {};
         CHECK(have_map == want_map);
     }
 
@@ -410,12 +410,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 
         const auto result = tn.Contract();
 
-        const path_t have_path = tn.GetPath();
-        const path_t want_path = {{0, 1}};
+        const path have_path = tn.GetPath();
+        const path want_path = {{0, 1}};
         CHECK(have_path == want_path);
 
-        const data_t have_tensor_data = result.GetData();
-        const data_t want_tensor_data = {{-30, 40}, {-39, 52}};
+        const data have_tensor_data = result.GetData();
+        const data want_tensor_data = {{-30, 40}, {-39, 52}};
         CHECK(have_tensor_data == want_tensor_data);
 
         const auto &nodes = tn.GetNodes();
@@ -428,12 +428,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
             const auto &node = nodes[2];
             CHECK(node.id == 2);
             CHECK(node.name == "B1");
-            CHECK(node.indices == indices_t{"B1"});
+            CHECK(node.indices == indices{"B1"});
             CHECK(node.contracted == false);
         }
 
-        const index_to_edge_map_t have_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_map = {{"B1", {2, {2}}}};
+        const index_to_edge_map have_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_map = {{"B1", {2, {2}}}};
         CHECK(have_map == want_map);
     }
 
@@ -447,12 +447,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 
         const auto result = tn.Contract();
 
-        const path_t have_path = tn.GetPath();
-        const path_t want_path = {{0, 1}};
+        const path have_path = tn.GetPath();
+        const path want_path = {{0, 1}};
         CHECK(have_path == want_path);
 
-        const data_t have_tensor_data = {result.GetValue({})};
-        const data_t want_tensor_data = {{-165, 220}};
+        const data have_tensor_data = {result.GetValue({})};
+        const data want_tensor_data = {{-165, 220}};
         CHECK(have_tensor_data == want_tensor_data);
 
         const auto &nodes = tn.GetNodes();
@@ -465,12 +465,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
             const auto &node = nodes[2];
             CHECK(node.id == 2);
             CHECK(node.name == "_");
-            CHECK(node.indices == indices_t{});
+            CHECK(node.indices == indices{});
             CHECK(node.contracted == false);
         }
 
-        const index_to_edge_map_t have_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_map = {};
+        const index_to_edge_map have_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_map = {};
         CHECK(have_map == want_map);
     }
 
@@ -484,17 +484,17 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 
         const auto result = tn.Contract();
 
-        const path_t have_path = tn.GetPath();
-        const path_t want_path = {{0, 1}};
+        const path have_path = tn.GetPath();
+        const path want_path = {{0, 1}};
         CHECK(have_path == want_path);
 
-        const shape_t have_tensor_shape = result.GetShape();
-        const shape_t want_tensor_shape = {2, 3};
+        const shape have_tensor_shape = result.GetShape();
+        const shape want_tensor_shape = {2, 3};
         REQUIRE(have_tensor_shape == want_tensor_shape);
 
-        const data_t have_tensor_data = result.GetData();
-        const data_t want_tensor_data = {{-15, 20}, {-42, 56},   {-69, 92},
-                                         {-42, 56}, {-150, 200}, {-258, 344}};
+        const data have_tensor_data = result.GetData();
+        const data want_tensor_data = {{-15, 20}, {-42, 56},   {-69, 92},
+                                       {-42, 56}, {-150, 200}, {-258, 344}};
         CHECK(have_tensor_data == want_tensor_data);
 
         const auto &nodes = tn.GetNodes();
@@ -507,13 +507,12 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
             const auto &node = nodes[2];
             CHECK(node.id == 2);
             CHECK(node.name == "A0C2");
-            CHECK(node.indices == indices_t{"A0", "C2"});
+            CHECK(node.indices == indices{"A0", "C2"});
             CHECK(node.contracted == false);
         }
 
-        const index_to_edge_map_t have_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_map = {{"A0", {2, {2}}},
-                                              {"C2", {3, {2}}}};
+        const index_to_edge_map have_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_map = {{"A0", {2, {2}}}, {"C2", {3, {2}}}};
         CHECK(have_map == want_map);
     }
 
@@ -529,16 +528,16 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
 
         const auto result = tn.Contract({{1, 2}, {0, 3}});
 
-        const path_t have_path = tn.GetPath();
-        const path_t want_path = {{1, 2}, {0, 3}};
+        const path have_path = tn.GetPath();
+        const path want_path = {{1, 2}, {0, 3}};
         CHECK(have_path == want_path);
 
-        const shape_t have_tensor_shape = result.GetShape();
-        const shape_t want_tensor_shape = {2, 2};
+        const shape have_tensor_shape = result.GetShape();
+        const shape want_tensor_shape = {2, 2};
         REQUIRE(have_tensor_shape == want_tensor_shape);
 
-        const data_t have_tensor_data = result.GetData();
-        const data_t want_tensor_data = {
+        const data have_tensor_data = result.GetData();
+        const data want_tensor_data = {
             {-308, -56}, {-517, -94}, {-1100, -200}, {-1804, -328}};
         CHECK(have_tensor_data == want_tensor_data);
 
@@ -553,20 +552,19 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
             const auto &node = nodes[3];
             CHECK(node.id == 3);
             CHECK(node.name == "B1D3");
-            CHECK(node.indices == indices_t{"B1", "D3"});
+            CHECK(node.indices == indices{"B1", "D3"});
             CHECK(node.contracted == true);
         }
         {
             const auto &node = nodes[4];
             CHECK(node.id == 4);
             CHECK(node.name == "A0D3");
-            CHECK(node.indices == indices_t{"A0", "D3"});
+            CHECK(node.indices == indices{"A0", "D3"});
             CHECK(node.contracted == false);
         }
 
-        const index_to_edge_map_t have_map = tn.GetIndexToEdgeMap();
-        const index_to_edge_map_t want_map = {{"D3", {2, {4}}},
-                                              {"A0", {2, {4}}}};
+        const index_to_edge_map have_map = tn.GetIndexToEdgeMap();
+        const index_to_edge_map want_map = {{"D3", {2, {4}}}, {"A0", {2, {4}}}};
         CHECK(have_map == want_map);
     }
 

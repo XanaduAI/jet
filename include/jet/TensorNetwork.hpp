@@ -98,8 +98,7 @@ template <class Tensor> class TensorNetwork {
     using index_to_edge_map = std::unordered_map<std::string, Edge>;
 
     /// Type of the tag-to-node-IDs map.
-    using tag_to_node_ids_map =
-        std::unordered_multimap<std::string, node_id_t>;
+    using tag_to_node_ids_map = std::unordered_multimap<std::string, node_id_t>;
 
     /// Type of a contraction path.
     using path = std::vector<std::pair<node_id_t, node_id_t>>;
