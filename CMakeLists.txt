@@ -110,7 +110,8 @@ FetchContent_MakeAvailable(Taskflow)
 if(ENABLE_HPTT)
   FetchContent_Declare(
     hptt
-    GIT_REPOSITORY https://github.com/springer13/hptt
+    GIT_REPOSITORY  https://github.com/springer13/hptt
+    GIT_TAG         v1.0.5 
   )
   FetchContent_MakeAvailable(hptt)
 endif()
