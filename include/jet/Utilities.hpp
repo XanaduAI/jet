@@ -29,7 +29,7 @@ constexpr inline bool is_pow_2(size_t value)
  * subtracted from the number of bits in the size_t value to yield the log2
  * value.
  *
- * @param value Value to calculate log2 of.
+ * @param value Value to calculate log2 of. If 0, the result is undefined
  * @return size_t log2 result of value. If value is a non power-of-2, returns
  * the floor of the log2 operation.
  */
