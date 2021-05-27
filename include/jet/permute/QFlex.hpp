@@ -8,8 +8,7 @@
 
 namespace Jet {
 
-template<size_t blocksize=1024, size_t min_dims=32>
-class QFlexPermuter {
+template <size_t blocksize = 1024, size_t min_dims = 32> class QFlexPermuter {
   public:
     QFlexPermuter() {}
 
@@ -17,29 +16,30 @@ class QFlexPermuter {
     std::vector<DataType> Transpose(const std::vector<DataType> &data_,
                                     const std::vector<size_t> &shape,
                                     const std::vector<std::string> &old_indices,
-                                    const std::vector<std::string> &new_indices
-                                    )
+                                    const std::vector<std::string> &new_indices)
 
     {
         std::vector<DataType> data(data_);
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data_a = PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
+        PrecomputedQflexTransposeData precomputed_data_a =
+            PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
         FastTranspose(data, precomputed_data_a, scratch);
         return data;
     }
 
     template <class DataType>
     void Transpose(const std::vector<DataType> &data_,
-                                    const std::vector<size_t> &shape,
-                                    std::vector<DataType> &data_out,
-                                    const std::vector<std::string> &old_indices,
-                                    const std::vector<std::string> &new_indices
-                                    )
+                   const std::vector<size_t> &shape,
+                   std::vector<DataType> &data_out,
+                   const std::vector<std::string> &old_indices,
+                   const std::vector<std::string> &new_indices)
 
     {
         data_out = data_;
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data_a = PrecomputeFastTransposeData(data_out, shape, old_indices, new_indices);
+        PrecomputedQflexTransposeData precomputed_data_a =
+            PrecomputeFastTransposeData(data_out, shape, old_indices,
+                                        new_indices);
         FastTranspose(data_out, precomputed_data_a, scratch);
     }
 
@@ -126,9 +126,8 @@ class QFlexPermuter {
     template <typename DataType>
     void PrecomputedLeftOrRightTranspose(
         const std::vector<std::size_t> &map_old_to_new_position,
-        size_t dim_left, size_t dim_right, size_t tensor_dim,
-        PermuteType type, std::vector<DataType> &data_in,
-        std::vector<DataType> &scratch)
+        size_t dim_left, size_t dim_right, size_t tensor_dim, PermuteType type,
+        std::vector<DataType> &data_in, std::vector<DataType> &scratch)
     {
         auto data_ = data_in.data();
         auto scratch_copy = scratch.data();
@@ -161,9 +160,10 @@ class QFlexPermuter {
     }
 
     template <typename DataType>
-    void FastTranspose(std::vector<DataType> &data_in,
-                       const PrecomputedQflexTransposeData &precomputed_data,
-                       std::vector<DataType> &scratch_in) //const size_t blocksize)
+    void
+    FastTranspose(std::vector<DataType> &data_in,
+                  const PrecomputedQflexTransposeData &precomputed_data,
+                  std::vector<DataType> &scratch_in) // const size_t blocksize)
     {
         auto data_ = data_in.data();
         auto scratch = scratch_in.data();
@@ -335,13 +335,14 @@ class QFlexPermuter {
                                 const std::vector<size_t> &shape,
                                 const std::vector<std::string> &old_indices,
                                 const std::vector<std::string> &new_ordering)
-                                //const size_t blocksize, const size_t min_dims)
+    // const size_t blocksize, const size_t min_dims)
     {
         using namespace Jet::Utilities;
         PrecomputedQflexTransposeData precomputed_data;
 
         for (std::size_t i = 0; i < shape.size(); ++i) {
-            JET_ABORT_IF_NOT(is_pow_2(shape[i]), "Fast transpose expects power-of-2 data.");
+            JET_ABORT_IF_NOT(is_pow_2(shape[i]),
+                             "Fast transpose expects power-of-2 data.");
         }
 
         // Create binary orderings.

@@ -4,24 +4,22 @@
 
 namespace Jet {
 
-template<size_t blocksize=1024>
-class DefaultPermuter {
+template <size_t blocksize = 1024> class DefaultPermuter {
 
   public:
     DefaultPermuter() {}
 
     template <class DataType>
     void Transpose(const std::vector<DataType> &data_,
-                                    const std::vector<size_t> &shape,
-                                    std::vector<DataType> &data_out,
-                                    const std::vector<std::string> &old_indices,
-                                    const std::vector<std::string> &new_indices
-                                    )
+                   const std::vector<size_t> &shape,
+                   std::vector<DataType> &data_out,
+                   const std::vector<std::string> &old_indices,
+                   const std::vector<std::string> &new_indices)
 
     {
         using namespace Jet::Utilities;
         data_out = data_;
-        
+
         if (new_indices == old_indices)
             return;
 
@@ -60,7 +58,8 @@ class DefaultPermuter {
             }
         }
 
-        std::vector<unsigned short int> small_map_old_to_new_position(blocksize_);
+        std::vector<unsigned short int> small_map_old_to_new_position(
+            blocksize_);
 
         // No combined efficient mapping from old to new positions with actual
         // copies in memory, all in small cache friendly (for old data, not new,
@@ -105,11 +104,11 @@ class DefaultPermuter {
 
                 bool complete{true};
                 for (size_t j = num_indices; j--;) {
-                    if(++old_counter[j] < shape[j]){
-                        complete=false;
+                    if (++old_counter[j] < shape[j]) {
+                        complete = false;
                         break;
                     }
-                    else{
+                    else {
                         old_counter[j] = 0;
                     }
                 }
@@ -136,14 +135,12 @@ class DefaultPermuter {
     std::vector<DataType> Transpose(const std::vector<DataType> &data_,
                                     const std::vector<size_t> &shape,
                                     const std::vector<std::string> &old_indices,
-                                    const std::vector<std::string> &new_indices
-                                    )
+                                    const std::vector<std::string> &new_indices)
     {
         std::vector<DataType> data_out(data_);
         Transpose(data_, shape, data_out, old_indices, new_indices);
         return data_out;
     }
-
 
   private:
     static constexpr size_t blocksize_ = blocksize;

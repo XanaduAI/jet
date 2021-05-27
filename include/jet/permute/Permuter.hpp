@@ -16,7 +16,7 @@ namespace Jet {
  */
 template <class PermuterBackend> class Permuter {
   public:
-    Permuter(){}
+    Permuter() {}
 
     template <class DataType>
     void Transpose(const std::vector<DataType> &data_in,
@@ -25,7 +25,8 @@ template <class PermuterBackend> class Permuter {
                    const std::vector<std::string> &current_order,
                    const std::vector<std::string> &new_order)
     {
-        permuter_b_.Transpose(data_in, shape, data_out, current_order, new_order);
+        permuter_b_.Transpose(data_in, shape, data_out, current_order,
+                              new_order);
     }
 
     template <class DataType>

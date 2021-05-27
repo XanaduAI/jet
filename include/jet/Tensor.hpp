@@ -6,9 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "permute/PermuterIncludes.hpp"
 #include "TensorHelpers.hpp"
 #include "Utilities.hpp"
+#include "permute/PermuterIncludes.hpp"
 
 namespace Jet {
 
@@ -277,10 +277,10 @@ Tensor<T> Transpose(const Tensor<T> &A,
     if (is_pow_2(A.GetSize())) {
         QFlexPermuter log2_permuter;
 
-        return Tensor<T>{
-            new_indices, new_shape,
-            log2_permuter.Transpose<T>(A.GetData(), A.GetShape(),
-                                       A.GetIndices(), new_indices)};
+        return Tensor<T>{new_indices, new_shape,
+                         log2_permuter.Transpose<T>(A.GetData(), A.GetShape(),
+                                                    A.GetIndices(),
+                                                    new_indices)};
     }
 
     DefaultPermuter default_permuter;

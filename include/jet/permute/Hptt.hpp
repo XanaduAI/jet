@@ -13,10 +13,10 @@ class HpttPermuter {
 
     template <class DataType>
     void Transpose(const std::vector<DataType> &data,
-                                    const std::vector<size_t> &shape,
-                                    std::vector<DataType> data_out,
-                                    const std::vector<std::string> &old_indices,
-                                    const std::vector<std::string> &new_indices)
+                   const std::vector<size_t> &shape,
+                   std::vector<DataType> data_out,
+                   const std::vector<std::string> &old_indices,
+                   const std::vector<std::string> &new_indices)
     {
         using namespace Jet::Utilities;
         data_out = data;
@@ -38,11 +38,9 @@ class HpttPermuter {
         std::vector<int> local_shape(shape.begin(), shape.end());
 
         auto plan = hptt::create_plan(
-            perm.data(), local_shape.size(),
-            1, data.data(),
-            local_shape.data(), nullptr,
-            static_cast<typename DataType::value_type>(0.0), data_out.data(),
-            nullptr, hptt::PATIENT, 1, nullptr, true);
+            perm.data(), local_shape.size(), 1, data.data(), local_shape.data(),
+            nullptr, static_cast<typename DataType::value_type>(0.0),
+            data_out.data(), nullptr, hptt::PATIENT, 1, nullptr, true);
 
         plan->execute();
 
