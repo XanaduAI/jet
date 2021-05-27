@@ -39,8 +39,7 @@ class QFlexPermuter {
     {
         data_out = data_;
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data_a =
-            recomputeFastTransposeData(data_out, shape, old_indices, new_indices);
+        PrecomputedQflexTransposeData precomputed_data_a = PrecomputeFastTransposeData(data_out, shape, old_indices, new_indices);
         FastTranspose(data_out, precomputed_data_a, scratch);
     }
 
@@ -65,8 +64,6 @@ class QFlexPermuter {
         bool no_transpose;
         size_t total_dim;
     };
-
-
 
     void GenerateBinaryReorderingMap(
         const std::vector<std::size_t> &map_old_to_new_idxpos,
