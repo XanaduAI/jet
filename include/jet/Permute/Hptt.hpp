@@ -39,7 +39,7 @@ class HpttPermute : public PermuteBase<HpttPermute> {
 
         auto plan = hptt::create_plan(
             perm.data(), local_shape.size(),
-            static_cast<typename DataType::value_type>(1.0), data.data(),
+            1, data.data(),
             local_shape.data(), nullptr,
             static_cast<typename DataType::value_type>(0.0), data_out.data(),
             nullptr, hptt::PATIENT, 1, nullptr, true);
