@@ -121,7 +121,12 @@ class TestStrawberryFieldsToXIR:
         assert irprog.statements == []
         assert irprog.include == []
         assert irprog.statements == []
-        assert irprog.declarations == {"gate": [], "func": [], "output": [], "operator": []}
+        assert irprog.declarations == {
+            "gate": [],
+            "func": [],
+            "output": [],
+            "operator": [],
+        }
 
         assert irprog.gates == dict()
         assert irprog.operators == dict()

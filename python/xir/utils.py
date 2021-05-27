@@ -87,7 +87,9 @@ def check_wires(wires: Tuple, stmts: List):
     """
     wires_flat = [i for s in stmts for i in s.wires]
     if set(wires) != set(wires_flat):
-        raise ValueError(f"Wrong wires supplied. Expected {set(wires)}, got {set(wires_flat)}")
+        raise ValueError(
+            f"Wrong wires supplied. Expected {set(wires)}, got {set(wires_flat)}"
+        )
 
 
 def strip(script: str) -> str:

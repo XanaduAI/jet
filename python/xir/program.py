@@ -243,7 +243,9 @@ class XIRProgram:
         """
         return self._called_ops
 
-    def add_gate(self, name: str, params: List[str], wires: Tuple, statements: List[Statement]):
+    def add_gate(
+        self, name: str, params: List[str], wires: Tuple, statements: List[Statement]
+    ):
         """Adds a gate to the program
 
         Args:
@@ -253,7 +255,9 @@ class XIRProgram:
             statements (list[Statement]): statements that the gate applies
         """
         if name in self._gates:
-            warnings.warn("Gate already defined. Replacing old definition with new definiton.")
+            warnings.warn(
+                "Gate already defined. Replacing old definition with new definiton."
+            )
         self._gates[name] = {"params": params, "wires": wires, "statements": statements}
 
     def add_operator(
@@ -268,8 +272,14 @@ class XIRProgram:
             statements (list[OperatorStmt]): statements that the operator applies
         """
         if name in self._operators:
-            warnings.warn("Operator already defined. Replacing old definition with new definiton.")
-        self._operators[name] = {"params": params, "wires": wires, "statements": statements}
+            warnings.warn(
+                "Operator already defined. Replacing old definition with new definiton."
+            )
+        self._operators[name] = {
+            "params": params,
+            "wires": wires,
+            "statements": statements,
+        }
 
     def serialize(self, minimize: bool = False) -> str:
         """Serialize an XIRProgram returning an XIR script

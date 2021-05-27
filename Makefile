@@ -8,15 +8,16 @@ define HELP_BODY
 Please use 'make [target]'.
 
 TARGETS
+
   install [prefix=<path>]     Install Jet headers to <path>/include, defaults to $(.DEFAULT_PREFIX)
 
   uninstall [prefix=<path>]   Remove Jet headers from <path>/include, defaults to $(.DEFAULT_PREFIX)
-  
-  test                        Build and run tests (requires cmake)
 
-  docs                        Build docs (requires doxygen, pandoc and pip)
+  test                        Build and run C++ tests (requires Cmake)
 
-  format [check=1]            Apply formatters; use with 'check=1' to check instead of modify (requires clang-format)
+  docs                        Build docs (requires Doxygen, Pandoc and pip)
+
+  format [check=1]            Apply C++ formatter; use with 'check=1' to check instead of modify (requires clang-format)
 
   clean                       Remove all build artifacts
 
@@ -60,7 +61,7 @@ docs: $(.VENV_DIR)
 
 .PHONY: clean
 clean:
-	rm -rf docs/_build docs/api docs/doxyoutput
+	rm -rf ./docs/_build ./docs/api ./docs/doxyoutput
 	rm -rf $(.TEST_BUILD_DIR)
 	rm -rf $(.VENV_DIR)
 
