@@ -13,11 +13,11 @@ namespace py = pybind11;
 namespace {
 
 /**
- * @brief Adds Python bindings for the TensorNetworkFile class.
+ * @brief Adds Python bindings for the `TensorNetworkFile` class.
  *
- * @tparam Tensor Type of the tensor in the tensor network file.
+ * @tparam Tensor Template parameter of the `TensorNetworkFile` class.
  * @param m Jet pybind11 module.
- * @param name Name of the TensorNetworkFile class binding.
+ * @param name Name of the `TensorNetworkFile` class binding.
  */
 template <class Tensor>
 void AddBindingsForTensorNetworkFile(py::module_ &m, const char *name)
@@ -45,11 +45,11 @@ void AddBindingsForTensorNetworkFile(py::module_ &m, const char *name)
 }
 
 /**
- * @brief Adds Python bindings for the TensorNetworkSerializer class.
+ * @brief Adds Python bindings for the `TensorNetworkSerializer` class.
  *
- * @tparam Tensor Type of the tensor in the tensor network file.
+ * @tparam Tensor Template parameter of the `TensorNetworkSerializer` class.
  * @param m Jet pybind11 module.
- * @param name Name of the TensorNetworkSerializer class binding.
+ * @param name Name of the `TensorNetworkSerializer` class binding.
  */
 template <class Tensor>
 void AddBindingsForTensorNetworkSerializer(py::module_ &m, const char *name)
