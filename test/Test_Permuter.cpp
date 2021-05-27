@@ -8,7 +8,6 @@
 #include "jet/permute/PermuterIncludes.hpp"
 
 using namespace Jet;
-using namespace Jet::Utilities;
 using data_t = std::complex<float>;
 
 std::vector<data_t> fillArray(size_t num_vals, size_t start = 0)
