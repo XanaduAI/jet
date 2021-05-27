@@ -18,9 +18,6 @@ PYBIND11_MODULE(bindings, m)
 
     AddBindingsForPathInfo<c64_t, c128_t>(m);
 
-    AddBindingsForTaskBasedCpuContractor<c64_t>(m);
-    AddBindingsForTaskBasedCpuContractor<c128_t>(m);
-
     AddBindingsForTensor<c64_t>(m);
     AddBindingsForTensor<c128_t>(m);
 
