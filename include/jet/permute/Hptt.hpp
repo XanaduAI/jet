@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Base.hpp"
 #include <hptt.h>
 #include <iostream>
 #include <memory>
@@ -8,20 +7,22 @@
 
 namespace Jet {
 
-class HpttPermute : public PermuteBase<HpttPermute> {
+class HpttPermuter {
   public:
-    HpttPermute() : PermuteBase<HpttPermute>() {}
+    HpttPermute() {}
 
     template <class DataType>
-    std::vector<DataType> Transpose(const std::vector<DataType> &data,
+    void Transpose(const std::vector<DataType> &data,
                                     const std::vector<size_t> &shape,
+                                    std::vector<DataType> data_out,
                                     const std::vector<std::string> &old_indices,
                                     const std::vector<std::string> &new_indices)
     {
         using namespace Jet::Utilities;
+        data_out = data;
 
         if (new_indices == old_indices)
-            return data;
+            return;
 
         std::vector<int> perm(old_indices.size());
 
@@ -34,7 +35,6 @@ class HpttPermute : public PermuteBase<HpttPermute> {
             }
         }
 
-        auto data_out(data);
         std::vector<int> local_shape(shape.begin(), shape.end());
 
         auto plan = hptt::create_plan(
@@ -46,6 +46,17 @@ class HpttPermute : public PermuteBase<HpttPermute> {
 
         plan->execute();
 
+        return data_out;
+    }
+
+    template <class DataType>
+    std::vector<DataType> Transpose(const std::vector<DataType> &data,
+                                    const std::vector<size_t> &shape,
+                                    const std::vector<std::string> &old_indices,
+                                    const std::vector<std::string> &new_indices)
+    {
+        auto data_out(data);
+        Transpose(data, shape, data_out, old_indices, new_indices);
         return data_out;
     }
 };

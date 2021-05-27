@@ -15,13 +15,6 @@ namespace Jet {
  * @tparam PermuteBackend
  */
 template <class PermuterBackend> class Permuter {
-  private:
-    const size_t blocksize;
-    PermuterBackend permuter_b_;
-
-  protected:
-    friend PermuterBackend;
-
   public:
     Permuter(size_t blocksize=1024) : blocksize(blocksize) {}
 
@@ -44,6 +37,13 @@ template <class PermuterBackend> class Permuter {
     {
         permuter_b_.Transpose(data_in, shape, current_order, new_order, blocksize);
     }
+
+  protected:
+    friend PermuterBackend;
+
+  private:
+    const size_t blocksize;
+    PermuterBackend permuter_b_;
 };
 
 } // namespace Jet

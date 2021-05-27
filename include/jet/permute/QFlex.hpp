@@ -10,28 +10,6 @@ namespace Jet {
 
 template<size_t blocksize=1024, size_t min_dims=32>
 class QFlexPermuter {
-    static constexpr size_t blocksize_ = blocksize;
-    static constexpr size_t min_dims_ = min_dims;
-
-    enum class PermuteType { PermuteLeft, PermuteRight, None };
-
-  private:
-    struct PrecomputedQflexTransposeData {
-
-        std::vector<std::vector<size_t>> map_old_to_new_position;
-        std::vector<size_t> dim_left;
-        std::vector<size_t> dim_right;
-        std::vector<size_t> tensor_dim;
-        std::vector<PermuteType> types;
-
-        std::vector<std::string> new_ordering;
-        std::vector<std::size_t> new_dimensions;
-        std::vector<std::string> old_ordering;
-        std::vector<std::size_t> old_dimensions;
-        bool no_transpose;
-        size_t total_dim;
-    };
-
   public:
     QFlexPermuter() {}
 
@@ -65,6 +43,29 @@ class QFlexPermuter {
             recomputeFastTransposeData(data_out, shape, old_indices, new_indices);
         FastTranspose(data_out, precomputed_data_a, scratch);
     }
+
+  private:
+    static constexpr size_t blocksize_ = blocksize;
+    static constexpr size_t min_dims_ = min_dims;
+
+    enum class PermuteType { PermuteLeft, PermuteRight, None };
+
+    struct PrecomputedQflexTransposeData {
+
+        std::vector<std::vector<size_t>> map_old_to_new_position;
+        std::vector<size_t> dim_left;
+        std::vector<size_t> dim_right;
+        std::vector<size_t> tensor_dim;
+        std::vector<PermuteType> types;
+
+        std::vector<std::string> new_ordering;
+        std::vector<std::size_t> new_dimensions;
+        std::vector<std::string> old_ordering;
+        std::vector<std::size_t> old_dimensions;
+        bool no_transpose;
+        size_t total_dim;
+    };
+
 
 
     void GenerateBinaryReorderingMap(
