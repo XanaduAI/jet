@@ -8,7 +8,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Pybind11)
 
-# The following command also creates a CMake target called "jet".
-pybind11_add_module(jet src/Python.cpp)
+# The following command also creates a CMake target called "bindings".
+pybind11_add_module(bindings src/Python.cpp)
 
-target_link_libraries(jet PRIVATE Jet)
+target_link_libraries(bindings PRIVATE Jet)

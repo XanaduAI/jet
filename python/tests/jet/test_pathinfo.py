@@ -1,5 +1,4 @@
 import jet
-import pytest
 
 
 class TestPathInfo:
@@ -18,11 +17,11 @@ class TestPathInfo:
 
     def test_constructor(self):
         """Tests that the tensor network and path constructor is called."""
-        tn = jet.TensorNetwork64()
+        tn = jet.TensorNetwork()
 
-        id_a = tn.add_tensor(jet.Tensor64(), ["A"])
-        id_b = tn.add_tensor(jet.Tensor64(), ["B"])
-        id_c = tn.add_tensor(jet.Tensor64(), ["C"])
+        id_a = tn.add_tensor(jet.Tensor(), ["A"])
+        id_b = tn.add_tensor(jet.Tensor(), ["B"])
+        id_c = tn.add_tensor(jet.Tensor(), ["C"])
 
         path = [(id_a, id_b)]
 
