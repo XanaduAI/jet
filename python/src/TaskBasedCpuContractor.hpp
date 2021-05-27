@@ -1,9 +1,11 @@
 #include <sstream>
+#include <string>
 
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "Type.hpp"
 #include <Jet.hpp>
 
 namespace py = pybind11;
@@ -13,19 +15,26 @@ namespace py = pybind11;
  *
  * @note Functions that return objects from the taskflow library are not bound.
  *
- * @tparam Tensor Template parameter of the `TaskBasedCpuContractor` class.
+ * @tparam T Template parameter of the `Tensor` class.
  * @param m Jet pybind11 module.
- * @param name Name of the `TaskBasedCpuContractor` class binding.
  */
-template <class T>
-void AddBindingsForTaskBasedCpuContractor(py::module_ &m, const char *name)
+template <class T> void AddBindingsForTaskBasedCpuContractor(py::module_ &m)
 {
-    using TaskBasedCpuContractor = Jet::TaskBasedCpuContractor<T>;
+    using TaskBasedCpuContractor = Jet::TaskBasedCpuContractor<Jet::Tensor<T>>;
 
-    py::class_<TaskBasedCpuContractor>(m, name, R"(
+    const std::string class_name = "TaskBasedCpuContractor" + Type<T>::suffix;
+
+    py::class_<TaskBasedCpuContractor>(m, class_name.c_str(), R"(
         This class is a tensor network contractor that contracts tensors
         concurrently on the CPU using a task-based scheduler.
     )")
+
+        // Static properties
+        // ---------------------------------------------------------------------
+
+        .def_property_readonly_static(
+            "dtype", [](const py::object &) { return Type<T>::dtype; },
+            "Data type of this task-based CPU contractor.")
 
         // Constructors
         // ---------------------------------------------------------------------
@@ -38,7 +47,8 @@ void AddBindingsForTaskBasedCpuContractor(py::module_ &m, const char *name)
         .def_property_readonly(
             "name_to_tensor_map",
             [](const TaskBasedCpuContractor &tbcc) {
-                std::unordered_map<std::string, T *> name_to_tensor_map;
+                std::unordered_map<std::string, Jet::Tensor<T> *>
+                    name_to_tensor_map;
                 for (const auto &[name, ptr] : tbcc.GetNameToTensorMap()) {
                     name_to_tensor_map.emplace(name, ptr.get());
                 }

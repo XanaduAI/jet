@@ -6,6 +6,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "Type.hpp"
 #include <Jet.hpp>
 
 namespace py = pybind11;
@@ -15,25 +16,33 @@ namespace {
 /**
  * @brief Adds Python bindings for the `TensorNetworkFile` class.
  *
- * @tparam Tensor Template parameter of the `TensorNetworkFile` class.
+ * @tparam T Template parameter of the `Tensor` class.
  * @param m Jet pybind11 module.
- * @param name Name of the `TensorNetworkFile` class binding.
  */
-template <class Tensor>
-void AddBindingsForTensorNetworkFile(py::module_ &m, const char *name)
+template <class T> void AddBindingsForTensorNetworkFile(py::module_ &m)
 {
-    using TensorNetworkFile = Jet::TensorNetworkFile<Tensor>;
+    using TensorNetworkFile = Jet::TensorNetworkFile<Jet::Tensor<T>>;
+
+    const std::string class_name = "TensorNetworkFile" + Type<T>::suffix;
 
     py::class_<TensorNetworkFile>(
-        m, name, "This class represents the contents of a tensor network file.")
+        m, class_name.c_str(),
+        "This class represents the contents of a tensor network file.")
+
+        // Static properties
+        // ---------------------------------------------------------------------
+
+        .def_property_readonly_static(
+            "dtype", [](const py::object &) { return Type<T>::dtype; },
+            "Data type of this tensor network file.")
 
         // Constructors
         // ---------------------------------------------------------------------
 
         .def(py::init<const std::optional<Jet::PathInfo> &,
-                      const Jet::TensorNetwork<Tensor> &>(),
+                      const Jet::TensorNetwork<Jet::Tensor<T>> &>(),
              py::arg("path") = std::nullopt,
-             py::arg("tensors") = Jet::TensorNetwork<Tensor>())
+             py::arg("tensors") = Jet::TensorNetwork<Jet::Tensor<T>>())
 
         // Properties
         // ---------------------------------------------------------------------
@@ -47,16 +56,17 @@ void AddBindingsForTensorNetworkFile(py::module_ &m, const char *name)
 /**
  * @brief Adds Python bindings for the `TensorNetworkSerializer` class.
  *
- * @tparam Tensor Template parameter of the `TensorNetworkSerializer` class.
+ * @tparam T Template parameter of the `Tensor` class.
  * @param m Jet pybind11 module.
- * @param name Name of the `TensorNetworkSerializer` class binding.
  */
-template <class Tensor>
-void AddBindingsForTensorNetworkSerializer(py::module_ &m, const char *name)
+template <class T> void AddBindingsForTensorNetworkSerializer(py::module_ &m)
 {
-    using TensorNetworkSerializer = Jet::TensorNetworkSerializer<Tensor>;
+    using TensorNetworkSerializer =
+        Jet::TensorNetworkSerializer<Jet::Tensor<T>>;
 
-    py::class_<TensorNetworkSerializer>(m, name, R"(
+    const std::string class_name = "TensorNetworkSerializer" + Type<T>::suffix;
+
+    py::class_<TensorNetworkSerializer>(m, class_name.c_str(), R"(
         This class is a functor for serializing and deserializing a tensor
         network (and, optionally, a path) to/from a JSON document.
 
@@ -96,6 +106,13 @@ void AddBindingsForTensorNetworkSerializer(py::module_ &m, const char *name)
         index of an intermediate tensor). 
     )")
 
+        // Static properties
+        // ---------------------------------------------------------------------
+
+        .def_property_readonly_static(
+            "dtype", [](const py::object &) { return Type<T>::dtype; },
+            "Data type of this tensor network serializer.")
+
         // Constructors
         // ---------------------------------------------------------------------
 
@@ -113,7 +130,9 @@ void AddBindingsForTensorNetworkSerializer(py::module_ &m, const char *name)
         .def(
             "__call__",
             [](TensorNetworkSerializer &serializer,
-               const Jet::TensorNetwork<Tensor> &tn) { return serializer(tn); },
+               const Jet::TensorNetwork<Jet::Tensor<T>> &tn) {
+                return serializer(tn);
+            },
             py::arg("tn"),
             R"(
             Dumps the given tensor network to a JSON string.
@@ -129,7 +148,7 @@ void AddBindingsForTensorNetworkSerializer(py::module_ &m, const char *name)
         .def(
             "__call__",
             [](TensorNetworkSerializer &serializer,
-               const Jet::TensorNetwork<Tensor> &tn,
+               const Jet::TensorNetwork<Jet::Tensor<T>> &tn,
                const Jet::PathInfo &path) { return serializer(tn, path); },
             py::arg("tn"), py::arg("path"),
             R"(
@@ -167,15 +186,11 @@ void AddBindingsForTensorNetworkSerializer(py::module_ &m, const char *name)
 /**
  * @brief Adds Python bindings for the include/jet/TensorNetworkIO.hpp file.
  *
- * @tparam Tensor Type of the tensor in the TensorNetwork.
+ * @tparam T Template parameter of the `Tensor` class.
  * @param m Jet pybind11 module.
- * @param tnf_name Name of the TensorNetworkFile class binding.
- * @param tns_name Name of the TensorNetworkSerializer class binding.
  */
-template <class Tensor>
-void AddBindingsForTensorNetworkIO(py::module_ &m, const char *tnf_name,
-                                   const char *tns_name)
+template <class T> void AddBindingsForTensorNetworkIO(py::module_ &m)
 {
-    AddBindingsForTensorNetworkFile<Tensor>(m, tnf_name);
-    AddBindingsForTensorNetworkSerializer<Tensor>(m, tns_name);
+    AddBindingsForTensorNetworkFile<T>(m);
+    AddBindingsForTensorNetworkSerializer<T>(m);
 }
