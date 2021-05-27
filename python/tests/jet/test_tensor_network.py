@@ -5,7 +5,10 @@ import jet
 
 @pytest.mark.parametrize(
     "TensorNetwork, Tensor",
-    [(jet.TensorNetwork32, jet.Tensor32), (jet.TensorNetwork64, jet.Tensor64)],
+    [
+        (jet.TensorNetworkC64, jet.TensorC64),
+        (jet.TensorNetworkC128, jet.TensorC128),
+    ],
 )
 class TestTensorNetwork:
     def test_constructor(self, TensorNetwork, Tensor):

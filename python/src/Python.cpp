@@ -9,34 +9,33 @@
 #include "TensorNetworkIO.hpp"
 #include "Version.hpp"
 
-PYBIND11_MODULE(jet, m)
+PYBIND11_MODULE(bindings, m)
 {
-    m.doc() = "Jet is a library for simulating quantum circuits using tensor "
-              "network contractions.";
+    m.doc() = "Python bindings for the C++ tensor network contraction headers.";
 
-    using c_fp32_t = std::complex<float>;
-    using c_fp64_t = std::complex<double>;
+    using c64_t = std::complex<float>;
+    using c128_t = std::complex<double>;
 
-    using Tensor32 = Jet::Tensor<c_fp32_t>;
-    using Tensor64 = Jet::Tensor<c_fp64_t>;
+    using TensorC64 = Jet::Tensor<c64_t>;
+    using TensorC128 = Jet::Tensor<c128_t>;
 
-    AddBindingsForTaskBasedCpuContractor<Tensor32>(m,
-                                                   "TaskBasedCpuContractorC64");
-    AddBindingsForTaskBasedCpuContractor<Tensor64>(
+    AddBindingsForTaskBasedCpuContractor<TensorC64>(
+        m, "TaskBasedCpuContractorC64");
+    AddBindingsForTaskBasedCpuContractor<TensorC128>(
         m, "TaskBasedCpuContractorC128");
 
-    AddBindingsForTensor<c_fp32_t>(m, "Tensor32");
-    AddBindingsForTensor<c_fp64_t>(m, "Tensor64");
+    AddBindingsForTensor<c64_t>(m, "TensorC64");
+    AddBindingsForTensor<c128_t>(m, "TensorC128");
 
-    AddBindingsForTensorNetwork<Tensor32>(m, "TensorNetwork32");
-    AddBindingsForTensorNetwork<Tensor64>(m, "TensorNetwork64");
+    AddBindingsForTensorNetwork<TensorC64>(m, "TensorNetworkC64");
+    AddBindingsForTensorNetwork<TensorC128>(m, "TensorNetworkC128");
 
-    AddBindingsForTensorNetworkIO<Tensor32>(m, "TensorNetworkFile32",
-                                            "TensorNetworkSerializer32");
-    AddBindingsForTensorNetworkIO<Tensor64>(m, "TensorNetworkFile64",
-                                            "TensorNetworkSerializer64");
+    AddBindingsForTensorNetworkIO<TensorC64>(m, "TensorNetworkFileC64",
+                                             "TensorNetworkSerializerC64");
+    AddBindingsForTensorNetworkIO<TensorC128>(m, "TensorNetworkFileC128",
+                                              "TensorNetworkSerializerC128");
 
-    AddBindingsForPathInfo<Tensor32, Tensor64>(m);
+    AddBindingsForPathInfo<TensorC64, TensorC128>(m);
 
     AddBindingsForVersion(m);
 }

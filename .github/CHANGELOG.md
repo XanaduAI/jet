@@ -2,6 +2,10 @@
 
 ### New features since last release
 
+* Running `make build` from the `python` directory now creates a Python distribution package. [(#13)](https://github.com/XanaduAI/jet/pull/13)
+
+* A new intermediate representation (IR) is added, including a parser, IR representation program, and a Strawberry Fields interface. [(#11)](https://github.com/XanaduAI/jet/pull/11)
+
 * Python bindings are now available for the `TensorNetworkSerializer` class. [(#5)](https://github.com/XanaduAI/jet/pull/5)
 
 * Python bindings are now available for the `TensorNetwork` and `PathInfo` classes [(#7)](https://github.com/XanaduAI/jet/pull/7)
@@ -9,8 +13,6 @@
 * Python bindings are now available for the `Tensor` class. [(#2)](https://github.com/XanaduAI/jet/pull/2)
 
 * Running CMake with `-DBUILD_PYTHON=ON` now generates Python bindings within a `jet` package. [(#1)](https://github.com/XanaduAI/jet/pull/1)
-
-* A new intermediate representation (IR) is added, including a parser, IR representation program, and a Strawberry Fields interface. [(#11)](https://github.com/XanaduAI/jet/pull/11)
 
 ### Improvements
 
@@ -22,6 +24,8 @@
 
 ### Breaking Changes
 
+* Python bindings for `complex<float>` and `complex<double>` specializations are now suffixed with `C64` and `C128`, respectively. [(#15)](https://github.com/XanaduAI/jet/pull/15)
+
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
@@ -29,6 +33,8 @@
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with one another. [(#6)](https://github.com/XanaduAI/jet/pull/6)
 
 ### Documentation
+
+* The license comment headers at the top of the IR source files have been removed. [(#14)](https://github.com/XanaduAI/jet/pull/14)
 
 ### Contributors
 
