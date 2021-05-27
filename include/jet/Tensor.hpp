@@ -258,7 +258,7 @@ template <class T> Tensor<T> Conj(const Tensor<T> &A)
  * @param new_indices New `%Tensor` index label ordering.
  * @return Transposed `%Tensor` object.
  */
-template <class T>
+template <class T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
 Tensor<T> Transpose(const Tensor<T> &A,
                     const std::vector<std::string> &new_indices)
 {
@@ -275,19 +275,16 @@ Tensor<T> Transpose(const Tensor<T> &A,
         new_shape[i] = A.GetIndexToDimension().at(new_indices[i]);
 
     if (is_pow_2(A.GetSize())) {
-        QFlexPermuter log2_permuter;
-
+        auto permuter = Permuter<QFlexPermuter<BLOCKSIZE, MINSIZE>>();
         return Tensor<T>{new_indices, new_shape,
-                         log2_permuter.Transpose<T>(A.GetData(), A.GetShape(),
-                                                    A.GetIndices(),
-                                                    new_indices)};
+                         permuter.Transpose(A.GetData(), A.GetShape(),
+                                            A.GetIndices(), new_indices)};
     }
-
-    DefaultPermuter default_permuter;
+    auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
     return Tensor<T>{
         new_indices, std::move(new_shape),
-        std::move(default_permuter.Transpose<T>(A.GetData(), A.GetShape(),
-                                                A.GetIndices(), new_indices))};
+        std::move(permuter.Transpose(A.GetData(), A.GetShape(), A.GetIndices(),
+                                     new_indices))};
 }
 
 /**
