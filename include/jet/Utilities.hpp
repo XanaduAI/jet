@@ -24,10 +24,11 @@ constexpr inline bool is_pow_2(size_t value)
 
 /**
  * @brief Finds the log2 value of a known power of 2, otherwise finds the floor
- * of log2 of the operand. This works by counting the highest set bit in a
- * size_t by examining the number of leading zeros. This value can then be
- * subtracted from the number of bits in the size_t value to yield the log2
- * value.
+ * of log2 of the operand.
+ *
+ * This works by counting the highest set bit in a size_t by examining the
+ * number of leading zeros. This value can then be subtracted from the
+ * number of bits in the size_t value to yield the log2 value.
  *
  * @param value Value to calculate log2 of. If 0, the result is undefined
  * @return size_t log2 result of value. If value is a non power-of-2, returns
