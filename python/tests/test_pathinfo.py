@@ -1,5 +1,6 @@
-import jet
 import pytest
+
+import jet
 
 
 class TestPathInfo:

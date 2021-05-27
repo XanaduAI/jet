@@ -1,5 +1,6 @@
-import jet
 import pytest
+
+import jet
 
 
 @pytest.mark.parametrize("Tensor", [jet.Tensor32, jet.Tensor64])

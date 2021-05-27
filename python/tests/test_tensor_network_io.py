@@ -1,7 +1,8 @@
 import re
 
-import jet
 import pytest
+
+import jet
 
 
 @pytest.mark.parametrize("TensorNetworkFile", [jet.TensorNetworkFile32, jet.TensorNetworkFile64])
