@@ -13,7 +13,7 @@ namespace Jet {
 namespace Utilities {
 
 /**
- * @brief Determine if an integral type is a power of 2
+ * @brief Determines if an integral value is a power of 2.
  * @param value Number to check.
  * @return True if `value` is a power of 2.
  */
