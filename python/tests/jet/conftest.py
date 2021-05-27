@@ -4,7 +4,7 @@ import jet
 
 
 @pytest.fixture
-def tensor_network(self):
+def tensor_network():
     def tensor_network_(dtype: str):
         """Returns a tensor network with three tensors of the given type."""
         A = jet.Tensor(shape=[2, 2], indices=["i", "j"], data=[1, 1j, -1j, 1], dtype=dtype)
