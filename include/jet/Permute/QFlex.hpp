@@ -337,10 +337,7 @@ class QFlexPermute : public PermuteBase<QFlexPermute> {
         PrecomputedQflexTransposeData precomputed_data;
 
         for (std::size_t i = 0; i < shape.size(); ++i) {
-            if (!is_pow_2(shape[i])) {
-                JET_ABORT("Fast transpose should not be called with non "
-                          "power-of-2 data");
-            }
+            JET_ABORT_IF_NOT(is_pow_2(shape[i]), "Fast transpose expects power-of-2 data.");
         }
 
         // Create binary orderings.
