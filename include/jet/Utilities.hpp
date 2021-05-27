@@ -36,8 +36,6 @@ constexpr inline bool is_pow_2(size_t value)
  */
 constexpr inline size_t fast_log2(size_t value)
 {
-    /// Note: doing this as a define instead with the values hardcoded results
-    /// in the subtraction folded into the limit
     return static_cast<size_t>(std::numeric_limits<size_t>::digits -
                                __builtin_clzll((value)) - 1ULL);
 }
