@@ -1,7 +1,8 @@
 # The existence of a Python binding is proof of its intention to be exposed.
 from .bindings import *
 
-# Python floating-point numbers, by default, are 64 bits wide.
+# By default, Python uses two 64-bit floating-point numbers to represent a
+# complex number. Altogether, this requires 128 bits of storage.
 Tensor = TensorC128
 TensorNetwork = TensorNetworkC128
 TensorNetworkFile = TensorNetworkFileC128
