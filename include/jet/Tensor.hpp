@@ -278,9 +278,9 @@ Tensor<T> Transpose(const Tensor<T> &A,
         QFlexPermute log2_permuter;
 
         return Tensor<T>{
-            new_indices, std::move(new_shape),
-            std::move(log2_permuter.Transpose<T>(A.GetData(), A.GetShape(),
-                                                 A.GetIndices(), new_indices))};
+            new_indices, new_shape,
+            log2_permuter.Transpose<T>(A.GetData(), A.GetShape(),
+                                       A.GetIndices(), new_indices)};
     }
 
     DefaultPermute default_permuter;
