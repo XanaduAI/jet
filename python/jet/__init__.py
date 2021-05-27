@@ -1,11 +1,15 @@
+from typing import Union
+
 import numpy as np
 
 # The existence of a Python binding is proof of its intention to be exposed.
 from .bindings import *
 
 
-def Tensor(*args, **kwargs):
-    """Contructs a tensor with the specified NumPy data type."""
+def Tensor(*args, **kwargs) -> Union[TensorC64, TensorC128]:
+    """Constructs a tensor with the specified data type. If a `dtype` keyword
+    argument is not provided, a TensorC128 instance will be returned.
+    """
     dtype = kwargs.pop("dtype", "complex128")
     if np.dtype(dtype) == np.complex64:
         return TensorC64(*args, **kwargs)
@@ -15,8 +19,11 @@ def Tensor(*args, **kwargs):
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
-def TensorNetwork(*args, **kwargs):
-    """Contructs a tensor network with the specified NumPy data type."""
+def TensorNetwork(*args, **kwargs) -> Union[TensorNetworkC64, TensorNetworkC128]:
+    """Constructs a tensor network with the specified data type. If a `dtype`
+    keyword argument is not provided, a TensorNetworkC128 instance will be
+    returned.
+    """
     dtype = kwargs.pop("dtype", "complex128")
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkC64(*args, **kwargs)
@@ -26,8 +33,11 @@ def TensorNetwork(*args, **kwargs):
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
-def TensorNetworkFile(*args, **kwargs):
-    """Contructs a tensor network file with the specified NumPy data type."""
+def TensorNetworkFile(*args, **kwargs) -> Union[TensorNetworkFileC64, TensorNetworkFileC128]:
+    """Constructs a tensor network file with the specified data type. If a
+    `dtype` keyword argument is not provided, a TensorNetworkFileC128 instance
+    will be returned.
+    """
     dtype = kwargs.pop("dtype", "complex128")
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkFileC64(*args, **kwargs)
@@ -37,8 +47,13 @@ def TensorNetworkFile(*args, **kwargs):
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
-def TensorNetworkSerializer(*args, **kwargs):
-    """Contructs a tensor network serializer with the specified NumPy data type."""
+def TensorNetworkSerializer(
+    *args, **kwargs
+) -> Union[TensorNetworkSerializerC64, TensorNetworkSerializerC128]:
+    """Constructs a tensor network serializer with the specified data type. If a
+    `dtype` keyword argument is not provided, a TensorNetworkSerializerC128
+    instance will be returned.
+    """
     dtype = kwargs.pop("dtype", "complex128")
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkSerializerC64(*args, **kwargs)
