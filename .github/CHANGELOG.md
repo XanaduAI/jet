@@ -14,7 +14,7 @@
 
 ### Improvements
 
-* Tensor network contractions are now significantly faster than initial release. [(#12)](https://github.com/XanaduAI/jet/pull/12)
+* Tensor transposes are now significantly faster when all the dimensions are powers of two. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
