@@ -3,6 +3,7 @@
 #include <Jet.hpp>
 
 #include "PathInfo.hpp"
+#include "TaskBasedCpuContractor.hpp"
 #include "Tensor.hpp"
 #include "TensorNetwork.hpp"
 #include "TensorNetworkIO.hpp"
@@ -18,6 +19,11 @@ PYBIND11_MODULE(jet, m)
 
     using Tensor32 = Jet::Tensor<c_fp32_t>;
     using Tensor64 = Jet::Tensor<c_fp64_t>;
+
+    AddBindingsForTaskBasedCpuContractor<Tensor32>(m,
+                                                   "TaskBasedCpuContractorC64");
+    AddBindingsForTaskBasedCpuContractor<Tensor64>(
+        m, "TaskBasedCpuContractorC128");
 
     AddBindingsForTensor<c_fp32_t>(m, "Tensor32");
     AddBindingsForTensor<c_fp64_t>(m, "Tensor64");
