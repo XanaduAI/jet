@@ -43,10 +43,8 @@ class DefaultPermute : public PermuteBase<DefaultPermute> {
 
         // Create super dimensions (combined dimension of all to the right of
         // i).
-        std::vector<size_t> old_super_dimensions(num_indices);
-        std::vector<size_t> new_super_dimensions(num_indices);
-        old_super_dimensions[num_indices - 1] = 1;
-        new_super_dimensions[num_indices - 1] = 1;
+        std::vector<size_t> old_super_dimensions(num_indices, 1);
+        std::vector<size_t> new_super_dimensions(num_indices, 1);
 
         const size_t old_dimensions_size = shape.size();
         if (old_dimensions_size >= 2) {
