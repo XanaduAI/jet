@@ -103,12 +103,8 @@ class DefaultPermute : public PermuteBase<DefaultPermute> {
 
                 bool complete{true};
                 for (size_t j = num_indices; j--;) {
-                    if (++old_counter[j] < shape[j]) {
-                        complete = false;
-                        break;
-                    }
-                    else
-                        old_counter[j] = 0;
+                    old_counter[j] = (old_counter[j] + 1) % shape[j];
+                    complete = old_counter[j] > 0;
                 }
                 // If end of block or end of entire operation, break.
                 if ((++internal_po == MAX_RIGHT_DIM) || (po == total_dim - 1))
