@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <numeric>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -17,44 +18,61 @@
 #include <curand.h>
 #include <cutensor.h>
 
-
-#include <string_view>
-// https://stackoverflow.com/questions/81870/is-it-possible-to-print-a-variables-type-in-standard-c
-    template <typename T>
-    constexpr auto type_name() noexcept {
-    std::string_view name = "Error: unsupported compiler", prefix, suffix;
-    #ifdef __clang__
-        name = __PRETTY_FUNCTION__;
-        prefix = "auto type_name() [T = ";
-        suffix = "]";
-    #elif defined(__GNUC__)
-        name = __PRETTY_FUNCTION__;
-        prefix = "constexpr auto type_name() [with T = ";
-        suffix = "]";
-    #endif
-        name.remove_prefix(prefix.size());
-        name.remove_suffix(suffix.size());
-        return name;
-    }
-
+/**
+ * @brief 
+ * 
+ * @param err 
+ */
 inline void ThrowCudaError(cudaError_t &err){
     auto s = std::string(cudaGetErrorString(err));
-    if(s != "no error"){
-        throw Jet::Exception(s);
+    if(err != cudaSuccess){
+        throw Jet::Exception(std::string(cudaGetErrorString(err)));
     }
 }
 
+/**
+ * @brief 
+ * 
+ * @param err 
+ */
+inline void ThrowCuTensorError(cutensorStatus_t &err){
+    if(err != CUTENSOR_STATUS_SUCCESS){
+        throw Jet::Exception(std::string(cutensorGetErrorString(err)));
+    }
+}
+
+/**
+ * @brief Calculate the strides for each dimension for the CUDA array
+ * 
+ * @param extents 
+ * @return std::vector<int64_t> 
+ */
+static std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
+{
+    std::vector<int64_t> strides(std::max(extents.size(),1UL), 1);
+    for (int i = 1; i < extents.size(); ++i){
+        strides[i] = static_cast<int64_t>(extents[i-1])*strides[i-1];
+    }
+    return strides;
+}
+
+/**
+ * @brief Convertor between row-major and column-major indices.
+ * 
+ * @param row_order_linear_index Lexicographic ordered data index.
+ * @param sizes The size of each indepedent dimension of the tensor data.
+ * @return size_t Single index mapped to column-major (colexicographic) form.
+ */
 size_t RowOrderToColumnOrder(size_t row_order_linear_index, const std::vector<size_t> & sizes){
     using namespace Jet::Utilities;
     auto unraveled_index = UnravelIndex(row_order_linear_index, sizes);
+
+    auto strides = GetStrides(sizes);
+
     size_t column_order_linear_index = 0;
     int d = sizes.size();
     for (int k = 0; k < d; k++){
-        size_t multiplier = 1;
-        for (int l = 0; l < k-1; l++){
-            multiplier *= sizes[l];
-        }
-        column_order_linear_index += unraveled_index[k]*multiplier; 
+        column_order_linear_index += unraveled_index[k]*strides[k]; 
     }
     return column_order_linear_index;
 }
@@ -242,19 +260,18 @@ template <class T = cuComplex> class CudaTensor {
     explicit operator Tensor<std::complex<scalar_type_t_precision>>(){
         std::vector<std::complex<scalar_type_t_precision>> 
             host_data(GetSize(), {0.0,0.0});
-        std::vector<std::complex<scalar_type_t_precision>> host_data_reshape(host_data);
-        using namespace Jet::Utilities;
 
         CopyGpuDataToHost( reinterpret_cast<T*>(host_data.data()));
 
-        /*for(size_t i = 0; i < GetSize(); i++){
-            std::cout << i << std::endl;
-            host_data_reshape[i] = host_data[RowOrderToColumnOrder(i, GetShape())];
-        }
-        return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), GetShape(), host_data_reshape);
-        */
-        return Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), GetShape(), host_data);
+        std::vector<std::complex<scalar_type_t_precision>> host_data_reshape = host_data;
 
+        for(size_t idx = 0; idx < host_data_reshape.size(); idx++){
+            auto col_idx = RowOrderToColumnOrder(idx, GetShape());
+            host_data_reshape[idx] = host_data[col_idx];
+        }
+
+        auto t = Tensor<std::complex<scalar_type_t_precision>>(GetIndices(), GetShape(), host_data_reshape);
+        return t;
     }
 
     /**
@@ -381,47 +398,71 @@ CudaContractionPlan GetCudaContractionPlan(CudaTensor<T> &a_tensor,
     cutensorHandle_t handle;
     cutensorInit(&handle);
 
+    const std::vector<int64_t> a_strides = GetStrides(a_tensor.GetShape());
+    const std::vector<int64_t> b_strides = GetStrides(b_tensor.GetShape());
+    const std::vector<int64_t> c_strides = GetStrides(c_tensor.GetShape());
+
+/* cutensorStatus_t cutensorInitTensorDescriptor(
+    const cutensorHandle_t *handle, 
+    cutensorTensorDescriptor_t *desc, 
+    const uint32_t numModes, 
+    const int64_t extent[], 
+    const int64_t stride[], 
+    cudaDataType_t dataType, 
+    cutensorOperator_t unaryOp)
+*/
+
+    cutensorStatus_t cutensor_err;
     cutensorTensorDescriptor_t a_descriptor;
-    cutensorInitTensorDescriptor(&handle, &a_descriptor, a_modes.size(),
-                                 a_dimensions.data(), nullptr, /*stride*/
+    cutensor_err = cutensorInitTensorDescriptor(&handle, &a_descriptor, a_modes.size(),
+                                 a_dimensions.data(), a_strides.data(),
                                  data_type, CUTENSOR_OP_IDENTITY);
+    ThrowCuTensorError(cutensor_err);
 
     cutensorTensorDescriptor_t b_descriptor;
-    cutensorInitTensorDescriptor(&handle, &b_descriptor, b_modes.size(),
-                                 b_dimensions.data(), nullptr, /*stride*/
+    cutensor_err = cutensorInitTensorDescriptor(&handle, &b_descriptor, b_modes.size(),
+                                 b_dimensions.data(), b_strides.data(),
                                  data_type, CUTENSOR_OP_IDENTITY);
+    ThrowCuTensorError(cutensor_err);
 
     cutensorTensorDescriptor_t c_descriptor;
-    cutensorInitTensorDescriptor(&handle, &c_descriptor, c_modes.size(),
-                                 c_dimensions.data(), nullptr, /*stride*/
+    cutensor_err = cutensorInitTensorDescriptor(&handle, &c_descriptor, c_modes.size(),
+                                 c_dimensions.data(), c_strides.data(),
                                  data_type, CUTENSOR_OP_IDENTITY);
+    ThrowCuTensorError(cutensor_err);
 
     uint32_t a_alignment_requirement;
-    cutensorGetAlignmentRequirement(&handle, a_tensor.GetData(), &a_descriptor,
+    cutensor_err = cutensorGetAlignmentRequirement(&handle, a_tensor.GetData(), &a_descriptor,
                                     &a_alignment_requirement);
+    ThrowCuTensorError(cutensor_err);
 
     uint32_t b_alignment_requirement;
-    cutensorGetAlignmentRequirement(&handle, b_tensor.GetData(), &b_descriptor,
+    cutensor_err = cutensorGetAlignmentRequirement(&handle, b_tensor.GetData(), &b_descriptor,
                                     &b_alignment_requirement);
+    ThrowCuTensorError(cutensor_err);
 
     uint32_t c_alignment_requirement;
-    cutensorGetAlignmentRequirement(&handle, c_tensor.GetData(), &c_descriptor,
+    cutensor_err = cutensorGetAlignmentRequirement(&handle, c_tensor.GetData(), &c_descriptor,
                                     &c_alignment_requirement);
+    ThrowCuTensorError(cutensor_err);
 
     cutensorContractionDescriptor_t descriptor;
-    cutensorInitContractionDescriptor(
+    cutensor_err = cutensorInitContractionDescriptor(
         &handle, &descriptor, &a_descriptor, a_modes.data(),
         a_alignment_requirement, &b_descriptor, b_modes.data(),
         b_alignment_requirement, &c_descriptor, c_modes.data(),
         c_alignment_requirement, &c_descriptor, c_modes.data(),
         c_alignment_requirement, compute_type);
+    ThrowCuTensorError(cutensor_err);
 
     cutensorContractionFind_t find;
-    cutensorInitContractionFind(&handle, &find, CUTENSOR_ALGO_DEFAULT);
+    cutensor_err = cutensorInitContractionFind(&handle, &find, CUTENSOR_ALGO_DEFAULT);
+    ThrowCuTensorError(cutensor_err);
 
     uint64_t work_size = 0;
-    cutensorContractionGetWorkspace(&handle, &descriptor, &find,
+    cutensor_err = cutensorContractionGetWorkspace(&handle, &descriptor, &find,
                                     CUTENSOR_WORKSPACE_RECOMMENDED, &work_size);
+    ThrowCuTensorError(cutensor_err);
 
     void *work = nullptr;
     if (work_size > 0) {
@@ -436,7 +477,8 @@ CudaContractionPlan GetCudaContractionPlan(CudaTensor<T> &a_tensor,
      **************************/
 
     cutensorContractionPlan_t plan;
-    cutensorInitContractionPlan(&handle, &plan, &descriptor, &find, work_size);
+    cutensor_err = cutensorInitContractionPlan(&handle, &plan, &descriptor, &find, work_size);
+    ThrowCuTensorError(cutensor_err);
 
     CudaContractionPlan cplan;
     cplan.plan = plan;
@@ -462,10 +504,12 @@ void ContractTensorsWithoutAllocation(CudaTensor<cuComplex> &a,
     cuComplex beta;
     beta.x = 0.f;
     beta.y = 0.f;
+    cutensorStatus_t cutensor_err;
 
-    cutensorContraction(&c_plan.handle, &c_plan.plan, (void *)&alpha,
+    cutensor_err = cutensorContraction(&c_plan.handle, &c_plan.plan, (void *)&alpha,
                         a.GetData(), b.GetData(), (void *)&beta, c.GetData(),
                         c.GetData(), c_plan.work, c_plan.work_size, stream);
+    ThrowCuTensorError(cutensor_err);
 }
 
 template <typename T>
@@ -489,6 +533,7 @@ CudaTensor<T> ContractTensors(CudaTensor<T> &a_tensor, CudaTensor<T> &b_tensor)
     }
 
     auto &&c_indices = VectorUnion(left_indices, right_indices);
+
     std::vector<std::size_t> c_shape(c_indices.size());
     for (std::size_t i = 0; i < left_indices.size(); ++i)
         c_shape[i] = a_tensor.GetIndexToDimension().at(left_indices[i]);

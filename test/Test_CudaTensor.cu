@@ -333,95 +333,6 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 {
     using namespace Jet;
 
-    SECTION("Random 2x2 (i,j) with 2x1 (i): all permutations")
-    {
-        CudaTensor r_ij({"i", "j"}, {2, 2});
-        r_ij.FillRandom();
-        Tensor<c_fp32_host> r_ij_host = static_cast<Tensor<c_fp32_host>>(r_ij);
-
-        CudaTensor r_ji({"j", "i"}, {2, 2}, r_ij.GetData());
-        Tensor<c_fp32_host> r_ji_host = static_cast<Tensor<c_fp32_host>>(r_ji);
-
-        CudaTensor s_i({"i"}, {2});
-        s_i.FillRandom();
-        Tensor s_i_host = static_cast<Tensor<c_fp32_host>>(s_i);
-
-        CudaTensor con_si_rij = ContractTensors(s_i, r_ij);
-        CudaTensor con_si_rji = ContractTensors(s_i, r_ji);
-        CudaTensor con_rij_si = ContractTensors(r_ij, s_i);
-        CudaTensor con_rji_si = ContractTensors(r_ji, s_i);
-
-        Tensor<c_fp32_host> con_si_rij_host = static_cast<Tensor<c_fp32_host>>(con_si_rij);
-        Tensor<c_fp32_host> con_si_rji_host = static_cast<Tensor<c_fp32_host>>(con_si_rji);
-        Tensor<c_fp32_host> con_rij_si_host = static_cast<Tensor<c_fp32_host>>(con_rij_si);
-        Tensor<c_fp32_host> con_rji_si_host = static_cast<Tensor<c_fp32_host>>(con_rji_si);
-
-        Tensor<c_fp32_host> expected_rij_si_host(
-            {"j"}, {2},
-            {
-                r_ji_host.GetValue({0, 0}) * s_i_host.GetValue({0}) +
-                    r_ji_host.GetValue({0, 1}) * s_i_host.GetValue({1}),
-                r_ji_host.GetValue({1, 0}) * s_i_host.GetValue({0}) +
-                    r_ji_host.GetValue({1, 1}) * s_i_host.GetValue({1}),
-            });
-        // R_{j,i} S_i == S_i R_{i,j}
-        Tensor<c_fp32_host> expected_rji_si_host(
-            {"j"}, {2},
-            {
-                r_ji_host.GetValue({0, 0}) * s_i_host.GetValue({0}) +
-                    r_ji_host.GetValue({1, 0}) * s_i_host.GetValue({1}),
-                r_ji_host.GetValue({0, 1}) * s_i_host.GetValue({0}) +
-                    r_ji_host.GetValue({1, 1}) * s_i_host.GetValue({1}),
-            });
-
-/*
-        std::cout << "#####################" << std::endl;
-        std::cout << con_si_rij_host << std::endl;
-        std::cout << con_si_rji_host << std::endl;
-        std::cout << con_rij_si_host << std::endl;
-        std::cout << con_rji_si_host << std::endl;
-        std::cout << "#####################" << std::endl;
-        std::cout << expected_rij_si_host << std::endl;
-        std::cout << expected_rji_si_host << std::endl;
-        std::cout << "#####################" << std::endl;
-*/
-        CHECK(con_rij_si_host.GetData()[0].real() ==
-              Approx(expected_rij_si_host.GetData()[0].real()));
-        CHECK(con_rij_si_host.GetData()[0].imag() ==
-              Approx(expected_rij_si_host.GetData()[0].imag()));
-        CHECK(con_rij_si_host.GetData()[1].real() ==
-              Approx(expected_rij_si_host.GetData()[1].real()));
-        CHECK(con_rij_si_host.GetData()[1].imag() ==
-              Approx(expected_rij_si_host.GetData()[1].imag()));
-
-        CHECK(con_rji_si_host.GetData()[0].real() ==
-              Approx(expected_rji_si_host.GetData()[0].real()));
-        CHECK(con_rji_si_host.GetData()[0].imag() ==
-              Approx(expected_rji_si_host.GetData()[0].imag()));
-        CHECK(con_rji_si_host.GetData()[1].real() ==
-              Approx(expected_rji_si_host.GetData()[1].real()));
-        CHECK(con_rji_si_host.GetData()[1].imag() ==
-              Approx(expected_rji_si_host.GetData()[1].imag()));
-
-        CHECK(con_si_rij_host.GetData()[0].real() ==
-              Approx(expected_rji_si_host.GetData()[0].real()));
-        CHECK(con_si_rij_host.GetData()[0].imag() ==
-              Approx(expected_rji_si_host.GetData()[0].imag()));
-        CHECK(con_si_rij_host.GetData()[1].real() ==
-              Approx(expected_rji_si_host.GetData()[1].real()));
-        CHECK(con_si_rij_host.GetData()[1].imag() ==
-              Approx(expected_rji_si_host.GetData()[1].imag()));
-
-        CHECK(con_si_rji_host.GetData()[0].real() ==
-              Approx(expected_rij_si_host.GetData()[0].real()));
-        CHECK(con_si_rji_host.GetData()[0].imag() ==
-              Approx(expected_rij_si_host.GetData()[0].imag()));
-        CHECK(con_si_rji_host.GetData()[1].real() ==
-              Approx(expected_rij_si_host.GetData()[1].real()));
-        CHECK(con_si_rji_host.GetData()[1].imag() ==
-              Approx(expected_rij_si_host.GetData()[1].imag()));
-    }
-
     SECTION("Contract T0(a,b) and T1(b) -> T2(a)")
     {
         std::vector<std::size_t> t_shape1{2, 2};
@@ -441,6 +352,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
         CudaTensor tensor1(t_indices1, t_shape1, t_data1);
         CudaTensor tensor2(t_indices2, t_shape2, t_data2);
+
         CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
 
         Tensor<c_fp32_host> tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
@@ -490,9 +402,56 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CudaTensor tensor2(t_indices2, t_shape2, t_data2);
 
         CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
+
         auto tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
         Tensor<c_fp32_host> tensor4_host({}, {}, {c_fp32_host(4.0, 0.0)});
 
         CHECK(tensor3_host == tensor4_host);
+    }
+
+    SECTION("Compare CudaTensor and Tensor random tensor contraction")
+    {
+        using namespace Jet;
+
+        std::vector<std::size_t> t1_shape{2, 3, 5};
+        std::vector<std::size_t> t2_shape{5, 3, 4};
+        std::vector<std::string> t1_idx{"a", "b", "c"};
+        std::vector<std::string> t2_idx{"c", "b", "d"};
+
+        CudaTensor tensor1_dev(t1_idx, t1_shape);
+        CudaTensor tensor2_dev(t2_idx, t2_shape);
+
+        Tensor tensor1_host(t1_idx, t1_shape);
+        Tensor tensor2_host(t2_idx, t2_shape);
+
+        tensor1_dev.FillRandom(7);
+        tensor2_dev.FillRandom(7);
+        Tensor<c_fp32_host> tensor1_host_conv(tensor1_dev);
+        Tensor<c_fp32_host> tensor2_host_conv(tensor2_dev);
+
+        CHECK(tensor1_host.GetIndices() == tensor1_host_conv.GetIndices());
+        CHECK(tensor1_host.GetShape()   == tensor1_host_conv.GetShape());
+        CHECK(tensor1_host.GetSize()    == tensor1_host_conv.GetSize());
+        CHECK(tensor2_host.GetIndices() == tensor2_host_conv.GetIndices());
+        CHECK(tensor2_host.GetShape()   == tensor2_host_conv.GetShape());
+        CHECK(tensor2_host.GetSize()    == tensor2_host_conv.GetSize());
+
+        auto tensor3_host = Tensor<c_fp32_host>::ContractTensors(tensor1_host_conv, tensor2_host_conv);
+
+        auto tensor3_dev = ContractTensors(tensor1_dev, tensor2_dev);
+        Tensor<c_fp32_host> tensor3_host_conv(tensor3_dev);
+
+        CHECK(tensor3_host_conv.GetIndices() == tensor3_host.GetIndices());
+        CHECK(tensor3_host_conv.GetShape()   == tensor3_host.GetShape());
+        CHECK(tensor3_host_conv.GetSize()    == tensor3_host.GetSize());
+        
+        CHECK(tensor3_host_conv.GetData()[0].real() == Approx(tensor3_host.GetData()[0].real()));
+        CHECK(tensor3_host_conv.GetData()[0].imag() == Approx(tensor3_host.GetData()[0].imag()));
+        CHECK(tensor3_host_conv.GetData()[1].real() == Approx(tensor3_host.GetData()[1].real()));
+        CHECK(tensor3_host_conv.GetData()[1].imag() == Approx(tensor3_host.GetData()[1].imag()));
+        CHECK(tensor3_host_conv.GetData()[2].real() == Approx(tensor3_host.GetData()[2].real() ));
+        CHECK(tensor3_host_conv.GetData()[2].imag() == Approx(tensor3_host.GetData()[2].imag() ));
+        CHECK(tensor3_host_conv.GetData()[3].real() == Approx(tensor3_host.GetData()[3].real() ));
+        CHECK(tensor3_host_conv.GetData()[3].imag() == Approx(tensor3_host.GetData()[3].imag() ));
     }
 }
