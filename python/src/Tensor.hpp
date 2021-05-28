@@ -243,8 +243,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
                     import jet
 
-                    A = jet.Tensor64(["i", "j"], [2, 3])
-                    B = jet.Tensor64(["i", "j"], [2, 3])
+                    A = jet.Tensor(["i", "j"], [2, 3])
+                    B = jet.Tensor(["i", "j"], [2, 3])
 
                     A.fill_random()
                     B.fill_random()
@@ -273,8 +273,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
                     import jet
 
-                    A = jet.Tensor64(["i", "j", "k"], [3, 2, 4])
-                    B = jet.Tensor64(["j", "k", "l"], [2, 4, 2])
+                    A = jet.Tensor(["i", "j", "k"], [3, 2, 4])
+                    B = jet.Tensor(["j", "k", "l"], [2, 4, 2])
 
                     A.fill_random()
                     B.fill_random()
@@ -311,7 +311,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
                     import jet
 
-                    A = jet.Tensor64({"i", "j"}, {2, 3})
+                    A = jet.Tensor({"i", "j"}, {2, 3})
                     A.fill_random()
 
                     jet.slice_index(A, "i", 0) # Result is a 1x3 tensor
