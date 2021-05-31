@@ -92,30 +92,31 @@ template <class Tensor> class TensorNetwork {
     };
 
     /// Type of a `Node` collection.
-    using nodes = std::vector<Node>;
+    using Nodes = std::vector<Node>;
 
     /// Type of the index-to-edge map.
-    using index_to_edge_map = std::unordered_map<std::string, Edge>;
+    using IndexToEdgeMap = std::unordered_map<std::string, Edge>;
 
     /// Type of the tag-to-node-IDs map.
-    using tag_to_node_ids_map = std::unordered_multimap<std::string, node_id_t>;
+    using TagToNodeIdsMap =
+        std::unordered_multimap<std::string, node_id_t>;
 
     /// Type of a contraction path.
-    using path = std::vector<std::pair<node_id_t, node_id_t>>;
+    using Path = std::vector<std::pair<node_id_t, node_id_t>>;
 
     /**
      * @brief Returns the nodes in this `%TensorNetwork`.
      *
      * @return Collection of nodes.
      */
-    const nodes &GetNodes() const noexcept { return nodes_; }
+    const Nodes &GetNodes() const noexcept { return nodes_; }
 
     /**
      * @brief Returns the index-to-edge map of this `%TensorNetwork`.
      *
      * @return Map which associates indices with edges.
      */
-    const index_to_edge_map &GetIndexToEdgeMap() const noexcept
+    const IndexToEdgeMap &GetIndexToEdgeMap() const noexcept
     {
         return index_to_edge_map_;
     }
@@ -125,7 +126,7 @@ template <class Tensor> class TensorNetwork {
      *
      * @return Map which associates tags with node IDs.
      */
-    const tag_to_node_ids_map &GetTagToNodesMap() const noexcept
+    const TagToNodeIdsMap &GetTagToNodesMap() const noexcept
     {
         return tag_to_nodes_map_;
     }
@@ -137,7 +138,7 @@ template <class Tensor> class TensorNetwork {
      *
      * @return Pairs of node IDs representing the contraction path.
      */
-    const path &GetPath() noexcept { return path_; }
+    const Path &GetPath() noexcept { return path_; }
 
     /**
      * @brief Returns the number of indices in this `%TensorNetwork`.
@@ -294,7 +295,7 @@ template <class Tensor> class TensorNetwork {
      * @param path Contraction path specified as a list of node ID pairs.
      * @return Tensor associated with the result of the final contraction.
      */
-    const Tensor &Contract(const path &path = {})
+    const Tensor &Contract(const Path &path = {})
     {
         JET_ABORT_IF(nodes_.empty(),
                      "An empty tensor network cannot be contracted.");
@@ -325,15 +326,15 @@ template <class Tensor> class TensorNetwork {
 
   private:
     /// Nodes inside this tensor network.
-    nodes nodes_;
+    Nodes nodes_;
 
     /// Map that associates each index with its corresponding edge.
     /// Not used when a contraction path is specified.
-    index_to_edge_map index_to_edge_map_;
+    IndexToEdgeMap index_to_edge_map_;
 
     /// Map that associates each tag with a list of nodes that contain that tag.
     /// Not used when a contraction path is specified.
-    tag_to_node_ids_map tag_to_nodes_map_;
+    TagToNodeIdsMap tag_to_nodes_map_;
 
     /// Contraction path representing pairs of nodes to be contracted.
     std::vector<std::pair<size_t, size_t>> path_;
