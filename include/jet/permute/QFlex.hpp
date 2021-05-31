@@ -54,25 +54,42 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
 
-    /**
-     * @brief SoA for data used to plan permutation.
-     * 
-     */
+    class DimData{
+      public:
+        const size_t dim_left;
+        const size_t dim_right;
+        const size_t tensor_dim;
+        const std::vector<size_t> dim_map;
+
+        DimData(size_t dim_left, size_t dim_right, size_t tensor_dim, const std::vector<size_t> &dim_map) : dim_left{dim_left}, dim_right{dim_right}, tensor_dim{tensor_dim}, dim_map{dim_map} {}
+        DimData(size_t dim_left, size_t dim_right, size_t tensor_dim, std::vector<size_t> &&dim_map) : dim_left{dim_left}, dim_right{dim_right}, tensor_dim{tensor_dim}, dim_map{dim_map} {}
+        DimData() : dim_left{}, dim_right{}, tensor_dim{}, dim_map{} {}
+
+    };
+    class IndexData{
+      public:
+        const std::vector<size_t> old_indices;
+        const std::vector<size_t> new_indices;
+        const std::vector<std::string> old_labels;
+        const std::vector<std::string> new_labels;
+
+        IndexData(const std::vector<size_t> &old_indices, const std::vector<size_t> &new_indices, const std::vector<std::string> &old_labels, const std::vector<std::string> &new_labels) : old_indices{old_indices}, new_indices{new_indices}, old_labels{old_labels}, new_labels{new_labels} {}
+        IndexData(std::vector<size_t> &&old_indices, std::vector<size_t> &&new_indices, std::vector<std::string> &&old_labels, std::vector<std::string> &&new_labels) : old_indices{old_indices}, new_indices{new_indices}, old_labels{old_labels}, new_labels{new_labels} {}
+        IndexData() : old_indices{}, new_indices{}, old_labels{}, new_labels{} {}
+    };
+
     class PlanData {
       public:
-
-        std::vector<std::vector<size_t>> map_old_to_new_position;
-        std::vector<size_t> dim_left;
-        std::vector<size_t> dim_right;
-        std::vector<size_t> tensor_dim;
+        std::vector<DimData> dim_data;
         std::vector<PermuteType> types;
-
+        //IndexData idx_data;
         std::vector<std::string> new_ordering;
         std::vector<size_t> new_dimensions;
         std::vector<std::string> old_ordering;
         std::vector<size_t> old_dimensions;
         bool no_transpose;
         size_t total_dim;
+        //PlanData() : dim_data{}, types{PermuteType::None}, idx_data{}, no_transpose{true}, total_dim{0} {}
     };
 
     void GenerateBinaryReorderingMap(
@@ -144,11 +161,11 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
         for (size_t p_i = 0; p_i < precomputed_data.types.size();
              p_i++) { // Type is empty, hence no transpose
-            auto &dim_right = precomputed_data.dim_right[p_i];
-            auto &dim_left = precomputed_data.dim_left[p_i];
-            auto &tensor_dim = precomputed_data.tensor_dim[p_i];
+            auto &dim_right = precomputed_data.dim_data[p_i].dim_right;
+            auto &dim_left = precomputed_data.dim_data[p_i].dim_left;
+            auto &tensor_dim = precomputed_data.dim_data[p_i].tensor_dim;
             auto &map_old_to_new_position =
-                precomputed_data.map_old_to_new_position[p_i];
+                precomputed_data.dim_data[p_i].dim_map;
 
             if (precomputed_data.types[p_i] == PermuteType::PermuteRight) {
 #if defined _OPENMP
@@ -242,11 +259,12 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         size_t dim_left =
             tensor_size / dim_right; // Remember, it's all powers of 2, so OK.
 
-        precomputed_data.dim_left.push_back(dim_left);
-        precomputed_data.dim_right.push_back(dim_right);
-        precomputed_data.tensor_dim.push_back(tensor_size);
-        precomputed_data.map_old_to_new_position.push_back(
-            map_old_to_new_position);
+        precomputed_data.dim_data.push_back(DimData{dim_left, dim_right, tensor_size, std::move(map_old_to_new_position)});
+        //precomputed_data.dim_left.push_back(dim_left);
+        //precomputed_data.dim_right.push_back(dim_right);
+        //precomputed_data.tensor_dim.push_back(tensor_size);
+        //precomputed_data.map_old_to_new_position.push_back(
+        //    map_old_to_new_position);
         precomputed_data.types.push_back(PermuteType::PermuteRight);
     }
 
@@ -294,11 +312,12 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             tensor_dim / dim_left; // Remember, it's all powers
         // of 2, so OK.
 
-        precomputed_data.dim_left.push_back(dim_left);
-        precomputed_data.dim_right.push_back(dim_right);
-        precomputed_data.tensor_dim.push_back(tensor_dim);
-        precomputed_data.map_old_to_new_position.push_back(
-            map_old_to_new_position);
+        precomputed_data.dim_data.push_back(DimData{dim_left, dim_right, tensor_dim, std::move(map_old_to_new_position)});
+        //precomputed_data.dim_left.push_back(dim_left);
+        //precomputed_data.dim_right.push_back(dim_right);
+        //precomputed_data.tensor_dim.push_back(tensor_dim);
+        //precomputed_data.map_old_to_new_position.push_back(
+        //    map_old_to_new_position);
         precomputed_data.types.push_back(PermuteType::PermuteLeft);
     }
 
@@ -338,7 +357,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 }
             }
         }
-
+        //precomputed_data.idx_data = IndexData(old_dimensions, new_dimensions, old_ordering, new_ordering);
         precomputed_data.new_ordering = new_ordering;
         precomputed_data.new_dimensions = new_dimensions;
         precomputed_data.old_ordering = old_ordering;
