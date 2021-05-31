@@ -1,10 +1,11 @@
 #pragma once
+
 #include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "../Abort.hpp"
+#include "Permuter.hpp"
 
 namespace Jet {
 

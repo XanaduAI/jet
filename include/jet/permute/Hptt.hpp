@@ -1,9 +1,10 @@
 #pragma once
 
-#include <hptt.h>
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+
+#include <hptt.h>
 
 namespace Jet {
 
