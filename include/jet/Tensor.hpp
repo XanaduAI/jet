@@ -74,7 +74,7 @@ template <class T> Tensor<T> AddTensors(const Tensor<T> &A, const Tensor<T> &B)
     auto bt_ptr = Bt.GetData().data();
 
 #if defined _OPENMP
-#pragma omp parallel for schedule(static, 1024)//MAX_RIGHT_DIM)
+#pragma omp parallel for schedule(static, 1024) // MAX_RIGHT_DIM)
 #endif
     for (size_t i = 0; i < size; i++) {
         c_ptr[i] = a_ptr[i] + bt_ptr[i];
@@ -134,7 +134,7 @@ Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index,
     auto tensor_sliced_ptr = tensor_sliced.GetData().data();
 
 #if defined _OPENMP
-     int max_right_dim = 1024;
+    int max_right_dim = 1024;
 #pragma omp parallel for schedule(static, max_right_dim)
 #endif
     for (size_t p = 0; p < projection_size; ++p)
@@ -212,8 +212,9 @@ Tensor<T> Transpose(const Tensor<T> &A,
                                             A.GetIndices(), new_indices)};
     }
     auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
-    return Tensor<T>{
-        new_indices, new_shape, permuter.Transpose(A.GetData(), A.GetShape(), A.GetIndices(), new_indices)};
+    return Tensor<T>{new_indices, new_shape,
+                     permuter.Transpose(A.GetData(), A.GetShape(),
+                                        A.GetIndices(), new_indices)};
 }
 
 /**
@@ -241,9 +242,8 @@ Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
         new_indices[i] = old_indices[new_ordering[i]];
     }
 
-    return Transpose<T,BLOCKSIZE,MINSIZE>(A, new_indices);
+    return Transpose<T, BLOCKSIZE, MINSIZE>(A, new_indices);
 }
-
 
 /**
  * @brief Contracts two `%Tensor` objects over the intersection of their index
@@ -304,8 +304,8 @@ Tensor<T> ContractTensors(const Tensor<T> &A, const Tensor<T> &B)
             B.GetIndexToDimension().at(right_indices[i]);
 
     Tensor<T> C(C_indices, C_dimensions);
-    auto &&At = Transpose<T,1024UL,32UL>(A, a_new_ordering);
-    auto &&Bt = Transpose<T,1024UL,32UL>(B, b_new_ordering);
+    auto &&At = Transpose<T, 1024UL, 32UL>(A, a_new_ordering);
+    auto &&Bt = Transpose<T, 1024UL, 32UL>(B, b_new_ordering);
 
     TensorHelpers::MultiplyTensorData<T>(
         At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
@@ -709,4 +709,3 @@ template <class T> class Tensor {
 };
 
 }; // namespace Jet
-
