@@ -53,13 +53,9 @@ template <size_t blocksize = 1024> class DefaultPermuter {
         std::vector<size_t> new_super_dimensions(num_indices, 1);
 
         const size_t old_dimensions_size = shape.size();
-        if (old_dimensions_size >= 2) {
-            for (size_t i = old_dimensions_size; --i;) {
-                old_super_dimensions[i - 1] =
-                    old_super_dimensions[i] * shape[i];
-                new_super_dimensions[i - 1] =
-                    new_super_dimensions[i] * new_dimensions[i];
-            }
+        for (size_t i = old_dimensions_size; --i;) {
+            old_super_dimensions[i - 1] = old_super_dimensions[i] * shape[i];
+            new_super_dimensions[i - 1] = new_super_dimensions[i] * new_dimensions[i];
         }
 
         std::vector<unsigned short int> small_map_old_to_new_position(
