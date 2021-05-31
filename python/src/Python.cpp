@@ -15,21 +15,16 @@ PYBIND11_MODULE(bindings, m)
     using c64_t = std::complex<float>;
     using c128_t = std::complex<double>;
 
-    using TensorC64 = Jet::Tensor<c64_t>;
-    using TensorC128 = Jet::Tensor<c128_t>;
+    AddBindingsForPathInfo<c64_t, c128_t>(m);
 
-    AddBindingsForTensor<c64_t>(m, "TensorC64");
-    AddBindingsForTensor<c128_t>(m, "TensorC128");
+    AddBindingsForTensor<c64_t>(m);
+    AddBindingsForTensor<c128_t>(m);
 
-    AddBindingsForTensorNetwork<TensorC64>(m, "TensorNetworkC64");
-    AddBindingsForTensorNetwork<TensorC128>(m, "TensorNetworkC128");
+    AddBindingsForTensorNetwork<c64_t>(m);
+    AddBindingsForTensorNetwork<c128_t>(m);
 
-    AddBindingsForTensorNetworkIO<TensorC64>(m, "TensorNetworkFileC64",
-                                             "TensorNetworkSerializerC64");
-    AddBindingsForTensorNetworkIO<TensorC128>(m, "TensorNetworkFileC128",
-                                              "TensorNetworkSerializerC128");
-
-    AddBindingsForPathInfo<TensorC64, TensorC128>(m);
+    AddBindingsForTensorNetworkIO<c64_t>(m);
+    AddBindingsForTensorNetworkIO<c128_t>(m);
 
     AddBindingsForVersion(m);
 }

@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* Python bindings now include a factory method which accepts a `dtype` parameter. [(#18)](https://github.com/XanaduAI/jet/pull/18)
+
 * Running `make build` from the `python` directory now creates a Python distribution package. [(#13)](https://github.com/XanaduAI/jet/pull/13)
 
 * A new intermediate representation (IR) is added, including a parser, IR representation program, and a Strawberry Fields interface. [(#11)](https://github.com/XanaduAI/jet/pull/11)
