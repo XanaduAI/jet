@@ -1,6 +1,7 @@
 #pragma once
 
 #include <complex>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,11 @@ template <class PermuterBackend> class Permuter {
                    const std::vector<std::string> &current_order,
                    const std::vector<std::string> &new_order)
     {
+        const std::set<std::string> idx_old(current_order.begin(), current_order.end());
+        const std::set<std::string> idx_new(new_order.begin(), new_order.end());
+        JET_ABORT_IF_NOT(idx_old.size() == current_order.size(), "Duplicate existing indices found. Please ensure indices are unique.");
+        JET_ABORT_IF_NOT(idx_new.size() == new_order.size(), "Duplicate transpose indices found. Please ensure indices are unique.");
+        JET_ABORT_IF_NOT(idx_old == idx_new, "New indices are an invalid permutation of the existing indices");
         permuter_b_.Transpose(data_in, shape, data_out, current_order,
                               new_order);
     }
@@ -68,6 +74,11 @@ template <class PermuterBackend> class Permuter {
               const std::vector<std::string> &current_order,
               const std::vector<std::string> &new_order)
     {
+        std::set<std::string> idx_old(current_order.begin(), current_order.end());
+        std::set<std::string> idx_new(new_order.begin(), new_order.end());
+        JET_ABORT_IF_NOT(idx_old.size() == current_order.size(), "Duplicate existing indices found. Please ensure indices are unique.");
+        JET_ABORT_IF_NOT(idx_new.size() == new_order.size(), "Duplicate transpose indices found. Please ensure indices are unique.");
+        JET_ABORT_IF_NOT(idx_old == idx_new, "New indices are an invalid permutation of the existing indices");
         return permuter_b_.Transpose(data_in, shape, current_order, new_order);
     }
 
