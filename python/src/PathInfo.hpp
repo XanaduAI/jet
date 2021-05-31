@@ -10,8 +10,8 @@ template <class Tensor, class... Tensors>
 void bind_constructors(py::class_<Jet::PathInfo> &c)
 {
     c.def(py::init<const Jet::TensorNetwork<Tensor> &,
-                   const Jet::PathInfo::path_t &>(),
-          py::arg("tn"), py::arg("path") = Jet::PathInfo::path_t(), R"(
+                   const Jet::PathInfo::Path &>(),
+          py::arg("tn"), py::arg("path") = Jet::PathInfo::Path(), R"(
             Constructs a populated PathInfo for the given path
             through a tensor network
 

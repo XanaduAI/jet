@@ -17,7 +17,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
 {
 
     using TensorNetwork = Jet::TensorNetwork<Tensor>;
-    using node_id_t = typename Jet::TensorNetwork<Tensor>::node_id_t;
+    using NodeID_t = typename Jet::TensorNetwork<Tensor>::NodeID_t;
     using Node = typename Jet::TensorNetwork<Tensor>::Node;
     using Edge = typename Jet::TensorNetwork<Tensor>::Edge;
 
@@ -51,7 +51,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
             .def_property_readonly(
                 "tag_to_node_id_map",
                 [](const TensorNetwork &tn) {
-                    std::unordered_map<std::string, std::vector<node_id_t>> map;
+                    std::unordered_map<std::string, std::vector<NodeID_t>> map;
 
                     for (const auto &[tag, node_id] : tn.GetTagToNodesMap()) {
                         map[tag].emplace_back(node_id);
