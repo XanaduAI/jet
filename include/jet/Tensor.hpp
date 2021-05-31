@@ -74,80 +74,11 @@ template <class T> Tensor<T> AddTensors(const Tensor<T> &A, const Tensor<T> &B)
     auto bt_ptr = Bt.GetData().data();
 
 #if defined _OPENMP
-#pragma omp parallel for // schedule(static, MAX_RIGHT_DIM)
+#pragma omp parallel for schedule(static, 1024)//MAX_RIGHT_DIM)
 #endif
     for (size_t i = 0; i < size; i++) {
         c_ptr[i] = a_ptr[i] + bt_ptr[i];
     }
-
-    return C;
-}
-
-/**
- * @brief Contracts two `%Tensor` objects over the intersection of their index
- *        sets.
- *
- * The resulting tensor will be formed with indices given by the symmetric
- * difference of the index sets.
- *
- * Example: Given a 3x2x4 tensor A(i,j,k) and a 2x4x2 tensor B(j,k,l), the
- * common indices are (j,k) and the symmetric difference of the sets is (i,l).
- * The result of the contraction is a 3x2 tensor C(i,l).
- * \code{.cpp}
- *     Tensor A({"i", "j", "k"}, {3, 2, 4});
- *     Tensor B({"j", "k", "l"}, {2, 4, 2});
- *     A.FillRandom();
- *     B.FillRandom();
- *     Tensor C = ContractTensors(A, B);
- * \endcode
- *
- * @see TODO: Link to documentation
- *
- * @tparam T `%Tensor` data type.
- * @param A tensor on the LHS of the contraction.
- * @param B tensor on the RHS of the contraction.
- * @return `%Tensor` object representing the contraction of the tensors.
- */
-template <class T>
-Tensor<T> ContractTensors(const Tensor<T> &A, const Tensor<T> &B)
-{
-    using namespace Jet::Utilities;
-    using namespace Jet::TensorHelpers;
-
-    auto &&left_indices = VectorSubtraction(A.GetIndices(), B.GetIndices());
-    auto &&right_indices = VectorSubtraction(B.GetIndices(), A.GetIndices());
-    auto &&common_indices = VectorIntersection(A.GetIndices(), B.GetIndices());
-
-    size_t left_dim = 1, right_dim = 1, common_dim = 1;
-    for (size_t i = 0; i < left_indices.size(); ++i) {
-        left_dim *= A.GetIndexToDimension().at(left_indices[i]);
-    }
-    for (size_t i = 0; i < right_indices.size(); ++i) {
-        right_dim *= B.GetIndexToDimension().at(right_indices[i]);
-    }
-    for (size_t i = 0; i < common_indices.size(); ++i) {
-        size_t a_dim = A.GetIndexToDimension().at(common_indices[i]);
-        common_dim *= a_dim;
-    }
-
-    auto &&a_new_ordering = VectorUnion(left_indices, common_indices);
-    auto &&b_new_ordering = VectorUnion(common_indices, right_indices);
-
-    auto &&C_indices = VectorUnion(left_indices, right_indices);
-    std::vector<size_t> C_dimensions(C_indices.size());
-    for (size_t i = 0; i < left_indices.size(); ++i)
-        C_dimensions[i] = A.GetIndexToDimension().at(left_indices[i]);
-    for (size_t i = 0; i < right_indices.size(); ++i)
-        C_dimensions[i + left_indices.size()] =
-            B.GetIndexToDimension().at(right_indices[i]);
-
-    Tensor<T> C(C_indices, C_dimensions);
-    auto &&At = Transpose(A, a_new_ordering);
-    auto &&Bt = Transpose(B, b_new_ordering);
-
-    TensorHelpers::MultiplyTensorData<T>(
-        At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
-        left_dim, right_dim, common_dim);
 
     return C;
 }
@@ -203,8 +134,8 @@ Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index,
     auto tensor_sliced_ptr = tensor_sliced.GetData().data();
 
 #if defined _OPENMP
-    // int max_right_dim = 1024;
-#pragma omp parallel for // schedule(static, max_right_dim)
+     int max_right_dim = 1024;
+#pragma omp parallel for schedule(static, max_right_dim)
 #endif
     for (size_t p = 0; p < projection_size; ++p)
         tensor_sliced_ptr[p] = data_ptr[projection_begin + p];
@@ -298,7 +229,7 @@ Tensor<T> Transpose(const Tensor<T> &A,
  * @param new_ordering New `%Tensor` index permutation.
  * @return Transposed `%Tensor` object.
  */
-template <class T>
+template <class T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
 Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
 {
     const size_t num_indices = A.GetIndices().size();
@@ -312,7 +243,77 @@ Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
         new_indices[i] = old_indices[new_ordering[i]];
     }
 
-    return Transpose(A, new_indices);
+    return Transpose<T,BLOCKSIZE,MINSIZE>(A, new_indices);
+}
+
+
+/**
+ * @brief Contracts two `%Tensor` objects over the intersection of their index
+ *        sets.
+ *
+ * The resulting tensor will be formed with indices given by the symmetric
+ * difference of the index sets.
+ *
+ * Example: Given a 3x2x4 tensor A(i,j,k) and a 2x4x2 tensor B(j,k,l), the
+ * common indices are (j,k) and the symmetric difference of the sets is (i,l).
+ * The result of the contraction is a 3x2 tensor C(i,l).
+ * \code{.cpp}
+ *     Tensor A({"i", "j", "k"}, {3, 2, 4});
+ *     Tensor B({"j", "k", "l"}, {2, 4, 2});
+ *     A.FillRandom();
+ *     B.FillRandom();
+ *     Tensor C = ContractTensors(A, B);
+ * \endcode
+ *
+ * @see TODO: Link to documentation
+ *
+ * @tparam T `%Tensor` data type.
+ * @param A tensor on the LHS of the contraction.
+ * @param B tensor on the RHS of the contraction.
+ * @return `%Tensor` object representing the contraction of the tensors.
+ */
+template <class T>
+Tensor<T> ContractTensors(const Tensor<T> &A, const Tensor<T> &B)
+{
+    using namespace Jet::Utilities;
+    using namespace Jet::TensorHelpers;
+
+    auto &&left_indices = VectorSubtraction(A.GetIndices(), B.GetIndices());
+    auto &&right_indices = VectorSubtraction(B.GetIndices(), A.GetIndices());
+    auto &&common_indices = VectorIntersection(A.GetIndices(), B.GetIndices());
+
+    size_t left_dim = 1, right_dim = 1, common_dim = 1;
+    for (size_t i = 0; i < left_indices.size(); ++i) {
+        left_dim *= A.GetIndexToDimension().at(left_indices[i]);
+    }
+    for (size_t i = 0; i < right_indices.size(); ++i) {
+        right_dim *= B.GetIndexToDimension().at(right_indices[i]);
+    }
+    for (size_t i = 0; i < common_indices.size(); ++i) {
+        size_t a_dim = A.GetIndexToDimension().at(common_indices[i]);
+        common_dim *= a_dim;
+    }
+
+    auto &&a_new_ordering = VectorUnion(left_indices, common_indices);
+    auto &&b_new_ordering = VectorUnion(common_indices, right_indices);
+
+    auto &&C_indices = VectorUnion(left_indices, right_indices);
+    std::vector<size_t> C_dimensions(C_indices.size());
+    for (size_t i = 0; i < left_indices.size(); ++i)
+        C_dimensions[i] = A.GetIndexToDimension().at(left_indices[i]);
+    for (size_t i = 0; i < right_indices.size(); ++i)
+        C_dimensions[i + left_indices.size()] =
+            B.GetIndexToDimension().at(right_indices[i]);
+
+    Tensor<T> C(C_indices, C_dimensions);
+    auto &&At = Transpose<T,1024UL,32UL>(A, a_new_ordering);
+    auto &&Bt = Transpose<T,1024UL,32UL>(B, b_new_ordering);
+
+    TensorHelpers::MultiplyTensorData<T>(
+        At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
+        left_dim, right_dim, common_dim);
+
+    return C;
 }
 
 /**
@@ -710,3 +711,4 @@ template <class T> class Tensor {
 };
 
 }; // namespace Jet
+
