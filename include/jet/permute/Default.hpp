@@ -9,7 +9,7 @@ namespace Jet {
  * 
  * @tparam blocksize Controls the internal data chunk size for cache blocking.
  */
-template <size_t blocksize = 1024> class DefaultPermuter {
+template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
 
   public:
     /**
@@ -142,7 +142,7 @@ template <size_t blocksize = 1024> class DefaultPermuter {
     }
 
   private:
-    static constexpr size_t blocksize_ = blocksize;
+    static constexpr size_t blocksize_ = BLOCKSIZE;
 };
 
 } // namespace Jet
