@@ -10,7 +10,7 @@ namespace Jet {
 
 class HpttPermuter {
   public:
-    HpttPermute() {}
+    HpttPermuter() {}
 
     template <class DataType>
     void Transpose(const std::vector<DataType> &data,
@@ -28,11 +28,9 @@ class HpttPermuter {
         std::vector<int> perm(old_indices.size());
 
         for (size_t i = 0; i < old_indices.size(); i++) {
-            for (size_t j = 0; j < new_indices.size(); j++) {
-                if (old_indices[i] == new_indices[j]) {
-                    perm[i] = j;
-                    break;
-                }
+            const auto it = std::find(new_indices.begin(), new_indices.end(), old_indices[i]);
+            if (it != new_indices.end()) {
+                perm[i] = std::distance(new_indices.begin(), it);
             }
         }
 
@@ -40,7 +38,7 @@ class HpttPermuter {
 
         auto plan = hptt::create_plan(
             perm.data(), local_shape.size(), 1, data.data(), local_shape.data(),
-            nullptr, static_cast<typename DataType::value_type>(0.0),
+            nullptr, 0,
             data_out.data(), nullptr, hptt::PATIENT, 1, nullptr, true);
 
         plan->execute();
