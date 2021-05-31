@@ -13,7 +13,7 @@ namespace Jet {
  * @brief Power-of-2 permutation backend. Based on QFlex implementation.
  * 
  * @tparam BLOCKSIZE Controls the blocksize of the transpose to improve cache hits.
- * @tparam MIN_DIMS Controls the right-movement minimum size for optimal performance.
+ * @tparam MIN_DIMS Controls the right-movement minimum dimension size.
  */
 template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
   public:
@@ -26,9 +26,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     {
         std::vector<DataType> data(data_);
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data_a =
+        PrecomputedQflexTransposeData precomputed_data =
             PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
-        FastTranspose(data, precomputed_data_a, scratch);
+        FastTranspose(data, precomputed_data, scratch);
         return data;
     }
 
@@ -42,10 +42,10 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     {
         data_out = data_;
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data_a =
+        PrecomputedQflexTransposeData precomputed_data =
             PrecomputeFastTransposeData(data_out, shape, old_indices,
                                         new_indices);
-        FastTranspose(data_out, precomputed_data_a, scratch);
+        FastTranspose(data_out, precomputed_data, scratch);
     }
 
   private:
