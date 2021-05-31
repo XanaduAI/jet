@@ -23,9 +23,9 @@ namespace py = pybind11;
 template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
 {
     using TensorNetwork = Jet::TensorNetwork<Jet::Tensor<T>>;
-    using NodeID_t = typename Jet::TensorNetwork<Tensor<T>>::NodeID_t;
-    using Node = typename Jet::TensorNetwork<Tensor<T>>::Node;
-    using Edge = typename Jet::TensorNetwork<Tensor<T>>::Edge;
+    using NodeID_t = typename Jet::TensorNetwork<Jet::Tensor<T>>::NodeID_t;
+    using Node = typename Jet::TensorNetwork<Jet::Tensor<T>>::Node;
+    using Edge = typename Jet::TensorNetwork<Jet::Tensor<T>>::Edge;
 
     const std::string class_name = "TensorNetwork" + Type<T>::suffix;
     const std::string class_name_node = "TensorNetworkNode" + Type<T>::suffix;
