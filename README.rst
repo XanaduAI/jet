@@ -61,11 +61,11 @@ include path and OpenBLAS is installed on your system, you can compile the
     #include <Jet.hpp>
 
     int main(){
-        using tensor_t = Jet::Tensor<std::complex<float>>;
+        using Tensor = Jet::Tensor<std::complex<float>>;
 
-        std::array<tensor_t, 3> tensors;
-        tensors[0] = tensor_t({"i", "j", "k"}, {2, 2, 2});
-        tensors[1] = tensor_t({"j", "k", "l"}, {2, 2, 2});
+        std::array<Tensor, 3> tensors;
+        tensors[0] = Tensor({"i", "j", "k"}, {2, 2, 2});
+        tensors[1] = Tensor({"j", "k", "l"}, {2, 2, 2});
 
         tensors[0].FillRandom();
         tensors[1].FillRandom();
