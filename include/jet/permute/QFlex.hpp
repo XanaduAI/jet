@@ -26,7 +26,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     {
         std::vector<DataType> data(data_);
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data =
+        PlanData precomputed_data =
             PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
         FastTranspose(data, precomputed_data, scratch);
         return data;
@@ -42,7 +42,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     {
         data_out = data_;
         std::vector<DataType> scratch(data_);
-        PrecomputedQflexTransposeData precomputed_data =
+        PlanData precomputed_data =
             PrecomputeFastTransposeData(data_out, shape, old_indices,
                                         new_indices);
         FastTranspose(data_out, precomputed_data, scratch);
@@ -54,7 +54,12 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
 
-    struct PrecomputedQflexTransposeData {
+    /**
+     * @brief SoA for data used to plan permutation.
+     * 
+     */
+    class PlanData {
+      public:
 
         std::vector<std::vector<size_t>> map_old_to_new_position;
         std::vector<size_t> dim_left;
@@ -129,45 +134,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     }
 
     template <typename DataType>
-    void PrecomputedLeftOrRightTranspose(
-        const std::vector<size_t> &map_old_to_new_position,
-        size_t dim_left, size_t dim_right, size_t tensor_dim, PermuteType type,
-        std::vector<DataType> &data_in, std::vector<DataType> &scratch)
-    {
-        auto data_ = data_in.data();
-        auto scratch_copy = scratch.data();
-
-        if (type == PermuteType::PermuteRight) {
-            DataType *temp_data = new DataType[dim_right];
-            for (size_t pl = 0; pl < dim_left; ++pl) {
-                size_t offset = pl * dim_right;
-                for (size_t pr = 0; pr < dim_right; ++pr)
-                    *(temp_data + pr) = *(data_ + offset + pr);
-                for (size_t pr = 0; pr < dim_right; ++pr)
-                    *(data_ + offset + map_old_to_new_position[pr]) =
-                        *(temp_data + pr);
-            }
-            delete[] temp_data;
-            temp_data = nullptr;
-        }
-        else {
-            std::copy(data_, data_ + tensor_dim, scratch_copy);
-            // Move back.
-            for (size_t pl = 0; pl < dim_left; ++pl) {
-                size_t old_offset = pl * dim_right;
-                size_t new_offset =
-                    map_old_to_new_position[pl] * dim_right;
-                std::copy(scratch_copy + old_offset,
-                          scratch_copy + old_offset + dim_right,
-                          data_ + new_offset);
-            }
-        }
-    }
-
-    template <typename DataType>
     void
     FastTranspose(std::vector<DataType> &data_in,
-                  const PrecomputedQflexTransposeData &precomputed_data,
+                  const PlanData &precomputed_data,
                   std::vector<DataType> &scratch_in)
     {
         auto data_ = data_in.data();
@@ -232,7 +201,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     void PrecomputeRightTransposeData(
         const std::vector<std::string> &old_ordering,
         const std::vector<std::string> &new_ordering, size_t tensor_size,
-        PrecomputedQflexTransposeData &precomputed_data)
+        PlanData &precomputed_data)
     {
 
         // Don't do anything if there is nothing to reorder.
@@ -285,7 +254,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     PrecomputeLeftTransposeData(const std::vector<std::string> &old_ordering,
                                 const std::vector<std::string> &new_ordering,
                                 size_t tensor_size,
-                                PrecomputedQflexTransposeData &precomputed_data)
+                                PlanData &precomputed_data)
     {
 
         // Don't do anything if there is nothing to reorder.
@@ -335,14 +304,14 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
     // has to have dimensions that are multiples of 2
     template <typename DataType>
-    PrecomputedQflexTransposeData
+    PlanData
     PrecomputeFastTransposeData(std::vector<DataType> &tensor_data,
                                 const std::vector<size_t> &shape,
                                 const std::vector<std::string> &old_indices,
                                 const std::vector<std::string> &new_ordering)
     {
         using namespace Jet::Utilities;
-        PrecomputedQflexTransposeData precomputed_data;
+        PlanData precomputed_data;
 
         for (size_t i = 0; i < shape.size(); ++i) {
             JET_ABORT_IF_NOT(is_pow_2(shape[i]),
@@ -375,6 +344,11 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         precomputed_data.old_ordering = old_ordering;
         precomputed_data.old_dimensions = old_dimensions;
         precomputed_data.total_dim = total_dim;
+
+        if (new_ordering == old_ordering) {
+            precomputed_data.no_transpose = true;
+            return precomputed_data;
+        }
 
         // Create binary orderings:
         std::vector<size_t> old_logs(num_indices);
@@ -417,10 +391,6 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
         size_t tensor_size = tensor_data.size();
 
-        if (new_ordering == old_ordering) {
-            precomputed_data.no_transpose = true;
-            return precomputed_data;
-        }
         // Up to here, I have created old_binary_ordering and
         // new_binary_ordering.
 
