@@ -63,51 +63,51 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         std::vector<PermuteType> types;
 
         std::vector<std::string> new_ordering;
-        std::vector<std::size_t> new_dimensions;
+        std::vector<size_t> new_dimensions;
         std::vector<std::string> old_ordering;
-        std::vector<std::size_t> old_dimensions;
+        std::vector<size_t> old_dimensions;
         bool no_transpose;
         size_t total_dim;
     };
 
     void GenerateBinaryReorderingMap(
-        const std::vector<std::size_t> &map_old_to_new_idxpos,
-        std::vector<std::size_t> &map_old_to_new_position)
+        const std::vector<size_t> &map_old_to_new_idxpos,
+        std::vector<size_t> &map_old_to_new_position)
     {
-        std::size_t dim = 2; // Hard coded!
-        std::size_t num_indices = map_old_to_new_idxpos.size();
+        size_t dim = 2; // Hard coded!
+        size_t num_indices = map_old_to_new_idxpos.size();
 
         // Check
         if (num_indices == 0)
             JET_ABORT("Number of indices cannot be zero.");
 
         // Check
-        if ((std::size_t)std::pow(dim, num_indices) !=
+        if ((size_t)std::pow(dim, num_indices) !=
             map_old_to_new_position.size()) {
             JET_ABORT("Size of map must be equal to 2^num_indices");
         }
 
         // Define super dimensions. See _naive_reorder().
-        std::vector<std::size_t> old_dimensions(num_indices, dim);
-        std::vector<std::size_t> new_dimensions(num_indices, dim);
-        std::vector<std::size_t> old_super_dimensions(num_indices);
-        std::vector<std::size_t> new_super_dimensions(num_indices);
+        std::vector<size_t> old_dimensions(num_indices, dim);
+        std::vector<size_t> new_dimensions(num_indices, dim);
+        std::vector<size_t> old_super_dimensions(num_indices);
+        std::vector<size_t> new_super_dimensions(num_indices);
         old_super_dimensions[num_indices - 1] = 1;
         new_super_dimensions[num_indices - 1] = 1;
 
         if (num_indices >= 2)
-            for (std::size_t i = num_indices; --i;) {
+            for (size_t i = num_indices; --i;) {
                 old_super_dimensions[i - 1] = old_super_dimensions[i] * dim;
                 new_super_dimensions[i - 1] = new_super_dimensions[i] * dim;
             }
 
         // Iterate and generate map.
-        std::vector<std::size_t> old_counter(num_indices, 0);
+        std::vector<size_t> old_counter(num_indices, 0);
 
         while (true) {
-            std::size_t po{0}, pn{0}; // Position of the data, old and new.
+            size_t po{0}, pn{0}; // Position of the data, old and new.
 
-            for (std::size_t i = 0; i < num_indices; ++i) {
+            for (size_t i = 0; i < num_indices; ++i) {
                 po += old_super_dimensions[i] * old_counter[i];
                 pn += new_super_dimensions[map_old_to_new_idxpos[i]] *
                       old_counter[i];
@@ -115,7 +115,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             map_old_to_new_position[po] = pn;
 
             bool complete{true};
-            for (std::size_t j = num_indices; j--;) {
+            for (size_t j = num_indices; j--;) {
                 if (++old_counter[j] < old_dimensions[j]) {
                     complete = false;
                     break;
@@ -130,7 +130,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
     template <typename DataType>
     void PrecomputedLeftOrRightTranspose(
-        const std::vector<std::size_t> &map_old_to_new_position,
+        const std::vector<size_t> &map_old_to_new_position,
         size_t dim_left, size_t dim_right, size_t tensor_dim, PermuteType type,
         std::vector<DataType> &data_in, std::vector<DataType> &scratch)
     {
@@ -139,11 +139,11 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
         if (type == PermuteType::PermuteRight) {
             DataType *temp_data = new DataType[dim_right];
-            for (std::size_t pl = 0; pl < dim_left; ++pl) {
-                std::size_t offset = pl * dim_right;
-                for (std::size_t pr = 0; pr < dim_right; ++pr)
+            for (size_t pl = 0; pl < dim_left; ++pl) {
+                size_t offset = pl * dim_right;
+                for (size_t pr = 0; pr < dim_right; ++pr)
                     *(temp_data + pr) = *(data_ + offset + pr);
-                for (std::size_t pr = 0; pr < dim_right; ++pr)
+                for (size_t pr = 0; pr < dim_right; ++pr)
                     *(data_ + offset + map_old_to_new_position[pr]) =
                         *(temp_data + pr);
             }
@@ -153,9 +153,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         else {
             std::copy(data_, data_ + tensor_dim, scratch_copy);
             // Move back.
-            for (std::size_t pl = 0; pl < dim_left; ++pl) {
-                std::size_t old_offset = pl * dim_right;
-                std::size_t new_offset =
+            for (size_t pl = 0; pl < dim_left; ++pl) {
+                size_t old_offset = pl * dim_right;
+                size_t new_offset =
                     map_old_to_new_position[pl] * dim_right;
                 std::copy(scratch_copy + old_offset,
                           scratch_copy + old_offset + dim_right,
@@ -190,11 +190,11 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 #if defined _OPENMP
 #pragma omp for schedule(static)
 #endif
-                    for (std::size_t pl = 0; pl < dim_left; ++pl) {
-                        std::size_t offset = pl * dim_right;
-                        for (std::size_t pr = 0; pr < dim_right; ++pr)
+                    for (size_t pl = 0; pl < dim_left; ++pl) {
+                        size_t offset = pl * dim_right;
+                        for (size_t pr = 0; pr < dim_right; ++pr)
                             *(temp_data + pr) = *(data_ + offset + pr);
-                        for (std::size_t pr = 0; pr < dim_right; ++pr)
+                        for (size_t pr = 0; pr < dim_right; ++pr)
                             *(data_ + offset + map_old_to_new_position[pr]) =
                                 *(temp_data + pr);
                     }
@@ -205,7 +205,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 #if defined _OPENMP
 #pragma omp parallel for schedule(static, blocksize_)
 #endif
-                for (std::size_t p = 0; p < tensor_dim; ++p) {
+                for (size_t p = 0; p < tensor_dim; ++p) {
                     *(scratch + p) = *(data_ + p);
                 }
 #if defined _OPENMP
@@ -215,11 +215,11 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 #if defined _OPENMP
 #pragma omp for schedule(static)
 #endif
-                    for (std::size_t pl = 0; pl < dim_left; ++pl) {
-                        std::size_t old_offset = pl * dim_right;
-                        std::size_t new_offset =
+                    for (size_t pl = 0; pl < dim_left; ++pl) {
+                        size_t old_offset = pl * dim_right;
+                        size_t new_offset =
                             map_old_to_new_position[pl] * dim_right;
-                        for (std::size_t pr = 0; pr < dim_right; ++pr) {
+                        for (size_t pr = 0; pr < dim_right; ++pr) {
                             *(data_ + new_offset + pr) =
                                 *(scratch + old_offset + pr);
                         }
@@ -242,19 +242,19 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
         // Create dim, num_indices, map_old_to_new_idxpos from old to new
         // indices, old_dimensions, new_dimensions, and total_dim.
-        std::size_t dim = 2;
-        std::size_t num_indices = old_ordering.size();
-        std::vector<std::size_t> map_old_to_new_idxpos(num_indices);
-        std::vector<std::size_t> old_dimensions(num_indices, dim);
-        std::vector<std::size_t> new_dimensions(num_indices, dim);
+        size_t dim = 2;
+        size_t num_indices = old_ordering.size();
+        std::vector<size_t> map_old_to_new_idxpos(num_indices);
+        std::vector<size_t> old_dimensions(num_indices, dim);
+        std::vector<size_t> new_dimensions(num_indices, dim);
 
-        std::size_t total_dim = 1;
-        for (std::size_t i = 0; i < num_indices; ++i) {
+        size_t total_dim = 1;
+        for (size_t i = 0; i < num_indices; ++i) {
             total_dim *= old_dimensions[i];
         }
 
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            for (std::size_t j = 0; j < num_indices; ++j) {
+        for (size_t i = 0; i < num_indices; ++i) {
+            for (size_t j = 0; j < num_indices; ++j) {
                 if (old_ordering[i] == new_ordering[j]) {
                     map_old_to_new_idxpos[i] = j;
                     new_dimensions[j] = old_dimensions[i];
@@ -263,14 +263,14 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             }
         }
 
-        std::vector<std::size_t> map_old_to_new_position(total_dim);
+        std::vector<size_t> map_old_to_new_position(total_dim);
         GenerateBinaryReorderingMap(map_old_to_new_idxpos,
                                     map_old_to_new_position);
 
         // With the map_old_to_new_position, we are ready to reorder within
         // small chuncks.
-        std::size_t dim_right = total_dim;
-        std::size_t dim_left =
+        size_t dim_right = total_dim;
+        size_t dim_left =
             tensor_size / dim_right; // Remember, it's all powers of 2, so OK.
 
         precomputed_data.dim_left.push_back(dim_left);
@@ -295,16 +295,16 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
         // Create dim, num_indices, map_old_to_new_idxpos from old to new
         // indices, old_dimensions, new_dimensions, and total_dim.
-        std::size_t dim = 2;
-        std::size_t num_indices = old_ordering.size();
-        std::vector<std::size_t> map_old_to_new_idxpos(num_indices);
-        std::vector<std::size_t> old_dimensions(num_indices, dim);
-        std::vector<std::size_t> new_dimensions(num_indices, dim);
-        std::size_t total_dim = 1;
-        for (std::size_t i = 0; i < num_indices; ++i)
+        size_t dim = 2;
+        size_t num_indices = old_ordering.size();
+        std::vector<size_t> map_old_to_new_idxpos(num_indices);
+        std::vector<size_t> old_dimensions(num_indices, dim);
+        std::vector<size_t> new_dimensions(num_indices, dim);
+        size_t total_dim = 1;
+        for (size_t i = 0; i < num_indices; ++i)
             total_dim *= old_dimensions[i];
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            for (std::size_t j = 0; j < num_indices; ++j) {
+        for (size_t i = 0; i < num_indices; ++i) {
+            for (size_t j = 0; j < num_indices; ++j) {
                 if (old_ordering[i] == new_ordering[j]) {
                     map_old_to_new_idxpos[i] = j;
                     new_dimensions[j] = old_dimensions[i];
@@ -314,14 +314,14 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         }
 
         // on _REORDER_MAPS.
-        std::vector<std::size_t> map_old_to_new_position(total_dim);
+        std::vector<size_t> map_old_to_new_position(total_dim);
         GenerateBinaryReorderingMap(map_old_to_new_idxpos,
                                     map_old_to_new_position);
 
         // With the map_old_to_new_position, we are ready to move small chunks.
-        std::size_t dim_left = total_dim;
-        std::size_t tensor_dim = tensor_size;
-        std::size_t dim_right =
+        size_t dim_left = total_dim;
+        size_t tensor_dim = tensor_size;
+        size_t dim_right =
             tensor_dim / dim_left; // Remember, it's all powers
         // of 2, so OK.
 
@@ -344,24 +344,24 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         using namespace Jet::Utilities;
         PrecomputedQflexTransposeData precomputed_data;
 
-        for (std::size_t i = 0; i < shape.size(); ++i) {
+        for (size_t i = 0; i < shape.size(); ++i) {
             JET_ABORT_IF_NOT(is_pow_2(shape[i]),
                              "Fast transpose expects power-of-2 data.");
         }
 
         // Create binary orderings.
         std::vector<std::string> old_ordering(old_indices);
-        std::vector<std::size_t> old_dimensions(shape);
-        std::size_t num_indices = old_ordering.size();
-        std::size_t total_dim = 1;
-        for (std::size_t i = 0; i < num_indices; ++i)
+        std::vector<size_t> old_dimensions(shape);
+        size_t num_indices = old_ordering.size();
+        size_t total_dim = 1;
+        for (size_t i = 0; i < num_indices; ++i)
             total_dim *= old_dimensions[i];
         // Create map_old_to_new_idxpos from old to new indices, and
         // new_dimensions.
-        std::vector<std::size_t> map_old_to_new_idxpos(num_indices);
-        std::vector<std::size_t> new_dimensions(num_indices);
-        for (std::size_t i = 0; i < num_indices; ++i) {
-            for (std::size_t j = 0; j < num_indices; ++j) {
+        std::vector<size_t> map_old_to_new_idxpos(num_indices);
+        std::vector<size_t> new_dimensions(num_indices);
+        for (size_t i = 0; i < num_indices; ++i) {
+            for (size_t j = 0; j < num_indices; ++j) {
                 if (old_ordering[i] == new_ordering[j]) {
                     map_old_to_new_idxpos[i] = j;
                     new_dimensions[j] = old_dimensions[i];
@@ -377,17 +377,17 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         precomputed_data.total_dim = total_dim;
 
         // Create binary orderings:
-        std::vector<std::size_t> old_logs(num_indices);
-        for (std::size_t i = 0; i < num_indices; ++i) {
+        std::vector<size_t> old_logs(num_indices);
+        for (size_t i = 0; i < num_indices; ++i) {
             old_logs[i] = fast_log2(old_dimensions[i]);
         }
-        std::size_t num_binary_indices = fast_log2(total_dim);
+        size_t num_binary_indices = fast_log2(total_dim);
         // Create map from old letter to new group of letters.
         std::unordered_map<std::string, std::vector<std::string>> binary_groups;
-        std::size_t alphabet_position = 0;
-        for (std::size_t i = 0; i < num_indices; ++i) {
+        size_t alphabet_position = 0;
+        for (size_t i = 0; i < num_indices; ++i) {
             std::vector<std::string> group(old_logs[i]);
-            for (std::size_t j = 0; j < old_logs[i]; ++j) {
+            for (size_t j = 0; j < old_logs[i]; ++j) {
                 group[j] = GenerateStringIndex(alphabet_position);
                 ++alphabet_position;
             }
@@ -396,19 +396,19 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         // Create old and new binary ordering in letters.
         std::vector<std::string> old_binary_ordering(num_binary_indices);
         std::vector<std::string> new_binary_ordering(num_binary_indices);
-        std::size_t binary_position = 0;
-        for (std::size_t i = 0; i < num_indices; ++i) {
+        size_t binary_position = 0;
+        for (size_t i = 0; i < num_indices; ++i) {
             std::string old_index = old_ordering[i];
-            for (std::size_t j = 0; j < binary_groups[old_index].size(); ++j) {
+            for (size_t j = 0; j < binary_groups[old_index].size(); ++j) {
                 old_binary_ordering[binary_position] =
                     binary_groups[old_index][j];
                 ++binary_position;
             }
         }
         binary_position = 0;
-        for (std::size_t i = 0; i < num_indices; ++i) {
+        for (size_t i = 0; i < num_indices; ++i) {
             std::string new_index = new_ordering[i];
-            for (std::size_t j = 0; j < binary_groups[new_index].size(); ++j) {
+            for (size_t j = 0; j < binary_groups[new_index].size(); ++j) {
                 new_binary_ordering[binary_position] =
                     binary_groups[new_index][j];
                 ++binary_position;
@@ -444,9 +444,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
 
-            constexpr std::size_t Lr = fast_log2(blocksize_);
-            std::size_t Ll = new_binary_ordering.size() - Lr;
-            constexpr std::size_t Rr = fast_log2(min_dims_);
+            constexpr size_t Lr = fast_log2(blocksize_);
+            size_t Ll = new_binary_ordering.size() - Lr;
+            constexpr size_t Rr = fast_log2(min_dims_);
             std::vector<std::string> Ll_old_indices(
                 old_binary_ordering.begin(), old_binary_ordering.begin() + Ll);
             std::vector<std::string> Ll_new_indices(
@@ -467,8 +467,8 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             if (Rr == 0)
                 JET_ABORT("Rr move cannot be zero.");
 
-            for (std::size_t i = 7; i--;) {
-                std::size_t extended_Rr = Rr + i - 1;
+            for (size_t i = 7; i--;) {
+                size_t extended_Rr = Rr + i - 1;
                 std::vector<std::string> Rr_old_indices(
                     old_binary_ordering.end() - extended_Rr,
                     old_binary_ordering.end());
@@ -510,15 +510,15 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 JET_ABORT(
                     "New ordering is too small to be used at this point.");
 
-            constexpr std::size_t Lr = fast_log2(blocksize_);
-            std::size_t Ll = new_binary_ordering.size() - Lr;
-            constexpr std::size_t Rr = fast_log2(min_dims_);
-            std::size_t Rl = new_binary_ordering.size() - Rr;
+            constexpr size_t Lr = fast_log2(blocksize_);
+            size_t Ll = new_binary_ordering.size() - Lr;
+            constexpr size_t Rr = fast_log2(min_dims_);
+            size_t Rl = new_binary_ordering.size() - Rr;
             // Helper vectors that can be reused.
             std::vector<std::string> Lr_indices(Lr), Ll_indices(Ll), Rr_indices(Rr), Rl_indices(Rl);
-            for (std::size_t i = 0; i < Rr; ++i)
+            for (size_t i = 0; i < Rr; ++i)
                 Rr_indices[i] = new_binary_ordering[i + Rl];
-            for (std::size_t i = 0; i < Rl; ++i)
+            for (size_t i = 0; i < Rl; ++i)
                 Rl_indices[i] = old_binary_ordering[i];
             std::vector<std::string> Rr_new_in_Rl_old = VectorIntersection(Rl_indices, Rr_indices);
 
@@ -528,7 +528,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 VectorConcatenation(Rl_old_not_in_Rr_new, Rr_new_in_Rl_old);
 
             std::vector<std::string> Rl_zeroth_step(Rl);
-            for (std::size_t i = 0; i < Rl; ++i)
+            for (size_t i = 0; i < Rl; ++i)
                 Rl_zeroth_step[i] = old_binary_ordering[i];
 
             PrecomputeLeftTransposeData(Rl_zeroth_step, Rl_first_step, tensor_size, precomputed_data);
