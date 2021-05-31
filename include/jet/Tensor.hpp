@@ -213,9 +213,7 @@ Tensor<T> Transpose(const Tensor<T> &A,
     }
     auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
     return Tensor<T>{
-        new_indices, std::move(new_shape),
-        std::move(permuter.Transpose(A.GetData(), A.GetShape(), A.GetIndices(),
-                                     new_indices))};
+        new_indices, new_shape, permuter.Transpose(A.GetData(), A.GetShape(), A.GetIndices(), new_indices)};
 }
 
 /**
