@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -8,31 +9,47 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "Type.hpp"
 #include <Jet.hpp>
 
 namespace py = pybind11;
 
-template <class Tensor>
-void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
+/**
+ * @brief Adds Python bindings for the `TensorNetwork` class.
+ *
+ * @tparam T Template parameter of the `Tensor` class.
+ * @param m Jet pybind11 module.
+ */
+template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
 {
+    using TensorNetwork = Jet::TensorNetwork<Jet::Tensor<T>>;
+    using NodeID_t = typename Jet::TensorNetwork<Tensor<T>>::NodeID_t;
+    using Node = typename Jet::TensorNetwork<Tensor<T>>::Node;
+    using Edge = typename Jet::TensorNetwork<Tensor<T>>::Edge;
 
-    using TensorNetwork = Jet::TensorNetwork<Tensor>;
-    using NodeID_t = typename Jet::TensorNetwork<Tensor>::NodeID_t;
-    using Node = typename Jet::TensorNetwork<Tensor>::Node;
-    using Edge = typename Jet::TensorNetwork<Tensor>::Edge;
+    const std::string class_name = "TensorNetwork" + Type<T>::suffix;
+    const std::string class_name_node = "TensorNetworkNode" + Type<T>::suffix;
+    const std::string class_name_edge = "TensorNetworkEdge" + Type<T>::suffix;
 
     auto cls =
-        py::class_<TensorNetwork>(m, name, R"(
+        py::class_<TensorNetwork>(m, class_name.c_str(), R"(
         TensorNetwork represents a tensor network)")
 
+            // Static properties
+            // -----------------------------------------------------------------
+
+            .def_property_readonly_static(
+                "dtype", [](const py::object &) { return Type<T>::dtype; },
+                "Data type of this tensor network.")
+
             // Constructors
-            // --------------------------------------------------------------------
+            // -----------------------------------------------------------------
 
             .def(py::init<>(), R"(
             Constructs an empty tensor network)")
 
             // Magic methods
-            // --------------------------------------------------------------------
+            // -----------------------------------------------------------------
 
             .def("__str__",
                  [](const TensorNetwork &tn) {
@@ -42,7 +59,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                  })
 
             // Properties
-            // --------------------------------------------------------------------
+            // -----------------------------------------------------------------
 
             .def_property_readonly("index_to_edge_map",
                                    &TensorNetwork::GetIndexToEdgeMap, R"(
@@ -77,7 +94,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                 The number of unique indices in this tensor network)")
 
             // Other
-            // --------------------------------------------------------------------
+            // -----------------------------------------------------------------
 
             .def("add_tensor", &TensorNetwork::AddTensor, py::arg("tensor"),
                  py::arg("tags") = std::vector<std::string>(), R"(
@@ -106,7 +123,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
                  py::arg("path") = std::vector<std::pair<size_t, size_t>>(), R"(
                 Contracts a tensor network along an optionally-provided path)");
 
-    py::class_<Node>(cls, (std::string(name) + "Node").c_str())
+    py::class_<Node>(cls, class_name_node.c_str())
         .def_readonly("id", &Node::id)
         .def_readonly("name", &Node::name)
         .def_readonly("indices", &Node::indices)
@@ -114,7 +131,7 @@ void AddBindingsForTensorNetwork(py::module_ &m, const char *name)
         .def_readonly("contracted", &Node::contracted)
         .def_readonly("tensor", &Node::tensor);
 
-    py::class_<Edge>(cls, (std::string(name) + "Edge").c_str())
+    py::class_<Edge>(cls, class_name_edge.c_str())
         .def_readonly("dim", &Edge::dim)
         .def_readonly("node_ids", &Edge::node_ids)
         .def("__eq__", &Edge::operator==);

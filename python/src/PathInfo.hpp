@@ -1,17 +1,19 @@
 #pragma once
 
+#include <string>
+
 #include <pybind11/pybind11.h>
 
 #include <Jet.hpp>
 
 namespace py = pybind11;
 
-template <class Tensor, class... Tensors>
+template <class T, class... Ts>
 void bind_constructors(py::class_<Jet::PathInfo> &c)
 {
-    c.def(py::init<const Jet::TensorNetwork<Tensor> &,
-                   const Jet::PathInfo::Path &>(),
-          py::arg("tn"), py::arg("path") = Jet::PathInfo::Path(), R"(
+    c.def(py::init<const Jet::TensorNetwork<Jet::Tensor<T>> &,
+                   const Jet::PathInfo::path_t &>(),
+          py::arg("tn"), py::arg("path") = Jet::PathInfo::path_t(), R"(
             Constructs a populated PathInfo for the given path
             through a tensor network
 
@@ -21,14 +23,19 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
                       the tensor network
             )");
 
-    if constexpr (sizeof...(Tensors) > 0) {
-        bind_constructors<Tensors...>(c);
+    if constexpr (sizeof...(Ts) > 0) {
+        bind_constructors<Ts...>(c);
     }
 }
 
-template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
+/**
+ * @brief Adds Python bindings for the include/jet/PathInfo.hpp file.
+ *
+ * @tparam T Template parameter of the `Tensor` class.
+ * @param m Jet pybind11 module.
+ */
+template <class... Ts> void AddBindingsForPathInfo(py::module_ &m)
 {
-
     py::class_<Jet::PathStepInfo>(m, "PathStepInfo", R"(
         PathStepInfo represents the contraction metadata associated
         with a node in a TensorNetwork)")
@@ -86,6 +93,6 @@ template <class... Tensors> void AddBindingsForPathInfo(py::module_ &m)
             Computes the total memory required to contract the tensor
             network along this path.)");
 
-    // Add constructor bindings for each Tensor type
-    bind_constructors<Tensors...>(cls);
+    // Add constructor bindings for each Tensor data type.
+    bind_constructors<Ts...>(cls);
 }

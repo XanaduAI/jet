@@ -2,6 +2,10 @@
 
 ### New features since last release
 
+* Python bindings are now available for the `TaskBasedCpuContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
+
+* Python bindings now include a factory method which accepts a `dtype` parameter. [(#18)](https://github.com/XanaduAI/jet/pull/18)
+
 * Running `make build` from the `python` directory now creates a Python distribution package. [(#13)](https://github.com/XanaduAI/jet/pull/13)
 
 * A new intermediate representation (IR) is added, including a parser, IR representation program, and a Strawberry Fields interface. [(#11)](https://github.com/XanaduAI/jet/pull/11)
@@ -30,6 +34,8 @@
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
+
+* `TaskBasedCpuContractor::AddReductionTask()` now handles the reduction of non-scalar tensors. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with one another. [(#6)](https://github.com/XanaduAI/jet/pull/6)
 

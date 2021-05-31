@@ -1,11 +1,13 @@
 #include <complex>
 #include <sstream>
+#include <string>
 
 #include <pybind11/complex.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "Type.hpp"
 #include <Jet.hpp>
 
 namespace py = pybind11;
@@ -13,15 +15,16 @@ namespace py = pybind11;
 /**
  * @brief Adds Python bindings for the include/jet/Tensor.hpp file.
  *
- * @tparam T Template parameter for Jet::Tensor.
+ * @tparam T Template parameter of the `Tensor` class.
  * @param m Jet pybind11 module.
- * @param name Name of the Tensor class binding.
  */
-template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
+template <class T> void AddBindingsForTensor(py::module_ &m)
 {
-    using Tensor = Jet::Tensor<T>;
+    using tensor_t = Jet::Tensor<T>;
 
-    py::class_<Tensor>(m, name, R"(
+    const std::string class_name = "Tensor" + Type<T>::suffix;
+
+    py::class_<tensor_t>(m, class_name.c_str(), R"(
         This class represents an n-rank data structure of complex-valued data
         for tensor operations. We use the following conventions:
 
@@ -31,19 +34,26 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             - "Shape" refers to the dimensions of a tensor; the number of
               dimensions is the rank of the tensor.
     )")
+        // Static properties
+        // ---------------------------------------------------------------------
+
+        .def_property_readonly_static(
+            "dtype", [](const py::object &) { return Type<T>::dtype; },
+            "Data type of this tensor.")
+
         // Static functions
         // ---------------------------------------------------------------------
 
-        .def_static("add_tensors", &Tensor::AddTensors, py::arg("A"),
+        .def_static("add_tensors", &tensor_t::AddTensors, py::arg("A"),
                     py::arg("B"), "Alias for add_tensors().")
 
-        .def_static("contract_tensors", &Tensor::ContractTensors, py::arg("A"),
-                    py::arg("B"), "Alias for contract_tensors().")
+        .def_static("contract_tensors", &tensor_t::ContractTensors,
+                    py::arg("A"), py::arg("B"), "Alias for contract_tensors().")
 
-        .def_static("reshape", &Tensor::Reshape, py::arg("tensor"),
+        .def_static("reshape", &tensor_t::Reshape, py::arg("tensor"),
                     py::arg("shape"), "Alias for reshape().")
 
-        .def_static("slice_index", &Tensor::SliceIndex, py::arg("tensor"),
+        .def_static("slice_index", &tensor_t::SliceIndex, py::arg("tensor"),
                     py::arg("index"), py::arg("value"),
                     "Alias for slice_index().")
 
@@ -90,7 +100,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 data: row-major encoded complex data representation.
         )")
 
-        .def(py::init<const Tensor &>(), py::arg("other"), R"(
+        .def(py::init<const tensor_t &>(), py::arg("other"), R"(
             Constructs a copy of a tensor object.
 
             Args:
@@ -100,20 +110,20 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
         // Properties
         // ---------------------------------------------------------------------
 
-        .def_property("shape", &Tensor::GetShape, &Tensor::SetShape,
+        .def_property("shape", &tensor_t::GetShape, &tensor_t::SetShape,
                       "List containing the dimension of each tensor index.")
 
         .def_property_readonly("index_to_dimension_map",
-                               &Tensor::GetIndexToDimension,
+                               &tensor_t::GetIndexToDimension,
                                "Mapping from index labels to dimension sizes.")
 
-        .def_property_readonly("data", &Tensor::GetData,
+        .def_property_readonly("data", &tensor_t::GetData,
                                "Complex data values in row-major order.")
 
-        .def_property_readonly("indices", &Tensor::GetIndices,
+        .def_property_readonly("indices", &tensor_t::GetIndices,
                                "List of index labels.")
 
-        .def_property_readonly("scalar", &Tensor::GetScalar,
+        .def_property_readonly("scalar", &tensor_t::GetScalar,
                                "First data value of the tensor.")
 
         // Special methods
@@ -121,7 +131,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
         .def(
             "__getitem__",
-            [](const Tensor &tensor, size_t pos) { return tensor[pos]; },
+            [](const tensor_t &tensor, size_t pos) { return tensor[pos]; },
             py::arg("pos"), R"(
             Returns the tensor object data at the given local index. Supplying
             an index greater than or equal to the size of the tensor is
@@ -135,12 +145,12 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 Complex data value at the given index.
         )")
 
-        .def("__len__", &Tensor::GetSize,
+        .def("__len__", &tensor_t::GetSize,
              "Returns the number of data elements in the tensor.")
 
         .def(
             "__repr__",
-            [](const Tensor &tensor) {
+            [](const tensor_t &tensor) {
                 std::stringstream stream;
                 stream << tensor;
                 return stream.str();
@@ -156,13 +166,13 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
         // Other
         // ---------------------------------------------------------------------
 
-        .def("fill_random", py::overload_cast<>(&Tensor::FillRandom), R"(
+        .def("fill_random", py::overload_cast<>(&tensor_t::FillRandom), R"(
             Assigns random values to the tensor data.  The real and imaginary
             components of each datum will be independently sampled from a
             uniform distribution with support over [-1, 1].
         )")
 
-        .def("fill_random", py::overload_cast<size_t>(&Tensor::FillRandom),
+        .def("fill_random", py::overload_cast<size_t>(&tensor_t::FillRandom),
              py::arg("seed"), R"(
             Assigns random values to the tensor data.  The real and imaginary
             components of each datum will be independently sampled from a
@@ -173,7 +183,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 seed: seed to supply to the RNG engine.
         )")
 
-        .def("init_indices_and_shape", &Tensor::InitIndicesAndShape,
+        .def("init_indices_and_shape", &tensor_t::InitIndicesAndShape,
              py::arg("indices"), py::arg("shape"), R"(
             Initializes the indices and shape of a tensor object. The indices
             and shape must be ordered to map directly such that `indices[i]` has
@@ -184,7 +194,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 shape: dimension of each tensor index.
         )")
 
-        .def("get_value", &Tensor::GetValue, py::arg("indices"), R"(
+        .def("get_value", &tensor_t::GetValue, py::arg("indices"), R"(
             Returns the tensor data value at the given n-dimensional index.
 
             Args:
@@ -194,14 +204,14 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 Complex data value at the given index.
         )")
 
-        .def("is_scalar", &Tensor::IsScalar, R"(
+        .def("is_scalar", &tensor_t::IsScalar, R"(
             Reports whether the tensor is a scalar.
 
             Returns:
                 True if the tensor is of rank 0.  Otherwise, False is returned.
         )")
 
-        .def("rename_index", &Tensor::RenameIndex, py::arg("pos"),
+        .def("rename_index", &tensor_t::RenameIndex, py::arg("pos"),
              py::arg("new_label"), R"(
             Renames the index label at the given position.
 
@@ -210,7 +220,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
                 new_label: New label.
         )")
 
-        .def("set_value", &Tensor::SetValue, py::arg("indices"),
+        .def("set_value", &tensor_t::SetValue, py::arg("indices"),
              py::arg("value"), R"(
             Sets the tensor data value at the given n-dimensional index.
 
@@ -331,7 +341,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
           )");
 
     m.def("transpose",
-          py::overload_cast<const Tensor &, const std::vector<std::string> &>(
+          py::overload_cast<const tensor_t &, const std::vector<std::string> &>(
               Jet::Transpose<T>),
           py::arg("tensor"), py::arg("indices"), R"(
             Transposes the indices of a tensor object.
@@ -345,7 +355,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
           )");
 
     m.def("transpose",
-          py::overload_cast<const Tensor &, const std::vector<size_t> &>(
+          py::overload_cast<const tensor_t &, const std::vector<size_t> &>(
               Jet::Transpose<T>),
           py::arg("tensor"), py::arg("ordering"), R"(
             Transposes the indices of a tensor object.
