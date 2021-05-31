@@ -112,6 +112,19 @@ class PathInfo {
         }
     }
 
+
+  PathInfo(const PathInfo& sub_path_info, const path_t & path){
+    *this = sub_path_info;
+    for (const auto &[node_id_1, node_id_2] : path) {
+      path_.push_back({node_id_1, node_id_2});
+      JET_ABORT_IF_NOT(node_id_1 < steps_.size(),
+		       "Node ID 1 in contraction path pair is invalid.");
+      JET_ABORT_IF_NOT(node_id_2 < steps_.size(),
+		       "Node ID 2 in contraction path pair is invalid.");
+      ContractSteps_(node_id_1, node_id_2);
+    }
+  }
+  
     /**
      * @brief Returns the index-to-size map of this path.
      *
@@ -252,7 +265,7 @@ class PathInfo {
     /// This information is used to estimate memory requirements and floating-
     /// point operation counts.
     index_to_size_map_t index_to_size_map_;
-
+  
     /**
      * @brief Contracts two path steps.
      *
