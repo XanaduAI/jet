@@ -17,8 +17,6 @@ namespace Jet {
  */
 template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
   public:
-    QFlexPermuter() {}
-
     template <class DataType>
     std::vector<DataType> Transpose(const std::vector<DataType> &data_,
                                     const std::vector<size_t> &shape,
@@ -538,15 +536,19 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             std::vector<std::string> Lr_first_step = VectorConcatenation(
                 std::vector<std::string>(Rl_first_step.begin() + Ll, Rl_first_step.end()),
                 std::vector<std::string>(old_binary_ordering.begin() + Rl, old_binary_ordering.end()));
+
             Rr_indices = std::vector<std::string>( new_binary_ordering.begin() + Rl, new_binary_ordering.end());
+
             std::vector<std::string> Lr_second_step = VectorConcatenation(
                 VectorSubtraction(Lr_first_step, Rr_indices),
                 std::vector<std::string>(Rr_indices));
 
             PrecomputeRightTransposeData(Lr_first_step, Lr_second_step, tensor_size, precomputed_data);
+
             std::vector<std::string> Rl_second_step = VectorConcatenation(
                 std::vector<std::string>(Rl_first_step.begin(), Rl_first_step.begin() + Ll),
                 std::vector<std::string>(Lr_second_step.begin(), Lr_second_step.begin() + Lr - Rr));
+            
             std::vector<std::string> Rl_third_step( new_binary_ordering.begin(), new_binary_ordering.begin() + Rl);
             PrecomputeLeftTransposeData(Rl_second_step, Rl_third_step, tensor_size, precomputed_data);
             // done with 3).

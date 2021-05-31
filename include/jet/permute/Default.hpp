@@ -12,8 +12,6 @@ namespace Jet {
 template <size_t blocksize = 1024> class DefaultPermuter {
 
   public:
-    DefaultPermuter() {}
-
     /**
      * @brief Reference-based transpose operation. See `Permuter` class for more details.
      */

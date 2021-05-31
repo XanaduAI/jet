@@ -8,8 +8,6 @@ namespace Jet {
 
 class HpttPermuter {
   public:
-    HpttPermuter() {}
-
     template <class DataType>
     void Transpose(const std::vector<DataType> &data,
                    const std::vector<size_t> &shape,
