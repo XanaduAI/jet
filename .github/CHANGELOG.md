@@ -16,8 +16,7 @@
 
 ### Improvements
 
-* Remove `_t` suffix from aliases of non-fundamental types
-
+* Remove `_t` suffix from aliases of non-fundamental types [(#17)](https://github.com/XanaduAI/jet/pull/17)
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
 * `TaskBasedCpuContractor` now stores `Tensor` results. [(#8)](https://github.com/XanaduAI/jet/pull/8)
