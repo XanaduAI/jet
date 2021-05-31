@@ -77,13 +77,6 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
     return os;
 }
 
-const size_t ALPHABET_SIZE_ = 52;
-const std::vector<std::string> ALPHABET_(
-    {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-     "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-     "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"});
-
 /**
  * Converts an ID into a unique string index of the form [a-zA-Z][0-9]*.
  *
