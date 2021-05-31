@@ -38,14 +38,14 @@ namespace Jet {
 template <class Tensor> class TensorNetwork {
   public:
     /// Type of a node ID.
-    using node_id_t = size_t;
+    using NodeID_t = size_t;
 
     /**
      * @brief `%Node` is a POD which wraps tensors in a `TensorNetwork`.
      */
     struct Node {
         /// Unique ID for this node.
-        node_id_t id;
+        NodeID_t id;
 
         /// Name of this node.
         std::string name;
@@ -71,7 +71,7 @@ template <class Tensor> class TensorNetwork {
         size_t dim;
 
         /// IDs of the nodes connected by this edge.
-        std::vector<node_id_t> node_ids;
+        std::vector<NodeID_t> node_ids;
 
         /**
          * @brief Reports whether two edges are the same.
@@ -98,11 +98,10 @@ template <class Tensor> class TensorNetwork {
     using IndexToEdgeMap = std::unordered_map<std::string, Edge>;
 
     /// Type of the tag-to-node-IDs map.
-    using TagToNodeIdsMap =
-        std::unordered_multimap<std::string, node_id_t>;
+    using TagToNodeIdsMap = std::unordered_multimap<std::string, NodeID_t>;
 
     /// Type of a contraction path.
-    using Path = std::vector<std::pair<node_id_t, node_id_t>>;
+    using Path = std::vector<std::pair<NodeID_t, NodeID_t>>;
 
     /**
      * @brief Returns the nodes in this `%TensorNetwork`.
@@ -165,10 +164,10 @@ template <class Tensor> class TensorNetwork {
      *
      * @return Node ID assigned to the tensor.
      */
-    node_id_t AddTensor(const Tensor &tensor,
-                        const std::vector<std::string> &tags) noexcept
+    NodeID_t AddTensor(const Tensor &tensor,
+                       const std::vector<std::string> &tags) noexcept
     {
-        node_id_t id = nodes_.size();
+        NodeID_t id = nodes_.size();
         nodes_.emplace_back(Node{
             id,                                   // id
             DeriveNodeName_(tensor.GetIndices()), // name

@@ -51,10 +51,10 @@ struct PathStepInfo {
 class PathInfo {
   public:
     /// Type of a node ID.
-    using node_id_t = size_t;
+    using NodeID_t = size_t;
 
     /// Type of a contraction path.
-    using Path = std::vector<std::pair<node_id_t, node_id_t>>;
+    using Path = std::vector<std::pair<NodeID_t, NodeID_t>>;
 
     /// Type of the index-to-size map.
     using IndexToSizeMap = std::unordered_map<std::string, size_t>;

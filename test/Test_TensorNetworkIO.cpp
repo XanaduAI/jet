@@ -16,7 +16,7 @@ TEMPLATE_TEST_CASE("TensorNetworkSerializer::operator()",
 
     using namespace Jet;
 
-    using path_t = std::vector<std::pair<size_t, size_t>>;
+    using Path = std::vector<std::pair<size_t, size_t>>;
     using tensor_t = Tensor<TestType>;
 
     SECTION("empty string")
@@ -94,7 +94,7 @@ TEMPLATE_TEST_CASE("TensorNetworkSerializer::operator()",
 
         REQUIRE(tn_f.path.has_value() == true);
 
-        CHECK(tn_f.path.value().GetPath() == path_t({{0, 1}, {1, 2}}));
+        CHECK(tn_f.path.value().GetPath() == Path({{0, 1}, {1, 2}}));
 
         auto tn = tn_f.tensors;
 
