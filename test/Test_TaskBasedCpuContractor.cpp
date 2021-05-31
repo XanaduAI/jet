@@ -442,7 +442,7 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
         CHECK(have_result == want_result);
     }
 
-    SECTION("Results vector has a single value")
+    SECTION("Results vector has a single scalar")
     {
         const auto tensor_1 = MakeTensor({"A0"}, {3});
         const auto tensor_2 = MakeTensor({"A0"}, {3});
@@ -459,6 +459,26 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
 
         const tensor_t have_result = tbcc.GetReductionResult();
         const tensor_t want_result = tensor_t({}, {}, {5});
+        CHECK(have_result == want_result);
+    }
+
+    SECTION("Results vector has a single non-scalar")
+    {
+        const auto tensor_1 = MakeTensor({"A0", "B1"}, {2, 3});
+        const auto tensor_2 = MakeTensor({"A0"}, {2});
+
+        TensorNetwork<tensor_t> tn;
+        tn.AddTensor(tensor_1, {});
+        tn.AddTensor(tensor_2, {});
+
+        const PathInfo path_info(tn, {{0, 1}});
+
+        tbcc.AddContractionTasks(tn, path_info);
+        tbcc.AddReductionTask();
+        tbcc.Contract().wait();
+
+        const tensor_t have_result = tbcc.GetReductionResult();
+        const tensor_t want_result = tensor_t({"B1"}, {3}, {3, 4, 5});
         CHECK(have_result == want_result);
     }
 

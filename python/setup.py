@@ -52,6 +52,7 @@ with open("../include/jet/Version.hpp", "r") as f:
 
 requirements = [
     "lark-parser>=0.11.0",
+    "numpy",
     "StrawberryFields==0.18.0",
 ]
 
