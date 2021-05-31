@@ -385,7 +385,7 @@ template <size_t blocksize = 1024, size_t min_dims = 32> class QFlexPermuter {
         for (std::size_t i = 0; i < num_indices; ++i) {
             std::vector<std::string> group(old_logs[i]);
             for (std::size_t j = 0; j < old_logs[i]; ++j) {
-                group[j] = ALPHABET_[alphabet_position];
+                group[j] = GenerateStringIndex(alphabet_position);
                 ++alphabet_position;
             }
             binary_groups[old_ordering[i]] = group;
