@@ -6,6 +6,22 @@ import numpy as np
 from .bindings import *
 
 
+def TaskBasedCpuContractor(
+    *args, **kwargs
+) -> Union[TaskBasedCpuContractorC64, TaskBasedCpuContractorC128]:
+    """Constructs a task-based CPU contractor with the specified data type. If a
+    `dtype` keyword argument is not provided, a TaskBasedCpuContractorC128
+    instance will be returned.
+    """
+    dtype = kwargs.pop("dtype", "complex128")
+    if np.dtype(dtype) == np.complex64:
+        return TaskBasedCpuContractorC64(*args, **kwargs)
+    elif np.dtype(dtype) == np.complex128:
+        return TaskBasedCpuContractorC128(*args, **kwargs)
+    else:
+        raise TypeError(f"Data type '{dtype}' is not supported.")
+
+
 def Tensor(*args, **kwargs) -> Union[TensorC64, TensorC128]:
     """Constructs a tensor with the specified data type. If a `dtype` keyword
     argument is not provided, a TensorC128 instance will be returned.
