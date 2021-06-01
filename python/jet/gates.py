@@ -1,16 +1,14 @@
-"""Tensor representations of quantum gates"""
-
-import math
 import cmath
+import math
 from functools import lru_cache
-from typing import Sequence, List, Optional
+from typing import List, Optional, Sequence
 
 import numpy as np
 from thewalrus.fock_gradients import (
+    beamsplitter,
     displacement,
     squeezing,
     two_mode_squeezing,
-    beamsplitter,
 )
 
 import jet
@@ -21,8 +19,7 @@ __all__ = [
     "Squeezing",
     "TwoModeSqueezing",
     "Beamsplitter",
-
-    # qubit gates
+    # Qubit gates
     "Hadamard",
     "PauliX",
     "PauliY",
@@ -55,33 +52,30 @@ __all__ = [
     "U3",
 ]
 
-ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 INV_SQRT2 = 1 / math.sqrt(2)
 
-DEFAULT_DTYPE = np.complex128
 
 class Gate:
-    """Gate class
-
-    Args:
-        name (str): name of the gate
-        num_wires (int): the number of wires the gate is applied to
-
-    Kwargs:
-        tensor_id (int): identification number for the gate-tensor
-        dtype (type): type to use in matrix representations of gates
-    """
-
     def __init__(self, name: str, num_wires: int, **kwargs) -> None:
+        """Constructs a quantum gate.
+
+        Args:
+            name: name of the gate.
+            num_wires: number of wires the gate is applied to.
+
+        Kwargs:
+            tensor_id (int): identification number for the gate-tensor.
+            dtype (type): type to use in matrix representations of gates.
+        """
         self.name = name
         self.tensor_id = kwargs.get("tensor_id", None)
 
-        self._dtype = kwargs.get("dtype", DEFAULT_DTYPE)
+        self._dtype = kwargs.get("dtype", np.complex128)
         self._indices = None
         self._num_wires = num_wires
 
-    def tensor(self, adjoint: bool = False):
-        """Tensor representation of gate"""
+    def tensor(self, adjoint: bool = False) -> jet.Tensor:
+        """Returns the tensor representation of this gate."""
         if adjoint:
             data = np.conj(self._data()).T.flatten()
         else:
@@ -89,24 +83,26 @@ class Gate:
 
         indices = self.indices
         if indices is None:
-            indices = list(ALPHABET[:2 * self._num_wires])
-        shape = int(len(data) ** ((2 * self._num_wires) ** -1))
+            indices = list(map(str, range(2 * self._num_wires)))
 
-        return jet.Tensor(indices, [shape] * 2 * self._num_wires, data)
+        dimension = int(len(data) ** (1 / len(indices)))
+        shape = [dimension] * len(indices)
+
+        return jet.Tensor(indices=indices, shape=shape, data=data)
 
     def _data(self) -> np.ndarray:
-        """Matrix representation of the gate"""
+        """Returns the matrix representation of this gate."""
         raise NotImplementedError("No tensor data available for generic gate.")
 
     @property
     def indices(self) -> Optional[List[str]]:
-        """Indices for connecting tensors"""
+        """Returns the indices of this gate for connecting tensors."""
         return self._indices
 
     @indices.setter
-    def indices(self, indices: Optional[List[str]]) -> None:
-        """Setter method for indices"""
-        # validate that indices is a list of unique strings
+    def indices(self, indices: Optional[Sequence[str]]) -> None:
+        """Sets the indices of this gate for connecting tensors."""
+        # Check that `indices is a sequence of unique strings.
         if (
             not isinstance(indices, Sequence)
             or not all(isinstance(idx, str) for idx in indices)
@@ -114,16 +110,13 @@ class Gate:
         ):
             raise ValueError("Indices must be a sequence of unique strings.")
 
-        # validate that indices has the correct lenght (or is None)
-        if indices is None:
-            self._indices = indices
-        elif len(indices) == 2 * self._num_wires:
-            self._indices = indices
-        else:
+        # Check that `indices` has the correct length (or is None)
+        if indices is not None and len(indices) != 2 * self._num_wires:
             raise ValueError(
-                f"Must have 2 indices per wire. Got {len(indices)} indices for"
-                f"{self._num_wires} wires."
+                f"Indices must have two indices per wire. "
+                f"Received {len(indices)} indices for {self._num_wires} wires."
             )
+        self._indices = indices
 
 
 ##################################
