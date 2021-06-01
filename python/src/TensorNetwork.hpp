@@ -23,7 +23,7 @@ namespace py = pybind11;
 template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
 {
     using TensorNetwork = Jet::TensorNetwork<Jet::Tensor<T>>;
-    using node_id_t = typename Jet::TensorNetwork<Jet::Tensor<T>>::node_id_t;
+    using NodeID_t = typename Jet::TensorNetwork<Jet::Tensor<T>>::NodeID_t;
     using Node = typename Jet::TensorNetwork<Jet::Tensor<T>>::Node;
     using Edge = typename Jet::TensorNetwork<Jet::Tensor<T>>::Edge;
 
@@ -68,7 +68,7 @@ template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
             .def_property_readonly(
                 "tag_to_node_id_map",
                 [](const TensorNetwork &tn) {
-                    std::unordered_map<std::string, std::vector<node_id_t>> map;
+                    std::unordered_map<std::string, std::vector<NodeID_t>> map;
 
                     for (const auto &[tag, node_id] : tn.GetTagToNodesMap()) {
                         map[tag].emplace_back(node_id);

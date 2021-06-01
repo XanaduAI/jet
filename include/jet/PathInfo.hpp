@@ -51,16 +51,16 @@ struct PathStepInfo {
 class PathInfo {
   public:
     /// Type of a node ID.
-    using node_id_t = size_t;
+    using NodeID_t = size_t;
 
     /// Type of a contraction path.
-    using path_t = std::vector<std::pair<node_id_t, node_id_t>>;
+    using Path = std::vector<std::pair<NodeID_t, NodeID_t>>;
 
     /// Type of the index-to-size map.
-    using index_to_size_map_t = std::unordered_map<std::string, size_t>;
+    using IndexToSizeMap = std::unordered_map<std::string, size_t>;
 
     /// Type of a `PathStepInfo` sequence.
-    using steps_t = std::vector<PathStepInfo>;
+    using Steps = std::vector<PathStepInfo>;
 
     /**
      * @brief Constructs an empty path.
@@ -78,7 +78,7 @@ class PathInfo {
      * @param path Pairs of node IDs representing a raw contraction path.
      */
     template <typename Tensor>
-    PathInfo(const TensorNetwork<Tensor> &tn, const path_t &path) : path_(path)
+    PathInfo(const TensorNetwork<Tensor> &tn, const Path &path) : path_(path)
     {
         const auto &nodes = tn.GetNodes();
         num_leaves_ = nodes.size();
@@ -117,7 +117,7 @@ class PathInfo {
      *
      * @return Map which associates each index with a dimension size.
      */
-    const index_to_size_map_t &GetIndexSizes() const noexcept
+    const IndexToSizeMap &GetIndexSizes() const noexcept
     {
         return index_to_size_map_;
     }
@@ -134,14 +134,14 @@ class PathInfo {
      *
      * @return Pairs of node IDs representing the contraction path.
      */
-    const path_t &GetPath() const noexcept { return path_; }
+    const Path &GetPath() const noexcept { return path_; }
 
     /**
      * @brief Returns the steps of this path.
      *
      * @return Collection of path steps.
      */
-    const steps_t &GetSteps() const noexcept { return steps_; }
+    const Steps &GetSteps() const noexcept { return steps_; }
 
     /**
      * @brief Computes the number of floating-point operations needed to execute
@@ -240,10 +240,10 @@ class PathInfo {
 
   private:
     /// Contraction path through the tensor network associated with this path.
-    path_t path_;
+    Path path_;
 
     /// Contraction metadata of the tensor network associated with this path.
-    steps_t steps_;
+    Steps steps_;
 
     /// Number of leaf nodes in the tensor network associated with this path.
     size_t num_leaves_;
@@ -251,7 +251,7 @@ class PathInfo {
     /// Map that associates each index with its corresponding dimension size.
     /// This information is used to estimate memory requirements and floating-
     /// point operation counts.
-    index_to_size_map_t index_to_size_map_;
+    IndexToSizeMap index_to_size_map_;
 
     /**
      * @brief Contracts two path steps.
