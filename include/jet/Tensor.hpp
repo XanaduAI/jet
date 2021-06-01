@@ -76,6 +76,17 @@ template <class T=std::complex<float>> class Tensor {
 template <class U=T>
 static Tensor<U> AddTensors(const Tensor<U> &A, const Tensor<U> &B)
 {
+    static const Tensor<T> zero;
+
+    // The zero tensor is used in reductions where the shape of an accumulator
+    // is not known beforehand.
+    if (A == zero) {
+        return B;
+    }
+    else if (B == zero) {
+        return A;
+    }
+
     const auto disjoint_indices =
         Jet::Utilities::VectorDisjunctiveUnion(A.GetIndices(), B.GetIndices());
 
