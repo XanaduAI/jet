@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* Support for CUDA enabled `CudaTensor` class with CuTensor v1.3 support. One-way conversion support for  `CudaTensor` to `Tensor` exists for testing and verification. []
+
 * Python bindings are now available for the `TaskBasedCpuContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 
 * Python bindings now include a factory method which accepts a `dtype` parameter. [(#18)](https://github.com/XanaduAI/jet/pull/18)
@@ -19,6 +21,8 @@
 * Running CMake with `-DBUILD_PYTHON=ON` now generates Python bindings within a `jet` package. [(#1)](https://github.com/XanaduAI/jet/pull/1)
 
 ### Improvements
+
+* `CudaTensor` class has feature-parity with `Tensor` class. Support is built with `-DENABLE_CUTENSOR=on` CMake flag. []
 
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
