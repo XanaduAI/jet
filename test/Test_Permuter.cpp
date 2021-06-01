@@ -89,13 +89,13 @@ static const std::vector<data_t> data_non_pow2_cab{
     {4, 4}, {9, 9}, {14, 14}, {19, 19}, {24, 24}, {29, 29}};
 
 TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
-                   //DefaultPermuter<>, DefaultPermuter<64>, DefaultPermuter<128>,
-                   //DefaultPermuter<256>, DefaultPermuter<512>,
-                   //DefaultPermuter<2048>, QFlexPermuter<>, QFlexPermuter<64>,
-                   //QFlexPermuter<128>, QFlexPermuter<256>, QFlexPermuter<512>,
-                   //QFlexPermuter<2048>, (QFlexPermuter<1024, 64>),
-                   //(QFlexPermuter<1024, 128>), (QFlexPermuter<1024, 256>),
-                   //(QFlexPermuter<1024, 512>), (QFlexPermuter<2048, 1024>), 
+                   DefaultPermuter<>, DefaultPermuter<64>, DefaultPermuter<128>,
+                   DefaultPermuter<256>, DefaultPermuter<512>,
+                   DefaultPermuter<2048>, QFlexPermuter<>, QFlexPermuter<64>,
+                   QFlexPermuter<128>, QFlexPermuter<256>, QFlexPermuter<512>,
+                   QFlexPermuter<2048>, (QFlexPermuter<1024, 64>),
+                   (QFlexPermuter<1024, 128>), (QFlexPermuter<1024, 256>),
+                   (QFlexPermuter<1024, 512>), (QFlexPermuter<2048, 1024>),
                    (QFlexPermuter<1024, 2>))
 {
     Permuter<TestType> permuter;
@@ -310,8 +310,7 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
     }
 }
 
-TEST_CASE("DefaultPermuter<>::Transpose Non power-of-2 data",
-                   "[Permute]", )
+TEST_CASE("DefaultPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
 {
     Permuter<DefaultPermuter<>> permuter;
 
@@ -349,8 +348,7 @@ TEST_CASE("DefaultPermuter<>::Transpose Non power-of-2 data",
     }
 }
 
-TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data",
-                   "[Permute]", )
+TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
 {
     using namespace Catch::Matchers;
 
