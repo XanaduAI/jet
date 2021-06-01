@@ -114,6 +114,17 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         std::vector<size_t> old_dimensions;
         bool no_transpose;
         size_t total_dim;
+        PlanData(size_t num_elements) : new_ordering(num_elements), new_dimensions(num_elements), old_ordering(num_elements), old_dimensions(num_elements) {}
+
+        PlanData(
+            const std::vector<std::string> &old_indices, 
+            const std::vector<std::string> &new_ordering, 
+            const std::vector<size_t> &shape
+        ) : 
+        new_ordering(new_ordering), 
+        new_dimensions(shape.size(), 0), 
+        old_ordering(old_indices), 
+        old_dimensions(shape) {}
     };
 
     void GenerateBinaryReorderingMap(
@@ -343,7 +354,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                                 const std::vector<std::string> &new_ordering)
     {
         using namespace Jet::Utilities;
-        PlanData precomputed_data;
+        PlanData precomputed_data(old_indices, new_ordering, shape);
 
         for (size_t i = 0; i < shape.size(); ++i) {
             JET_ABORT_IF_NOT(is_pow_2(shape[i]),
@@ -351,19 +362,17 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         }
 
         // Create binary orderings.
-        std::vector<std::string> old_ordering(old_indices);
-        std::vector<size_t> old_dimensions(shape);
+        std::vector<std::string> &old_ordering = precomputed_data.old_ordering;
+        std::vector<size_t> &old_dimensions = precomputed_data.old_dimensions;
         size_t num_indices = old_ordering.size();
         size_t total_dim = 1;
         for (size_t i = 0; i < num_indices; ++i)
             total_dim *= old_dimensions[i];
 
-        std::vector<size_t> map_old_to_new_idxpos(num_indices);
-        std::vector<size_t> new_dimensions(num_indices);
+        std::vector<size_t> &new_dimensions = precomputed_data.new_dimensions;
         for (size_t i = 0; i < num_indices; ++i) {
             for (size_t j = 0; j < num_indices; ++j) {
                 if (old_ordering[i] == new_ordering[j]) {
-                    map_old_to_new_idxpos[i] = j;
                     new_dimensions[j] = old_dimensions[i];
                     break;
                 }
@@ -371,10 +380,10 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         }
         // precomputed_data.idx_data = IndexData(old_dimensions, new_dimensions,
         // old_ordering, new_ordering);
-        precomputed_data.new_ordering = new_ordering;
-        precomputed_data.new_dimensions = new_dimensions;
-        precomputed_data.old_ordering = old_ordering;
-        precomputed_data.old_dimensions = old_dimensions;
+        //precomputed_data.new_ordering = new_ordering;
+        //precomputed_data.new_dimensions = new_dimensions;
+        //precomputed_data.old_ordering = old_ordering;
+        //precomputed_data.old_dimensions = old_dimensions;
         precomputed_data.total_dim = total_dim;
 
         if (new_ordering == old_ordering) {
