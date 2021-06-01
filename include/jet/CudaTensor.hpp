@@ -202,7 +202,16 @@ template <class T = cuComplex> class CudaTensor {
                    cudaMemcpyDeviceToDevice);
     }
 
-    void operator=(const CudaTensor &) = delete;
+    CudaTensor& operator=(const CudaTensor &other)
+    {
+        if (this != &other) // not a self-assignment
+        {
+            SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+            cudaMemcpy(data_, other.GetData(), sizeof(T) * GetSize(),
+                   cudaMemcpyDeviceToDevice);
+        }
+        return *this;
+    }
 
     T *GetData() { return data_; }
     const T *GetData() const { return data_; }
