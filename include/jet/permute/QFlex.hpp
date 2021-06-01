@@ -114,8 +114,6 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         std::vector<size_t> old_dimensions;
         bool no_transpose;
         size_t total_dim;
-        // PlanData() : dim_data{}, types{PermuteType::None}, idx_data{},
-        // no_transpose{true}, total_dim{0} {}
     };
 
     void GenerateBinaryReorderingMap(
@@ -140,6 +138,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         std::vector<size_t> new_dimensions(num_indices, dim);
         std::vector<size_t> old_super_dimensions(num_indices);
         std::vector<size_t> new_super_dimensions(num_indices);
+
         old_super_dimensions[num_indices - 1] = 1;
         new_super_dimensions[num_indices - 1] = 1;
 
@@ -148,6 +147,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 old_super_dimensions[i - 1] = old_super_dimensions[i] * dim;
                 new_super_dimensions[i - 1] = new_super_dimensions[i] * dim;
             }
+
 
         // Iterate and generate map.
         std::vector<size_t> old_counter(num_indices, 0);
@@ -281,17 +281,12 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         // With the map_old_to_new_position, we are ready to reorder within
         // small chuncks.
         size_t dim_right = total_dim;
-        size_t dim_left =
-            tensor_size / dim_right; // Remember, it's all powers of 2, so OK.
+        size_t dim_left = tensor_size>>Jet::Utilities::fast_log2(dim_right); 
 
         precomputed_data.dim_data.push_back(
             DimData{dim_left, dim_right, tensor_size,
                     std::move(map_old_to_new_position)});
-        // precomputed_data.dim_left.push_back(dim_left);
-        // precomputed_data.dim_right.push_back(dim_right);
-        // precomputed_data.tensor_dim.push_back(tensor_size);
-        // precomputed_data.map_old_to_new_position.push_back(
-        //    map_old_to_new_position);
+
         precomputed_data.types.push_back(PermuteType::PermuteRight);
     }
 
@@ -334,21 +329,15 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         // With the map_old_to_new_position, we are ready to move small chunks.
         size_t dim_left = total_dim;
         size_t tensor_dim = tensor_size;
-        size_t dim_right = tensor_dim / dim_left; // Remember, it's all powers
-        // of 2, so OK.
+        size_t dim_right = tensor_dim>>Jet::Utilities::fast_log2(dim_left);
 
         precomputed_data.dim_data.push_back(
             DimData{dim_left, dim_right, tensor_dim,
                     std::move(map_old_to_new_position)});
-        // precomputed_data.dim_left.push_back(dim_left);
-        // precomputed_data.dim_right.push_back(dim_right);
-        // precomputed_data.tensor_dim.push_back(tensor_dim);
-        // precomputed_data.map_old_to_new_position.push_back(
-        //    map_old_to_new_position);
+
         precomputed_data.types.push_back(PermuteType::PermuteLeft);
     }
 
-    // has to have dimensions that are multiples of 2
     template <typename DataType>
     PlanData
     PrecomputeFastTransposeData(std::vector<DataType> &tensor_data,
@@ -371,8 +360,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         size_t total_dim = 1;
         for (size_t i = 0; i < num_indices; ++i)
             total_dim *= old_dimensions[i];
-        // Create map_old_to_new_idxpos from old to new indices, and
-        // new_dimensions.
+
         std::vector<size_t> map_old_to_new_idxpos(num_indices);
         std::vector<size_t> new_dimensions(num_indices);
         for (size_t i = 0; i < num_indices; ++i) {
