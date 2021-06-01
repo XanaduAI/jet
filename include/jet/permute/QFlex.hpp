@@ -11,8 +11,9 @@ namespace Jet {
 
 /**
  * @brief Power-of-2 permutation backend. Based on QFlex implementation.
- * 
- * @tparam BLOCKSIZE Controls the blocksize of the transpose to improve cache hits.
+ *
+ * @tparam BLOCKSIZE Controls the blocksize of the transpose to improve cache
+ * hits.
  * @tparam MIN_DIMS Controls the right-movement minimum dimension size.
  */
 template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
@@ -42,9 +43,8 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     {
         data_out = data_;
         std::vector<DataType> scratch(data_);
-        PlanData precomputed_data =
-            PrecomputeFastTransposeData(data_out, shape, old_indices,
-                                        new_indices);
+        PlanData precomputed_data = PrecomputeFastTransposeData(
+            data_out, shape, old_indices, new_indices);
         FastTranspose(data_out, precomputed_data, scratch);
     }
 
@@ -54,42 +54,68 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
 
-    class DimData{
+    class DimData {
       public:
         const size_t dim_left;
         const size_t dim_right;
         const size_t tensor_dim;
         const std::vector<size_t> dim_map;
 
-        DimData(size_t dim_left, size_t dim_right, size_t tensor_dim, const std::vector<size_t> &dim_map) : dim_left{dim_left}, dim_right{dim_right}, tensor_dim{tensor_dim}, dim_map{dim_map} {}
-        DimData(size_t dim_left, size_t dim_right, size_t tensor_dim, std::vector<size_t> &&dim_map) : dim_left{dim_left}, dim_right{dim_right}, tensor_dim{tensor_dim}, dim_map{dim_map} {}
+        DimData(size_t dim_left, size_t dim_right, size_t tensor_dim,
+                const std::vector<size_t> &dim_map)
+            : dim_left{dim_left}, dim_right{dim_right},
+              tensor_dim{tensor_dim}, dim_map{dim_map}
+        {
+        }
+        DimData(size_t dim_left, size_t dim_right, size_t tensor_dim,
+                std::vector<size_t> &&dim_map)
+            : dim_left{dim_left}, dim_right{dim_right},
+              tensor_dim{tensor_dim}, dim_map{dim_map}
+        {
+        }
         DimData() : dim_left{}, dim_right{}, tensor_dim{}, dim_map{} {}
-
     };
-    class IndexData{
+    class IndexData {
       public:
         const std::vector<size_t> old_indices;
         const std::vector<size_t> new_indices;
         const std::vector<std::string> old_labels;
         const std::vector<std::string> new_labels;
 
-        IndexData(const std::vector<size_t> &old_indices, const std::vector<size_t> &new_indices, const std::vector<std::string> &old_labels, const std::vector<std::string> &new_labels) : old_indices{old_indices}, new_indices{new_indices}, old_labels{old_labels}, new_labels{new_labels} {}
-        IndexData(std::vector<size_t> &&old_indices, std::vector<size_t> &&new_indices, std::vector<std::string> &&old_labels, std::vector<std::string> &&new_labels) : old_indices{old_indices}, new_indices{new_indices}, old_labels{old_labels}, new_labels{new_labels} {}
-        IndexData() : old_indices{}, new_indices{}, old_labels{}, new_labels{} {}
+        IndexData(const std::vector<size_t> &old_indices,
+                  const std::vector<size_t> &new_indices,
+                  const std::vector<std::string> &old_labels,
+                  const std::vector<std::string> &new_labels)
+            : old_indices{old_indices}, new_indices{new_indices},
+              old_labels{old_labels}, new_labels{new_labels}
+        {
+        }
+        IndexData(std::vector<size_t> &&old_indices,
+                  std::vector<size_t> &&new_indices,
+                  std::vector<std::string> &&old_labels,
+                  std::vector<std::string> &&new_labels)
+            : old_indices{old_indices}, new_indices{new_indices},
+              old_labels{old_labels}, new_labels{new_labels}
+        {
+        }
+        IndexData() : old_indices{}, new_indices{}, old_labels{}, new_labels{}
+        {
+        }
     };
 
     class PlanData {
       public:
         std::vector<DimData> dim_data;
         std::vector<PermuteType> types;
-        //IndexData idx_data;
+        // IndexData idx_data;
         std::vector<std::string> new_ordering;
         std::vector<size_t> new_dimensions;
         std::vector<std::string> old_ordering;
         std::vector<size_t> old_dimensions;
         bool no_transpose;
         size_t total_dim;
-        //PlanData() : dim_data{}, types{PermuteType::None}, idx_data{}, no_transpose{true}, total_dim{0} {}
+        // PlanData() : dim_data{}, types{PermuteType::None}, idx_data{},
+        // no_transpose{true}, total_dim{0} {}
     };
 
     void GenerateBinaryReorderingMap(
@@ -151,10 +177,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     }
 
     template <typename DataType>
-    void
-    FastTranspose(std::vector<DataType> &data_in,
-                  const PlanData &precomputed_data,
-                  std::vector<DataType> &scratch_in)
+    void FastTranspose(std::vector<DataType> &data_in,
+                       const PlanData &precomputed_data,
+                       std::vector<DataType> &scratch_in)
     {
         auto data_ = data_in.data();
         auto scratch = scratch_in.data();
@@ -215,10 +240,10 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         }
     }
 
-    void PrecomputeRightTransposeData(
-        const std::vector<std::string> &old_ordering,
-        const std::vector<std::string> &new_ordering, size_t tensor_size,
-        PlanData &precomputed_data)
+    void
+    PrecomputeRightTransposeData(const std::vector<std::string> &old_ordering,
+                                 const std::vector<std::string> &new_ordering,
+                                 size_t tensor_size, PlanData &precomputed_data)
     {
 
         // Don't do anything if there is nothing to reorder.
@@ -259,11 +284,13 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         size_t dim_left =
             tensor_size / dim_right; // Remember, it's all powers of 2, so OK.
 
-        precomputed_data.dim_data.push_back(DimData{dim_left, dim_right, tensor_size, std::move(map_old_to_new_position)});
-        //precomputed_data.dim_left.push_back(dim_left);
-        //precomputed_data.dim_right.push_back(dim_right);
-        //precomputed_data.tensor_dim.push_back(tensor_size);
-        //precomputed_data.map_old_to_new_position.push_back(
+        precomputed_data.dim_data.push_back(
+            DimData{dim_left, dim_right, tensor_size,
+                    std::move(map_old_to_new_position)});
+        // precomputed_data.dim_left.push_back(dim_left);
+        // precomputed_data.dim_right.push_back(dim_right);
+        // precomputed_data.tensor_dim.push_back(tensor_size);
+        // precomputed_data.map_old_to_new_position.push_back(
         //    map_old_to_new_position);
         precomputed_data.types.push_back(PermuteType::PermuteRight);
     }
@@ -271,8 +298,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
     void
     PrecomputeLeftTransposeData(const std::vector<std::string> &old_ordering,
                                 const std::vector<std::string> &new_ordering,
-                                size_t tensor_size,
-                                PlanData &precomputed_data)
+                                size_t tensor_size, PlanData &precomputed_data)
     {
 
         // Don't do anything if there is nothing to reorder.
@@ -308,15 +334,16 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         // With the map_old_to_new_position, we are ready to move small chunks.
         size_t dim_left = total_dim;
         size_t tensor_dim = tensor_size;
-        size_t dim_right =
-            tensor_dim / dim_left; // Remember, it's all powers
+        size_t dim_right = tensor_dim / dim_left; // Remember, it's all powers
         // of 2, so OK.
 
-        precomputed_data.dim_data.push_back(DimData{dim_left, dim_right, tensor_dim, std::move(map_old_to_new_position)});
-        //precomputed_data.dim_left.push_back(dim_left);
-        //precomputed_data.dim_right.push_back(dim_right);
-        //precomputed_data.tensor_dim.push_back(tensor_dim);
-        //precomputed_data.map_old_to_new_position.push_back(
+        precomputed_data.dim_data.push_back(
+            DimData{dim_left, dim_right, tensor_dim,
+                    std::move(map_old_to_new_position)});
+        // precomputed_data.dim_left.push_back(dim_left);
+        // precomputed_data.dim_right.push_back(dim_right);
+        // precomputed_data.tensor_dim.push_back(tensor_dim);
+        // precomputed_data.map_old_to_new_position.push_back(
         //    map_old_to_new_position);
         precomputed_data.types.push_back(PermuteType::PermuteLeft);
     }
@@ -357,7 +384,8 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 }
             }
         }
-        //precomputed_data.idx_data = IndexData(old_dimensions, new_dimensions, old_ordering, new_ordering);
+        // precomputed_data.idx_data = IndexData(old_dimensions, new_dimensions,
+        // old_ordering, new_ordering);
         precomputed_data.new_ordering = new_ordering;
         precomputed_data.new_dimensions = new_dimensions;
         precomputed_data.old_ordering = old_ordering;
@@ -504,14 +532,17 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             constexpr size_t Rr = fast_log2(min_dims_);
             size_t Rl = new_binary_ordering.size() - Rr;
             // Helper vectors that can be reused.
-            std::vector<std::string> Lr_indices(Lr), Ll_indices(Ll), Rr_indices(Rr), Rl_indices(Rl);
+            std::vector<std::string> Lr_indices(Lr), Ll_indices(Ll),
+                Rr_indices(Rr), Rl_indices(Rl);
             for (size_t i = 0; i < Rr; ++i)
                 Rr_indices[i] = new_binary_ordering[i + Rl];
             for (size_t i = 0; i < Rl; ++i)
                 Rl_indices[i] = old_binary_ordering[i];
-            std::vector<std::string> Rr_new_in_Rl_old = VectorIntersection(Rl_indices, Rr_indices);
+            std::vector<std::string> Rr_new_in_Rl_old =
+                VectorIntersection(Rl_indices, Rr_indices);
 
-            std::vector<std::string> Rl_old_not_in_Rr_new = VectorSubtraction(Rl_indices, Rr_new_in_Rl_old);
+            std::vector<std::string> Rl_old_not_in_Rr_new =
+                VectorSubtraction(Rl_indices, Rr_new_in_Rl_old);
 
             std::vector<std::string> Rl_first_step =
                 VectorConcatenation(Rl_old_not_in_Rr_new, Rr_new_in_Rl_old);
@@ -520,26 +551,35 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             for (size_t i = 0; i < Rl; ++i)
                 Rl_zeroth_step[i] = old_binary_ordering[i];
 
-            PrecomputeLeftTransposeData(Rl_zeroth_step, Rl_first_step, tensor_size, precomputed_data);
+            PrecomputeLeftTransposeData(Rl_zeroth_step, Rl_first_step,
+                                        tensor_size, precomputed_data);
 
             std::vector<std::string> Lr_first_step = VectorConcatenation(
-                std::vector<std::string>(Rl_first_step.begin() + Ll, Rl_first_step.end()),
-                std::vector<std::string>(old_binary_ordering.begin() + Rl, old_binary_ordering.end()));
+                std::vector<std::string>(Rl_first_step.begin() + Ll,
+                                         Rl_first_step.end()),
+                std::vector<std::string>(old_binary_ordering.begin() + Rl,
+                                         old_binary_ordering.end()));
 
-            Rr_indices = std::vector<std::string>( new_binary_ordering.begin() + Rl, new_binary_ordering.end());
+            Rr_indices = std::vector<std::string>(
+                new_binary_ordering.begin() + Rl, new_binary_ordering.end());
 
             std::vector<std::string> Lr_second_step = VectorConcatenation(
                 VectorSubtraction(Lr_first_step, Rr_indices),
                 std::vector<std::string>(Rr_indices));
 
-            PrecomputeRightTransposeData(Lr_first_step, Lr_second_step, tensor_size, precomputed_data);
+            PrecomputeRightTransposeData(Lr_first_step, Lr_second_step,
+                                         tensor_size, precomputed_data);
 
             std::vector<std::string> Rl_second_step = VectorConcatenation(
-                std::vector<std::string>(Rl_first_step.begin(), Rl_first_step.begin() + Ll),
-                std::vector<std::string>(Lr_second_step.begin(), Lr_second_step.begin() + Lr - Rr));
-            
-            std::vector<std::string> Rl_third_step( new_binary_ordering.begin(), new_binary_ordering.begin() + Rl);
-            PrecomputeLeftTransposeData(Rl_second_step, Rl_third_step, tensor_size, precomputed_data);
+                std::vector<std::string>(Rl_first_step.begin(),
+                                         Rl_first_step.begin() + Ll),
+                std::vector<std::string>(Lr_second_step.begin(),
+                                         Lr_second_step.begin() + Lr - Rr));
+
+            std::vector<std::string> Rl_third_step(
+                new_binary_ordering.begin(), new_binary_ordering.begin() + Rl);
+            PrecomputeLeftTransposeData(Rl_second_step, Rl_third_step,
+                                        tensor_size, precomputed_data);
             // done with 3).
             return precomputed_data;
         }
