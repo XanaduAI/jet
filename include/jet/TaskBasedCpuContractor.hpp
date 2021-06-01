@@ -89,7 +89,10 @@ template <typename TensorType> class TaskBasedCpuContractor {
      *
      * @return Vector of tensors.
      */
-    const std::vector<TensorType> &GetResults() const noexcept { return results_; }
+    const std::vector<TensorType> &GetResults() const noexcept
+    {
+        return results_;
+    }
 
     /**
      * @brief Returns the reduction of the final tensor results.
@@ -244,7 +247,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
         }
         reduced_ = true;
 
-        auto reduce_func = [] (const TensorType& a, const TensorType& b) {
+        auto reduce_func = [](const TensorType &a, const TensorType &b) {
             return a.AddTensors(b);
         };
 
@@ -367,7 +370,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
         const auto runner = [this, name_1, name_2, name_3]() {
             name_to_tensor_map_[name_3] = std::make_unique<TensorType>(
                 TensorType::ContractTensors(*name_to_tensor_map_.at(name_1),
-                                        *name_to_tensor_map_.at(name_2)));
+                                            *name_to_tensor_map_.at(name_2)));
         };
 
         const auto task_3 = taskflow_.emplace(runner).name(name_3);
