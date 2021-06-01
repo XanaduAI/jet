@@ -12,7 +12,7 @@
 
 using c128_t = std::complex<double>;
 using c64_t = std::complex<float>;
-using data_t = std::vector<c64_t>;
+using Data = std::vector<c64_t>;
 
 using namespace Jet;
 

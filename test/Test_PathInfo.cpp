@@ -10,17 +10,16 @@
 
 using namespace Jet;
 
-using complex_t = std::complex<float>;
-using tensor_t = Tensor<complex_t>;
+using TestTensor = Tensor<std::complex<float>>;
 
-using index_to_size_map_t = PathInfo::index_to_size_map_t;
-using path_t = PathInfo::path_t;
-using steps_t = PathInfo::steps_t;
+using IndexToSizeMap = PathInfo::IndexToSizeMap;
+using Path = PathInfo::Path;
+using Steps = PathInfo::Steps;
 
-using children_t = std::pair<size_t, size_t>;
-using indices_t = std::vector<std::string>;
-using shape_t = std::vector<size_t>;
-using tags_t = std::vector<std::string>;
+using Children = std::pair<size_t, size_t>;
+using Indices = std::vector<std::string>;
+using Shape = std::vector<size_t>;
+using Tags = std::vector<std::string>;
 
 namespace {
 /**
@@ -31,9 +30,10 @@ namespace {
  * @return Tensor with the given indices and shape.  Each element in the tensor
  *         is populated with the value of its linear index.
  */
-tensor_t MakeTensor(const indices_t &indices, const shape_t &shape)
+Tensor<std::complex<float>> MakeTensor(const Indices &indices,
+                                       const Shape &shape)
 {
-    tensor_t tensor(indices, shape);
+    Tensor<std::complex<float>> tensor(indices, shape);
     if (!shape.empty()) {
         for (size_t i = 0; i < tensor.GetSize(); i++) {
             const auto index = Jet::Utilities::UnravelIndex(i, shape);
@@ -52,21 +52,21 @@ TEST_CASE("PathInfo::PathInfo()", "[PathInfo]")
     const size_t want_leaves = 0;
     CHECK(have_leaves == want_leaves);
 
-    const path_t have_path = path_info.GetPath();
-    const path_t want_path = {};
+    const Path have_path = path_info.GetPath();
+    const Path want_path = {};
     CHECK(have_path == want_path);
 
-    const index_to_size_map_t have_index_sizes = path_info.GetIndexSizes();
-    const index_to_size_map_t want_index_sizes = {};
+    const IndexToSizeMap have_index_sizes = path_info.GetIndexSizes();
+    const IndexToSizeMap want_index_sizes = {};
     CHECK(have_index_sizes == want_index_sizes);
 
-    const steps_t have_steps = path_info.GetSteps();
+    const Steps have_steps = path_info.GetSteps();
     CHECK(have_steps.empty());
 }
 
-TEST_CASE("PathInfo::PathInfo(TensorNetwork, path_t)", "[PathInfo]")
+TEST_CASE("PathInfo::PathInfo(TensorNetwork, Path)", "[PathInfo]")
 {
-    TensorNetwork<tensor_t> tn;
+    TensorNetwork<TestTensor> tn;
 
     SECTION("Tensor network is empty")
     {
@@ -76,15 +76,15 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, path_t)", "[PathInfo]")
         const size_t want_leaves = 0;
         CHECK(have_leaves == want_leaves);
 
-        const path_t have_path = path_info.GetPath();
-        const path_t want_path = {};
+        const Path have_path = path_info.GetPath();
+        const Path want_path = {};
         CHECK(have_path == want_path);
 
-        const index_to_size_map_t have_index_sizes = path_info.GetIndexSizes();
-        const index_to_size_map_t want_index_sizes = {};
+        const IndexToSizeMap have_index_sizes = path_info.GetIndexSizes();
+        const IndexToSizeMap want_index_sizes = {};
         CHECK(have_index_sizes == want_index_sizes);
 
-        const steps_t have_steps = path_info.GetSteps();
+        const Steps have_steps = path_info.GetSteps();
         CHECK(have_steps.empty());
     }
 
@@ -99,26 +99,26 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, path_t)", "[PathInfo]")
         const size_t want_leaves = 1;
         CHECK(have_leaves == want_leaves);
 
-        const path_t have_path = path_info.GetPath();
-        const path_t want_path = {};
+        const Path have_path = path_info.GetPath();
+        const Path want_path = {};
         CHECK(have_path == want_path);
 
-        const index_to_size_map_t have_index_sizes = path_info.GetIndexSizes();
-        const index_to_size_map_t want_index_sizes = {{"A0", 3}};
+        const IndexToSizeMap have_index_sizes = path_info.GetIndexSizes();
+        const IndexToSizeMap want_index_sizes = {{"A0", 3}};
         CHECK(have_index_sizes == want_index_sizes);
 
-        const steps_t steps = path_info.GetSteps();
+        const Steps steps = path_info.GetSteps();
         REQUIRE(steps.size() == 1);
 
         {
             const auto &step = steps[0];
             CHECK(step.id == 0);
             CHECK(step.parent == -1UL);
-            CHECK(step.children == children_t{-1, -1});
-            CHECK(step.node_indices == indices_t{"A0"});
-            CHECK(step.tensor_indices == indices_t{"A0"});
-            CHECK(step.contracted_indices == indices_t{});
-            CHECK(step.tags == tags_t{});
+            CHECK(step.children == Children{-1, -1});
+            CHECK(step.node_indices == Indices{"A0"});
+            CHECK(step.tensor_indices == Indices{"A0"});
+            CHECK(step.contracted_indices == Indices{});
+            CHECK(step.tags == Tags{});
         }
     }
 
@@ -138,64 +138,64 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, path_t)", "[PathInfo]")
         const size_t want_leaves = 3;
         CHECK(have_leaves == want_leaves);
 
-        const path_t have_path = path_info.GetPath();
-        const path_t want_path = {{0, 1}};
+        const Path have_path = path_info.GetPath();
+        const Path want_path = {{0, 1}};
         CHECK(have_path == want_path);
 
-        const index_to_size_map_t have_index_sizes = path_info.GetIndexSizes();
-        const index_to_size_map_t want_index_sizes = {
+        const IndexToSizeMap have_index_sizes = path_info.GetIndexSizes();
+        const IndexToSizeMap want_index_sizes = {
             {"A0", 3}, {"B1", 2}, {"C2", 4}, {"D3", 5}};
         CHECK(have_index_sizes == want_index_sizes);
 
-        const steps_t steps = path_info.GetSteps();
+        const Steps steps = path_info.GetSteps();
         REQUIRE(steps.size() == 4);
 
         {
             const auto &step = steps[0];
             CHECK(step.id == 0);
             CHECK(step.parent == 3);
-            CHECK(step.children == children_t{-1, -1});
-            CHECK(step.node_indices == indices_t{"A0", "B1"});
-            CHECK(step.tensor_indices == indices_t{"A0", "B1"});
-            CHECK(step.contracted_indices == indices_t{});
-            CHECK(step.tags == tags_t{"apple"});
+            CHECK(step.children == Children{-1, -1});
+            CHECK(step.node_indices == Indices{"A0", "B1"});
+            CHECK(step.tensor_indices == Indices{"A0", "B1"});
+            CHECK(step.contracted_indices == Indices{});
+            CHECK(step.tags == Tags{"apple"});
         }
         {
             const auto &step = steps[1];
             CHECK(step.id == 1);
             CHECK(step.parent == 3);
-            CHECK(step.children == children_t{-1, -1});
-            CHECK(step.node_indices == indices_t{"B1", "C2"});
-            CHECK(step.tensor_indices == indices_t{"B1", "C2"});
-            CHECK(step.contracted_indices == indices_t{});
-            CHECK(step.tags == tags_t{"banana"});
+            CHECK(step.children == Children{-1, -1});
+            CHECK(step.node_indices == Indices{"B1", "C2"});
+            CHECK(step.tensor_indices == Indices{"B1", "C2"});
+            CHECK(step.contracted_indices == Indices{});
+            CHECK(step.tags == Tags{"banana"});
         }
         {
             const auto &step = steps[2];
             CHECK(step.id == 2);
             CHECK(step.parent == -1ULL);
-            CHECK(step.children == children_t{-1, -1});
-            CHECK(step.node_indices == indices_t{"D3"});
-            CHECK(step.tensor_indices == indices_t{"D3"});
-            CHECK(step.contracted_indices == indices_t{});
-            CHECK(step.tags == tags_t{"cherry"});
+            CHECK(step.children == Children{-1, -1});
+            CHECK(step.node_indices == Indices{"D3"});
+            CHECK(step.tensor_indices == Indices{"D3"});
+            CHECK(step.contracted_indices == Indices{});
+            CHECK(step.tags == Tags{"cherry"});
         }
         {
             const auto &step = steps[3];
             CHECK(step.id == 3);
             CHECK(step.parent == -1UL);
-            CHECK(step.children == children_t{0, 1});
-            CHECK(step.node_indices == indices_t{"A0", "C2"});
-            CHECK(step.tensor_indices == indices_t{"A0", "C2"});
-            CHECK(step.contracted_indices == indices_t{"B1"});
-            CHECK(step.tags == tags_t{"apple", "banana"});
+            CHECK(step.children == Children{0, 1});
+            CHECK(step.node_indices == Indices{"A0", "C2"});
+            CHECK(step.tensor_indices == Indices{"A0", "C2"});
+            CHECK(step.contracted_indices == Indices{"B1"});
+            CHECK(step.tags == Tags{"apple", "banana"});
         }
     }
 }
 
 TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
 {
-    TensorNetwork<tensor_t> tn;
+    TensorNetwork<TestTensor> tn;
 
     SECTION("Path step is a leaf")
     {
@@ -287,7 +287,7 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
 
 TEST_CASE("PathInfo::GetTotalFlops()", "[PathInfo]")
 {
-    TensorNetwork<tensor_t> tn;
+    TensorNetwork<TestTensor> tn;
 
     SECTION("Path is empty")
     {
@@ -356,11 +356,11 @@ TEST_CASE("PathInfo::GetTotalFlops()", "[PathInfo]")
 
 TEST_CASE("PathInfo::GetPathStepMemory()", "[PathInfo]")
 {
-    TensorNetwork<tensor_t> tn;
+    TensorNetwork<TestTensor> tn;
 
     SECTION("Tensor is a scalar")
     {
-        const auto tensor = MakeTensor(indices_t{}, {});
+        const auto tensor = MakeTensor(Indices{}, {});
         tn.AddTensor(tensor, {});
 
         const PathInfo path_info(tn, {});
@@ -423,7 +423,7 @@ TEST_CASE("PathInfo::GetPathStepMemory()", "[PathInfo]")
 
 TEST_CASE("PathInfo::GetTotalMemory()", "[PathInfo]")
 {
-    TensorNetwork<tensor_t> tn;
+    TensorNetwork<TestTensor> tn;
 
     SECTION("Path is empty")
     {
