@@ -1,6 +1,7 @@
 """Contains the circuit class for building a tensor network"""
 
 import jet
+
 from .gates import Gate
 
 

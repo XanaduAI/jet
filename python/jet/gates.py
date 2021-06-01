@@ -56,7 +56,7 @@ INV_SQRT2 = 1 / math.sqrt(2)
 
 
 class Gate:
-    def __init__(self, name: str, num_wires: int, **kwargs) -> None:
+    def __init__(self, name: str, num_wires: int, **kwargs):
         """Constructs a quantum gate.
 
         Args:
@@ -139,11 +139,12 @@ class Displacement(Gate):
         num_params = 3
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -170,11 +171,12 @@ class Squeezing(Gate):
         num_params = 3
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -201,11 +203,12 @@ class TwoModeSqueezing(Gate):
         num_params = 3
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -232,11 +235,12 @@ class Beamsplitter(Gate):
         num_params = 3
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -262,11 +266,12 @@ class CNOT(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -284,11 +289,12 @@ class Hadamard(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -306,11 +312,12 @@ class PauliX(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -328,11 +335,12 @@ class PauliY(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -350,11 +358,12 @@ class PauliZ(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -372,11 +381,12 @@ class S(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -394,11 +404,12 @@ class T(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -416,11 +427,12 @@ class SX(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -438,11 +450,12 @@ class CZ(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -460,11 +473,12 @@ class CY(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -482,11 +496,12 @@ class SWAP(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -504,11 +519,12 @@ class ISWAP(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -526,11 +542,12 @@ class CSWAP(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -557,11 +574,12 @@ class Toffoli(Gate):
         num_params = 0
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -588,11 +606,12 @@ class RX(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -614,11 +633,12 @@ class RY(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -641,11 +661,12 @@ class RZ(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -666,11 +687,12 @@ class PhaseShift(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -690,23 +712,20 @@ class CPhase(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
         """Controlled phase shift operator matrix"""
         phi = self.params[0]
-        mat = [
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, cmath.exp(1j * phi)]
-        ]
+        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, cmath.exp(1j * phi)]]
         return np.array(mat, dtype=self._dtype)
+
 
 class Rot(Gate):
     """The arbitrary single qubit rotation gate"""
@@ -717,11 +736,12 @@ class Rot(Gate):
         num_params = 3
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -730,7 +750,7 @@ class Rot(Gate):
         c = math.cos(theta / 2)
         s = math.sin(theta / 2)
 
-        mat =[
+        mat = [
             [cmath.exp(-0.5j * (phi + omega)) * c, -cmath.exp(0.5j * (phi - omega)) * s],
             [cmath.exp(-0.5j * (phi - omega)) * s, cmath.exp(0.5j * (phi + omega)) * c],
         ]
@@ -746,11 +766,12 @@ class CRX(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -772,11 +793,12 @@ class CRY(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -798,11 +820,12 @@ class CRZ(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -826,11 +849,12 @@ class CRot(Gate):
         num_params = 3
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -857,11 +881,12 @@ class U1(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -880,11 +905,12 @@ class U2(Gate):
         num_params = 1
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -892,7 +918,7 @@ class U2(Gate):
         phi, lam = self.params
         mat = [
             [INV_SQRT2, -INV_SQRT2 * cmath.exp(1j * lam)],
-            [INV_SQRT2 * cmath.exp(1j * phi), INV_SQRT2 * cmath.exp(1j * (phi + lam))]
+            [INV_SQRT2 * cmath.exp(1j * phi), INV_SQRT2 * cmath.exp(1j * (phi + lam))],
         ]
         return np.array(mat, dtype=self._dtype)
 
@@ -906,11 +932,12 @@ class U3(Gate):
         num_params = 3
 
         if len(params) != num_params:
-            raise ValueError(f"{len(params)} passed. The {name} gate only accepts {num_params} parameters.")
+            raise ValueError(
+                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
+            )
         self.params = params
 
         super().__init__(name, num_wires, **kwargs)
-
 
     @lru_cache
     def _data(self) -> np.ndarray:
