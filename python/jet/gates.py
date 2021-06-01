@@ -11,10 +11,10 @@ from thewalrus.fock_gradients import (
     two_mode_squeezing,
 )
 
-import jet
+from jet import Tensor
 
 __all__ = [
-    # CV fock gates
+    # CV Fock gates
     "Displacement",
     "Squeezing",
     "TwoModeSqueezing",
@@ -56,12 +56,13 @@ INV_SQRT2 = 1 / math.sqrt(2)
 
 
 class Gate:
-    def __init__(self, name: str, num_wires: int, **kwargs):
+    def __init__(self, name: str, num_wires: int, params: List, **kwargs):
         """Constructs a quantum gate.
 
         Args:
             name: name of the gate.
             num_wires: number of wires the gate is applied to.
+            params: parameters of the gate.
 
         Kwargs:
             tensor_id (int): identification number for the gate-tensor.
@@ -73,8 +74,9 @@ class Gate:
         self._dtype = kwargs.get("dtype", np.complex128)
         self._indices = None
         self._num_wires = num_wires
+        self._params = params
 
-    def tensor(self, adjoint: bool = False) -> jet.Tensor:
+    def tensor(self, adjoint: bool = False) -> Tensor:
         """Returns the tensor representation of this gate."""
         if adjoint:
             data = np.conj(self._data()).T.flatten()
@@ -88,16 +90,29 @@ class Gate:
         dimension = int(len(data) ** (1 / len(indices)))
         shape = [dimension] * len(indices)
 
-        return jet.Tensor(indices=indices, shape=shape, data=data)
+        return Tensor(indices=indices, shape=shape, data=data)
 
     def _data(self) -> np.ndarray:
         """Returns the matrix representation of this gate."""
         raise NotImplementedError("No tensor data available for generic gate.")
 
+    def _validate(self, num_params: int):
+        """Throws a ValueError if the given quantity differs from the number of gate parameters."""
+        if len(self.params) != num_params:
+            raise ValueError(
+                f"The {self.name} gate accepts exactly {num_params} parameters "
+                f"but {len(self.params)} parameters were given."
+            )
+
     @property
     def indices(self) -> Optional[List[str]]:
         """Returns the indices of this gate for connecting tensors."""
         return self._indices
+
+    @property
+    def params(self) -> Optional[List]:
+        """Returns the parameters of this gate."""
+        return self._params
 
     @indices.setter
     def indices(self, indices: Optional[Sequence[str]]) -> None:
@@ -119,182 +134,102 @@ class Gate:
         self._indices = indices
 
 
-##################################
+####################################################################################################
 # Continuous variable Fock gates
-##################################
+####################################################################################################
 
 
 class Displacement(Gate):
-    """Displacement gate
+    def __init__(self, *params, **kwargs):
+        """Constructs a displacement gate.
 
-    Args:
-        r (float): displacement magnitude
-        phi (float): displacement angle
-        cutoff (int): Fock ladder cutoff
-    """
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "Displacement"
-        num_wires = 1
-        num_params = 3
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+        Args:
+            r (float): displacement magnitude.
+            phi (float): displacement angle.
+            cutoff (int): Fock ladder cutoff.
+        """
+        super().__init__(name="Displacement", num_wires=1, *params, **kwargs)
+        self._validate(num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """The matrix representation of the displacement gate
-
-        Returns:
-            array[complex]: matrix representing the displacement gate.
-        """
         return displacement(*self.params, dtype=self._dtype)
 
 
 class Squeezing(Gate):
-    """Squeezing gate
+    def __init__(self, *params, **kwargs):
+        """Constructs a squeezing gate.
 
-    Args:
-        r (float): squeezing magnitude
-        theta (float): squeezing angle
-        cutoff (int): Fock ladder cutoff
-    """
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "Squeezing"
-        num_wires = 1
-        num_params = 3
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+        Args:
+            r (float): squeezing magnitude.
+            theta (float): squeezing angle.
+            cutoff (int): Fock ladder cutoff.
+        """
+        super().__init__(name="Squeezing", num_wires=1, *params, **kwargs)
+        self._validate(num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """The matrix representation of the squeezing gate
-
-        Returns:
-            array[complex]: matrix representing the squeezing gate.
-        """
         return squeezing(*self.params, dtype=self._dtype)
 
 
 class TwoModeSqueezing(Gate):
-    """TwoModeSqueezing gate
+    def __init__(self, *params, **kwargs):
+        """Constructs a two-mode squeezing gate.
 
-    Args:
-        r (float): squeezing magnitude
-        theta (float): squeezing angle
-        cutoff (int): Fock ladder cutoff
-    """
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "TwoModeSqueezing"
-        num_wires = 2
-        num_params = 3
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+        Args:
+            r (float): squeezing magnitude.
+            theta (float): squeezing angle.
+            cutoff (int): Fock ladder cutoff.
+        """
+        super().__init__(name="TwoModeSqueezing", num_wires=2, *params, **kwargs)
+        self._validate(num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """The matrix representation of the two-mode squeezing gate
-
-        Returns:
-            array[complex]: matrix representing the two-mode squeezing gate.
-        """
         return two_mode_squeezing(*self.params, dtype=self._dtype)
 
 
 class Beamsplitter(Gate):
-    """Beamsplitter gate
+    def __init__(self, *params, **kwargs):
+        """Constructs a beamsplitter gate.
 
-    Args:
-        theta (float): transmissivity angle of the beamsplitter. The transmissivity is :math:`t=\cos(\theta)`
-        phi (float): reflection phase of the beamsplitter
-        cutoff (int): Fock ladder cutoff
-    """
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "Beamsplitter"
-        num_wires = 1
-        num_params = 3
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+        Args:
+            theta (float): transmissivity angle of the beamsplitter. The transmissivity is
+                           :math:`t=\\cos(\\theta)`.
+            phi (float): reflection phase of the beamsplitter.
+            cutoff (int): Fock ladder cutoff.
+        """
+        super().__init__(name="Beamsplitter", num_wires=1, *params, **kwargs)
+        self._validate(num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """The matrix representation of the beamsplitter gate
-
-        Returns:
-            array[complex]: matrix representing the beamsplitter gate.
-        """
         return beamsplitter(*self.params, dtype=self._dtype)
 
 
-###############
+####################################################################################################
 # Qubit gates
-###############
+####################################################################################################
 
 
 class CNOT(Gate):
-    """CNOT gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CNOT"
-        num_wires = 2
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a CNOT gate."""
+        super().__init__(name="CNOT", num_wires=2, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """CNOT matrix"""
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
         return np.array(mat, dtype=self._dtype)
 
 
 class Hadamard(Gate):
-    """Hadamard gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "Hadamard"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a Hadamard gate."""
+        super().__init__(name="Hadamard", num_wires=1, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -304,254 +239,133 @@ class Hadamard(Gate):
 
 
 class PauliX(Gate):
-    """PauliX gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "PauliX"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a PauliX gate."""
+        super().__init__(name="PauliX", num_wires=1, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """PauliX matrix"""
         mat = [[0, 1], [1, 0]]
         return np.array(mat, dtype=self._dtype)
 
 
 class PauliY(Gate):
-    """PauliX gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "PauliY"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a PauliY gate."""
+        super().__init__(name="PauliY", num_wires=1, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """PauliY matrix"""
         mat = [[0, -1j], [1j, 0]]
         return np.array(mat, dtype=self._dtype)
 
 
 class PauliZ(Gate):
-    """PauliZ gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "PauliZ"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a PauliZ gate."""
+        super().__init__(name="PauliZ", num_wires=1, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """PauliZ matrix"""
         mat = [[1, 0], [0, -1]]
         return np.array(mat, dtype=self._dtype)
 
 
 class S(Gate):
-    """The single-qubit phase gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "S"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a single-qubit phase gate."""
+        super().__init__(name="S", num_wires=1, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Single-qubit phase gate matrix"""
         mat = [[1, 0], [0, 1j]]
         return np.array(mat, dtype=self._dtype)
 
 
 class T(Gate):
-    """The single-qubit T gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "T"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a single-qubit T gate."""
+        super().__init__(name="T", num_wires=1, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Single-qubit T gate matrix"""
         mat = [[1, 0], [0, cmath.exp(0.25j * np.pi)]]
         return np.array(mat, dtype=self._dtype)
 
 
 class SX(Gate):
-    """The single-qubit Square-Root X gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "SX"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a single-qubit Square-Root X gate."""
+        super().__init__(name="SX", num_wires=1, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Single-qubit Square-Root X operator matrix"""
         mat = [[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]]
         return np.array(mat, dtype=self._dtype)
 
 
 class CZ(Gate):
-    """The controlled-Z gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CZ"
-        num_wires = 2
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled-Z gate."""
+        super().__init__(name="CZ", num_wires=2, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Controlled-Z gate matrix"""
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]
         return np.array(mat, dtype=self._dtype)
 
 
 class CY(Gate):
-    """The controlled-Y gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CY"
-        num_wires = 2
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled-Y gate."""
+        super().__init__(name="CY", num_wires=2, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Controlled-Y operator matrix"""
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j], [0, 0, 1j, 0]]
         return np.array(mat, dtype=self._dtype)
 
 
 class SWAP(Gate):
-    """The swap gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "SWAP"
-        num_wires = 2
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a SWAP gate."""
+        super().__init__(name="SWAP", num_wires=2, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Swap operator matrix"""
         mat = [[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
         return np.array(mat, dtype=self._dtype)
 
 
 class ISWAP(Gate):
-    """The i-swap gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "iSWAP"
-        num_wires = 1
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs an ISWAP gate."""
+        super().__init__(name="ISWAP", num_wires=2, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """i-swap operator matrix"""
         mat = [[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]]
         return np.array(mat, dtype=self._dtype)
 
 
 class CSWAP(Gate):
-    """The CSWAP gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CSWAP"
-        num_wires = 3
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a CSWAP gate."""
+        super().__init__(name="CSWAP", num_wires=3, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """CSWAP operator matrix"""
         mat = [
             [1, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0],
@@ -566,24 +380,13 @@ class CSWAP(Gate):
 
 
 class Toffoli(Gate):
-    """The Toffoli gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "Toffoli"
-        num_wires = 3
-        num_params = 0
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a Toffoli gate."""
+        super().__init__(name="Toffoli", num_wires=3, *params, **kwargs)
+        self._validate(num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Toffoli operator matrix"""
         mat = [
             [1, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0],
@@ -598,24 +401,13 @@ class Toffoli(Gate):
 
 
 class RX(Gate):
-    """The single qubit X rotation gate"""
-
-    def __init__(self, *params: float, **kwargs) -> None:
-        name = "RX"
-        num_wires = 1
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a single-qubit X rotation gate."""
+        super().__init__(name="RX", num_wires=1, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Single qubit X rotation matrix"""
         theta = self.params[0]
         c = math.cos(theta / 2)
         js = 1j * math.sin(-theta / 2)
@@ -625,24 +417,13 @@ class RX(Gate):
 
 
 class RY(Gate):
-    """The single qubit Y rotation gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "RY"
-        num_wires = 1
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a single-qubit Y rotation gate."""
+        super().__init__(name="RY", num_wires=1, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Single qubit Y rotation matrix"""
         theta = self.params[0]
 
         c = math.cos(theta / 2)
@@ -653,24 +434,13 @@ class RY(Gate):
 
 
 class RZ(Gate):
-    """The single qubit Z rotation gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "RZ"
-        num_wires = 1
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a single-qubit Z rotation gate."""
+        super().__init__(name="RZ", num_wires=1, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Single qubit Z rotation matrix"""
         theta = self.params[0]
         p = cmath.exp(-0.5j * theta)
 
@@ -679,73 +449,39 @@ class RZ(Gate):
 
 
 class PhaseShift(Gate):
-    """The single qubit local phase shift gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "PhaseShift"
-        num_wires = 1
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a single-qubit local phase shift gate."""
+        super().__init__(name="PhaseShift", num_wires=1, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Single qubit local phase shift operator matrix"""
         phi = self.params[0]
         mat = [[1, 0], [0, cmath.exp(1j * phi)]]
-
         return np.array(mat, dtype=self._dtype)
 
 
 class CPhase(Gate):
-    """The controlled phase shift gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CPhase"
-        num_wires = 2
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled phase shift gate."""
+        super().__init__(name="CPhase", num_wires=2, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Controlled phase shift operator matrix"""
         phi = self.params[0]
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, cmath.exp(1j * phi)]]
         return np.array(mat, dtype=self._dtype)
 
 
 class Rot(Gate):
-    """The arbitrary single qubit rotation gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "Rot"
-        num_wires = 1
-        num_params = 3
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs an arbitrary single-qubit rotation gate."""
+        super().__init__(name="Rot", num_wires=1, *params, **kwargs)
+        self._validate(num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Arbitrary single qubit rotation operator matrix"""
         phi, theta, omega = self.params
         c = math.cos(theta / 2)
         s = math.sin(theta / 2)
@@ -758,24 +494,13 @@ class Rot(Gate):
 
 
 class CRX(Gate):
-    """The controlled-RX gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CRX"
-        num_wires = 2
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled-RX gate."""
+        super().__init__(name="CRX", num_wires=2, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Controlled-RX operator matrix"""
         theta = self.params[0]
         c = math.cos(theta / 2)
         js = 1j * math.sin(-theta / 2)
@@ -785,24 +510,13 @@ class CRX(Gate):
 
 
 class CRY(Gate):
-    """The controlled-RY gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CRY"
-        num_wires = 2
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled-RY gate."""
+        super().__init__(name="CRY", num_wires=2, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Controlled-RY operator matrix"""
         theta = self.params[0]
         c = math.cos(theta / 2)
         s = math.sin(theta / 2)
@@ -812,24 +526,13 @@ class CRY(Gate):
 
 
 class CRZ(Gate):
-    """The controlled-RZ gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CRZ"
-        num_wires = 2
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled-RZ gate."""
+        super().__init__(name="CRZ", num_wires=2, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Controlled-RZ operator matrix"""
         theta = self.params[0]
         mat = [
             [1, 0, 0, 0],
@@ -841,24 +544,13 @@ class CRZ(Gate):
 
 
 class CRot(Gate):
-    """The controlled-rotation gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "CRZ"
-        num_wires = 2
-        num_params = 3
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled-rotation gate."""
+        super().__init__(name="CRot", num_wires=2, *params, **kwargs)
+        self._validate(num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Controlled-rotation operator matrix"""
         phi, theta, omega = self.params
         c = math.cos(theta / 2)
         s = math.sin(theta / 2)
@@ -873,48 +565,26 @@ class CRot(Gate):
 
 
 class U1(Gate):
-    """The U1 gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "U1"
-        num_wires = 1
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a U1 gate."""
+        super().__init__(name="U1", num_wires=1, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """U1 operator matrix"""
         phi = self.params[0]
         mat = [[1, 0], [0, cmath.exp(1j * phi)]]
         return np.array(mat, dtype=self._dtype)
 
 
 class U2(Gate):
-    """The U2 gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "U2"
-        num_wires = 2
-        num_params = 1
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs a U2 gate."""
+        super().__init__(name="U2", num_wires=2, *params, **kwargs)
+        self._validate(num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """U2 operator matrix"""
         phi, lam = self.params
         mat = [
             [INV_SQRT2, -INV_SQRT2 * cmath.exp(1j * lam)],
@@ -924,24 +594,13 @@ class U2(Gate):
 
 
 class U3(Gate):
-    """The arbitrary single qubit unitary gate"""
-
-    def __init__(self, *params, **kwargs) -> None:
-        name = "U3"
-        num_wires = 1
-        num_params = 3
-
-        if len(params) != num_params:
-            raise ValueError(
-                f"{len(params)} passed. The {name} gate only accepts {num_params} parameters."
-            )
-        self.params = params
-
-        super().__init__(name, num_wires, **kwargs)
+    def __init__(self, *params, **kwargs):
+        """Constructs an arbitrary single-qubit unitary gate."""
+        super().__init__(name="U3", num_wires=1, *params, **kwargs)
+        self._validate(num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        """Arbitrary single qubit unitary operator matrix"""
         theta, phi, lam = self.params
         c = math.cos(theta / 2)
         s = math.sin(theta / 2)
