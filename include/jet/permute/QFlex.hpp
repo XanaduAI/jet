@@ -148,7 +148,6 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 new_super_dimensions[i - 1] = new_super_dimensions[i] * dim;
             }
 
-
         // Iterate and generate map.
         std::vector<size_t> old_counter(num_indices, 0);
 
@@ -281,11 +280,10 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         // With the map_old_to_new_position, we are ready to reorder within
         // small chuncks.
         size_t dim_right = total_dim;
-        size_t dim_left = tensor_size>>Jet::Utilities::fast_log2(dim_right); 
+        size_t dim_left = tensor_size >> Jet::Utilities::fast_log2(dim_right);
 
         precomputed_data.dim_data.push_back(
-            DimData{dim_left, dim_right, tensor_size,
-                    std::move(map_old_to_new_position)});
+            DimData{dim_left, dim_right, tensor_size, map_old_to_new_position});
 
         precomputed_data.types.push_back(PermuteType::PermuteRight);
     }
@@ -329,11 +327,10 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         // With the map_old_to_new_position, we are ready to move small chunks.
         size_t dim_left = total_dim;
         size_t tensor_dim = tensor_size;
-        size_t dim_right = tensor_dim>>Jet::Utilities::fast_log2(dim_left);
+        size_t dim_right = tensor_dim >> Jet::Utilities::fast_log2(dim_left);
 
         precomputed_data.dim_data.push_back(
-            DimData{dim_left, dim_right, tensor_dim,
-                    std::move(map_old_to_new_position)});
+            DimData{dim_left, dim_right, tensor_dim, map_old_to_new_position});
 
         precomputed_data.types.push_back(PermuteType::PermuteLeft);
     }
