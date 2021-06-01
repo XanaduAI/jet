@@ -24,7 +24,8 @@ class HpttPermuter {
         std::vector<int> perm(old_indices.size());
 
         for (size_t i = 0; i < old_indices.size(); i++) {
-            const auto it = std::find(new_indices.begin(), new_indices.end(), old_indices[i]);
+            const auto it = std::find(new_indices.begin(), new_indices.end(),
+                                      old_indices[i]);
             if (it != new_indices.end()) {
                 perm[i] = std::distance(new_indices.begin(), it);
             }
@@ -32,10 +33,10 @@ class HpttPermuter {
 
         std::vector<int> local_shape(shape.begin(), shape.end());
 
-        auto plan = hptt::create_plan(
-            perm.data(), local_shape.size(), 1, data.data(), local_shape.data(),
-            nullptr, 0,
-            data_out.data(), nullptr, hptt::PATIENT, 1, nullptr, true);
+        auto plan =
+            hptt::create_plan(perm.data(), local_shape.size(), 1, data.data(),
+                              local_shape.data(), nullptr, 0, data_out.data(),
+                              nullptr, hptt::PATIENT, 1, nullptr, true);
 
         plan->execute();
 

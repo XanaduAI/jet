@@ -5,15 +5,17 @@
 namespace Jet {
 
 /**
- * @brief Default Permuter backend class for generalised transforms. Adapted from QFlex.
- * 
+ * @brief Default Permuter backend class for generalised transforms. Adapted
+ * from QFlex.
+ *
  * @tparam blocksize Controls the internal data chunk size for cache blocking.
  */
 template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
 
   public:
     /**
-     * @brief Reference-based transpose operation. See `Permuter` class for more details.
+     * @brief Reference-based transpose operation. See `Permuter` class for more
+     * details.
      */
     template <class DataType>
     void Transpose(const std::vector<DataType> &data_,
@@ -55,7 +57,8 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
         const size_t old_dimensions_size = shape.size();
         for (size_t i = old_dimensions_size; --i;) {
             old_super_dimensions[i - 1] = old_super_dimensions[i] * shape[i];
-            new_super_dimensions[i - 1] = new_super_dimensions[i] * new_dimensions[i];
+            new_super_dimensions[i - 1] =
+                new_super_dimensions[i] * new_dimensions[i];
         }
 
         std::vector<unsigned short int> small_map_old_to_new_position(
@@ -128,7 +131,8 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
     }
 
     /**
-     * @brief Return-based transpose operation. See `Permuter` class for more details.
+     * @brief Return-based transpose operation. See `Permuter` class for more
+     * details.
      */
     template <class DataType>
     std::vector<DataType> Transpose(const std::vector<DataType> &data_,

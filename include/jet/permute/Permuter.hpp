@@ -12,15 +12,20 @@ namespace Jet {
 
 /**
  * @brief Interface for tensor permutation backend.
- * 
- * The Permuter class represents the front-end interface for calling permutations, which are a generalization of transposition to high-rank tensors. The class follows a composition-based approach, where we instantiate with a given backend permuter, who makes available two `Transpose` methods, one which returns the transform result, and another which modifies a reference directly.
- * 
+ *
+ * The Permuter class represents the front-end interface for calling
+ * permutations, which are a generalization of transposition to high-rank
+ * tensors. The class follows a composition-based approach, where we instantiate
+ * with a given backend permuter, who makes available two `Transpose` methods,
+ * one which returns the transform result, and another which modifies a
+ * reference directly.
+ *
  *   Example 1:
  *   const std::vector<size_t> data_in {0,1,2,3,4,5};
  *   std::vector<size_t> data_out(data_in.size(), 0);
  *   Permuter<DefaultPermuter<size_t>> p;
  *   p.Transpose(data_in, {2,3}, data_out, {"a","b"}, {"b","a"});
- * 
+ *
  *   Example 2:
  *   const std::vector<size_t> data_in {0,1,2,3,4,5};
  *   Permuter<DefaultPermuter<size_t>> p;
@@ -30,14 +35,14 @@ namespace Jet {
  */
 template <class PermuterBackend> class Permuter {
   public:
-
     /**
-     * @brief Reshape the given lexicographic data vector from old to new index ordering.
-     * 
+     * @brief Reshape the given lexicographic data vector from old to new index
+     * ordering.
+     *
      * @tparam DataType Data participating in the permutation.
      * @param data_in Input data to be transposed.
      * @param shape Current shape of the tensor data in each dimension.
-     * @param data_out Output data following the transpose. 
+     * @param data_out Output data following the transpose.
      * @param current_order Current index ordering of the tensor.
      * @param new_order New index ordering of the tensor.
      */
@@ -48,24 +53,32 @@ template <class PermuterBackend> class Permuter {
                    const std::vector<std::string> &current_order,
                    const std::vector<std::string> &new_order)
     {
-        const std::set<std::string> idx_old(current_order.begin(), current_order.end());
+        const std::set<std::string> idx_old(current_order.begin(),
+                                            current_order.end());
         const std::set<std::string> idx_new(new_order.begin(), new_order.end());
-        JET_ABORT_IF_NOT(idx_old.size() == current_order.size(), "Duplicate existing indices found. Please ensure indices are unique.");
-        JET_ABORT_IF_NOT(idx_new.size() == new_order.size(), "Duplicate transpose indices found. Please ensure indices are unique.");
-        JET_ABORT_IF_NOT(idx_old == idx_new, "New indices are an invalid permutation of the existing indices");
+        JET_ABORT_IF_NOT(idx_old.size() == current_order.size(),
+                         "Duplicate existing indices found. Please ensure "
+                         "indices are unique.");
+        JET_ABORT_IF_NOT(idx_new.size() == new_order.size(),
+                         "Duplicate transpose indices found. Please ensure "
+                         "indices are unique.");
+        JET_ABORT_IF_NOT(
+            idx_old == idx_new,
+            "New indices are an invalid permutation of the existing indices");
         permuter_b_.Transpose(data_in, shape, data_out, current_order,
                               new_order);
     }
 
     /**
-     * @brief Reshape the given lexicographic data vector from old to new index ordering.
-     * 
+     * @brief Reshape the given lexicographic data vector from old to new index
+     * ordering.
+     *
      * @tparam DataType Data participating in the permutation.
      * @param data_in Input data to be transposed.
      * @param shape Current shape of the tensor data in each dimension.
      * @param current_order Current index ordering of the tensor.
      * @param new_order New index ordering of the tensor.
-     * @return std::vector<DataType> Output data following the transpose. 
+     * @return std::vector<DataType> Output data following the transpose.
      */
     template <class DataType>
     std::vector<DataType>
@@ -74,11 +87,18 @@ template <class PermuterBackend> class Permuter {
               const std::vector<std::string> &current_order,
               const std::vector<std::string> &new_order)
     {
-        std::set<std::string> idx_old(current_order.begin(), current_order.end());
+        std::set<std::string> idx_old(current_order.begin(),
+                                      current_order.end());
         std::set<std::string> idx_new(new_order.begin(), new_order.end());
-        JET_ABORT_IF_NOT(idx_old.size() == current_order.size(), "Duplicate existing indices found. Please ensure indices are unique.");
-        JET_ABORT_IF_NOT(idx_new.size() == new_order.size(), "Duplicate transpose indices found. Please ensure indices are unique.");
-        JET_ABORT_IF_NOT(idx_old == idx_new, "New indices are an invalid permutation of the existing indices");
+        JET_ABORT_IF_NOT(idx_old.size() == current_order.size(),
+                         "Duplicate existing indices found. Please ensure "
+                         "indices are unique.");
+        JET_ABORT_IF_NOT(idx_new.size() == new_order.size(),
+                         "Duplicate transpose indices found. Please ensure "
+                         "indices are unique.");
+        JET_ABORT_IF_NOT(
+            idx_old == idx_new,
+            "New indices are an invalid permutation of the existing indices");
         return permuter_b_.Transpose(data_in, shape, current_order, new_order);
     }
 
