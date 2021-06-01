@@ -398,8 +398,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         for (size_t i = 0; i < num_indices; i++) {
             std::vector<std::string> group(old_logs[i]);
             for (size_t j = 0; j < old_logs[i]; j++) {
-                group[j] = GenerateStringIndex(alphabet_position);
-                ++alphabet_position;
+                group[j] = GenerateStringIndex(alphabet_position++);
             }
             binary_groups[old_ordering[i]] = group;
         }
@@ -409,19 +408,15 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         size_t binary_position = 0;
         for (size_t i = 0; i < num_indices; i++) {
             std::string old_index = old_ordering[i];
-            for (size_t j = 0; j < binary_groups[old_index].size(); j++) {
-                old_binary_ordering[binary_position] =
-                    binary_groups[old_index][j];
-                ++binary_position;
+            for (std::string j : binary_groups[old_index]) {
+                old_binary_ordering[binary_position++] = j;
             }
         }
         binary_position = 0;
         for (size_t i = 0; i < num_indices; i++) {
             std::string new_index = new_ordering[i];
-            for (size_t j = 0; j < binary_groups[new_index].size(); j++) {
-                new_binary_ordering[binary_position] =
-                    binary_groups[new_index][j];
-                ++binary_position;
+            for (std::string j : binary_groups[new_index]) {
+                new_binary_ordering[binary_position++] = j;
             }
         }
 
