@@ -56,13 +56,13 @@ INV_SQRT2 = 1 / math.sqrt(2)
 
 
 class Gate:
-    def __init__(self, name: str, num_wires: int, params: List, **kwargs):
+    def __init__(self, name: str, num_wires: int, *params, **kwargs):
         """Constructs a quantum gate.
 
         Args:
             name: name of the gate.
             num_wires: number of wires the gate is applied to.
-            params: parameters of the gate.
+            params: gate parameters.
 
         Kwargs:
             tensor_id (int): identification number for the gate-tensor.
@@ -109,11 +109,6 @@ class Gate:
         """Returns the indices of this gate for connecting tensors."""
         return self._indices
 
-    @property
-    def params(self) -> Optional[List]:
-        """Returns the parameters of this gate."""
-        return self._params
-
     @indices.setter
     def indices(self, indices: Optional[Sequence[str]]) -> None:
         """Sets the indices of this gate for connecting tensors."""
@@ -133,6 +128,11 @@ class Gate:
             )
         self._indices = indices
 
+    @property
+    def params(self) -> Optional[List]:
+        """Returns the parameters of this gate."""
+        return self._params
+
 
 ####################################################################################################
 # Continuous variable Fock gates
@@ -148,7 +148,7 @@ class Displacement(Gate):
             phi (float): displacement angle.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="Displacement", num_wires=1, *params, **kwargs)
+        super().__init__(name="Displacement", num_wires=1, params=params, **kwargs)
         self._validate(num_params=3)
 
     @lru_cache
@@ -165,7 +165,7 @@ class Squeezing(Gate):
             theta (float): squeezing angle.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="Squeezing", num_wires=1, *params, **kwargs)
+        super().__init__(name="Squeezing", num_wires=1, params=params, **kwargs)
         self._validate(num_params=3)
 
     @lru_cache
@@ -182,7 +182,7 @@ class TwoModeSqueezing(Gate):
             theta (float): squeezing angle.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="TwoModeSqueezing", num_wires=2, *params, **kwargs)
+        super().__init__(name="TwoModeSqueezing", num_wires=2, params=params, **kwargs)
         self._validate(num_params=3)
 
     @lru_cache
@@ -200,7 +200,7 @@ class Beamsplitter(Gate):
             phi (float): reflection phase of the beamsplitter.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="Beamsplitter", num_wires=1, *params, **kwargs)
+        super().__init__(name="Beamsplitter", num_wires=1, params=params, **kwargs)
         self._validate(num_params=3)
 
     @lru_cache
@@ -216,7 +216,7 @@ class Beamsplitter(Gate):
 class CNOT(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a CNOT gate."""
-        super().__init__(name="CNOT", num_wires=2, *params, **kwargs)
+        super().__init__(name="CNOT", num_wires=2, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -228,7 +228,7 @@ class CNOT(Gate):
 class Hadamard(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a Hadamard gate."""
-        super().__init__(name="Hadamard", num_wires=1, *params, **kwargs)
+        super().__init__(name="Hadamard", num_wires=1, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -241,7 +241,7 @@ class Hadamard(Gate):
 class PauliX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a PauliX gate."""
-        super().__init__(name="PauliX", num_wires=1, *params, **kwargs)
+        super().__init__(name="PauliX", num_wires=1, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -253,7 +253,7 @@ class PauliX(Gate):
 class PauliY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a PauliY gate."""
-        super().__init__(name="PauliY", num_wires=1, *params, **kwargs)
+        super().__init__(name="PauliY", num_wires=1, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -265,7 +265,7 @@ class PauliY(Gate):
 class PauliZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a PauliZ gate."""
-        super().__init__(name="PauliZ", num_wires=1, *params, **kwargs)
+        super().__init__(name="PauliZ", num_wires=1, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -277,7 +277,7 @@ class PauliZ(Gate):
 class S(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit phase gate."""
-        super().__init__(name="S", num_wires=1, *params, **kwargs)
+        super().__init__(name="S", num_wires=1, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -289,7 +289,7 @@ class S(Gate):
 class T(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit T gate."""
-        super().__init__(name="T", num_wires=1, *params, **kwargs)
+        super().__init__(name="T", num_wires=1, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -301,7 +301,7 @@ class T(Gate):
 class SX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit Square-Root X gate."""
-        super().__init__(name="SX", num_wires=1, *params, **kwargs)
+        super().__init__(name="SX", num_wires=1, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -313,7 +313,7 @@ class SX(Gate):
 class CZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-Z gate."""
-        super().__init__(name="CZ", num_wires=2, *params, **kwargs)
+        super().__init__(name="CZ", num_wires=2, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -325,7 +325,7 @@ class CZ(Gate):
 class CY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-Y gate."""
-        super().__init__(name="CY", num_wires=2, *params, **kwargs)
+        super().__init__(name="CY", num_wires=2, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -337,7 +337,7 @@ class CY(Gate):
 class SWAP(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a SWAP gate."""
-        super().__init__(name="SWAP", num_wires=2, *params, **kwargs)
+        super().__init__(name="SWAP", num_wires=2, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -349,7 +349,7 @@ class SWAP(Gate):
 class ISWAP(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs an ISWAP gate."""
-        super().__init__(name="ISWAP", num_wires=2, *params, **kwargs)
+        super().__init__(name="ISWAP", num_wires=2, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -361,7 +361,7 @@ class ISWAP(Gate):
 class CSWAP(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a CSWAP gate."""
-        super().__init__(name="CSWAP", num_wires=3, *params, **kwargs)
+        super().__init__(name="CSWAP", num_wires=3, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -382,7 +382,7 @@ class CSWAP(Gate):
 class Toffoli(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a Toffoli gate."""
-        super().__init__(name="Toffoli", num_wires=3, *params, **kwargs)
+        super().__init__(name="Toffoli", num_wires=3, params=params, **kwargs)
         self._validate(num_params=0)
 
     @lru_cache
@@ -403,7 +403,7 @@ class Toffoli(Gate):
 class RX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit X rotation gate."""
-        super().__init__(name="RX", num_wires=1, *params, **kwargs)
+        super().__init__(name="RX", num_wires=1, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -419,7 +419,7 @@ class RX(Gate):
 class RY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit Y rotation gate."""
-        super().__init__(name="RY", num_wires=1, *params, **kwargs)
+        super().__init__(name="RY", num_wires=1, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -436,7 +436,7 @@ class RY(Gate):
 class RZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit Z rotation gate."""
-        super().__init__(name="RZ", num_wires=1, *params, **kwargs)
+        super().__init__(name="RZ", num_wires=1, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -451,7 +451,7 @@ class RZ(Gate):
 class PhaseShift(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit local phase shift gate."""
-        super().__init__(name="PhaseShift", num_wires=1, *params, **kwargs)
+        super().__init__(name="PhaseShift", num_wires=1, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -464,7 +464,7 @@ class PhaseShift(Gate):
 class CPhase(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled phase shift gate."""
-        super().__init__(name="CPhase", num_wires=2, *params, **kwargs)
+        super().__init__(name="CPhase", num_wires=2, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -477,7 +477,7 @@ class CPhase(Gate):
 class Rot(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs an arbitrary single-qubit rotation gate."""
-        super().__init__(name="Rot", num_wires=1, *params, **kwargs)
+        super().__init__(name="Rot", num_wires=1, params=params, **kwargs)
         self._validate(num_params=3)
 
     @lru_cache
@@ -496,7 +496,7 @@ class Rot(Gate):
 class CRX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-RX gate."""
-        super().__init__(name="CRX", num_wires=2, *params, **kwargs)
+        super().__init__(name="CRX", num_wires=2, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -512,7 +512,7 @@ class CRX(Gate):
 class CRY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-RY gate."""
-        super().__init__(name="CRY", num_wires=2, *params, **kwargs)
+        super().__init__(name="CRY", num_wires=2, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -528,7 +528,7 @@ class CRY(Gate):
 class CRZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-RZ gate."""
-        super().__init__(name="CRZ", num_wires=2, *params, **kwargs)
+        super().__init__(name="CRZ", num_wires=2, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -546,7 +546,7 @@ class CRZ(Gate):
 class CRot(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-rotation gate."""
-        super().__init__(name="CRot", num_wires=2, *params, **kwargs)
+        super().__init__(name="CRot", num_wires=2, params=params, **kwargs)
         self._validate(num_params=3)
 
     @lru_cache
@@ -567,7 +567,7 @@ class CRot(Gate):
 class U1(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a U1 gate."""
-        super().__init__(name="U1", num_wires=1, *params, **kwargs)
+        super().__init__(name="U1", num_wires=1, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -580,7 +580,7 @@ class U1(Gate):
 class U2(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a U2 gate."""
-        super().__init__(name="U2", num_wires=2, *params, **kwargs)
+        super().__init__(name="U2", num_wires=2, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
@@ -596,7 +596,7 @@ class U2(Gate):
 class U3(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs an arbitrary single-qubit unitary gate."""
-        super().__init__(name="U3", num_wires=1, *params, **kwargs)
+        super().__init__(name="U3", num_wires=1, params=params, **kwargs)
         self._validate(num_params=3)
 
     @lru_cache
