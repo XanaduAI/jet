@@ -207,9 +207,16 @@ Tensor<T> Transpose(const Tensor<T> &A,
 
     if (is_pow_2(A.GetSize())) {
         auto permuter = Permuter<QFlexPermuter<BLOCKSIZE, MINSIZE>>();
-        return Tensor<T>{new_indices, new_shape,
-                         permuter.Transpose(A.GetData(), A.GetShape(),
-                                            A.GetIndices(), new_indices)};
+        try {
+            return Tensor<T>{new_indices, new_shape,
+                             permuter.Transpose(A.GetData(), A.GetShape(),
+                                                A.GetIndices(), new_indices)};
+        }
+        catch (Jet::Exception &e) {
+            std::cerr << "Error in fast transpose with given parameters:="
+                      << e.what() << std::endl;
+            std::cerr << "Using fall-back default transpose." << std::endl;
+        }
     }
     auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
     return Tensor<T>{new_indices, new_shape,
