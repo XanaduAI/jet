@@ -357,16 +357,9 @@ TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
         CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_bca, {3, 5, 2},
                                            {"b", "c", "a"}, index_expected),
                         Jet::Exception);
-        CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_bca, {3, 5, 2},
-                                           data_out, {"b", "c", "a"},
-                                           index_expected),
-                        Jet::Exception);
+
         CHECK_THROWS_WITH(permuter.Transpose(data_non_pow2_bca, {3, 5, 2},
                                              {"b", "c", "a"}, index_expected),
-                          Contains("Fast transpose expects power-of-2 data"));
-        CHECK_THROWS_WITH(permuter.Transpose(data_non_pow2_bca, {3, 5, 2},
-                                             data_out, {"b", "c", "a"},
-                                             index_expected),
                           Contains("Fast transpose expects power-of-2 data"));
     }
     SECTION("{c,b,a} - > {a,b,c}")
@@ -375,16 +368,9 @@ TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
         CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cba, {5, 3, 2},
                                            {"c", "b", "a"}, index_expected),
                         Jet::Exception);
-        CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cba, {5, 3, 2},
-                                           data_out, {"c", "b", "a"},
-                                           index_expected),
-                        Jet::Exception);
+
         CHECK_THROWS_WITH(permuter.Transpose(data_non_pow2_cba, {5, 3, 2},
                                              {"c", "b", "a"}, index_expected),
-                          Contains("Fast transpose expects power-of-2 data"));
-        CHECK_THROWS_WITH(permuter.Transpose(data_non_pow2_cba, {5, 3, 2},
-                                             data_out, {"c", "b", "a"},
-                                             index_expected),
                           Contains("Fast transpose expects power-of-2 data"));
     }
     SECTION("{c,a,b} - > {a,b,c}")
@@ -393,17 +379,79 @@ TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
         CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, {5, 2, 3},
                                            {"c", "a", "b"}, index_expected),
                         Jet::Exception);
-        CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, {5, 2, 3},
-                                           data_out, {"c", "a", "b"},
-                                           index_expected),
-                        Jet::Exception);
+
         CHECK_THROWS_WITH(permuter.Transpose(data_non_pow2_cab, {5, 2, 3},
                                              {"c", "a", "b"}, index_expected),
                           Contains("Fast transpose expects power-of-2 data"));
-        CHECK_THROWS_WITH(permuter.Transpose(data_non_pow2_cab, {5, 2, 3},
-                                             data_out, {"c", "a", "b"},
-                                             index_expected),
-                          Contains("Fast transpose expects power-of-2 data"));
+    }
+}
+
+TEST_CASE("QFlexPermuter<>::Transpose exceptional data conditions",
+          "[Permute]", )
+{
+    using namespace Catch::Matchers;
+
+    Permuter<QFlexPermuter<>> permuter;
+
+    std::vector<std::string> index_expected{"a", "b", "c"};
+    std::vector<data_t> data_expected = FillArray(30);
+    std::vector<size_t> shape{2, 3, 5, 2};
+
+    SECTION("Incorrect shape-indices match")
+    {
+
+        std::vector<data_t> data_out(data_non_pow2_cab);
+        CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, shape,
+                                           {"c", "a", "b"}, index_expected),
+                        Jet::Exception);
+
+        CHECK_THROWS_WITH(
+            permuter.Transpose(data_non_pow2_cab, shape, {"c", "a", "b"},
+                               index_expected),
+            Contains("Tensor shape does not match number of indices."));
+    }
+    SECTION("Incorrect shape-data match")
+    {
+        CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, {2, 3, 5, 2},
+                                           {"c", "a", "b", "d"},
+                                           {"a", "b", "c", "d"}),
+                        Jet::Exception);
+
+        CHECK_THROWS_WITH(
+            permuter.Transpose(data_non_pow2_cab, {2, 3, 5, 2},
+                               {"c", "a", "b", "d"}, {"a", "b", "c", "d"}),
+            Contains("Tensor shape does not match given tensor data."));
+    }
+    SECTION("Empty shape")
+    {
+        CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, {},
+                                           {"c", "a", "b", "d"},
+                                           index_expected),
+                        Jet::Exception);
+
+        CHECK_THROWS_WITH(
+            permuter.Transpose(data_non_pow2_cab, {}, {"c", "a", "b", "d"},
+                               index_expected),
+            Contains("Tensor shape does not match number of indices"));
+    }
+    SECTION("Empty indices")
+    {
+        CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, {2, 3, 5},
+                                           {"c", "a", "b"}, {}),
+                        Jet::Exception);
+
+        CHECK_THROWS_WITH(
+            permuter.Transpose(data_non_pow2_cab, {2, 3, 5},
+                               {"c", "a", "b", "d"}, {}),
+            Contains("Tensor shape does not match number of indices"));
+
+        CHECK_THROWS_AS(
+            permuter.Transpose(data_non_pow2_cab, {2, 3, 5}, {}, {}),
+            Jet::Exception);
+
+        CHECK_THROWS_WITH(
+            permuter.Transpose(data_non_pow2_cab, {}, {}, {}),
+            Contains("Tensor shape does not match given tensor data"));
     }
 }
 
