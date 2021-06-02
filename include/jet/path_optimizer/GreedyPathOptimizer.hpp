@@ -17,9 +17,14 @@ class GreedyPathOptimizer {
     size_t max_rejections_;
 
   public:
-    GreedyPathOptimizer(double alpha, double temperature,
-                        double amplitude_modifier = 1.0,
-                        size_t max_rejections = 100000, size_t seed = 0)
+    GreedyPathOptimizer
+    (
+     double alpha,
+     double temperature,
+     double amplitude_modifier = 1.0,
+     size_t max_rejections = 100000,
+     size_t seed = 0
+    )
     {
         alpha_ = alpha;
         amplitude_modifier_ = amplitude_modifier;

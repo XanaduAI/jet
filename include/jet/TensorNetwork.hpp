@@ -184,6 +184,25 @@ template <class Tensor> class TensorNetwork {
         return id;
     }
 
+  // void FillRandom(size_t num_tensors,
+  // 		  size_t num_edges,
+  // 		  int seed = 0,
+  // 		  size_t min_dimension = 2,
+  // 		  size_t max_dimension = 2)
+  // {
+
+  //   //We demand that two times the indices is greater than the number of tensors, so we can
+  //   //have atleast one index per tensor.
+  //   JET_ABORT_IF(num_tensors >= 2*num_edges, "num_tensors >= 2*num_edges);
+
+  //   std::vector<std::string> index_database(num_edges);
+  // 		 std::vector<std::vector<std::string>> 
+  // 		 std::vector<std::vector<std::size_t>>
+    
+    
+    
+  // }
+  
     /**
      * @brief Slices a set of indices.
      *
@@ -323,6 +342,81 @@ template <class Tensor> class TensorNetwork {
 
         return nodes_.back().tensor;
     }
+
+
+
+  size_t RankSimplify
+  (
+   const std::vector<std::string>
+   &ignore_tags
+  )
+  {
+    size_t num_nodes = NumTensors();
+    using namespace Jet::Utilities;
+    size_t counter_prev = -1;
+    size_t counter = 0;
+    // no tensor contractions can be done that reduce rank
+    // after counter_prev catches up to counter
+
+    std::unordered_set<size_t> ignore_node;
+    for (auto i : ignore_tags) {
+      if (tag_to_nodes_map_.count(i)) {
+	auto its = tag_to_nodes_map_.equal_range(i);
+	for (auto it = its.first; it != its.second; ++it) {
+	  ignore_node.insert(it->second);
+	}	
+      }
+    }
+
+    while (counter_prev != counter) {
+      std::pair<size_t, size_t> node_pair;
+      int diff = 0;
+      bool found = false;
+      for (auto &i : index_to_edge_map_) {
+	Edge &e = i.second;
+	size_t a = e.node_ids[0];
+	if (ignore_node.count(a))
+	  continue;
+	size_t b = e.node_ids[1];
+	if (ignore_node.count(b))
+	  continue;
+	Node node_a = nodes_[a];
+	Node node_b = nodes_[b];
+	const std::vector<std::string> &contracted_indices =
+	  VectorIntersection(node_a.tensor.GetIndices(),
+			     node_b.tensor.GetIndices());
+	size_t node_a_rank = node_a.tensor.GetShape().size();
+	size_t node_b_rank = node_b.tensor.GetShape().size();
+	int node_c_rank =
+	  node_a_rank + node_b_rank - 2 * contracted_indices.size();
+	int max_rank =
+	  (node_a_rank > node_b_rank) ? node_a_rank : node_b_rank;
+	int diff_temp = node_c_rank - max_rank;
+	if (diff_temp <= 0 && (found == false || diff_temp < diff)) {
+	  found = true;
+	  diff = diff_temp;
+	  node_pair = {a, b};
+	}
+      }
+      if (found) {
+	size_t new_node = ContractNodes_(node_pair.first,node_pair.second);
+	UpdateIndexMapAfterContraction_(nodes_[node_pair.first],
+					nodes_[node_pair.second],
+					nodes_[new_node]);
+	counter++;
+      }
+      counter_prev++;
+    }
+    TensorNetwork<Tensor> tn;
+    for (int i = 0; i < nodes_.size(); i++) {
+      if (nodes_[i].contracted == false)
+	tn.AddTensor(nodes_[i].tensor, nodes_[i].tags);
+    }
+    *(this) = tn;
+
+    return counter;
+  }
+  
 
   private:
     /// Nodes inside this tensor network.
@@ -509,6 +603,8 @@ template <class Tensor> class TensorNetwork {
             }
         }
     }
+
+  
 
     /**
      * @brief Derives the name of a node from a sequence of indices.
