@@ -18,6 +18,9 @@ namespace Jet {
  * @tparam MIN_DIMS Controls the right-movement minimum dimension size.
  */
 template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
+    static_assert(BLOCKSIZE > MIN_DIMS,
+                  "BLOCKSIZE must be greater than MIN_DIMS");
+
   public:
     template <class DataType>
     std::vector<DataType> Transpose(const std::vector<DataType> &data_,
@@ -26,12 +29,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                                     const std::vector<std::string> &new_indices)
 
     {
-        std::vector<DataType> data(data_);
-        std::vector<DataType> scratch(data_);
-        PlanData precomputed_data =
-            PrecomputeFastTransposeData(data, shape, old_indices, new_indices);
-        FastTranspose(data, precomputed_data, scratch);
-        return data;
+        std::vector<DataType> data_out(data_);
+        Transpose(data_, shape, data_out, old_indices, new_indices);
+        return data_out;
     }
 
     template <class DataType>
@@ -115,17 +115,19 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         std::vector<size_t> old_dimensions;
         bool no_transpose;
         size_t total_dim;
-        PlanData(size_t num_elements) : new_ordering(num_elements), new_dimensions(num_elements), old_ordering(num_elements), old_dimensions(num_elements) {}
+        PlanData(size_t num_elements)
+            : new_ordering(num_elements), new_dimensions(num_elements),
+              old_ordering(num_elements), old_dimensions(num_elements)
+        {
+        }
 
-        PlanData(
-            const std::vector<std::string> &old_indices, 
-            const std::vector<std::string> &new_ordering, 
-            const std::vector<size_t> &shape
-        ) : 
-        new_ordering(new_ordering), 
-        new_dimensions(shape.size(), 0), 
-        old_ordering(old_indices), 
-        old_dimensions(shape) {}
+        PlanData(const std::vector<std::string> &old_indices,
+                 const std::vector<std::string> &new_ordering,
+                 const std::vector<size_t> &shape)
+            : new_ordering(new_ordering), new_dimensions(shape.size(), 0),
+              old_ordering(old_indices), old_dimensions(shape)
+        {
+        }
     };
 
     void GenerateBinaryReorderingMap(
@@ -138,9 +140,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         JET_ABORT_IF(num_indices == 0, "Number of indices cannot be zero.");
 
         JET_ABORT_IF(static_cast<size_t>(std::pow(dim, num_indices)) !=
-            map_old_to_new_position.size(), "Size of map must be equal to 2^num_indices");
+                         map_old_to_new_position.size(),
+                     "Size of map must be equal to 2^num_indices");
 
-        // Define super dimensions. See _naive_reorder().
         std::vector<size_t> old_dimensions(num_indices, dim);
         std::vector<size_t> new_dimensions(num_indices, dim);
         std::vector<size_t> old_super_dimensions(num_indices);
@@ -187,8 +189,6 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                        const PlanData &precomputed_data,
                        std::vector<DataType> &scratch_in)
     {
-        auto data_ = data_in.data();
-        auto scratch = scratch_in.data();
 
         for (size_t p_i = 0; p_i < precomputed_data.types.size();
              p_i++) { // Type is empty, hence no transpose
@@ -203,27 +203,28 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 #pragma omp parallel
 #endif
                 {
-                    DataType *temp_data = new DataType[dim_right];
+                    std::vector<DataType> temp_data(dim_right);
 #if defined _OPENMP
 #pragma omp for schedule(static)
 #endif
                     for (size_t pl = 0; pl < dim_left; pl++) {
                         size_t offset = pl * dim_right;
+
                         for (size_t pr = 0; pr < dim_right; pr++)
-                            *(temp_data + pr) = *(data_ + offset + pr);
-                        for (size_t pr = 0; pr < dim_right; pr++)
-                            *(data_ + offset + map_old_to_new_position[pr]) =
-                                *(temp_data + pr);
+                            temp_data[pr] = data_in[offset + pr];
+                        for (size_t pr = 0; pr < dim_right; pr++) {
+                            data_in[offset + map_old_to_new_position[pr]] =
+                                temp_data[pr];
+                        }
                     }
-                    delete[] temp_data;
                 }
             }
-            else {
+            else if (precomputed_data.types[p_i] == PermuteType::PermuteLeft) {
 #if defined _OPENMP
 #pragma omp parallel for schedule(static, blocksize_)
 #endif
                 for (size_t p = 0; p < tensor_dim; p++) {
-                    *(scratch + p) = *(data_ + p);
+                    scratch_in[p] = data_in[p];
                 }
 #if defined _OPENMP
 #pragma omp parallel
@@ -237,8 +238,8 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                         size_t new_offset =
                             map_old_to_new_position[pl] * dim_right;
                         for (size_t pr = 0; pr < dim_right; pr++) {
-                            *(data_ + new_offset + pr) =
-                                *(scratch + old_offset + pr);
+                            data_in[new_offset + pr] =
+                                scratch_in[old_offset + pr];
                         }
                     }
                 }
@@ -251,6 +252,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                                  const std::vector<std::string> &new_ordering,
                                  size_t tensor_size, PlanData &precomputed_data)
     {
+        JET_ABORT_IF(old_ordering.size() != new_ordering.size(),
+                     "The number of provided indices must be the same for old "
+                     "and new orderings.")
 
         // Don't do anything if there is nothing to reorder.
         if (new_ordering == old_ordering) {
@@ -279,13 +283,14 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 }
             }
         }
+        using namespace Jet::Utilities;
 
         std::vector<size_t> map_old_to_new_position(total_dim);
         GenerateBinaryReorderingMap(map_old_to_new_idxpos,
                                     map_old_to_new_position);
 
         // With the map_old_to_new_position, we are ready to reorder within
-        // small chuncks.
+        // small chunks.
         size_t dim_right = total_dim;
         size_t dim_left = tensor_size >> Jet::Utilities::fast_log2(dim_right);
 
@@ -300,6 +305,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                                 const std::vector<std::string> &new_ordering,
                                 size_t tensor_size, PlanData &precomputed_data)
     {
+        JET_ABORT_IF(old_ordering.size() != new_ordering.size(),
+                     "The number of provided indices must be the same for old "
+                     "and new orderings.")
 
         // Don't do anything if there is nothing to reorder.
         if (new_ordering == old_ordering) {
@@ -379,8 +387,6 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
         if (new_ordering == old_ordering) {
             precomputed_data.no_transpose = true;
-                std::cout << "Returned here 5" << std::endl;
-
             return precomputed_data;
         }
 
@@ -420,30 +426,16 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
         size_t tensor_size = tensor_data.size();
 
-        // Up to here, I have created old_binary_ordering and
-        // new_binary_ordering.
-
-        // Change _indices and _dimensions, as well as _index_to_dimension.
-        // This is common to all cases, special or default (worst case).
-
-        // Now special cases, before the default L-R-L worst case.
-        // Tensor doesn't have enough size to pass MAX_RIGHT_DIM => only one R.
         if (num_binary_indices <= fast_log2(blocksize_)) {
             PrecomputeRightTransposeData(old_binary_ordering,
                                          new_binary_ordering, tensor_size,
                                          precomputed_data);
-                std::cout << "Returned here 4" << std::endl;
-
             return precomputed_data;
         }
-        // Reordering needs only one right move or one left move.
-        // Left moves might benefit a lot from being applied on shorter strings,
-        // up to L10. Computation times are L4>L5>L6>...>L10. I'll consider
-        // all of these cases.
+
         {
-            if (new_binary_ordering.size() < fast_log2(blocksize_))
-                JET_ABORT(
-                    "New ordering is too small to be used at this point.");
+            JET_ABORT_IF(new_binary_ordering.size() < fast_log2(blocksize_),
+                         "New ordering is too small to be used at this point.");
 
             constexpr size_t Lr = fast_log2(blocksize_);
             size_t Ll = new_binary_ordering.size() - Lr;
@@ -464,56 +456,36 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                     new_binary_ordering.end());
                 PrecomputeRightTransposeData(Lr_old_indices, Lr_new_indices,
                                              tensor_size, precomputed_data);
-                std::cout << "Returned here 1" << std::endl;
                 return precomputed_data;
             }
 
-            JET_ABORT_IF(Rr == 0, "Number of minimum dimensions must be greater than one.");
+            JET_ABORT_IF(
+                Rr == 0,
+                "Number of minimum dimensions must be greater than one.");
 
-            /// Search for matching substring sequences from end (right) to start. For a non-zero sequence matched here, we can form a Left-transpose.
-            auto matched_it = std::mismatch(old_binary_ordering.rbegin(), old_binary_ordering.rend(), new_binary_ordering.rbegin());
-            
-            size_t num_elems = std::distance(old_binary_ordering.rbegin(), matched_it.first);
+            /// Search for matching substring sequences from end (right) to
+            /// start. If the matched sequence is greater in length than the
+            /// minimum support size defined by MIN_SIZE, we can form a
+            /// Left-transpose.
+            auto matched_it = std::mismatch(old_binary_ordering.rbegin(),
+                                            old_binary_ordering.rend(),
+                                            new_binary_ordering.rbegin());
 
-            if(matched_it.first != old_binary_ordering.rbegin() && num_elems >= (Rr)){
+            size_t num_elems =
+                std::distance(old_binary_ordering.rbegin(), matched_it.first);
+
+            if (matched_it.first != old_binary_ordering.rbegin() &&
+                num_elems >= (Rr)) {
                 std::vector<std::string> Rl_old_indices(
-                        old_binary_ordering.begin(),
-                        old_binary_ordering.end() - num_elems);
+                    old_binary_ordering.begin(),
+                    old_binary_ordering.end() - num_elems);
                 std::vector<std::string> Rl_new_indices(
-                        new_binary_ordering.begin(),
-                        new_binary_ordering.end() - num_elems);
-                    PrecomputeLeftTransposeData(Rl_old_indices, Rl_new_indices,
-                                                tensor_size, precomputed_data);
-
-                    return precomputed_data;
+                    new_binary_ordering.begin(),
+                    new_binary_ordering.end() - num_elems);
+                PrecomputeLeftTransposeData(Rl_old_indices, Rl_new_indices,
+                                            tensor_size, precomputed_data);
+                return precomputed_data;
             }
-/*
-            for (size_t extended_Rr = old_binary_ordering.size(); extended_Rr > 0 ; extended_Rr--) {
-                std::cout << "Rr=" << Rr << ", extended_Rr=" << extended_Rr << ", |old_binary_ordering|="<< old_binary_ordering.size() << old_binary_ordering << std::endl;
-                std::vector<std::string> 
-Rr_old_indices( old_binary_ordering.end() - extended_Rr,  old_binary_ordering.end());
-                std::vector<std::string> Rr_new_indices(
-                    new_binary_ordering.end() - extended_Rr,
-                    new_binary_ordering.end());
-std::cout << Rr_old_indices << "," << Rr_new_indices << std::endl;
-    
-                if ( std::equal(old_binary_ordering.end() - extended_Rr, old_binary_ordering.end(), new_binary_ordering.end() - extended_Rr)   ) {
-                //if (Rr_old_indices == Rr_new_indices) {
-                    std::vector<std::string> Rl_old_indices(
-                        old_binary_ordering.begin(),
-                        old_binary_ordering.end() - extended_Rr);
-                    std::vector<std::string> Rl_new_indices(
-                        new_binary_ordering.begin(),
-                        new_binary_ordering.end() - extended_Rr);
-std::cout << Rl_old_indices << "," << Rl_new_indices << std::endl;
-
-                    PrecomputeLeftTransposeData(Rl_old_indices, Rl_new_indices,
-                                                tensor_size, precomputed_data);
-                std::cout << "Returned here 2" << std::endl;
-
-                    return precomputed_data;
-                }
-            }*/
         }
 
         // Worst case.
@@ -530,20 +502,22 @@ std::cout << Rl_old_indices << "," << Rl_new_indices << std::endl;
             // _left_reorder and _right_reorder, so that they don't do anything
             // when not needed. Debug from here!
 
-            JET_ABORT_IF(new_binary_ordering.size() < fast_log2(blocksize_), 
-                    "New ordering is too small to be used at this point.");
-            JET_ABORT_IF(new_binary_ordering.size() < fast_log2(min_dims_), 
-                    "New ordering is too small to be used at this point.");
+            JET_ABORT_IF(new_binary_ordering.size() < fast_log2(blocksize_),
+                         "New ordering is too small to be used at this point.");
+            JET_ABORT_IF(new_binary_ordering.size() < fast_log2(min_dims_),
+                         "New ordering is too small to be used at this point.");
 
             constexpr size_t Lr = fast_log2(blocksize_);
             size_t Ll = new_binary_ordering.size() - Lr;
             constexpr size_t Rr = fast_log2(min_dims_);
             size_t Rl = new_binary_ordering.size() - Rr;
             // Helper vectors that can be reused.
-            
-            std::vector<std::string>  Rr_indices(new_binary_ordering.begin()+Rl, new_binary_ordering.end());
-            
-            std::vector<std::string> Rl_indices(old_binary_ordering.begin(), old_binary_ordering.begin()+Rl);
+
+            std::vector<std::string> Rr_indices(
+                new_binary_ordering.begin() + Rl, new_binary_ordering.end());
+
+            std::vector<std::string> Rl_indices(
+                old_binary_ordering.begin(), old_binary_ordering.begin() + Rl);
 
             std::vector<std::string> Rr_new_in_Rl_old =
                 VectorIntersection(Rl_indices, Rr_indices);
@@ -554,25 +528,25 @@ std::cout << Rl_old_indices << "," << Rl_new_indices << std::endl;
             std::vector<std::string> Rl_first_step =
                 VectorConcatenation(Rl_old_not_in_Rr_new, Rr_new_in_Rl_old);
 
-            std::vector<std::string> Rl_zeroth_step(Rl);
-            for (size_t i = 0; i < Rl; i++)//Rl_zeroth_step(old_binary_ordering.begin(), old_binary_ordering.begin)
-                Rl_zeroth_step[i] = old_binary_ordering[i];
+            std::vector<std::string> &Rl_zeroth_step =
+                Rl_indices; /// already created
 
             PrecomputeLeftTransposeData(Rl_zeroth_step, Rl_first_step,
                                         tensor_size, precomputed_data);
 
-            std::vector<std::string> Lr_first_step = VectorConcatenation(
-                std::vector<std::string>(Rl_first_step.begin() + Ll,
-                                         Rl_first_step.end()),
-                std::vector<std::string>(old_binary_ordering.begin() + Rl,
-                                         old_binary_ordering.end()));
-
-            Rr_indices = std::vector<std::string>(
-                new_binary_ordering.begin() + Rl, new_binary_ordering.end());
+            std::vector<std::string> Lr_first_step(Rl_first_step.begin() + Ll,
+                                                   Rl_first_step.end());
+            Lr_first_step.insert(Lr_first_step.end(),
+                                 old_binary_ordering.begin() + Rl,
+                                 old_binary_ordering.end());
 
             std::vector<std::string> Lr_second_step = VectorConcatenation(
                 VectorSubtraction(Lr_first_step, Rr_indices),
                 std::vector<std::string>(Rr_indices));
+
+            JET_ABORT_IF(Lr_second_step.size() != Lr_first_step.size(),
+                         "New ordering is too small to be used at this point. "
+                         "Consider increasing the BLOCKSIZE.");
 
             PrecomputeRightTransposeData(Lr_first_step, Lr_second_step,
                                          tensor_size, precomputed_data);
@@ -588,7 +562,6 @@ std::cout << Rl_old_indices << "," << Rl_new_indices << std::endl;
             PrecomputeLeftTransposeData(Rl_second_step, Rl_third_step,
                                         tensor_size, precomputed_data);
             // done with 3).
-                            std::cout << "Returned here 3" << std::endl;
 
             return precomputed_data;
         }
