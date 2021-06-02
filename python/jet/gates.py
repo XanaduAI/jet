@@ -15,6 +15,7 @@ from .bindings import TensorC64, TensorC128
 from .factory import Tensor
 
 __all__ = [
+    "Gate",
     # CV Fock gates
     "Displacement",
     "Squeezing",
@@ -115,7 +116,7 @@ class Gate:
         if indices is None:
             pass
 
-        # Check that `indices is a sequence of unique strings.
+        # Check that `indices` is a sequence of unique strings.
         elif (
             not isinstance(indices, Sequence)
             or not all(isinstance(idx, str) for idx in indices)
