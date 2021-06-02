@@ -51,7 +51,8 @@ __all__ = [
     "U3",
 ]
 
-INV_SQRT2 = math.sqrt(2) / 2
+
+INV_SQRT2 = 1 / math.sqrt(2)
 
 
 class Gate:
@@ -154,7 +155,7 @@ class Displacement(Gate):
             cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="Displacement", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=3)
+        self._validate(want_num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -171,7 +172,7 @@ class Squeezing(Gate):
             cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="Squeezing", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=3)
+        self._validate(want_num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -188,7 +189,7 @@ class TwoModeSqueezing(Gate):
             cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="TwoModeSqueezing", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=3)
+        self._validate(want_num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -206,7 +207,7 @@ class Beamsplitter(Gate):
             cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="Beamsplitter", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=3)
+        self._validate(want_num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -222,7 +223,7 @@ class CNOT(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a CNOT gate."""
         super().__init__(name="CNOT", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -234,7 +235,7 @@ class Hadamard(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a Hadamard gate."""
         super().__init__(name="Hadamard", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -247,7 +248,7 @@ class PauliX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a PauliX gate."""
         super().__init__(name="PauliX", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -259,7 +260,7 @@ class PauliY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a PauliY gate."""
         super().__init__(name="PauliY", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -271,7 +272,7 @@ class PauliZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a PauliZ gate."""
         super().__init__(name="PauliZ", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -283,7 +284,7 @@ class S(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit phase gate."""
         super().__init__(name="S", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -295,7 +296,7 @@ class T(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit T gate."""
         super().__init__(name="T", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -307,7 +308,7 @@ class SX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit Square-Root X gate."""
         super().__init__(name="SX", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -319,7 +320,7 @@ class CZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-Z gate."""
         super().__init__(name="CZ", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -331,7 +332,7 @@ class CY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-Y gate."""
         super().__init__(name="CY", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -343,7 +344,7 @@ class SWAP(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a SWAP gate."""
         super().__init__(name="SWAP", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -355,7 +356,7 @@ class ISWAP(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs an ISWAP gate."""
         super().__init__(name="ISWAP", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -367,7 +368,7 @@ class CSWAP(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a CSWAP gate."""
         super().__init__(name="CSWAP", num_wires=3, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -388,7 +389,7 @@ class Toffoli(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a Toffoli gate."""
         super().__init__(name="Toffoli", num_wires=3, params=params, **kwargs)
-        self._validate(num_params=0)
+        self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -409,7 +410,7 @@ class RX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit X rotation gate."""
         super().__init__(name="RX", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -425,7 +426,7 @@ class RY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit Y rotation gate."""
         super().__init__(name="RY", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -442,7 +443,7 @@ class RZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit Z rotation gate."""
         super().__init__(name="RZ", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -457,7 +458,7 @@ class PhaseShift(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a single-qubit local phase shift gate."""
         super().__init__(name="PhaseShift", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -470,7 +471,7 @@ class CPhaseShift(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled phase shift gate."""
         super().__init__(name="CPhaseShift", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -483,7 +484,7 @@ class Rot(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs an arbitrary single-qubit rotation gate."""
         super().__init__(name="Rot", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=3)
+        self._validate(want_num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -502,7 +503,7 @@ class CRX(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-RX gate."""
         super().__init__(name="CRX", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -518,7 +519,7 @@ class CRY(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-RY gate."""
         super().__init__(name="CRY", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -534,7 +535,7 @@ class CRZ(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-RZ gate."""
         super().__init__(name="CRZ", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -552,7 +553,7 @@ class CRot(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled-rotation gate."""
         super().__init__(name="CRot", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=3)
+        self._validate(want_num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -573,7 +574,7 @@ class U1(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a U1 gate."""
         super().__init__(name="U1", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -586,7 +587,7 @@ class U2(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a U2 gate."""
         super().__init__(name="U2", num_wires=2, params=params, **kwargs)
-        self._validate(num_params=1)
+        self._validate(want_num_params=1)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -602,7 +603,7 @@ class U3(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs an arbitrary single-qubit unitary gate."""
         super().__init__(name="U3", num_wires=1, params=params, **kwargs)
-        self._validate(num_params=3)
+        self._validate(want_num_params=3)
 
     @lru_cache
     def _data(self) -> np.ndarray:
