@@ -79,58 +79,12 @@ class TestGate:
         assert gate.indices == indices
 
 
-# @pytest.mark.parametrize(
-#     ["state", "want_tensor"],
-#     [
-#         (
-#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
-#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
-#         ),
-#         (
-#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
-#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
-#         ),
-#         (
-#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
-#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
-#         ),
-#         (
-#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
-#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
-#         ),
-#     ],
-# )
-# def test_cnot(state, want_tensor):
-#     gate = jet.CNOT()
-#     have_tensor = jet.contract_tensors(gate.tensor(), state)
-#     assert have_tensor.data == pytest.approx(want_tensor.data)
-#     assert have_tensor.shape == want_tensor.shape
-#     assert have_tensor.indices == want_tensor.indices
-
-
 @pytest.mark.parametrize(
     ["gate", "state", "want_tensor"],
     [
-        (
-            jet.CNOT(),
-            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
-            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
-        ),
-        (
-            jet.CNOT(),
-            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
-            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
-        ),
-        (
-            jet.CNOT(),
-            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
-            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
-        ),
-        (
-            jet.CNOT(),
-            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
-            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
-        ),
+        ############################################################################################
+        # Hadamard gate
+        ############################################################################################
         (
             jet.Hadamard(),
             jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
@@ -141,6 +95,9 @@ class TestGate:
             jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
             jet.Tensor(indices=["0"], shape=[2], data=[INV_SQRT2, -INV_SQRT2]),
         ),
+        ############################################################################################
+        # Pauli gates
+        ############################################################################################
         (
             jet.PauliX(),
             jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
@@ -170,6 +127,424 @@ class TestGate:
             jet.PauliZ(),
             jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
             jet.Tensor(indices=["0"], shape=[2], data=[0, -1]),
+        ),
+        ############################################################################################
+        # Unparametrized phase shift gates
+        ############################################################################################
+        (
+            jet.S(),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1, 0]),
+        ),
+        (
+            jet.S(),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1j]),
+        ),
+        (
+            jet.T(),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1, 0]),
+        ),
+        (
+            jet.T(),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, INV_SQRT2 + INV_SQRT2 * 1j]),
+        ),
+        (
+            jet.SX(),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1 / 2 + 1j / 2, 1 / 2 - 1j / 2]),
+        ),
+        (
+            jet.SX(),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1 / 2 - 1j / 2, 1 / 2 + 1j / 2]),
+        ),
+        ############################################################################################
+        # Parametrized phase shift gates
+        ############################################################################################
+        (
+            jet.PhaseShift(math.pi / 2),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1, 0]),
+        ),
+        (
+            jet.PhaseShift(math.pi / 2),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1j]),
+        ),
+        (
+            jet.CPhaseShift(math.pi / 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CPhaseShift(math.pi / 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CPhaseShift(math.pi / 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
+        ),
+        (
+            jet.CPhaseShift(math.pi / 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1j]),
+        ),
+        ############################################################################################
+        # Control gates
+        ############################################################################################
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
+        ),
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
+        ),
+        (
+            jet.CY(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CY(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CY(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1j]),
+        ),
+        (
+            jet.CY(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, -1j, 0]),
+        ),
+        (
+            jet.CZ(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CZ(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CZ(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
+        ),
+        (
+            jet.CZ(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, -1]),
+        ),
+        ############################################################################################
+        # SWAP gates
+        ############################################################################################
+        (
+            jet.SWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.SWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
+        ),
+        (
+            jet.SWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.SWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
+        ),
+        (
+            jet.ISWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.ISWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1j, 0]),
+        ),
+        (
+            jet.ISWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1j, 0, 0]),
+        ),
+        (
+            jet.ISWAP(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[1, 0, 0, 0, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[1, 0, 0, 0, 0, 0, 0, 0]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 1, 0, 0, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 1, 0, 0, 0, 0, 0, 0]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 1, 0, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 1, 0, 0, 0, 0, 0]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 1, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 1, 0, 0, 0, 0]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 1, 0, 0, 0]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 1, 0]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 1, 0, 0]),
+        ),
+        (
+            jet.CSWAP(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 0, 1]),
+        ),
+        ############################################################################################
+        # Toffoli gate
+        ############################################################################################
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[1, 0, 0, 0, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[1, 0, 0, 0, 0, 0, 0, 0]),
+        ),
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 1, 0, 0, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 1, 0, 0, 0, 0, 0, 0]),
+        ),
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 1, 0, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 1, 0, 0, 0, 0, 0]),
+        ),
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 1, 0, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 1, 0, 0, 0, 0]),
+        ),
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 1, 0, 0, 0]),
+        ),
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 1, 0, 0]),
+        ),
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 0, 1]),
+        ),
+        (
+            jet.Toffoli(),
+            jet.Tensor(indices=["3", "4", "5"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1", "2"], shape=[2, 2, 2], data=[0, 0, 0, 0, 0, 0, 1, 0]),
+        ),
+        ############################################################################################
+        # Rotation gates
+        ############################################################################################
+        (
+            jet.RX(math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, -1j]),
+        ),
+        (
+            jet.RX(math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[-1j, 0]),
+        ),
+        (
+            jet.RY(math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1]),
+        ),
+        (
+            jet.RY(math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[-1, 0]),
+        ),
+        (
+            jet.RZ(math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[-1j, 0]),
+        ),
+        (
+            jet.RZ(math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1j]),
+        ),
+        (
+            jet.Rot(math.pi / 2, math.pi, 2 * math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, -INV_SQRT2 + INV_SQRT2 * 1j]),
+        ),
+        (
+            jet.Rot(math.pi / 2, math.pi, 2 * math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[INV_SQRT2 + INV_SQRT2 * 1j, 0]),
+        ),
+        ############################################################################################
+        # Controlled rotation gates
+        ############################################################################################
+        (
+            jet.CRX(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CRX(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CRX(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, -1j]),
+        ),
+        (
+            jet.CRX(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, -1j, 0]),
+        ),
+        (
+            jet.CRY(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CRY(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CRY(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
+        ),
+        (
+            jet.CRY(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, -1, 0]),
+        ),
+        (
+            jet.CRZ(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CRZ(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CRZ(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, -1j, 0]),
+        ),
+        (
+            jet.CRZ(math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1j]),
+        ),
+        (
+            jet.CRot(math.pi / 2, math.pi, 2 * math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CRot(math.pi / 2, math.pi, 2 * math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CRot(math.pi / 2, math.pi, 2 * math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(
+                indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, -INV_SQRT2 + INV_SQRT2 * 1j]
+            ),
+        ),
+        (
+            jet.CRot(math.pi / 2, math.pi, 2 * math.pi),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(
+                indices=["0", "1"], shape=[2, 2], data=[0, 0, INV_SQRT2 + INV_SQRT2 * 1j, 0]
+            ),
+        ),
+        ############################################################################################
+        # U gates
+        ############################################################################################
+        (
+            jet.U1(math.pi / 2),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1, 0]),
+        ),
+        (
+            jet.U1(math.pi / 2),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1j]),
+        ),
+        (
+            jet.U2(math.pi / 2, math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[INV_SQRT2, INV_SQRT2 * 1j]),
+        ),
+        (
+            jet.U2(math.pi / 2, math.pi),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[INV_SQRT2, -INV_SQRT2 * 1j]),
+        ),
+        (
+            jet.U3(2 * math.pi, math.pi, math.pi / 2),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[-1, 0]),
+        ),
+        (
+            jet.U3(2 * math.pi, math.pi, math.pi / 2),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1j]),
         ),
     ],
 )

@@ -30,8 +30,8 @@ __all__ = [
     "T",
     "SX",
     "CNOT",
-    "CZ",
     "CY",
+    "CZ",
     "SWAP",
     "ISWAP",
     "CSWAP",
@@ -219,18 +219,6 @@ class Beamsplitter(Gate):
 ####################################################################################################
 
 
-class CNOT(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a CNOT gate."""
-        super().__init__(name="CNOT", num_wires=2, params=params, **kwargs)
-        self._validate(want_num_params=0)
-
-    @lru_cache
-    def _data(self) -> np.ndarray:
-        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
-        return np.array(mat, dtype=self._dtype)
-
-
 class Hadamard(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a Hadamard gate."""
@@ -316,15 +304,41 @@ class SX(Gate):
         return np.array(mat, dtype=self._dtype)
 
 
-class CZ(Gate):
+class PhaseShift(Gate):
     def __init__(self, *params, **kwargs):
-        """Constructs a controlled-Z gate."""
-        super().__init__(name="CZ", num_wires=2, params=params, **kwargs)
+        """Constructs a single-qubit local phase shift gate."""
+        super().__init__(name="PhaseShift", num_wires=1, params=params, **kwargs)
+        self._validate(want_num_params=1)
+
+    @lru_cache
+    def _data(self) -> np.ndarray:
+        phi = self.params[0]
+        mat = [[1, 0], [0, cmath.exp(1j * phi)]]
+        return np.array(mat, dtype=self._dtype)
+
+
+class CPhaseShift(Gate):
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled phase shift gate."""
+        super().__init__(name="CPhaseShift", num_wires=2, params=params, **kwargs)
+        self._validate(want_num_params=1)
+
+    @lru_cache
+    def _data(self) -> np.ndarray:
+        phi = self.params[0]
+        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, cmath.exp(1j * phi)]]
+        return np.array(mat, dtype=self._dtype)
+
+
+class CNOT(Gate):
+    def __init__(self, *params, **kwargs):
+        """Constructs a CNOT gate."""
+        super().__init__(name="CNOT", num_wires=2, params=params, **kwargs)
         self._validate(want_num_params=0)
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]
+        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
         return np.array(mat, dtype=self._dtype)
 
 
@@ -337,6 +351,18 @@ class CY(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j], [0, 0, 1j, 0]]
+        return np.array(mat, dtype=self._dtype)
+
+
+class CZ(Gate):
+    def __init__(self, *params, **kwargs):
+        """Constructs a controlled-Z gate."""
+        super().__init__(name="CZ", num_wires=2, params=params, **kwargs)
+        self._validate(want_num_params=0)
+
+    @lru_cache
+    def _data(self) -> np.ndarray:
+        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]
         return np.array(mat, dtype=self._dtype)
 
 
@@ -454,32 +480,6 @@ class RZ(Gate):
         return np.array(mat, dtype=self._dtype)
 
 
-class PhaseShift(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a single-qubit local phase shift gate."""
-        super().__init__(name="PhaseShift", num_wires=1, params=params, **kwargs)
-        self._validate(want_num_params=1)
-
-    @lru_cache
-    def _data(self) -> np.ndarray:
-        phi = self.params[0]
-        mat = [[1, 0], [0, cmath.exp(1j * phi)]]
-        return np.array(mat, dtype=self._dtype)
-
-
-class CPhaseShift(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a controlled phase shift gate."""
-        super().__init__(name="CPhaseShift", num_wires=2, params=params, **kwargs)
-        self._validate(want_num_params=1)
-
-    @lru_cache
-    def _data(self) -> np.ndarray:
-        phi = self.params[0]
-        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, cmath.exp(1j * phi)]]
-        return np.array(mat, dtype=self._dtype)
-
-
 class Rot(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs an arbitrary single-qubit rotation gate."""
@@ -586,8 +586,8 @@ class U1(Gate):
 class U2(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a U2 gate."""
-        super().__init__(name="U2", num_wires=2, params=params, **kwargs)
-        self._validate(want_num_params=1)
+        super().__init__(name="U2", num_wires=1, params=params, **kwargs)
+        self._validate(want_num_params=2)
 
     @lru_cache
     def _data(self) -> np.ndarray:
