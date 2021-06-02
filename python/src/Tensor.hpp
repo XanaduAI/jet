@@ -1,11 +1,13 @@
 #include <complex>
 #include <sstream>
+#include <string>
 
 #include <pybind11/complex.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "Type.hpp"
 #include <Jet.hpp>
 
 namespace py = pybind11;
@@ -13,15 +15,16 @@ namespace py = pybind11;
 /**
  * @brief Adds Python bindings for the include/jet/Tensor.hpp file.
  *
- * @tparam T Template parameter for Jet::Tensor.
+ * @tparam T Template parameter of the `Tensor` class.
  * @param m Jet pybind11 module.
- * @param name Name of the Tensor class binding.
  */
-template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
+template <class T> void AddBindingsForTensor(py::module_ &m)
 {
     using tensor_t = Jet::Tensor<T>;
 
-    py::class_<tensor_t>(m, name, R"(
+    const std::string class_name = "Tensor" + Type<T>::suffix;
+
+    py::class_<tensor_t>(m, class_name.c_str(), R"(
         This class represents an n-rank data structure of complex-valued data
         for tensor operations. We use the following conventions:
 
@@ -31,6 +34,13 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
             - "Shape" refers to the dimensions of a tensor; the number of
               dimensions is the rank of the tensor.
     )")
+        // Static properties
+        // ---------------------------------------------------------------------
+
+        .def_property_readonly_static(
+            "dtype", [](const py::object &) { return Type<T>::dtype; },
+            "Data type of this tensor.")
+
         // Static functions
         // ---------------------------------------------------------------------
 
@@ -243,8 +253,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
                     import jet
 
-                    A = jet.Tensor64(["i", "j"], [2, 3])
-                    B = jet.Tensor64(["i", "j"], [2, 3])
+                    A = jet.Tensor(["i", "j"], [2, 3])
+                    B = jet.Tensor(["i", "j"], [2, 3])
 
                     A.fill_random()
                     B.fill_random()
@@ -273,8 +283,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
                     import jet
 
-                    A = jet.Tensor64(["i", "j", "k"], [3, 2, 4])
-                    B = jet.Tensor64(["j", "k", "l"], [2, 4, 2])
+                    A = jet.Tensor(["i", "j", "k"], [3, 2, 4])
+                    B = jet.Tensor(["j", "k", "l"], [2, 4, 2])
 
                     A.fill_random()
                     B.fill_random()
@@ -311,7 +321,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m, const char *name)
 
                     import jet
 
-                    A = jet.Tensor64({"i", "j"}, {2, 3})
+                    A = jet.Tensor({"i", "j"}, {2, 3})
                     A.fill_random()
 
                     jet.slice_index(A, "i", 0) # Result is a 1x3 tensor

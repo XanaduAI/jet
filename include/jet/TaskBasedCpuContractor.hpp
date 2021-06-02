@@ -31,18 +31,18 @@ namespace Jet {
 template <typename Tensor> class TaskBasedCpuContractor {
   public:
     /// Type of the name-to-task map.
-    using name_to_task_map_t = std::unordered_map<std::string, tf::Task>;
+    using NameToTaskMap = std::unordered_map<std::string, tf::Task>;
 
     /// Type of the name-to-tensor map.
-    using name_to_tensor_map_t =
+    using NameToTensorMap =
         std::unordered_map<std::string, std::unique_ptr<Tensor>>;
 
     /// Type of the name-to-parents map.
-    using name_to_parents_map_t =
+    using NameToParentsMap =
         std::unordered_map<std::string, std::unordered_set<std::string>>;
 
     /// Type of the task dependency graph.
-    using taskflow_t = tf::Taskflow;
+    using TaskFlow = tf::Taskflow;
 
     /**
      * @brief Constructs a new `%TaskBasedCpuContractor` object.
@@ -57,7 +57,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Map which associates names to tasks.
      */
-    const name_to_task_map_t &GetNameToTaskMap() const noexcept
+    const NameToTaskMap &GetNameToTaskMap() const noexcept
     {
         return name_to_task_map_;
     }
@@ -67,7 +67,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Map which associates names to tensors.
      */
-    const name_to_tensor_map_t &GetNameToTensorMap() const noexcept
+    const NameToTensorMap &GetNameToTensorMap() const noexcept
     {
         return name_to_tensor_map_;
     }
@@ -77,7 +77,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Map which associates names to a vector of parent node IDs.
      */
-    const name_to_parents_map_t &GetNameToParentsMap() const noexcept
+    const NameToParentsMap &GetNameToParentsMap() const noexcept
     {
         return name_to_parents_map_;
     }
@@ -117,7 +117,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Taskflow instance representing the task dependency graph.
      */
-    const taskflow_t &GetTaskflow() const noexcept { return taskflow_; }
+    const TaskFlow &GetTaskflow() const noexcept { return taskflow_; }
 
     /**
      * @brief Returns the number of floating-point operations needed to perform
@@ -309,17 +309,17 @@ template <typename Tensor> class TaskBasedCpuContractor {
     tf::Executor executor_;
 
     /// Task graph to be executed during a contraction.
-    taskflow_t taskflow_;
+    TaskFlow taskflow_;
 
     /// Map that associates a task name with its corresponding task.
-    name_to_task_map_t name_to_task_map_;
+    NameToTaskMap name_to_task_map_;
 
     /// Map that associates a task name with its result tensor.
-    name_to_tensor_map_t name_to_tensor_map_;
+    NameToTensorMap name_to_tensor_map_;
 
     /// Map that associates a task name with a list of parent task names.
     /// Task `A` is a parent of task `B` if `A` immediately succeeds `B`.
-    name_to_parents_map_t name_to_parents_map_;
+    NameToParentsMap name_to_parents_map_;
 
     /// Tasks that store the results of a contraction in `results_`.
     std::vector<tf::Task> result_tasks_;

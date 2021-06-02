@@ -3,34 +3,32 @@
 #include <Jet.hpp>
 
 #include "PathInfo.hpp"
+#include "TaskBasedCpuContractor.hpp"
 #include "Tensor.hpp"
 #include "TensorNetwork.hpp"
 #include "TensorNetworkIO.hpp"
 #include "Version.hpp"
 
-PYBIND11_MODULE(jet, m)
+PYBIND11_MODULE(bindings, m)
 {
-    m.doc() = "Jet is a library for simulating quantum circuits using tensor "
-              "network contractions.";
+    m.doc() = "Python bindings for the C++ tensor network contraction headers.";
 
-    using c_fp32_t = std::complex<float>;
-    using c_fp64_t = std::complex<double>;
+    using c64_t = std::complex<float>;
+    using c128_t = std::complex<double>;
 
-    using Tensor32 = Jet::Tensor<c_fp32_t>;
-    using Tensor64 = Jet::Tensor<c_fp64_t>;
+    AddBindingsForPathInfo<c64_t, c128_t>(m);
 
-    AddBindingsForTensor<c_fp32_t>(m, "Tensor32");
-    AddBindingsForTensor<c_fp64_t>(m, "Tensor64");
+    AddBindingsForTaskBasedCpuContractor<c64_t>(m);
+    AddBindingsForTaskBasedCpuContractor<c128_t>(m);
 
-    AddBindingsForTensorNetwork<Tensor32>(m, "TensorNetwork32");
-    AddBindingsForTensorNetwork<Tensor64>(m, "TensorNetwork64");
+    AddBindingsForTensor<c64_t>(m);
+    AddBindingsForTensor<c128_t>(m);
 
-    AddBindingsForTensorNetworkIO<Tensor32>(m, "TensorNetworkFile32",
-                                            "TensorNetworkSerializer32");
-    AddBindingsForTensorNetworkIO<Tensor64>(m, "TensorNetworkFile64",
-                                            "TensorNetworkSerializer64");
+    AddBindingsForTensorNetwork<c64_t>(m);
+    AddBindingsForTensorNetwork<c128_t>(m);
 
-    AddBindingsForPathInfo<Tensor32, Tensor64>(m);
+    AddBindingsForTensorNetworkIO<c64_t>(m);
+    AddBindingsForTensorNetworkIO<c128_t>(m);
 
     AddBindingsForVersion(m);
 }

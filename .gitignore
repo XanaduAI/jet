@@ -44,6 +44,7 @@ include/jet/CmakeMacros.hpp
 # Python
 .venv
 __pycache__
+dist
 
 # Sphinx documentation
 docs/__pycache__/*

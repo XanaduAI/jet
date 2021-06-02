@@ -17,11 +17,11 @@ using namespace Jet;
 using complex_t = std::complex<float>;
 using tensor_t = Tensor<complex_t>;
 
-using indices_t = std::vector<std::string>;
-using shape_t = std::vector<size_t>;
-using task_map_t = std::unordered_map<std::string, std::string>;
-using tensor_map_t = std::unordered_map<std::string, std::vector<complex_t>>;
-using parents_map_t =
+using Indices = std::vector<std::string>;
+using Shape = std::vector<size_t>;
+using TaskMap = std::unordered_map<std::string, std::string>;
+using TensorMap = std::unordered_map<std::string, std::vector<complex_t>>;
+using ParentsMap =
     std::unordered_map<std::string, std::unordered_set<std::string>>;
 
 namespace {
@@ -33,9 +33,10 @@ namespace {
  * @return Tensor with the given indices and shape.  Each element in the tensor
  *         is populated with the value of its linear index.
  */
-tensor_t MakeTensor(const indices_t &indices, const shape_t &shape)
+Tensor<std::complex<float>> MakeTensor(const Indices &indices,
+                                       const Shape &shape)
 {
-    tensor_t tensor(indices, shape);
+    Tensor<std::complex<float>> tensor(indices, shape);
     if (!shape.empty()) {
         for (size_t i = 0; i < tensor.GetSize(); i++) {
             const auto index = Jet::Utilities::UnravelIndex(i, shape);
@@ -51,9 +52,9 @@ tensor_t MakeTensor(const indices_t &indices, const shape_t &shape)
  * @param tbcc Task-based CPU contractor holding the name-to-task map.
  * @return Modified name-to-task map with a defined `==` operator.
  */
-task_map_t GetTaskMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
+TaskMap GetTaskMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
 {
-    task_map_t task_map;
+    TaskMap task_map;
     for (const auto &[name, task] : tbcc.GetNameToTaskMap()) {
         task_map[name] = task.name();
     }
@@ -66,9 +67,9 @@ task_map_t GetTaskMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
  * @param tbcc Task-based CPU contractor holding the name-to-tensor map.
  * @return Modified name-to-tensor map with a defined `==` operator.
  */
-tensor_map_t GetTensorMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
+TensorMap GetTensorMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
 {
-    tensor_map_t tensor_map;
+    TensorMap tensor_map;
     for (const auto &[name, tensor_ptr] : tbcc.GetNameToTensorMap()) {
         std::vector<complex_t> tensor_data;
         if (tensor_ptr.get() != nullptr) {
@@ -104,16 +105,16 @@ TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
         const double want_memory = 0;
         CHECK(have_memory == want_memory);
 
-        const task_map_t have_task_map = GetTaskMap(tbcc);
-        const task_map_t want_task_map = {};
+        const TaskMap have_task_map = GetTaskMap(tbcc);
+        const TaskMap want_task_map = {};
         CHECK(have_task_map == want_task_map);
 
-        const tensor_map_t have_tensor_map = GetTensorMap(tbcc);
-        const tensor_map_t want_tensor_map = {};
+        const TensorMap have_tensor_map = GetTensorMap(tbcc);
+        const TensorMap want_tensor_map = {};
         CHECK(have_tensor_map == want_tensor_map);
 
-        const parents_map_t have_parents_map = tbcc.GetNameToParentsMap();
-        const parents_map_t want_parents_map = {};
+        const ParentsMap have_parents_map = tbcc.GetNameToParentsMap();
+        const ParentsMap want_parents_map = {};
         CHECK(have_parents_map == want_parents_map);
     }
 
@@ -142,16 +143,16 @@ TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
         const double want_memory = 0;
         CHECK(have_memory == want_memory);
 
-        const task_map_t have_task_map = GetTaskMap(tbcc);
-        const task_map_t want_task_map = {};
+        const TaskMap have_task_map = GetTaskMap(tbcc);
+        const TaskMap want_task_map = {};
         CHECK(have_task_map == want_task_map);
 
-        const tensor_map_t have_tensor_map = GetTensorMap(tbcc);
-        const tensor_map_t want_tensor_map = {};
+        const TensorMap have_tensor_map = GetTensorMap(tbcc);
+        const TensorMap want_tensor_map = {};
         CHECK(have_tensor_map == want_tensor_map);
 
-        const parents_map_t have_parents_map = tbcc.GetNameToParentsMap();
-        const parents_map_t want_parents_map = {};
+        const ParentsMap have_parents_map = tbcc.GetNameToParentsMap();
+        const ParentsMap want_parents_map = {};
         CHECK(have_parents_map == want_parents_map);
     }
 
@@ -182,15 +183,15 @@ TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
         const double want_memory = (3 * 4) + (2 * 4) + (2 * 3);
         CHECK(have_memory == want_memory);
 
-        const task_map_t have_task_map = GetTaskMap(tbcc);
-        const task_map_t want_task_map = {
+        const TaskMap have_task_map = GetTaskMap(tbcc);
+        const TaskMap want_task_map = {
             {"3:C2B1", "3:C2B1"},
             {"4:A0C2", "4:A0C2"},
             {"5:B1A0:results[0]", "5:B1A0:results[0]"}};
         CHECK(have_task_map == want_task_map);
 
-        const tensor_map_t have_tensor_map = GetTensorMap(tbcc);
-        const tensor_map_t want_tensor_map = {
+        const TensorMap have_tensor_map = GetTensorMap(tbcc);
+        const TensorMap want_tensor_map = {
             {"0:A0C2", {0, 1, 2, 3, 4, 5, 6, 7}},
             {"1:A0B1", {0, 1, 2, 3, 4, 5}},
             {"2:B1C2", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}},
@@ -200,8 +201,8 @@ TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
         };
         CHECK(have_tensor_map == want_tensor_map);
 
-        const parents_map_t have_parents_map = tbcc.GetNameToParentsMap();
-        const parents_map_t want_parents_map = {
+        const ParentsMap have_parents_map = tbcc.GetNameToParentsMap();
+        const ParentsMap want_parents_map = {
             {"0:A0C2", {"3:C2B1"}},
             {"1:A0B1", {"3:C2B1", "4:A0C2"}},
             {"2:B1C2", {"4:A0C2"}},
@@ -243,14 +244,14 @@ TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
         const double want_memory = 3 + 2 * 1;
         CHECK(have_memory == want_memory);
 
-        const task_map_t have_task_map = GetTaskMap(tbcc);
-        const task_map_t want_task_map = {{"3:B1", "3:B1"},
-                                          {"4:_:results[0]", "4:_:results[0]"},
-                                          {"4:_:results[1]", "4:_:results[1]"}};
+        const TaskMap have_task_map = GetTaskMap(tbcc);
+        const TaskMap want_task_map = {{"3:B1", "3:B1"},
+                                       {"4:_:results[0]", "4:_:results[0]"},
+                                       {"4:_:results[1]", "4:_:results[1]"}};
         CHECK(have_task_map == want_task_map);
 
-        const tensor_map_t have_tensor_map = GetTensorMap(tbcc);
-        const tensor_map_t want_tensor_map = {
+        const TensorMap have_tensor_map = GetTensorMap(tbcc);
+        const TensorMap want_tensor_map = {
             {"0:A0B1", {0, 1, 2, 3, 4, 5}},
             {"1:A0", {0, 1}},
             {"2:B1", {0, 1, 2}},
@@ -260,8 +261,8 @@ TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
         };
         CHECK(have_tensor_map == want_tensor_map);
 
-        const parents_map_t have_parents_map = tbcc.GetNameToParentsMap();
-        const parents_map_t want_parents_map = {
+        const ParentsMap have_parents_map = tbcc.GetNameToParentsMap();
+        const ParentsMap want_parents_map = {
             {"0:A0B1", {"3:B1"}},
             {"1:A0", {"3:B1"}},
             {"2:B1", {"4:_:results[0]", "4:_:results[1]"}},
@@ -390,8 +391,8 @@ TEST_CASE("TaskBasedCpuContractor::AddDeletionTasks()",
 
         tbcc.Contract().wait();
 
-        const tensor_map_t have_tensor_map = GetTensorMap(tbcc);
-        const tensor_map_t want_tensor_map = {
+        const TensorMap have_tensor_map = GetTensorMap(tbcc);
+        const TensorMap want_tensor_map = {
             {"0:A0", {}},
             {"1:A0", {}},
             {"2:_:results[0]", {5}},
@@ -421,8 +422,8 @@ TEST_CASE("TaskBasedCpuContractor::AddDeletionTasks()",
 
         tbcc.Contract().wait();
 
-        const tensor_map_t have_tensor_map = GetTensorMap(tbcc);
-        const tensor_map_t want_tensor_map = {
+        const TensorMap have_tensor_map = GetTensorMap(tbcc);
+        const TensorMap want_tensor_map = {
             {"0:A0B1", {}},           {"1:A0", {}}, {"2:B1", {}}, {"3:B1", {}},
             {"4:_:results[0]", {14}},
         };
@@ -442,7 +443,7 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
         CHECK(have_result == want_result);
     }
 
-    SECTION("Results vector has a single value")
+    SECTION("Results vector has a single scalar")
     {
         const auto tensor_1 = MakeTensor({"A0"}, {3});
         const auto tensor_2 = MakeTensor({"A0"}, {3});
@@ -459,6 +460,26 @@ TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
 
         const tensor_t have_result = tbcc.GetReductionResult();
         const tensor_t want_result = tensor_t({}, {}, {5});
+        CHECK(have_result == want_result);
+    }
+
+    SECTION("Results vector has a single non-scalar")
+    {
+        const auto tensor_1 = MakeTensor({"A0", "B1"}, {2, 3});
+        const auto tensor_2 = MakeTensor({"A0"}, {2});
+
+        TensorNetwork<tensor_t> tn;
+        tn.AddTensor(tensor_1, {});
+        tn.AddTensor(tensor_2, {});
+
+        const PathInfo path_info(tn, {{0, 1}});
+
+        tbcc.AddContractionTasks(tn, path_info);
+        tbcc.AddReductionTask();
+        tbcc.Contract().wait();
+
+        const tensor_t have_result = tbcc.GetReductionResult();
+        const tensor_t want_result = tensor_t({"B1"}, {3}, {3, 4, 5});
         CHECK(have_result == want_result);
     }
 

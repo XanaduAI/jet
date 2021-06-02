@@ -1,17 +1,3 @@
-# Copyright 2021 Xanadu Quantum Technologies Inc.
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import re
 import warnings
 from decimal import Decimal
@@ -257,7 +243,9 @@ class XIRProgram:
         """
         return self._called_ops
 
-    def add_gate(self, name: str, params: List[str], wires: Tuple, statements: List[Statement]):
+    def add_gate(
+        self, name: str, params: List[str], wires: Tuple, statements: List[Statement]
+    ):
         """Adds a gate to the program
 
         Args:
@@ -267,7 +255,9 @@ class XIRProgram:
             statements (list[Statement]): statements that the gate applies
         """
         if name in self._gates:
-            warnings.warn("Gate already defined. Replacing old definition with new definiton.")
+            warnings.warn(
+                "Gate already defined. Replacing old definition with new definiton."
+            )
         self._gates[name] = {"params": params, "wires": wires, "statements": statements}
 
     def add_operator(
@@ -282,8 +272,14 @@ class XIRProgram:
             statements (list[OperatorStmt]): statements that the operator applies
         """
         if name in self._operators:
-            warnings.warn("Operator already defined. Replacing old definition with new definiton.")
-        self._operators[name] = {"params": params, "wires": wires, "statements": statements}
+            warnings.warn(
+                "Operator already defined. Replacing old definition with new definiton."
+            )
+        self._operators[name] = {
+            "params": params,
+            "wires": wires,
+            "statements": statements,
+        }
 
     def serialize(self, minimize: bool = False) -> str:
         """Serialize an XIRProgram returning an XIR script
