@@ -1,14 +1,19 @@
+import math
+
 import numpy as np
 import pytest
 
-from jet import Gate
+import jet
+
+
+INV_SQRT2 = 1 / math.sqrt(2)
 
 
 class TestGate:
     @pytest.fixture
     def gate(self):
         """Returns a generic gate with two wires and one parameter."""
-        return Gate(name="G", num_wires=2, params=[1])
+        return jet.Gate(name="G", num_wires=2, params=[1])
 
     def test_tensor_indices_not_set(self, gate):
         """Tests that the correct tensor is returned for a gate with unset indices."""
@@ -72,3 +77,104 @@ class TestGate:
         assert gate.indices is None
         gate.indices = indices
         assert gate.indices == indices
+
+
+# @pytest.mark.parametrize(
+#     ["state", "want_tensor"],
+#     [
+#         (
+#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+#         ),
+#         (
+#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+#         ),
+#         (
+#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
+#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+#         ),
+#         (
+#             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
+#             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+#         ),
+#     ],
+# )
+# def test_cnot(state, want_tensor):
+#     gate = jet.CNOT()
+#     have_tensor = jet.contract_tensors(gate.tensor(), state)
+#     assert have_tensor.data == pytest.approx(want_tensor.data)
+#     assert have_tensor.shape == want_tensor.shape
+#     assert have_tensor.indices == want_tensor.indices
+
+
+@pytest.mark.parametrize(
+    ["gate", "state", "want_tensor"],
+    [
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
+        ),
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
+        ),
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
+        ),
+        (
+            jet.CNOT(),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
+        ),
+        (
+            jet.Hadamard(),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[INV_SQRT2, INV_SQRT2]),
+        ),
+        (
+            jet.Hadamard(),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[INV_SQRT2, -INV_SQRT2]),
+        ),
+        (
+            jet.PauliX(),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1]),
+        ),
+        (
+            jet.PauliX(),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1, 0]),
+        ),
+        (
+            jet.PauliY(),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, 1j]),
+        ),
+        (
+            jet.PauliY(),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[-1j, 0]),
+        ),
+        (
+            jet.PauliZ(),
+            jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+            jet.Tensor(indices=["0"], shape=[2], data=[1, 0]),
+        ),
+        (
+            jet.PauliZ(),
+            jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+            jet.Tensor(indices=["0"], shape=[2], data=[0, -1]),
+        ),
+    ],
+)
+def test_gate(gate, state, want_tensor):
+    have_tensor = jet.contract_tensors(gate.tensor(), state)
+    assert have_tensor.data == pytest.approx(want_tensor.data)
+    assert have_tensor.shape == want_tensor.shape
+    assert have_tensor.indices == want_tensor.indices
