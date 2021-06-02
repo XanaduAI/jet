@@ -472,10 +472,10 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
             /// Search for matching substring sequences from end (right) to start. For a non-zero sequence matched here, we can form a Left-transpose.
             auto matched_it = std::mismatch(old_binary_ordering.rbegin(), old_binary_ordering.rend(), new_binary_ordering.rbegin());
+            
+            size_t num_elems = std::distance(old_binary_ordering.rbegin(), matched_it.first);
 
-            if(matched_it.first != old_binary_ordering.rbegin() ){
-                size_t num_elems = std::distance(old_binary_ordering.rbegin(), matched_it.first);
-
+            if(matched_it.first != old_binary_ordering.rbegin() && num_elems >= (Rr)){
                 std::vector<std::string> Rl_old_indices(
                         old_binary_ordering.begin(),
                         old_binary_ordering.end() - num_elems);
@@ -487,7 +487,6 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
                     return precomputed_data;
             }
-        
 /*
             for (size_t extended_Rr = old_binary_ordering.size(); extended_Rr > 0 ; extended_Rr--) {
                 std::cout << "Rr=" << Rr << ", extended_Rr=" << extended_Rr << ", |old_binary_ordering|="<< old_binary_ordering.size() << old_binary_ordering << std::endl;
