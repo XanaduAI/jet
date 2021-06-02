@@ -1,7 +1,7 @@
 import cmath
 import math
 from functools import lru_cache
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
 import numpy as np
 from thewalrus.fock_gradients import (
@@ -11,7 +11,8 @@ from thewalrus.fock_gradients import (
     two_mode_squeezing,
 )
 
-from jet import Tensor
+from .bindings import TensorC64, TensorC128
+from .factory import Tensor
 
 __all__ = [
     # CV Fock gates
@@ -24,8 +25,6 @@ __all__ = [
     "PauliX",
     "PauliY",
     "PauliZ",
-    "PauliRot",
-    "MultiRZ",
     "S",
     "T",
     "SX",
@@ -40,8 +39,7 @@ __all__ = [
     "RY",
     "RZ",
     "PhaseShift",
-    "ControlledPhaseShift",
-    "CPhase",
+    "CPhaseShift",
     "Rot",
     "CRX",
     "CRY",
@@ -52,21 +50,21 @@ __all__ = [
     "U3",
 ]
 
-INV_SQRT2 = 1 / math.sqrt(2)
+INV_SQRT2 = math.sqrt(2) / 2
 
 
 class Gate:
-    def __init__(self, name: str, num_wires: int, *params, **kwargs):
+    def __init__(self, name: str, num_wires: int, **kwargs):
         """Constructs a quantum gate.
 
         Args:
             name: name of the gate.
             num_wires: number of wires the gate is applied to.
-            params: gate parameters.
 
         Kwargs:
-            tensor_id (int): identification number for the gate-tensor.
             dtype (type): type to use in matrix representations of gates.
+            params (list): gate parameters.
+            tensor_id (int): identification number for the gate-tensor.
         """
         self.name = name
         self.tensor_id = kwargs.get("tensor_id", None)
@@ -74,9 +72,9 @@ class Gate:
         self._dtype = kwargs.get("dtype", np.complex128)
         self._indices = None
         self._num_wires = num_wires
-        self._params = params
+        self._params = kwargs.get("params", [])
 
-    def tensor(self, adjoint: bool = False) -> Tensor:
+    def tensor(self, adjoint: bool = False) -> Union[TensorC64, TensorC128]:
         """Returns the tensor representation of this gate."""
         if adjoint:
             data = np.conj(self._data()).T.flatten()
@@ -87,21 +85,22 @@ class Gate:
         if indices is None:
             indices = list(map(str, range(2 * self._num_wires)))
 
-        dimension = int(len(data) ** (1 / len(indices)))
+        dimension = int(round(len(data) ** (1 / len(indices))))
         shape = [dimension] * len(indices)
 
-        return Tensor(indices=indices, shape=shape, data=data)
+        return Tensor(indices=indices, shape=shape, data=data, dtype=self._dtype)
 
     def _data(self) -> np.ndarray:
         """Returns the matrix representation of this gate."""
         raise NotImplementedError("No tensor data available for generic gate.")
 
-    def _validate(self, num_params: int):
+    def _validate(self, want_num_params: int):
         """Throws a ValueError if the given quantity differs from the number of gate parameters."""
-        if len(self.params) != num_params:
+        have_num_params = 0 if self.params is None else len(self.params)
+        if have_num_params != want_num_params:
             raise ValueError(
-                f"The {self.name} gate accepts exactly {num_params} parameters "
-                f"but {len(self.params)} parameters were given."
+                f"The {self.name} gate accepts exactly {want_num_params} parameters "
+                f"but {have_num_params} parameters were given."
             )
 
     @property
@@ -112,20 +111,25 @@ class Gate:
     @indices.setter
     def indices(self, indices: Optional[Sequence[str]]) -> None:
         """Sets the indices of this gate for connecting tensors."""
+        # Skip the sequence property checks if `indices` is None.
+        if indices is None:
+            pass
+
         # Check that `indices is a sequence of unique strings.
-        if (
+        elif (
             not isinstance(indices, Sequence)
             or not all(isinstance(idx, str) for idx in indices)
             or len(set(indices)) != len(indices)
         ):
             raise ValueError("Indices must be a sequence of unique strings.")
 
-        # Check that `indices` has the correct length (or is None)
-        if indices is not None and len(indices) != 2 * self._num_wires:
+        # Check that `indices` has the correct length (or is None).
+        elif len(indices) != 2 * self._num_wires:
             raise ValueError(
                 f"Indices must have two indices per wire. "
                 f"Received {len(indices)} indices for {self._num_wires} wires."
             )
+
         self._indices = indices
 
     @property
@@ -461,10 +465,10 @@ class PhaseShift(Gate):
         return np.array(mat, dtype=self._dtype)
 
 
-class CPhase(Gate):
+class CPhaseShift(Gate):
     def __init__(self, *params, **kwargs):
         """Constructs a controlled phase shift gate."""
-        super().__init__(name="CPhase", num_wires=2, params=params, **kwargs)
+        super().__init__(name="CPhaseShift", num_wires=2, params=params, **kwargs)
         self._validate(num_params=1)
 
     @lru_cache
