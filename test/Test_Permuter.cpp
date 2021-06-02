@@ -210,33 +210,21 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
         }
         SECTION("{c,b,a,d} - > {a,b,c,d}")
         {
-            std::vector<data_t> data_out(data_pow2_cbad);
             CHECK(permuter.Transpose(data_pow2_cbad, shape,
                                      {"c", "b", "a", "d"},
                                      index_expected) == data_expected);
-            permuter.Transpose(data_pow2_cbad, shape, data_out,
-                               {"c", "b", "a", "d"}, index_expected);
-            CHECK(data_out == data_expected);
         }
         SECTION("{b,a,c,d} - > {a,b,c,d}")
         {
-            std::vector<data_t> data_out(data_pow2_bacd);
             CHECK(permuter.Transpose(data_pow2_bacd, shape,
                                      {"b", "a", "c", "d"},
                                      index_expected) == data_expected);
-            permuter.Transpose(data_pow2_bacd, shape, data_out,
-                               {"b", "a", "c", "d"}, index_expected);
-            CHECK(data_out == data_expected);
         }
         SECTION("{b,a,d,c} - > {a,b,c,d}")
         {
-            std::vector<data_t> data_out(data_pow2_badc);
             CHECK(permuter.Transpose(data_pow2_badc, shape,
                                      {"b", "a", "d", "c"},
                                      index_expected) == data_expected);
-            permuter.Transpose(data_pow2_badc, shape, data_out,
-                               {"b", "a", "d", "c"}, index_expected);
-            CHECK(data_out == data_expected);
         }
     }
     SECTION("4x4")
@@ -247,16 +235,8 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
 
         SECTION("{b, a} - > {a,b}")
         {
-            const std::vector<data_t> data_out(data_pow2_4x4_ba);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"b", "a"},
+            CHECK(permuter.Transpose(data_pow2_4x4_ba, shape, {"b", "a"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"b", "a"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
     }
     SECTION("2x4x2")
@@ -267,43 +247,21 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
 
         SECTION("{b, a, c} - > {a,b,c}")
         {
-            static const std::vector<data_t> data_out(data_pow2_2x4x2_bac);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"b", "a", "c"},
+            CHECK(permuter.Transpose(data_pow2_2x4x2_bac, shape,
+                                     {"b", "a", "c"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"b", "a", "c"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
         SECTION("{a, c, b} - > {a,b,c}")
         {
-            static const std::vector<data_t> data_out(data_pow2_2x4x2_acb);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"a", "c", "b"},
+            CHECK(permuter.Transpose(data_pow2_2x4x2_acb, shape,
+                                     {"a", "c", "b"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"a", "c", "b"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
         SECTION("{c, b, a} - > {a,b,c}")
         {
             /// 2x4x2 cba == 2x2x2x2 dbca
-            static const std::vector<data_t> data_out(data_pow2_dbca);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"c", "b", "a"},
+            CHECK(permuter.Transpose(data_pow2_dbca, shape, {"c", "b", "a"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"c", "b", "a"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
     }
     SECTION("4x2x2")
@@ -314,42 +272,21 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
 
         SECTION("{b, a, c} - > {a,b,c}")
         {
-            static const std::vector<data_t> data_out(data_pow2_4x2x2_bac);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"b", "a", "c"},
+            CHECK(permuter.Transpose(data_pow2_4x2x2_bac, shape,
+                                     {"b", "a", "c"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"b", "a", "c"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
         SECTION("{a, c, b} - > {a,b,c}")
         {
-            static const std::vector<data_t> data_out(data_pow2_4x2x2_acb);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"a", "c", "b"},
+            CHECK(permuter.Transpose(data_pow2_4x2x2_acb, shape,
+                                     {"a", "c", "b"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"a", "c", "b"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
         SECTION("{c, b, a} - > {a,b,c}")
         {
-            static const std::vector<data_t> data_out(data_pow2_4x2x2_cba);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"c", "b", "a"},
+            CHECK(permuter.Transpose(data_pow2_4x2x2_cba, shape,
+                                     {"c", "b", "a"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"c", "b", "a"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
     }
     SECTION("2x2x4")
@@ -361,62 +298,22 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
         SECTION("{b, a, c} - > {a,b,c}")
         {
             // 2x2x4 cba == 2x2x2x2 bacd
-            static const std::vector<data_t> data_out(data_pow2_bacd);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"b", "a", "c"},
+            CHECK(permuter.Transpose(data_pow2_bacd, shape, {"b", "a", "c"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"b", "a", "c"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
         SECTION("{a, c, b} - > {a,b,c}")
         {
-            static const std::vector<data_t> data_out(data_pow2_2x2x4_acb);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"a", "c", "b"},
+            CHECK(permuter.Transpose(data_pow2_2x2x4_acb, shape,
+                                     {"a", "c", "b"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"a", "c", "b"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
         SECTION("{c, b, a} - > {a,b,c}")
         {
-            static const std::vector<data_t> data_out(data_pow2_2x2x4_cba);
-
-            std::vector<data_t> data_out_ref(data_out);
-
-            CHECK(permuter.Transpose(data_out, shape, {"c", "b", "a"},
+            CHECK(permuter.Transpose(data_pow2_2x2x4_cba, shape,
+                                     {"c", "b", "a"},
                                      index_expected) == data_expected);
-
-            permuter.Transpose(data_out, shape, data_out_ref, {"c", "b", "a"},
-                               index_expected);
-            CHECK(data_out_ref == data_expected);
         }
-    } /*
-     SECTION("Large test: 2x2x2x2x2x2x2x2x2")
-     {
-         std::vector<size_t> shape{2, 2, 2, 2, 2, 2, 2, 2, 2};
-         std::vector<std::string> index_expected{"a", "b", "c", "d", "e", "f",
-     "g", "h", "i"}; std::vector<data_t> data_expected = FillArray(512);
-
-         SECTION("{d, g, h, b, i, a, f, c, e} - > {a,b,c,d,e,f,g,h,i}")
-         {
-             std::vector<data_t> data_out(large_example);
-             CHECK(permuter.Transpose(large_example, shape,
-                                      {"d", "g", "h", "b", "i", "a", "f", "c",
-     "e"}, index_expected) == data_expected);
-
-             permuter.Transpose(large_example, shape, data_out,
-                                {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
-     index_expected); CHECK(data_out == data_expected);
-         }
-     }*/
+    }
 }
 
 TEST_CASE("DefaultPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
@@ -429,31 +326,18 @@ TEST_CASE("DefaultPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
 
     SECTION("{b,c,a} - > {a,b,c}")
     {
-        std::vector<data_t> data_out(data_non_pow2_bca);
         CHECK(permuter.Transpose(data_non_pow2_bca, {3, 5, 2}, {"b", "c", "a"},
                                  index_expected) == data_expected);
-
-        permuter.Transpose(data_non_pow2_bca, {3, 5, 2}, data_out,
-                           {"b", "c", "a"}, index_expected);
-        CHECK(data_out == data_expected);
     }
     SECTION("{c,b,a} - > {a,b,c}")
     {
-        std::vector<data_t> data_out(data_non_pow2_cba);
         CHECK(permuter.Transpose(data_non_pow2_cba, {5, 3, 2}, {"c", "b", "a"},
                                  index_expected) == data_expected);
-        permuter.Transpose(data_non_pow2_cba, {5, 3, 2}, data_out,
-                           {"c", "b", "a"}, index_expected);
-        CHECK(data_out == data_expected);
     }
     SECTION("{c,a,b} - > {a,b,c}")
     {
-        std::vector<data_t> data_out(data_non_pow2_cab);
         CHECK(permuter.Transpose(data_non_pow2_cab, {5, 2, 3}, {"c", "a", "b"},
                                  index_expected) == data_expected);
-        permuter.Transpose(data_non_pow2_cab, {5, 2, 3}, data_out,
-                           {"c", "a", "b"}, index_expected);
-        CHECK(data_out == data_expected);
     }
 }
 
@@ -523,10 +407,9 @@ TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
     }
 }
 
-TEMPLATE_TEST_CASE("LARGE TEST",
-                   "[Permute1]", // DefaultPermuter<>, DefaultPermuter<64>,
-                                 // DefaultPermuter<128>, DefaultPermuter<256>,
-                                 // DefaultPermuter<512>,
+TEMPLATE_TEST_CASE("LARGE TEST", "[Permute]", DefaultPermuter<>,
+                   DefaultPermuter<64>, DefaultPermuter<128>,
+                   DefaultPermuter<256>, DefaultPermuter<512>,
                    DefaultPermuter<2048>, QFlexPermuter<>, QFlexPermuter<64>,
                    QFlexPermuter<128>, QFlexPermuter<256>, QFlexPermuter<512>,
                    QFlexPermuter<2048>, (QFlexPermuter<1024, 64>),
