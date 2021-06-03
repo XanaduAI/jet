@@ -5,7 +5,6 @@ import pytest
 
 import jet
 
-
 INV_SQRT2 = 1 / math.sqrt(2)
 
 
@@ -79,17 +78,134 @@ class TestGate:
         assert gate.indices == indices
 
 
-# def get_test_gate_parameter_id(val) -> str:
-#     """Returns the ID of the given test_gate() parameter."""
-#     if isinstance(val, jet.Gate):
-#         return val.name
-#     elif isinstance(val, jet.TensorC128):
-#         return str(tuple(val.indices))
-
-
 @pytest.mark.parametrize(
     ["gate", "state", "want_tensor"],
     [
+        ############################################################################################
+        # Continuous variable Fock gates
+        ############################################################################################
+        pytest.param(
+            jet.Displacement(2, math.pi / 2, 3),
+            jet.Tensor(indices=["1"], shape=[3], data=[1, 0, 0]),
+            jet.Tensor(
+                indices=["0"], shape=[3], data=[0.135335283237, 0.270670566473j, -0.382785986042]
+            ),
+            id="Displacement(2,pi/2,3)|1>",
+        ),
+        pytest.param(
+            jet.Displacement(2, math.pi / 2, 3),
+            jet.Tensor(indices=["1"], shape=[3], data=[0, 1, 0]),
+            jet.Tensor(
+                indices=["0"], shape=[3], data=[0.270670566473j, -0.40600584971, -0.382785986042j]
+            ),
+            id="Displacement(2,pi/2,3)|2>",
+        ),
+        pytest.param(
+            jet.Displacement(2, math.pi / 2, 3),
+            jet.Tensor(indices=["1"], shape=[3], data=[0, 0, 1]),
+            jet.Tensor(
+                indices=["0"], shape=[3], data=[-0.382785986042, -0.382785986042j, 0.135335283237]
+            ),
+            id="Displacement(2,pi/2,3)|3>",
+        ),
+        pytest.param(
+            jet.Squeezing(2, math.pi / 2, 3),
+            jet.Tensor(indices=["1"], shape=[3], data=[1, 0, 0]),
+            jet.Tensor(indices=["0"], shape=[3], data=[0.515560111756, 0, -0.351442087775j]),
+            id="Squeezing(2,pi/2,3)|1>",
+        ),
+        pytest.param(
+            jet.Squeezing(2, math.pi / 2, 3),
+            jet.Tensor(indices=["1"], shape=[3], data=[0, 1, 0]),
+            jet.Tensor(indices=["0"], shape=[3], data=[0, 0.137037026803, 0]),
+            id="Squeezing(2,pi/2,3)|2>",
+        ),
+        pytest.param(
+            jet.Squeezing(2, math.pi / 2, 3),
+            jet.Tensor(indices=["1"], shape=[3], data=[0, 0, 1]),
+            jet.Tensor(indices=["0"], shape=[3], data=[-0.351442087775j, 0, -0.203142935143]),
+            id="Squeezing(2,pi/2,3)|3>",
+        ),
+        pytest.param(
+            jet.TwoModeSqueezing(3, math.pi / 4, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[0.099327927419, 0, 0, 0.069888119434 + 0.069888119434j],
+            ),
+            id="TwoModeSqueezing(3,pi/4,2)|00>",
+        ),
+        pytest.param(
+            jet.TwoModeSqueezing(3, math.pi / 4, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[0, 0.009866037165, 0, 0],
+            ),
+            id="TwoModeSqueezing(3,pi/4,2)|01>",
+        ),
+        pytest.param(
+            jet.TwoModeSqueezing(3, math.pi / 4, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[0, 0, 0.009866037165, 0],
+            ),
+            id="TwoModeSqueezing(3,pi/4,2)|10>",
+        ),
+        pytest.param(
+            jet.TwoModeSqueezing(3, math.pi / 4, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[-0.069888119434 + 0.069888119434j, 0, 0, -0.097367981372],
+            ),
+            id="TwoModeSqueezing(3,pi/4,2)|10>",
+        ),
+        pytest.param(
+            jet.Beamsplitter(math.pi / 4, math.pi / 2, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[1, 0, 0, 0],
+            ),
+            id="Beamsplitter(pi/4,pi/2,2)|00>",
+        ),
+        pytest.param(
+            jet.Beamsplitter(math.pi / 4, math.pi / 2, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[0, INV_SQRT2, INV_SQRT2 * 1j, 0],
+            ),
+            id="Beamsplitter(pi/4,pi/2,2)|01>",
+        ),
+        pytest.param(
+            jet.Beamsplitter(math.pi / 4, math.pi / 2, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[0, INV_SQRT2 * 1j, INV_SQRT2, 0],
+            ),
+            id="Beamsplitter(pi/4,pi/2,2)|10>",
+        ),
+        pytest.param(
+            jet.Beamsplitter(math.pi / 4, math.pi / 2, 2),
+            jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
+            jet.Tensor(
+                indices=["0", "1"],
+                shape=[2, 2],
+                data=[0, 0, 0, 0],
+            ),
+            id="Beamsplitter(pi/4,pi/2,2)|11>",
+        ),
         ############################################################################################
         # Hadamard gate
         ############################################################################################

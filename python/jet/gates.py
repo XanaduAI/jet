@@ -206,7 +206,7 @@ class Beamsplitter(Gate):
             phi (float): reflection phase of the beamsplitter.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="Beamsplitter", num_wires=1, params=params, **kwargs)
+        super().__init__(name="Beamsplitter", num_wires=2, params=params, **kwargs)
         self._validate(want_num_params=3)
 
     @lru_cache
