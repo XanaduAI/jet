@@ -759,6 +759,7 @@ class TestGate:
     ],
 )
 def test_gate(gate, state, want_tensor):
+    """Tests that the correct transformation is applied by a gate to a basis state."""
     have_tensor = jet.contract_tensors(gate.tensor(), state)
     assert have_tensor.data == pytest.approx(want_tensor.data)
     assert have_tensor.shape == want_tensor.shape
