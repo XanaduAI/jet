@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* Quantum gate models have been added to the `jet` Python package. [(#16)](https://github.com/XanaduAI/jet/pull/16)
+
 * Python bindings are now available for the `TaskBasedCpuContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 
 * Python bindings now include a factory method which accepts a `dtype` parameter. [(#18)](https://github.com/XanaduAI/jet/pull/18)
@@ -20,7 +22,8 @@
 
 ### Improvements
 
-* Use camel case for type aliases [(#17)](https://github.com/XanaduAI/jet/pull/17)
+* Use camel case for type aliases. [(#17)](https://github.com/XanaduAI/jet/pull/17)
+
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
 * `TaskBasedCpuContractor` now stores `Tensor` results. [(#8)](https://github.com/XanaduAI/jet/pull/8)
