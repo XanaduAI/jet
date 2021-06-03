@@ -142,7 +142,9 @@ if(ENABLE_CUTENSOR)
                 lib64
                 ${CUDAToolkit_LIBRARY_DIR}
                 ${CUDA_TOOLKIT_ROOT_DIR}/lib
-                ${CUDA_TOOLKIT_ROOT_DIR}/lib64)
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib64
+		ENV LD_LIBRARY_PATH
+	)
 
     find_file(CUTENSOR_INC
         NAMES   cutensor.h 
@@ -152,7 +154,9 @@ if(ENABLE_CUTENSOR)
                 /opt 
                 include 
                 ${CUDAToolkit_INCLUDE_DIRS}
-                ${CUDA_TOOLKIT_ROOT_DIR}/include)
+                ${CUDA_TOOLKIT_ROOT_DIR}/include
+		ENV CPATH
+	)
 
     if(NOT CUTENSOR_LIB OR NOT CUTENSOR_INC)
         message(FATAL_ERROR "Unable to find cutensor installation. Please ensure v1.3.0+ is correctly installed.")
@@ -194,6 +198,9 @@ if(ENABLE_IPO)
 endif()
 if (ENABLE_FPIC)
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fPIC>)
+endif()
+if(MKL_FOUND)
+	target_compile_options(Jet INTERFACE -DENABLE_MKL)
 endif()
 if (ENABLE_CUTENSOR)
     target_include_directories(Jet INTERFACE ${CUDA_TOOLKIT_ROOT_DIR}/include)
