@@ -8,6 +8,7 @@ __all__ = [
     "State",
     "Qubit",
     "Qudit",
+    "QuditRegister",
 ]
 
 
@@ -49,7 +50,7 @@ class State(ABC):
             raise ValueError("Indices must be a sequence of unique strings.")
 
         # Check that `indices` has the correct length (or is None).
-        elif len(indices) != 1:
+        elif len(indices) != self.num_wires:
             raise ValueError(
                 f"States must have one index per wire. "
                 f"Received {len(indices)} indices for {self.num_wires} wires."
@@ -61,6 +62,14 @@ class State(ABC):
     def num_wires(self) -> int:
         """Returns the number of wires spanned by this state."""
         return self._num_wires
+
+    def __eq__(self, other) -> bool:
+        """Reports whether this state is equivalent to the given state."""
+        return np.all(self._data() == other._data())
+
+    def __ne__(self, other) -> bool:
+        """Reports whether this state is not equivalent to the given state."""
+        return not (self == other)
 
     @abstractmethod
     def _data(self) -> np.ndarray:
@@ -90,8 +99,12 @@ class Qubit(State):
         Args:
            data: optional state vector.
         """
-        self._state_vector = np.array([1, 0]) if data is None else data
-        super().__init__(name="Qubit", num_wires=1)
+        super().__init__(name=f"Qubit", num_wires=1)
+
+        if data is None:
+            self._state_vector = np.array([1, 0])
+        else:
+            self._state_vector = data.flatten()
 
     def _data(self) -> np.ndarray:
         return self._state_vector
@@ -99,14 +112,38 @@ class Qubit(State):
 
 class Qudit(State):
     def __init__(self, data: Optional[np.ndarray] = None, dim: int = 2):
-        """Constructs a qudit gate.
+        """Constructs a qudit state.
 
         Args:
             data: optional state vector.
             dim: dimension of the qudit.
         """
-        self._state_vector = np.array([1] + [0] * (dim - 1)) if data is None else data
         super().__init__(name=f"Qu-{dim}-it", num_wires=1)
+
+        if data is None:
+            self._state_vector = np.arange(dim) == 0
+        else:
+            self._state_vector = data.flatten()
+
+    def _data(self) -> np.ndarray:
+        return self._state_vector
+
+
+class QuditRegister(State):
+    def __init__(self, size: int, data: Optional[np.ndarray] = None, dim: int = 2):
+        """Constructs a qudit state register.
+
+        Args:
+            size: number of qudits.
+            data: optional state vector.
+            dim: dimension of the qudits.
+        """
+        super().__init__(name=f"Qu-{dim}-it[{size}]", num_wires=size)
+
+        if data is None:
+            self._state_vector = np.arange(dim ** size) == 0
+        else:
+            self._state_vector = data.flatten()
 
     def _data(self) -> np.ndarray:
         return self._state_vector
