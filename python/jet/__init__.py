@@ -2,6 +2,7 @@
 from .bindings import *
 
 # The rest of the modules control their exports using `__all__`.
+from .circuit import *
 from .factory import *
 from .gates import *
 from .state import *

@@ -7,6 +7,11 @@ from .factory import TensorNetwork, TensorNetworkType
 from .gates import Gate
 from .state import Qudit, State
 
+__all__ = [
+    "Wire",
+    "Circuit",
+]
+
 
 @dataclass
 class Wire:
@@ -33,10 +38,10 @@ class Circuit:
             dim: dimension of each wire.
         """
         self._wires = [Wire(i) for i in range(num_wires)]
-        self._parts = [Qudit(dim) for _ in range(num_wires)]
+        self._parts = [Qudit(dim=dim) for _ in range(num_wires)]
 
-        for (i, part) in zip(self._wires, self._parts):
-            part.indices = [self._wires[i].index]
+        for (wire, part) in zip(self._wires, self._parts):
+            part.indices = [wire.index]
 
     @property
     def parts(self) -> Tuple[Union[Gate, State]]:
@@ -51,14 +56,23 @@ class Circuit:
     def _append_validator(append_fn: Callable) -> Callable:
         """Decorator which validates the arguments to an append function."""
 
-        def validator(self, part: Union[Gate, State], wire_ids: Sequence[int]):
-            # Assert that each wire ID corresponds to an open wire in the circuit.
-            assert all(0 <= i < len(self.wires) for i in wire_ids)
-            assert all(self.wires[i].closed is False for i in wire_ids)
-            # Assert that each wire ID is unique and corresponds to a wire in the part.
-            assert len(wire_ids) == len(set(wire_ids))
-            assert len(wire_ids) == part.num_wires
-            return append_fn(self, part, wire_ids)
+        def validator(self, part: Union[Gate, State], wire_ids: Sequence[int]) -> None:
+            if not all(0 <= i < len(self.wires) for i in wire_ids):
+                raise ValueError(f"Wire IDs must fall in the range [0, {len(self.wires)}).")
+
+            elif any(self.wires[i].closed is True for i in wire_ids):
+                raise ValueError(f"Wire IDs must correspond to open wires.")
+
+            elif len(wire_ids) != len(set(wire_ids)):
+                raise ValueError(f"Wire IDs must be unique.")
+
+            elif len(wire_ids) != part.num_wires:
+                raise ValueError(
+                    f"Number of wire IDs ({len(wire_ids)}) must match the number of "
+                    f"wires connected to the circuit component ({part.num_wires})."
+                )
+
+            append_fn(self, part, wire_ids)
 
         return validator
 
@@ -85,7 +99,7 @@ class Circuit:
         self._parts.append(state)
 
     def indices(self, wire_ids: Sequence[int]) -> List[str]:
-        """Returns the current index label associated with each specified wire."""
+        """Returns the index label associated with each of the specified wires."""
         return [self.wires[i].index for i in wire_ids]
 
     def tensor_network(self, dtype: type = np.complex128) -> TensorNetworkType:
