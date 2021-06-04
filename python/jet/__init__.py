@@ -4,6 +4,7 @@ from .bindings import *
 # The rest of the modules control their exports using `__all__`.
 from .factory import *
 from .gates import *
+from .state import *
 
 # Grab the current Jet version from the C++ headers.
 __version__ = version()

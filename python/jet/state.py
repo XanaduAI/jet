@@ -20,18 +20,13 @@ class State(ABC):
             num_wires: number of wires the state connects to.
 
         Kwargs:
-            tensor_id (int): ID for the state tensor.
+            tensor_id (int): ID of the state tensor.
         """
         self.name = name
         self.tensor_id = kwargs.get("tensor_id", None)
 
         self._indices = None
         self._num_wires = num_wires
-
-    @property
-    def num_wires(self) -> int:
-        """Returns the number of wires spanned by this state."""
-        return self._num_wires
 
     @property
     def indices(self) -> Optional[List[str]]:
@@ -62,6 +57,15 @@ class State(ABC):
 
         self._indices = indices
 
+    @property
+    def num_wires(self) -> int:
+        """Returns the number of wires spanned by this state."""
+        return self._num_wires
+
+    @abstractmethod
+    def _data(self) -> np.ndarray:
+        """Returns the vector representation of this state."""
+
     def tensor(self, dtype: type = np.complex128, adjoint: bool = False) -> TensorType:
         """Returns the tensor representation of this state."""
         if adjoint:
@@ -78,32 +82,31 @@ class State(ABC):
 
         return Tensor(indices=indices, shape=shape, data=data, dtype=dtype)
 
-    @abstractmethod
-    def _data(self) -> np.ndarray:
-        """Returns the vector representation of this state."""
-        raise NotImplementedError("No data available for generic state.")
-
 
 class Qubit(State):
-    def __init__(self, state: Optional[np.ndarray] = None):
-        """Constructs a qubit state."""
-        self._state = state or np.array([1, 0])
+    def __init__(self, data: Optional[np.ndarray] = None):
+        """Constructs a qubit state.
+
+        Args:
+           data: optional state vector.
+        """
+        self._state_vector = np.array([1, 0]) if data is None else data
         super().__init__(name="Qubit", num_wires=1)
 
     def _data(self) -> np.ndarray:
-        return self._state
+        return self._state_vector
 
 
 class Qudit(State):
-    def __init__(self, dim: int, state: Optional[np.ndarray] = None):
+    def __init__(self, data: Optional[np.ndarray] = None, dim: int = 2):
         """Constructs a qudit gate.
 
         Args:
+            data: optional state vector.
             dim: dimension of the qudit.
-            state: optional state vector.
         """
-        self._state = state or np.array([1] + [0] * (dim - 1))
-        super().__init__(name=f"Qudit(d={dim})", num_wires=1)
+        self._state_vector = np.array([1] + [0] * (dim - 1)) if data is None else data
+        super().__init__(name=f"Qu-{dim}-it", num_wires=1)
 
     def _data(self) -> np.ndarray:
-        return self._state
+        return self._state_vector

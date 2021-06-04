@@ -120,7 +120,6 @@ class Gate(ABC):
     @abstractmethod
     def _data(self) -> np.ndarray:
         """Returns the matrix representation of this gate."""
-        pass
 
     def tensor(self, dtype: type = np.complex128, adjoint: bool = False) -> TensorType:
         """Returns the tensor representation of this gate."""

@@ -14,7 +14,7 @@ class Wire:
     id_: int
     # Number of gates applied to this wire.
     depth: int = 0
-    # Whether this wire is "capped" with a state.
+    # Whether this wire has been terminated with a state.
     closed: int = False
 
     @property
