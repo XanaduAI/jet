@@ -8,90 +8,90 @@
 #include "jet/permute/PermuterIncludes.hpp"
 
 using namespace Jet;
-using data_t = std::complex<float>;
+using Data = std::complex<float>;
 
 namespace {
-std::vector<data_t> FillArray(size_t num_vals, size_t start = 0)
+std::vector<Data> FillArray(size_t num_vals, size_t start = 0)
 {
-    std::vector<data_t> data(num_vals);
+    std::vector<Data> data(num_vals);
     for (size_t i = start; i < start + num_vals; i++) {
-        data[i - start] = data_t(i, i);
+        data[i - start] = Data(i, i);
     }
     return data;
 }
 } // namespace
 
 /// Declare reused vector data here to avoid reinitialization
-static const std::vector<data_t> data_pow2_dbca{
+static const std::vector<Data> data_pow2_dbca{
     {0, 0}, {8, 8}, {2, 2}, {10, 10}, {4, 4}, {12, 12}, {6, 6}, {14, 14},
     {1, 1}, {9, 9}, {3, 3}, {11, 11}, {5, 5}, {13, 13}, {7, 7}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_cbad{
+static const std::vector<Data> data_pow2_cbad{
     {0, 0}, {1, 1}, {8, 8},   {9, 9},   {4, 4}, {5, 5}, {12, 12}, {13, 13},
     {2, 2}, {3, 3}, {10, 10}, {11, 11}, {6, 6}, {7, 7}, {14, 14}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_bacd{
+static const std::vector<Data> data_pow2_bacd{
     {0, 0}, {1, 1}, {2, 2}, {3, 3}, {8, 8},   {9, 9},   {10, 10}, {11, 11},
     {4, 4}, {5, 5}, {6, 6}, {7, 7}, {12, 12}, {13, 13}, {14, 14}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_badc{
+static const std::vector<Data> data_pow2_badc{
     {0, 0}, {2, 2}, {1, 1}, {3, 3}, {8, 8},   {10, 10}, {9, 9},   {11, 11},
     {4, 4}, {6, 6}, {5, 5}, {7, 7}, {12, 12}, {14, 14}, {13, 13}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_4x4_ba{
+static const std::vector<Data> data_pow2_4x4_ba{
     {0, 0}, {4, 4}, {8, 8},   {12, 12}, {1, 1}, {5, 5}, {9, 9},   {13, 13},
     {2, 2}, {6, 6}, {10, 10}, {14, 14}, {3, 3}, {7, 7}, {11, 11}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_4x2x2_bac{
+static const std::vector<Data> data_pow2_4x2x2_bac{
     {0, 0}, {1, 1}, {8, 8},   {9, 9},   {2, 2}, {3, 3}, {10, 10}, {11, 11},
     {4, 4}, {5, 5}, {12, 12}, {13, 13}, {6, 6}, {7, 7}, {14, 14}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_2x4x2_bac{
+static const std::vector<Data> data_pow2_2x4x2_bac{
     {0, 0}, {1, 1}, {4, 4}, {5, 5}, {8, 8},   {9, 9},   {12, 12}, {13, 13},
     {2, 2}, {3, 3}, {6, 6}, {7, 7}, {10, 10}, {11, 11}, {14, 14}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_2x4x2_acb{
+static const std::vector<Data> data_pow2_2x4x2_acb{
     {0, 0}, {4, 4},   {1, 1}, {5, 5},   {2, 2},   {6, 6},   {3, 3},   {7, 7},
     {8, 8}, {12, 12}, {9, 9}, {13, 13}, {10, 10}, {14, 14}, {11, 11}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_4x2x2_acb{
+static const std::vector<Data> data_pow2_4x2x2_acb{
     {0, 0}, {2, 2},   {1, 1}, {3, 3},   {4, 4},   {6, 6},   {5, 5},   {7, 7},
     {8, 8}, {10, 10}, {9, 9}, {11, 11}, {12, 12}, {14, 14}, {13, 13}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_4x2x2_cba{
+static const std::vector<Data> data_pow2_4x2x2_cba{
     {0, 0}, {8, 8},   {4, 4}, {12, 12}, {1, 1}, {9, 9},   {5, 5}, {13, 13},
     {2, 2}, {10, 10}, {6, 6}, {14, 14}, {3, 3}, {11, 11}, {7, 7}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_2x2x4_acb{
+static const std::vector<Data> data_pow2_2x2x4_acb{
     {0, 0}, {2, 2},   {4, 4},   {6, 6},   {1, 1}, {3, 3},   {5, 5},   {7, 7},
     {8, 8}, {10, 10}, {12, 12}, {14, 14}, {9, 9}, {11, 11}, {13, 13}, {15, 15}};
 
-static const std::vector<data_t> data_pow2_2x2x4_cba{
+static const std::vector<Data> data_pow2_2x2x4_cba{
     {0, 0}, {4, 4}, {8, 8}, {12, 12}, {2, 2}, {6, 6}, {10, 10}, {14, 14},
     {1, 1}, {5, 5}, {9, 9}, {13, 13}, {3, 3}, {7, 7}, {11, 11}, {15, 15}};
 
-static const std::vector<data_t> data_non_pow2_bca{
+static const std::vector<Data> data_non_pow2_bca{
     {0, 0},   {15, 15}, {1, 1},   {16, 16}, {2, 2},   {17, 17},
     {3, 3},   {18, 18}, {4, 4},   {19, 19}, {5, 5},   {20, 20},
     {6, 6},   {21, 21}, {7, 7},   {22, 22}, {8, 8},   {23, 23},
     {9, 9},   {24, 24}, {10, 10}, {25, 25}, {11, 11}, {26, 26},
     {12, 12}, {27, 27}, {13, 13}, {28, 28}, {14, 14}, {29, 29}};
 
-static const std::vector<data_t> data_non_pow2_cba{
+static const std::vector<Data> data_non_pow2_cba{
     {0, 0}, {15, 15}, {5, 5}, {20, 20}, {10, 10}, {25, 25},
     {1, 1}, {16, 16}, {6, 6}, {21, 21}, {11, 11}, {26, 26},
     {2, 2}, {17, 17}, {7, 7}, {22, 22}, {12, 12}, {27, 27},
     {3, 3}, {18, 18}, {8, 8}, {23, 23}, {13, 13}, {28, 28},
     {4, 4}, {19, 19}, {9, 9}, {24, 24}, {14, 14}, {29, 29}};
 
-static const std::vector<data_t> data_non_pow2_cab{
+static const std::vector<Data> data_non_pow2_cab{
     {0, 0}, {5, 5}, {10, 10}, {15, 15}, {20, 20}, {25, 25},
     {1, 1}, {6, 6}, {11, 11}, {16, 16}, {21, 21}, {26, 26},
     {2, 2}, {7, 7}, {12, 12}, {17, 17}, {22, 22}, {27, 27},
     {3, 3}, {8, 8}, {13, 13}, {18, 18}, {23, 23}, {28, 28},
     {4, 4}, {9, 9}, {14, 14}, {19, 19}, {24, 24}, {29, 29}};
 
-static const std::vector<data_t> large_example{
+static const std::vector<Data> large_example{
     {0, 0},     {16, 16},   {64, 64},   {80, 80},   {8, 8},     {24, 24},
     {72, 72},   {88, 88},   {256, 256}, {272, 272}, {320, 320}, {336, 336},
     {264, 264}, {280, 280}, {328, 328}, {344, 344}, {1, 1},     {17, 17},
@@ -195,11 +195,11 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
     {
         std::vector<size_t> shape{2, 2, 2, 2};
         std::vector<std::string> index_expected{"a", "b", "c", "d"};
-        std::vector<data_t> data_expected = FillArray(16);
+        std::vector<Data> data_expected = FillArray(16);
 
         SECTION("{d,b,c,a} - > {a,b,c,d}")
         {
-            std::vector<data_t> data_out(data_pow2_dbca);
+            std::vector<Data> data_out(data_pow2_dbca);
             CHECK(permuter.Transpose(data_pow2_dbca, shape,
                                      {"d", "b", "c", "a"},
                                      index_expected) == data_expected);
@@ -231,7 +231,7 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
     {
         std::vector<size_t> shape{4, 4};
         std::vector<std::string> index_expected{"a", "b"};
-        std::vector<data_t> data_expected = FillArray(16);
+        std::vector<Data> data_expected = FillArray(16);
 
         SECTION("{b, a} - > {a,b}")
         {
@@ -243,7 +243,7 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
     {
         std::vector<size_t> shape{2, 4, 2};
         std::vector<std::string> index_expected{"a", "b", "c"};
-        std::vector<data_t> data_expected = FillArray(16);
+        std::vector<Data> data_expected = FillArray(16);
 
         SECTION("{b, a, c} - > {a,b,c}")
         {
@@ -268,7 +268,7 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
     {
         std::vector<size_t> shape{4, 2, 2};
         std::vector<std::string> index_expected{"a", "b", "c"};
-        std::vector<data_t> data_expected = FillArray(16);
+        std::vector<Data> data_expected = FillArray(16);
 
         SECTION("{b, a, c} - > {a,b,c}")
         {
@@ -293,7 +293,7 @@ TEMPLATE_TEST_CASE("Permuter<TestType>::Transpose Power-of-2 data", "[Permute]",
     {
         std::vector<size_t> shape{2, 2, 4};
         std::vector<std::string> index_expected{"a", "b", "c"};
-        std::vector<data_t> data_expected = FillArray(16);
+        std::vector<Data> data_expected = FillArray(16);
 
         SECTION("{b, a, c} - > {a,b,c}")
         {
@@ -322,7 +322,7 @@ TEST_CASE("DefaultPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
 
     std::vector<size_t> shape{2, 3, 5};
     std::vector<std::string> index_expected{"a", "b", "c"};
-    std::vector<data_t> data_expected = FillArray(30);
+    std::vector<Data> data_expected = FillArray(30);
 
     SECTION("{b,c,a} - > {a,b,c}")
     {
@@ -349,11 +349,11 @@ TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
 
     std::vector<size_t> shape{2, 3, 5};
     std::vector<std::string> index_expected{"a", "b", "c"};
-    std::vector<data_t> data_expected = FillArray(30);
+    std::vector<Data> data_expected = FillArray(30);
 
     SECTION("{b,c,a} - > {a,b,c}")
     {
-        std::vector<data_t> data_out(data_non_pow2_bca);
+        std::vector<Data> data_out(data_non_pow2_bca);
         CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_bca, {3, 5, 2},
                                            {"b", "c", "a"}, index_expected),
                         Jet::Exception);
@@ -364,7 +364,7 @@ TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
     }
     SECTION("{c,b,a} - > {a,b,c}")
     {
-        std::vector<data_t> data_out(data_non_pow2_cba);
+        std::vector<Data> data_out(data_non_pow2_cba);
         CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cba, {5, 3, 2},
                                            {"c", "b", "a"}, index_expected),
                         Jet::Exception);
@@ -375,7 +375,7 @@ TEST_CASE("QFlexPermuter<>::Transpose Non power-of-2 data", "[Permute]", )
     }
     SECTION("{c,a,b} - > {a,b,c}")
     {
-        std::vector<data_t> data_out(data_non_pow2_cab);
+        std::vector<Data> data_out(data_non_pow2_cab);
         CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, {5, 2, 3},
                                            {"c", "a", "b"}, index_expected),
                         Jet::Exception);
@@ -394,13 +394,13 @@ TEST_CASE("QFlexPermuter<>::Transpose exceptional data conditions",
     Permuter<QFlexPermuter<>> permuter;
 
     std::vector<std::string> index_expected{"a", "b", "c"};
-    std::vector<data_t> data_expected = FillArray(30);
+    std::vector<Data> data_expected = FillArray(30);
     std::vector<size_t> shape{2, 3, 5, 2};
 
     SECTION("Incorrect shape-indices match")
     {
 
-        std::vector<data_t> data_out(data_non_pow2_cab);
+        std::vector<Data> data_out(data_non_pow2_cab);
         CHECK_THROWS_AS(permuter.Transpose(data_non_pow2_cab, shape,
                                            {"c", "a", "b"}, index_expected),
                         Jet::Exception);
@@ -455,10 +455,10 @@ TEST_CASE("QFlexPermuter<>::Transpose exceptional data conditions",
     }
 }
 
-TEMPLATE_TEST_CASE("LARGE TEST", "[Permute]", DefaultPermuter<>,
+TEMPLATE_TEST_CASE("Large Test: 9 indices", "[Permute]", DefaultPermuter<>,
                    DefaultPermuter<64>, DefaultPermuter<128>,
                    DefaultPermuter<256>, DefaultPermuter<512>,
-                   DefaultPermuter<2048>, QFlexPermuter<>, QFlexPermuter<64>,
+                   DefaultPermuter<2048>, QFlexPermuter<>,
                    QFlexPermuter<128>, QFlexPermuter<256>, QFlexPermuter<512>,
                    QFlexPermuter<2048>, (QFlexPermuter<1024, 64>),
                    (QFlexPermuter<1024, 128>), (QFlexPermuter<1024, 256>),
@@ -472,11 +472,11 @@ TEMPLATE_TEST_CASE("LARGE TEST", "[Permute]", DefaultPermuter<>,
         std::vector<size_t> shape{2, 2, 2, 2, 2, 2, 2, 2, 2};
         std::vector<std::string> index_expected{"a", "b", "c", "d", "e",
                                                 "f", "g", "h", "i"};
-        std::vector<data_t> data_expected = FillArray(512);
+        std::vector<Data> data_expected = FillArray(512);
 
         SECTION("{d, g, h, b, i, a, f, c, e} - > {a,b,c,d,e,f,g,h,i}")
         {
-            std::vector<data_t> data_out(large_example);
+            std::vector<Data> data_out(large_example);
             CHECK(permuter.Transpose(
                       large_example, shape,
                       {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
@@ -486,6 +486,35 @@ TEMPLATE_TEST_CASE("LARGE TEST", "[Permute]", DefaultPermuter<>,
                                {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
                                index_expected);
             CHECK(data_out == data_expected);
+        }
+    }
+}
+
+TEST_CASE("Failing large test: insufficient BLOCKSIZE")
+{
+    using namespace Catch::Matchers;
+
+    Permuter<QFlexPermuter<64>> permuter;
+
+    SECTION("2x2x2x2x2x2x2x2x2")
+    {
+        std::vector<size_t> shape{2, 2, 2, 2, 2, 2, 2, 2, 2};
+        std::vector<std::string> index_expected{"a", "b", "c", "d", "e",
+                                                "f", "g", "h", "i"};
+        std::vector<Data> data_expected = FillArray(512);
+
+        SECTION("{d, g, h, b, i, a, f, c, e} - > {a,b,c,d,e,f,g,h,i}")
+        {
+            std::vector<Data> data_out(large_example);
+            CHECK_THROWS_AS(permuter.Transpose(
+                      large_example, shape,
+                      {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
+                      index_expected), Jet::Exception);
+            CHECK_THROWS_WITH(permuter.Transpose(
+                      large_example, shape,
+                      {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
+                      index_expected), Contains("Consider increasing the BLOCKSIZE"));
+
         }
     }
 }

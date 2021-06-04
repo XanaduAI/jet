@@ -55,8 +55,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
     enum class PermuteType { PermuteLeft, PermuteRight, None };
 
-    class DimData {
-      public:
+    struct DimData {
         const size_t dim_left;
         const size_t dim_right;
         const size_t tensor_dim;
@@ -76,39 +75,11 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
         }
         DimData() : dim_left{}, dim_right{}, tensor_dim{}, dim_map{} {}
     };
-    class IndexData {
-      public:
-        const std::vector<size_t> old_indices;
-        const std::vector<size_t> new_indices;
-        const std::vector<std::string> old_labels;
-        const std::vector<std::string> new_labels;
 
-        IndexData(const std::vector<size_t> &old_indices,
-                  const std::vector<size_t> &new_indices,
-                  const std::vector<std::string> &old_labels,
-                  const std::vector<std::string> &new_labels)
-            : old_indices{old_indices}, new_indices{new_indices},
-              old_labels{old_labels}, new_labels{new_labels}
-        {
-        }
-        IndexData(std::vector<size_t> &&old_indices,
-                  std::vector<size_t> &&new_indices,
-                  std::vector<std::string> &&old_labels,
-                  std::vector<std::string> &&new_labels)
-            : old_indices{old_indices}, new_indices{new_indices},
-              old_labels{old_labels}, new_labels{new_labels}
-        {
-        }
-        IndexData() : old_indices{}, new_indices{}, old_labels{}, new_labels{}
-        {
-        }
-    };
-
-    class PlanData {
-      public:
+    struct PlanData {
         std::vector<DimData> dim_data;
         std::vector<PermuteType> types;
-        // IndexData idx_data;
+
         std::vector<std::string> new_ordering;
         std::vector<size_t> new_dimensions;
         std::vector<std::string> old_ordering;
@@ -283,7 +254,6 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
                 }
             }
         }
-        using namespace Jet::Utilities;
 
         std::vector<size_t> map_old_to_new_position(total_dim);
         GenerateBinaryReorderingMap(map_old_to_new_idxpos,
