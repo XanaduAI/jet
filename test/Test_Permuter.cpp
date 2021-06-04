@@ -458,12 +458,11 @@ TEST_CASE("QFlexPermuter<>::Transpose exceptional data conditions",
 TEMPLATE_TEST_CASE("Large Test: 9 indices", "[Permute]", DefaultPermuter<>,
                    DefaultPermuter<64>, DefaultPermuter<128>,
                    DefaultPermuter<256>, DefaultPermuter<512>,
-                   DefaultPermuter<2048>, QFlexPermuter<>,
-                   QFlexPermuter<128>, QFlexPermuter<256>, QFlexPermuter<512>,
-                   QFlexPermuter<2048>, (QFlexPermuter<1024, 64>),
-                   (QFlexPermuter<1024, 128>), (QFlexPermuter<1024, 256>),
-                   (QFlexPermuter<1024, 512>), (QFlexPermuter<2048, 1024>),
-                   (QFlexPermuter<1024, 2>))
+                   DefaultPermuter<2048>, QFlexPermuter<>, QFlexPermuter<128>,
+                   QFlexPermuter<256>, QFlexPermuter<512>, QFlexPermuter<2048>,
+                   (QFlexPermuter<1024, 64>), (QFlexPermuter<1024, 128>),
+                   (QFlexPermuter<1024, 256>), (QFlexPermuter<1024, 512>),
+                   (QFlexPermuter<2048, 1024>), (QFlexPermuter<1024, 2>))
 {
     Permuter<TestType> permuter;
 
@@ -507,14 +506,15 @@ TEST_CASE("Failing large test: insufficient BLOCKSIZE")
         {
             std::vector<Data> data_out(large_example);
             CHECK_THROWS_AS(permuter.Transpose(
-                      large_example, shape,
-                      {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
-                      index_expected), Jet::Exception);
+                                large_example, shape,
+                                {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
+                                index_expected),
+                            Jet::Exception);
             CHECK_THROWS_WITH(permuter.Transpose(
-                      large_example, shape,
-                      {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
-                      index_expected), Contains("Consider increasing the BLOCKSIZE"));
-
+                                  large_example, shape,
+                                  {"d", "g", "h", "b", "i", "a", "f", "c", "e"},
+                                  index_expected),
+                              Contains("Consider increasing the BLOCKSIZE"));
         }
     }
 }

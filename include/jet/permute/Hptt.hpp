@@ -11,7 +11,7 @@ namespace Jet {
 
 /**
  * @brief HPTT autotuning tensor transpose permuter.
- * 
+ *
  * See https://github.com/springer13/hptt for details.
  *
  */
