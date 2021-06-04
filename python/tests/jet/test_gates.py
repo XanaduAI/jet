@@ -8,41 +8,48 @@ import jet
 INV_SQRT2 = 1 / math.sqrt(2)
 
 
+class MockGate(jet.Gate):
+    """MockGate represents a fictional, unnormalized gate which can be applied to pairs of qutrits."""
+
+    def __init__(self):
+        super().__init__(name="MockGate", num_wires=2)
+
+    def _data(self) -> np.ndarray:
+        return np.arange(3 ** 4) * (1 + 1j)
+
+
 class TestGate:
     @pytest.fixture
     def gate(self):
-        """Returns a gate with two wires and one parameter."""
-        return jet.CPhaseShift(0)
+        """Returns a mock gate instance."""
+        return MockGate()
 
     def test_tensor_indices_not_set(self, gate):
         """Tests that the correct tensor is returned for a gate with unset indices."""
-        gate._data = lambda: np.arange(16)
         tensor = gate.tensor()
 
         assert tensor.indices == ["0", "1", "2", "3"]
-        assert tensor.shape == [2, 2, 2, 2]
-        assert tensor.data == list(range(16))
+        assert tensor.shape == [3, 3, 3, 3]
+        assert tensor.data == [i * (1 + 1j) for i in range(3 ** 4)]
 
     def test_tensor_indices_are_set(self, gate):
         """Tests that the correct tensor is returned for a gate with specified indices."""
-        gate._data = lambda: np.arange(3 ** 4)
         gate.indices = ["r", "g", "b", "a"]
         tensor = gate.tensor()
 
         assert tensor.indices == ["r", "g", "b", "a"]
         assert tensor.shape == [3, 3, 3, 3]
-        assert tensor.data == list(range(3 ** 4))
+        assert tensor.data == [i * (1 + 1j) for i in range(3 ** 4)]
 
     def test_tensor_adjoint(self, gate):
         """Tests that the correct adjoint tensor is returned for a gate."""
-        gate._data = lambda: np.array([1 + 2j])
         tensor = gate.tensor(adjoint=True)
 
         assert tensor.indices == ["0", "1", "2", "3"]
-        assert tensor.shape == [1, 1, 1, 1]
-        assert tensor.data == [1 - 2j]
+        assert tensor.shape == [3, 3, 3, 3]
+        assert tensor.data == [i * (1 - 1j) for i in range(3 ** 4)]
 
-    @pytest.mark.parametrize("indices", [1, ["i", 2, "k"], ["x", "x"], []])
+    @pytest.mark.parametrize("indices", [1, ["i", "j", "k", 4], ["x", "x", "x", "x"], []])
     def test_indices_are_invalid(self, gate, indices):
         """Tests that a ValueError is raised when the indices of a gate are set
         to an invalid value.
