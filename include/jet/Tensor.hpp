@@ -1,19 +1,5 @@
 #pragma once
 
-/**
- * Cache friendly size (for complex<float>) to move things around.
- */
-#ifndef MAX_RIGHT_DIM
-#define MAX_RIGHT_DIM 1024
-#endif
-
-/**
- * Smallest size of cache friendly blocks (for complex<float>).
- */
-#ifndef MIN_RIGHT_DIM
-#define MIN_RIGHT_DIM 32
-#endif
-
 #include <complex>
 #include <random>
 #include <string>
@@ -22,6 +8,7 @@
 
 #include "TensorHelpers.hpp"
 #include "Utilities.hpp"
+#include "permute/PermuterIncludes.hpp"
 
 namespace Jet {
 
@@ -93,14 +80,187 @@ template <class T> Tensor<T> AddTensors(const Tensor<T> &A, const Tensor<T> &B)
     Tensor<T> C(indices, shape);
     const auto size = C.GetSize();
 
+    auto c_ptr = C.GetData().data();
+    auto a_ptr = A.GetData().data();
+    auto bt_ptr = Bt.GetData().data();
+
 #if defined _OPENMP
-#pragma omp parallel for schedule(static, MAX_RIGHT_DIM)
+#pragma omp parallel for schedule(static, 1024) // MAX_RIGHT_DIM)
 #endif
     for (size_t i = 0; i < size; i++) {
-        C[i] = A[i] + Bt[i];
+        c_ptr[i] = a_ptr[i] + bt_ptr[i];
     }
 
     return C;
+}
+
+/**
+ * @brief Slices a `%Tensor` object index.
+ *
+ * The result is a `%Tensor` object whose given indices and data are a subset of
+ * the provided tensor object, sliced along the given index argument.
+ *
+ * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices along
+ * each index with the resulting slices selected as required:
+ * \code{.cpp}
+ *     Tensor A({"i", "j"}, {2, 3});
+ *     A.FillRandom();
+ *
+ *     SliceIndex(A, "i", 0);  // [1x3] tensor, slice 0
+ *     SliceIndex(A, "i", 1);  // [1x3] tensor, slice 1
+
+ *     SliceIndex(A, "j", 0);  // [2x1] tensor, slice 0
+ *     SliceIndex(A, "j", 1);  // [2x1] tensor, slice 1
+ *     SliceIndex(A, "j", 2);  // [2x1] tensor, slice 2
+ * \endcode
+ *
+ * @tparam T `%Tensor` data type.
+ * @param tensor `%Tensor` object to slice.
+ * @param index `%Tensor` index label on which to slice.
+ * @param value Value to slice the `%Tensor` index on.
+ * @return Slice of the `%Tensor` object.
+ */
+template <class T>
+Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index,
+                     size_t value)
+{
+
+    std::vector<std::string> new_ordering = tensor.GetIndices();
+    auto it = find(new_ordering.begin(), new_ordering.end(), index);
+    size_t index_num = std::distance(new_ordering.begin(), it);
+    new_ordering.erase(new_ordering.begin() + index_num);
+    new_ordering.insert(new_ordering.begin(), index);
+
+    auto &&tensor_trans = Transpose(tensor, new_ordering);
+    std::vector<std::string> sliced_indices(
+        tensor_trans.GetIndices().begin() + 1, tensor_trans.GetIndices().end());
+    std::vector<size_t> sliced_dimensions(tensor_trans.GetShape().begin() + 1,
+                                          tensor_trans.GetShape().end());
+
+    Tensor<T> tensor_sliced(sliced_indices, sliced_dimensions);
+    size_t projection_size = tensor_sliced.GetSize();
+    size_t projection_begin = projection_size * value;
+
+    auto data_ptr = tensor_trans.GetData().data();
+    auto tensor_sliced_ptr = tensor_sliced.GetData().data();
+
+#if defined _OPENMP
+    int max_right_dim = 1024;
+#pragma omp parallel for schedule(static, max_right_dim)
+#endif
+    for (size_t p = 0; p < projection_size; ++p)
+        tensor_sliced_ptr[p] = data_ptr[projection_begin + p];
+
+    return tensor_sliced;
+}
+
+/**
+ * @brief Reshapes a `%Tensor` object to the given dimensions.
+ *
+ * @tparam T `%Tensor` data type.
+ * @param old_tensor Original tensor object to reshape.
+ * @param new_shape Index dimensionality for new tensor object.
+ * @return Reshaped copy of the `%Tensor` object.
+ */
+template <class T>
+Tensor<T> Reshape(const Tensor<T> &old_tensor,
+                  const std::vector<size_t> &new_shape)
+{
+    using namespace Utilities;
+
+    JET_ABORT_IF_NOT(old_tensor.GetSize() ==
+                         Jet::Utilities::ShapeToSize(new_shape),
+                     "Size is inconsistent between tensors.");
+    Tensor<T> new_tensor(new_shape);
+    Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
+    return new_tensor;
+}
+
+/**
+ * @brief Returns the conjugate of a `%Tensor` object.
+ *
+ * @tparam T `%Tensor` data type.
+ * @param A Reference `%Tensor` object.
+ * @return `%Tensor` object representing the conjugate of `A`.
+ */
+template <class T> Tensor<T> Conj(const Tensor<T> &A)
+{
+    Tensor<T> A_conj(A.GetIndices(), A.GetShape());
+    for (size_t i = 0; i < A.GetSize(); i++) {
+        A_conj[i] = std::conj(A[i]);
+    }
+    return A_conj;
+}
+
+/**
+ * @brief Transposes the indices of a `%Tensor` object to a new ordering.
+ *
+ * @tparam T `%Tensor` data type.
+ * @param A Reference `%Tensor` object.
+ * @param new_indices New `%Tensor` index label ordering.
+ * @return Transposed `%Tensor` object.
+ */
+template <class T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
+Tensor<T> Transpose(const Tensor<T> &A,
+                    const std::vector<std::string> &new_indices)
+{
+    using namespace Jet::Utilities;
+
+    if (A.GetIndices() == new_indices)
+        return A;
+
+    if (A.GetIndices().size() == 0)
+        JET_ABORT("Number of indices cannot be zero.");
+
+    std::vector<size_t> new_shape(A.GetShape().size());
+    for (size_t i = 0; i < new_indices.size(); i++)
+        new_shape[i] = A.GetIndexToDimension().at(new_indices[i]);
+
+    if (is_pow_2(A.GetSize())) {
+        auto permuter = Permuter<QFlexPermuter<BLOCKSIZE, MINSIZE>>();
+        try {
+            return Tensor<T>{new_indices, new_shape,
+                             permuter.Transpose(A.GetData(), A.GetShape(),
+                                                A.GetIndices(), new_indices)};
+        }
+        catch (Jet::Exception &e) {
+            std::cerr << "Error in fast transpose with given parameters:="
+                      << e.what() << std::endl;
+            std::cerr << "Using fall-back default transpose." << std::endl;
+        }
+    }
+    auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
+    return Tensor<T>{new_indices, new_shape,
+                     permuter.Transpose(A.GetData(), A.GetShape(),
+                                        A.GetIndices(), new_indices)};
+}
+
+/**
+ * @brief Transposes the indices of a `%Tensor` to a new ordering.
+ *
+ * @warning The program is aborted if the number of elements in the new ordering
+ *          does match the number of indices in the tensor.
+ *
+ * @tparam T `%Tensor` data type.
+ * @param A Reference `%Tensor` object.
+ * @param new_ordering New `%Tensor` index permutation.
+ * @return Transposed `%Tensor` object.
+ */
+template <class T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
+Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
+{
+    const size_t num_indices = A.GetIndices().size();
+    JET_ABORT_IF_NOT(num_indices == new_ordering.size(),
+                     "Size of ordering must match number of tensor indices.");
+
+    std::vector<std::string> new_indices(num_indices);
+    const auto &old_indices = A.GetIndices();
+
+    for (size_t i = 0; i < num_indices; i++) {
+        new_indices[i] = old_indices[new_ordering[i]];
+    }
+
+    return Transpose<T, BLOCKSIZE, MINSIZE>(A, new_indices);
 }
 
 /**
@@ -162,266 +322,14 @@ Tensor<T> ContractTensors(const Tensor<T> &A, const Tensor<T> &B)
             B.GetIndexToDimension().at(right_indices[i]);
 
     Tensor<T> C(C_indices, C_dimensions);
-    auto &&At = Transpose(A, a_new_ordering);
-    auto &&Bt = Transpose(B, b_new_ordering);
+    auto &&At = Transpose<T, 1024UL, 32UL>(A, a_new_ordering);
+    auto &&Bt = Transpose<T, 1024UL, 32UL>(B, b_new_ordering);
 
     TensorHelpers::MultiplyTensorData<T>(
         At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
         left_dim, right_dim, common_dim);
 
     return C;
-}
-
-/**
- * @brief Slices a `%Tensor` object index.
- *
- * The result is a `%Tensor` object whose given indices and data are a subset of
- * the provided tensor object, sliced along the given index argument.
- *
- * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices along
- * each index with the resulting slices selected as required:
- * \code{.cpp}
- *     Tensor A({"i", "j"}, {2, 3});
- *     A.FillRandom();
- *
- *     SliceIndex(A, "i", 0);  // [1x3] tensor, slice 0
- *     SliceIndex(A, "i", 1);  // [1x3] tensor, slice 1
-
- *     SliceIndex(A, "j", 0);  // [2x1] tensor, slice 0
- *     SliceIndex(A, "j", 1);  // [2x1] tensor, slice 1
- *     SliceIndex(A, "j", 2);  // [2x1] tensor, slice 2
- * \endcode
- *
- * @tparam T `%Tensor` data type.
- * @param tensor `%Tensor` object to slice.
- * @param index `%Tensor` index label on which to slice.
- * @param value Value to slice the `%Tensor` index on.
- * @return Slice of the `%Tensor` object.
- */
-template <class T>
-Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index,
-                     size_t value)
-{
-
-    std::vector<std::string> new_ordering = tensor.GetIndices();
-    auto it = find(new_ordering.begin(), new_ordering.end(), index);
-    size_t index_num = std::distance(new_ordering.begin(), it);
-    new_ordering.erase(new_ordering.begin() + index_num);
-    new_ordering.insert(new_ordering.begin(), index);
-
-    auto &&tensor_trans = Transpose(tensor, new_ordering);
-    std::vector<std::string> sliced_indices(
-        tensor_trans.GetIndices().begin() + 1, tensor_trans.GetIndices().end());
-    std::vector<size_t> sliced_dimensions(tensor_trans.GetShape().begin() + 1,
-                                          tensor_trans.GetShape().end());
-
-    Tensor<T> tensor_sliced(sliced_indices, sliced_dimensions);
-    size_t projection_size = tensor_sliced.GetSize();
-    size_t projection_begin = projection_size * value;
-    auto data_ptr = tensor_trans.GetData();
-
-#if defined _OPENMP
-    int max_right_dim = 1024;
-#pragma omp parallel for schedule(static, max_right_dim)
-#endif
-    for (size_t p = 0; p < projection_size; ++p)
-        tensor_sliced[p] = tensor_trans[projection_begin + p];
-
-    return tensor_sliced;
-}
-
-/**
- * @brief Reshapes a `%Tensor` object to the given dimensions.
- *
- * @tparam T `%Tensor` data type.
- * @param old_tensor Original tensor object to reshape.
- * @param new_shape Index dimensionality for new tensor object.
- * @return Reshaped copy of the `%Tensor` object.
- */
-template <class T>
-Tensor<T> Reshape(const Tensor<T> &old_tensor,
-                  const std::vector<size_t> &new_shape)
-{
-    using namespace Utilities;
-
-    JET_ABORT_IF_NOT(old_tensor.GetSize() ==
-                         Jet::Utilities::ShapeToSize(new_shape),
-                     "Size is inconsistent between tensors.");
-    Tensor<T> new_tensor(new_shape);
-    Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
-    return new_tensor;
-}
-
-/**
- * @brief Returns the conjugate of a `%Tensor` object.
- *
- * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
- * @return `%Tensor` object representing the conjugate of `A`.
- */
-template <class T> Tensor<T> Conj(const Tensor<T> &A)
-{
-    Tensor<T> A_conj(A.GetIndices(), A.GetShape());
-    for (size_t i = 0; i < A.GetSize(); i++) {
-        A_conj[i] = std::conj(A[i]);
-    }
-    return A_conj;
-}
-
-/**
- * @brief Transposes the indices of a `%Tensor` object to a new ordering.
- *
- * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
- * @param new_indices New `%Tensor` index label ordering.
- * @return Transposed `%Tensor` object.
- */
-template <class T>
-Tensor<T> Transpose(const Tensor<T> &A,
-                    const std::vector<std::string> &new_indices)
-{
-    using namespace Jet::Utilities;
-
-    auto indices_ = A.GetIndices();
-    auto shape_ = A.GetShape();
-
-    if (new_indices == indices_)
-        return A;
-
-    std::vector<std::string> old_ordering(indices_);
-    std::vector<size_t> old_dimensions(shape_);
-    size_t num_indices = old_ordering.size();
-    size_t total_dim = A.GetSize();
-
-    if (num_indices == 0)
-        JET_ABORT("Number of indices cannot be zero.");
-
-    // Create map_old_to_new_idxpos from old to new indices, and new_dimensions.
-    std::vector<size_t> map_old_to_new_idxpos(num_indices);
-    std::vector<size_t> new_dimensions(num_indices);
-    for (size_t i = 0; i < num_indices; ++i) {
-        for (size_t j = 0; j < num_indices; ++j) {
-            if (old_ordering[i] == new_indices[j]) {
-                map_old_to_new_idxpos[i] = j;
-                new_dimensions[j] = old_dimensions[i];
-                break;
-            }
-        }
-    }
-
-    // Create super dimensions (combined dimension of all to the right of i).
-    std::vector<size_t> old_super_dimensions(num_indices);
-    std::vector<size_t> new_super_dimensions(num_indices);
-    old_super_dimensions[num_indices - 1] = 1;
-    new_super_dimensions[num_indices - 1] = 1;
-
-    size_t old_dimensions_size = old_dimensions.size();
-    if (old_dimensions_size >= 2)
-        for (size_t i = old_dimensions_size; --i;) {
-            old_super_dimensions[i - 1] =
-                old_super_dimensions[i] * old_dimensions[i];
-            new_super_dimensions[i - 1] =
-                new_super_dimensions[i] * new_dimensions[i];
-        }
-
-    std::vector<unsigned short int> small_map_old_to_new_position(
-        MAX_RIGHT_DIM);
-
-    Tensor<T> At(new_indices, new_dimensions, A.GetData());
-    // No combined efficient mapping from old to new positions with actual
-    // copies in memory, all in small cache friendly (for old data, not new,
-    // which could be very scattered) blocks.
-
-    // Position old and new.
-    size_t po = 0, pn;
-    // Counter of the values of each indices in the iteration (old ordering).
-    std::vector<size_t> old_counter(num_indices, 0);
-    // offset is important when doing this in blocks, as it's indeed
-    // implemented.
-    size_t offset = 0;
-    // internal_po keeps track of interations within a block.
-    // Blocks have size MAX_RIGHT_DIM.
-    size_t internal_po = 0;
-
-    auto data = At.GetData().data();
-    auto scratch = A.GetData().data();
-    // External loop loops over blocks.
-    while (true) {
-        // If end of entire opration, break.
-        if (po == total_dim - 1)
-            break;
-
-        internal_po = 0;
-        // Each iteration of the while block goes through a new position.
-        // Inside the while, j takes care of increasing indices properly.
-        while (true) {
-            po = 0;
-            pn = 0;
-            for (size_t i = 0; i < num_indices; ++i) {
-                po += old_super_dimensions[i] * old_counter[i];
-                pn += new_super_dimensions[map_old_to_new_idxpos[i]] *
-                      old_counter[i];
-            }
-            small_map_old_to_new_position[po - offset] = pn;
-
-            bool complete{true};
-            for (size_t j = num_indices; j--;) {
-                if (++old_counter[j] < old_dimensions[j]) {
-                    complete = false;
-                    break;
-                }
-                else
-                    old_counter[j] = 0;
-            }
-            // If end of block or end of entire operation, break.
-            if ((++internal_po == MAX_RIGHT_DIM) || (po == total_dim - 1))
-                break;
-            // If last index (0) was increased, then go back to fastest index.
-            if (complete)
-                break;
-        }
-
-        // Copy data for this block, taking into account offset of small_map...
-        // The following line is to avoid casting MAX_RIGHT_DIM to size_t
-        // every iteration. Note that it has to be size_t for min to work,
-        // since total_dim is size_t.
-        size_t effective_max = std::min((size_t)MAX_RIGHT_DIM, total_dim);
-        for (size_t p = 0; p < effective_max; ++p)
-            *(data + small_map_old_to_new_position[p]) =
-                *(scratch + offset + p);
-
-        offset += MAX_RIGHT_DIM;
-    }
-
-    return At;
-}
-
-/**
- * @brief Transposes the indices of a `%Tensor` to a new ordering.
- *
- * @warning The program is aborted if the number of elements in the new ordering
- *          does match the number of indices in the tensor.
- *
- * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
- * @param new_ordering New `%Tensor` index permutation.
- * @return Transposed `%Tensor` object.
- */
-template <class T>
-Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
-{
-    const size_t num_indices = A.GetIndices().size();
-    JET_ABORT_IF_NOT(num_indices == new_ordering.size(),
-                     "Size of ordering must match number of tensor indices.");
-
-    std::vector<std::string> new_indices(num_indices);
-    const auto &old_indices = A.GetIndices();
-
-    for (size_t i = 0; i < num_indices; i++) {
-        new_indices[i] = old_indices[new_ordering[i]];
-    }
-
-    return Transpose(A, new_indices);
 }
 
 /**

@@ -3,13 +3,13 @@
 ##########################
 cmake_minimum_required(VERSION 3.14)
 set(JET_LOGO "
-      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄ 
-      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀ 
-      ██     ██             ██    
-      ██     ███████        ██    
-      ██     ██             ██    
-█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██    
- ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀    
+      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄
+      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀
+      ██     ██             ██
+      ██     ███████        ██
+      ██     ██             ██
+█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██
+ ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀
 ")
 message(${JET_LOGO})
 
@@ -37,6 +37,8 @@ if(NOT CMAKE_BUILD_TYPE)
             "Default build type: Release" FORCE)
 endif()
 
+option(ENABLE_HPTT "Enable support for hptt tensor transpose backend" OFF)
+
 ##########################
 ## Enfore Compiler Support
 ##########################
@@ -52,7 +54,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
     message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
     message(FATAL_ERROR "\nJet requires clang++ at least v5.0")
-  endif() 
+  endif()
 ## AppleClang
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0")
@@ -105,7 +107,17 @@ set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
 
 FetchContent_MakeAvailable(Taskflow)
 
+if(ENABLE_HPTT)
+  FetchContent_Declare(
+    hptt
+    GIT_REPOSITORY  https://github.com/springer13/hptt
+    GIT_TAG         v1.0.5 
+  )
+  FetchContent_MakeAvailable(hptt)
+endif()
+
 find_package(OpenMP QUIET)
+
 
 ##########################
 ## Create Jet target
@@ -113,7 +125,7 @@ find_package(OpenMP QUIET)
 
 add_library(Jet INTERFACE)
 target_include_directories(Jet INTERFACE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     ${BLAS_INCLUDE_DIRS}
 )
 
@@ -144,6 +156,14 @@ endif()
 
 if(ENABLE_IPO)
   target_compile_options(Jet INTERFACE -flto)
+endif()
+
+if(MKL_FOUND)
+  target_compile_options(Jet INTERFACE -DENABLE_MKL)
+endif()
+
+if(ENABLE_HPTT)
+  target_link_libraries(Jet INTERFACE hptt)
 endif()
 
 ##########################
