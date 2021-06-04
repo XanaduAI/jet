@@ -16,6 +16,11 @@ from .bindings import (
 )
 
 __all__ = [
+    "TaskBasedCpuContractorType",
+    "TensorType",
+    "TensorNetworkType",
+    "TensorNetworkFileType",
+    "TensorNetworkSerializerType",
     "TaskBasedCpuContractor",
     "Tensor",
     "TensorNetwork",
@@ -23,10 +28,15 @@ __all__ = [
     "TensorNetworkSerializer",
 ]
 
+# Specialization-agnostic type aliases.
+TaskBasedCpuContractorType = Union[TaskBasedCpuContractorC64, TaskBasedCpuContractorC128]
+TensorType = Union[TensorC64, TensorC128]
+TensorNetworkType = Union[TensorNetworkC64, TensorNetworkC128]
+TensorNetworkFileType = Union[TensorNetworkFileC64, TensorNetworkFileC128]
+TensorNetworkSerializerType = Union[TensorNetworkSerializerC64, TensorNetworkSerializerC128]
 
-def TaskBasedCpuContractor(
-    *args, **kwargs
-) -> Union[TaskBasedCpuContractorC64, TaskBasedCpuContractorC128]:
+
+def TaskBasedCpuContractor(*args, **kwargs) -> TaskBasedCpuContractorType:
     """Constructs a task-based CPU contractor with the specified data type. If a
     `dtype` keyword argument is not provided, a TaskBasedCpuContractorC128
     instance will be returned.
@@ -40,7 +50,7 @@ def TaskBasedCpuContractor(
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
-def Tensor(*args, **kwargs) -> Union[TensorC64, TensorC128]:
+def Tensor(*args, **kwargs) -> TensorType:
     """Constructs a tensor with the specified data type. If a `dtype` keyword
     argument is not provided, a TensorC128 instance will be returned.
     """
@@ -53,7 +63,7 @@ def Tensor(*args, **kwargs) -> Union[TensorC64, TensorC128]:
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
-def TensorNetwork(*args, **kwargs) -> Union[TensorNetworkC64, TensorNetworkC128]:
+def TensorNetwork(*args, **kwargs) -> TensorNetworkType:
     """Constructs a tensor network with the specified data type. If a `dtype`
     keyword argument is not provided, a TensorNetworkC128 instance will be
     returned.
@@ -67,7 +77,7 @@ def TensorNetwork(*args, **kwargs) -> Union[TensorNetworkC64, TensorNetworkC128]
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
-def TensorNetworkFile(*args, **kwargs) -> Union[TensorNetworkFileC64, TensorNetworkFileC128]:
+def TensorNetworkFile(*args, **kwargs) -> TensorNetworkFileType:
     """Constructs a tensor network file with the specified data type. If a
     `dtype` keyword argument is not provided, a TensorNetworkFileC128 instance
     will be returned.
@@ -81,9 +91,7 @@ def TensorNetworkFile(*args, **kwargs) -> Union[TensorNetworkFileC64, TensorNetw
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
-def TensorNetworkSerializer(
-    *args, **kwargs
-) -> Union[TensorNetworkSerializerC64, TensorNetworkSerializerC128]:
+def TensorNetworkSerializer(*args, **kwargs) -> TensorNetworkSerializerType:
     """Constructs a tensor network serializer with the specified data type. If a
     `dtype` keyword argument is not provided, a TensorNetworkSerializerC128
     instance will be returned.
