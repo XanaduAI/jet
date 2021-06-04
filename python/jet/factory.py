@@ -28,7 +28,7 @@ __all__ = [
     "TensorNetworkSerializer",
 ]
 
-# Specialization-agnostic type aliases.
+# Type aliases to avoid enumerating class specializations.
 TaskBasedCpuContractorType = Union[TaskBasedCpuContractorC64, TaskBasedCpuContractorC128]
 TensorType = Union[TensorC64, TensorC128]
 TensorNetworkType = Union[TensorNetworkC64, TensorNetworkC128]

@@ -11,8 +11,8 @@ INV_SQRT2 = 1 / math.sqrt(2)
 class TestGate:
     @pytest.fixture
     def gate(self):
-        """Returns a generic gate with two wires and one parameter."""
-        return jet.Gate(name="G", num_wires=2, params=[1])
+        """Returns a gate with two wires and one parameter."""
+        return jet.CPhaseShift(0)
 
     def test_tensor_indices_not_set(self, gate):
         """Tests that the correct tensor is returned for a gate with unset indices."""
@@ -41,26 +41,6 @@ class TestGate:
         assert tensor.indices == ["0", "1", "2", "3"]
         assert tensor.shape == [1, 1, 1, 1]
         assert tensor.data == [1 - 2j]
-
-    def test_data(self, gate):
-        """Tests that a NotImplementedError is raised when the data of a generic
-        gate is retrieved.
-        """
-        with pytest.raises(NotImplementedError):
-            gate._data()
-
-    def test_validate_wrong_number_of_parameters(self, gate):
-        """Tests that a ValueError is raised when a gate with the wrong number
-        of parameters is validated.
-        """
-        with pytest.raises(ValueError):
-            gate._validate(want_num_params=2)
-
-    def test_validate_correct_number_of_parameters(self, gate):
-        """Tests that no exceptions are raised when a gate with the correct
-        number of parameters is validated.
-        """
-        gate._validate(want_num_params=1)
 
     @pytest.mark.parametrize("indices", [1, ["i", 2, "k"], ["x", "x"], []])
     def test_indices_are_invalid(self, gate, indices):
