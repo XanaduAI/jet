@@ -1,7 +1,7 @@
 import cmath
 import math
 from functools import lru_cache
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional, Sequence
 
 import numpy as np
 from thewalrus.fock_gradients import (
@@ -11,8 +11,7 @@ from thewalrus.fock_gradients import (
     two_mode_squeezing,
 )
 
-from .bindings import TensorC64, TensorC128
-from .factory import Tensor
+from .factory import Tensor, TensorType
 
 __all__ = [
     "Gate",
@@ -64,19 +63,17 @@ class Gate:
             num_wires: number of wires the gate is applied to.
 
         Kwargs:
-            dtype (type): type to use in matrix representations of gates.
             params (list): gate parameters.
-            tensor_id (int): identification number for the gate-tensor.
+            tensor_id (int): ID of the gate tensor.
         """
         self.name = name
         self.tensor_id = kwargs.get("tensor_id", None)
 
-        self._dtype = kwargs.get("dtype", np.complex128)
         self._indices = None
         self._num_wires = num_wires
         self._params = kwargs.get("params", [])
 
-    def tensor(self, adjoint: bool = False) -> Union[TensorC64, TensorC128]:
+    def tensor(self, dtype: type = np.complex128, adjoint: bool = False) -> TensorType:
         """Returns the tensor representation of this gate."""
         if adjoint:
             data = np.conj(self._data()).T.flatten()
@@ -90,11 +87,11 @@ class Gate:
         dimension = int(round(len(data) ** (1 / len(indices))))
         shape = [dimension] * len(indices)
 
-        return Tensor(indices=indices, shape=shape, data=data, dtype=self._dtype)
+        return Tensor(indices=indices, shape=shape, data=data, dtype=dtype)
 
     def _data(self) -> np.ndarray:
         """Returns the matrix representation of this gate."""
-        raise NotImplementedError("No tensor data available for generic gate.")
+        raise NotImplementedError("No data available for generic gate.")
 
     def _validate(self, want_num_params: int):
         """Throws a ValueError if the given quantity differs from the number of gate parameters."""
@@ -133,6 +130,11 @@ class Gate:
             )
 
         self._indices = indices
+
+    @property
+    def num_wires(self) -> int:
+        """Returns the number of wires this gate affects."""
+        return self._num_wires
 
     @property
     def params(self) -> Optional[List]:
