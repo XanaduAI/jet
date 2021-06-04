@@ -65,7 +65,9 @@ template <class PermuterBackend> class Permuter {
         JET_ABORT_IF_NOT(shape.size() == new_order.size(),
                          "Tensor shape does not match number of indices.");
         JET_ABORT_IF_NOT(Jet::Utilities::ShapeToSize(shape) == data_in.size(),
-                         "Tensor shape does not match given tensor data.");
+                         "Tensor shape does not match given input tensor data.");
+        JET_ABORT_IF_NOT(Jet::Utilities::ShapeToSize(shape) == data_out.size(),
+                         "Tensor shape does not match given output tensor data.");
         JET_ABORT_IF_NOT(
             idx_old == idx_new,
             "New indices are an invalid permutation of the existing indices");
