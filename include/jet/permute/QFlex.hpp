@@ -374,7 +374,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             for (size_t j = 0; j < old_logs[i]; j++) {
                 group[j] = GenerateStringIndex(alphabet_position++);
             }
-            binary_groups[old_ordering[i]] = group;
+            binary_groups.emplace(old_ordering[i], group);
         }
         // Create old and new binary ordering in letters.
         std::vector<std::string> old_binary_ordering(num_binary_indices);
