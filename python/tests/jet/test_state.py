@@ -57,6 +57,17 @@ class TestState:
         state.indices = indices
         assert state.indices == indices
 
+    def test_equal_states(self):
+        """Tests that two equivalent states are equal."""
+        assert MockState() == MockState()
+
+    def test_unequal_states(self):
+        """Tests that two different states are not equal."""
+        state0 = MockState()
+        state1 = MockState()
+        state1._data = lambda: np.array([0, 0, 1])
+        assert state0 != state1
+
 
 class TestQubit:
     def test_default_constructor(self):
@@ -68,7 +79,7 @@ class TestQubit:
 
     def test_data_contructor(self):
         """Tests that the state vector of a qubit can be manually specified."""
-        tensor = jet.Qubit(data=[0, 1j]).tensor()
+        tensor = jet.Qubit(data=np.array([0, 1j])).tensor()
         assert tensor.indices == ["0"]
         assert tensor.shape == [2]
         assert tensor.data == [0, 1j]
@@ -95,3 +106,26 @@ class TestQudit:
         assert tensor.indices == ["0"]
         assert tensor.shape == [3]
         assert tensor.data == [1, 0, 0]
+
+
+class TestQuditRegister:
+    def test_default_constructor(self):
+        """Tests that the default state vector of a qudit register is the vacuum state."""
+        tensor = jet.QuditRegister(size=1).tensor()
+        assert tensor.indices == ["0"]
+        assert tensor.shape == [2]
+        assert tensor.data == [1, 0]
+
+    def test_data_contructor(self):
+        """Tests that the state vector of a qudit register can be manually specified."""
+        tensor = jet.QuditRegister(size=3, data=np.arange(8)).tensor()
+        assert tensor.indices == ["0", "1", "2"]
+        assert tensor.shape == [2, 2, 2]
+        assert tensor.data == list(range(8))
+
+    def test_shape_contructor(self):
+        """Tests that the shape of a qudit register can be manually specified."""
+        tensor = jet.QuditRegister(size=2, dim=3).tensor()
+        assert tensor.indices == ["0", "1"]
+        assert tensor.shape == [3, 3]
+        assert tensor.data == [1, 0, 0, 0, 0, 0, 0, 0, 0]
