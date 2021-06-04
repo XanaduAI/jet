@@ -101,7 +101,7 @@ class Gate(ABC):
         # Check that `indices` has the correct length (or is None).
         elif len(indices) != 2 * self._num_wires:
             raise ValueError(
-                f"Gates must have two indices per wire; received {len(indices)}"
+                f"Gates must have two indices per wire; received {len(indices)} "
                 f"indices for {self._num_wires} wires."
             )
 
