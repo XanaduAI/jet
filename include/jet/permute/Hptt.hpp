@@ -1,6 +1,9 @@
 #pragma once
 
-#include <memory>
+#include <algorithm>
+#include <iterator>
+#include <string>
+#include <vector>
 
 #include <hptt.h>
 
