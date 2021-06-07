@@ -4,7 +4,7 @@ from typing import Callable, List, Sequence, Tuple, Union
 import numpy as np
 
 from .factory import TensorNetwork, TensorNetworkType
-from .gates import Gate
+from .gate import Gate
 from .state import Qudit, State
 
 __all__ = [
