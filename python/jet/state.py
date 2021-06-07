@@ -98,8 +98,8 @@ class Qudit(State):
         """Constructs a qudit state.
 
         Args:
-            data: optional state vector.
             dim: dimension of the qudit.
+            data: optional state vector.
         """
         name = "Qubit" if dim == 2 else f"Qudit(d={dim})"
         super().__init__(name=name, num_wires=1)
@@ -118,9 +118,9 @@ class QuditRegister(State):
         """Constructs a qudit register state.
 
         Args:
+            dim: dimension of the qudits.
             size: number of qudits.
             data: optional state vector.
-            dim: dimension of the qudits.
         """
         name = f"Qubit[{size}]" if dim == 2 else f"Qudit(d={dim})[{size}]"
         super().__init__(name=name, num_wires=size)

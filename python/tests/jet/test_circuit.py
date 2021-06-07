@@ -100,7 +100,7 @@ class TestCircuit:
         )
 
     def test_append_two_wire_state(self, circuit):
-        """Tests that a state which transforms two wires can be appended to the circuit."""
+        """Tests that a state which terminates two wires can be appended to the circuit."""
         state = jet.QubitRegister(size=2)
         circuit.append_state(state, wire_ids=[0, 1])
         assert state.indices == ["0-0", "1-0"]
@@ -169,10 +169,10 @@ class TestCircuit:
     @pytest.mark.parametrize(
         "state, want_amplitude",
         [
-            (jet.QuditRegister(size=2, dim=2, data=np.array([1, 0, 0, 0])), 1 / sqrt(2)),
-            (jet.QuditRegister(size=2, dim=2, data=np.array([0, 1, 0, 0])), 0),
-            (jet.QuditRegister(size=2, dim=2, data=np.array([0, 0, 1, 0])), 0),
-            (jet.QuditRegister(size=2, dim=2, data=np.array([0, 0, 0, 1])), 1 / sqrt(2)),
+            (jet.QubitRegister(size=2, data=np.array([1, 0, 0, 0])), 1 / sqrt(2)),
+            (jet.QubitRegister(size=2, data=np.array([0, 1, 0, 0])), 0),
+            (jet.QubitRegister(size=2, data=np.array([0, 0, 1, 0])), 0),
+            (jet.QubitRegister(size=2, data=np.array([0, 0, 0, 1])), 1 / sqrt(2)),
         ],
     )
     def test_tensor_network_amplitude(self, state, want_amplitude):
