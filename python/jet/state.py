@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Sequence
+from typing import List, Optional, Sequence
+
 import numpy as np
 
 from .factory import Tensor, TensorType
