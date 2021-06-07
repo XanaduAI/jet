@@ -25,7 +25,7 @@ class TestCircuit:
     def test_constructor(self, circuit):
         """Tests that the circuit constructor initializes the correct wires and parts."""
         assert circuit.wires == tuple(jet.Wire(i, 0, False) for i in range(4))
-        assert circuit.parts == tuple(jet.Qudit(dim=2) for _ in range(4))
+        assert circuit.parts == tuple(jet.Qubit() for _ in range(4))
 
     def test_append_fake_wire(self, circuit, validator):
         """Tests that a ValueError is raised when the append validator is given
@@ -58,7 +58,7 @@ class TestCircuit:
             r"wires connected to the circuit component \(1\)."
         )
         with pytest.raises(ValueError, match=match):
-            validator(self=circuit, part=jet.Qudit(), wire_ids=[0, 1])
+            validator(self=circuit, part=jet.Qubit(), wire_ids=[0, 1])
 
     def test_append_one_wire_gate(self, circuit):
         """Tests that a gate which transforms one wire can be appended to the circuit."""
@@ -88,7 +88,7 @@ class TestCircuit:
 
     def test_append_one_wire_state(self, circuit):
         """Tests that a state which terminates one wire can be appended to the circuit."""
-        state = jet.Qudit()
+        state = jet.Qubit()
         circuit.append_state(state, wire_ids=[0])
         assert state.indices == ["0-0"]
         assert circuit.parts[-1] == state
@@ -101,7 +101,7 @@ class TestCircuit:
 
     def test_append_two_wire_state(self, circuit):
         """Tests that a state which transforms two wires can be appended to the circuit."""
-        state = jet.QuditRegister(size=2)
+        state = jet.QubitRegister(size=2)
         circuit.append_state(state, wire_ids=[0, 1])
         assert state.indices == ["0-0", "1-0"]
         assert circuit.parts[-1] == state
@@ -123,8 +123,8 @@ class TestCircuit:
         """Tests that the correct tensor IDs are assigned during the tensor network conversion."""
         gate0 = jet.Hadamard()
         gate1 = jet.CNOT()
-        state0 = jet.Qudit(dim=2, data=np.ndarray([1, 0]))
-        state1 = jet.Qudit(dim=2, data=np.ndarray([1, 0]))
+        state0 = jet.Qubit(data=np.ndarray([1, 0]))
+        state1 = jet.Qubit(data=np.ndarray([1, 0]))
 
         circuit = jet.Circuit(num_wires=2)
         circuit.append_gate(gate0, wire_ids=[0])
