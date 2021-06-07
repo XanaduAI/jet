@@ -214,8 +214,6 @@ template <class T = cuComplex> class CudaTensor {
         return axes;
     }
 
-    // const std::vector<std::string> &GetIndices() const { return indices_; }
-
     void Clear_()
     {
         index_to_dimension_.clear();
@@ -466,16 +464,6 @@ template <class T = cuComplex> class CudaTensor {
         const std::vector<int64_t> a_strides = GetStrides(a_tensor.GetShape());
         const std::vector<int64_t> b_strides = GetStrides(b_tensor.GetShape());
         const std::vector<int64_t> c_strides = GetStrides(c_tensor.GetShape());
-
-        /* cutensorStatus_t cutensorInitTensorDescriptor(
-            const cutensorHandle_t *handle,
-            cutensorTensorDescriptor_t *desc,
-            const uint32_t numModes,
-            const int64_t extent[],
-            const int64_t stride[],
-            cudaDataType_t dataType,
-            cutensorOperator_t unaryOp)
-        */
 
         cutensorStatus_t cutensor_err;
         cutensorTensorDescriptor_t a_descriptor;

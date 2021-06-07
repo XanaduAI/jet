@@ -1,6 +1,3 @@
-#ifdef CUTENSOR
-#include "jet/CudaTensor.hpp"
-#endif
 #include "jet/PathInfo.hpp"
 #include "jet/TaskBasedCpuContractor.hpp"
 #include "jet/Tensor.hpp"

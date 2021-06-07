@@ -8,6 +8,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <thread>
+
 #include <taskflow/taskflow.hpp>
 
 #include "PathInfo.hpp"
@@ -26,33 +28,36 @@ namespace Jet {
  *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
-template <typename TensorType> class TaskBasedCpuContractor {
+template <typename Tensor> class TaskBasedCpuContractor {
   public:
     /// Type of the name-to-task map.
-    using name_to_task_map_t = std::unordered_map<std::string, tf::Task>;
+    using NameToTaskMap = std::unordered_map<std::string, tf::Task>;
 
     /// Type of the name-to-tensor map.
-    using name_to_tensor_map_t =
-        std::unordered_map<std::string, std::unique_ptr<TensorType>>;
+    using NameToTensorMap =
+        std::unordered_map<std::string, std::unique_ptr<Tensor>>;
 
     /// Type of the name-to-parents map.
-    using name_to_parents_map_t =
+    using NameToParentsMap =
         std::unordered_map<std::string, std::unordered_set<std::string>>;
 
     /// Type of the task dependency graph.
-    using taskflow_t = tf::Taskflow;
+    using TaskFlow = tf::Taskflow;
 
     /**
      * @brief Constructs a new `%TaskBasedCpuContractor` object.
      */
-    TaskBasedCpuContractor() : memory_(0), flops_(0), reduced_(false) {}
+    TaskBasedCpuContractor()
+        : executor_{}, memory_(0), flops_(0), reduced_(false)
+    {
+    }
 
     /**
      * @brief Returns the name-to-task map of this `%TaskBasedCpuContractor`.
      *
      * @return Map which associates names to tasks.
      */
-    const name_to_task_map_t &GetNameToTaskMap() const noexcept
+    const NameToTaskMap &GetNameToTaskMap() const noexcept
     {
         return name_to_task_map_;
     }
@@ -62,7 +67,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
      *
      * @return Map which associates names to tensors.
      */
-    const name_to_tensor_map_t &GetNameToTensorMap() const noexcept
+    const NameToTensorMap &GetNameToTensorMap() const noexcept
     {
         return name_to_tensor_map_;
     }
@@ -72,7 +77,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
      *
      * @return Map which associates names to a vector of parent node IDs.
      */
-    const name_to_parents_map_t &GetNameToParentsMap() const noexcept
+    const NameToParentsMap &GetNameToParentsMap() const noexcept
     {
         return name_to_parents_map_;
     }
@@ -89,10 +94,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
      *
      * @return Vector of tensors.
      */
-    const std::vector<TensorType> &GetResults() const noexcept
-    {
-        return results_;
-    }
+    const std::vector<Tensor> &GetResults() const noexcept { return results_; }
 
     /**
      * @brief Returns the reduction of the final tensor results.
@@ -105,7 +107,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
      *
      * @return Tensor at the end of the reduction task.
      */
-    const TensorType &GetReductionResult() const noexcept
+    const Tensor &GetReductionResult() const noexcept
     {
         return reduction_result_;
     }
@@ -115,7 +117,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
      *
      * @return Taskflow instance representing the task dependency graph.
      */
-    const taskflow_t &GetTaskflow() const noexcept { return taskflow_; }
+    const TaskFlow &GetTaskflow() const noexcept { return taskflow_; }
 
     /**
      * @brief Returns the number of floating-point operations needed to perform
@@ -143,7 +145,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
      * @return Number of contraction tasks that are shared with previous calls
      *         to this function.
      */
-    size_t AddContractionTasks(const TensorNetwork<TensorType> &tn,
+    size_t AddContractionTasks(const TensorNetwork<Tensor> &tn,
                                const PathInfo &path_info) noexcept
     {
         const auto &path = path_info.GetPath();
@@ -188,13 +190,13 @@ template <typename TensorType> class TaskBasedCpuContractor {
             if (step_1_id < num_leaves) {
                 const auto &tensor = nodes[step_1_id].tensor;
                 name_to_tensor_map_.try_emplace(
-                    name_1, std::make_unique<TensorType>(tensor));
+                    name_1, std::make_unique<Tensor>(tensor));
             }
 
             if (step_2_id < num_leaves) {
                 const auto &tensor = nodes[step_2_id].tensor;
                 name_to_tensor_map_.try_emplace(
-                    name_2, std::make_unique<TensorType>(tensor));
+                    name_2, std::make_unique<Tensor>(tensor));
             }
 
             name_to_tensor_map_.try_emplace(name_3, nullptr);
@@ -247,7 +249,7 @@ template <typename TensorType> class TaskBasedCpuContractor {
         }
         reduced_ = true;
 
-        auto reduce_func = [](const TensorType &a, const TensorType &b) {
+        auto reduce_func = [](const Tensor &a, const Tensor &b) {
             return a.AddTensors(b);
         };
 
@@ -303,34 +305,34 @@ template <typename TensorType> class TaskBasedCpuContractor {
      *
      * @return Future that becomes available once all the tasks have finished.
      */
-    std::future<void> Contract()
-    {
-        tf::Executor executor;
-        return executor.run(taskflow_);
-    }
+    std::future<void> Contract() { return executor_.run(taskflow_); }
 
   private:
+    /// Taskflow executor to run tasks. Default-initialized to maximum number of
+    /// system threads.
+    tf::Executor executor_;
+
     /// Task graph to be executed during a contraction.
-    taskflow_t taskflow_;
+    TaskFlow taskflow_;
 
     /// Map that associates a task name with its corresponding task.
-    name_to_task_map_t name_to_task_map_;
+    NameToTaskMap name_to_task_map_;
 
     /// Map that associates a task name with its result tensor.
-    name_to_tensor_map_t name_to_tensor_map_;
+    NameToTensorMap name_to_tensor_map_;
 
     /// Map that associates a task name with a list of parent task names.
     /// Task `A` is a parent of task `B` if `A` immediately succeeds `B`.
-    name_to_parents_map_t name_to_parents_map_;
+    NameToParentsMap name_to_parents_map_;
 
     /// Tasks that store the results of a contraction in `results_`.
     std::vector<tf::Task> result_tasks_;
 
     /// Result of each call to AddContractionTasks().
-    std::vector<TensorType> results_;
+    std::vector<Tensor> results_;
 
     /// Sum over the `results_` elements.
-    TensorType reduction_result_;
+    Tensor reduction_result_;
 
     /// Memory required to store the intermediate tensors of a contraction.
     double memory_;
@@ -368,9 +370,9 @@ template <typename TensorType> class TaskBasedCpuContractor {
                              const std::string &name_3) noexcept
     {
         const auto runner = [this, name_1, name_2, name_3]() {
-            name_to_tensor_map_[name_3] = std::make_unique<TensorType>(
-                TensorType::ContractTensors(*name_to_tensor_map_.at(name_1),
-                                            *name_to_tensor_map_.at(name_2)));
+            name_to_tensor_map_[name_3] = std::make_unique<Tensor>(
+                Tensor::ContractTensors(*name_to_tensor_map_.at(name_1),
+                                        *name_to_tensor_map_.at(name_2)));
         };
 
         const auto task_3 = taskflow_.emplace(runner).name(name_3);
@@ -426,9 +428,9 @@ template <typename TensorType> class TaskBasedCpuContractor {
  * @param tbcc Task-based CPU contractor with the taskflow to be inserted.
  * @return Reference to the given output stream.
  */
-template <class TensorType>
+template <class Tensor>
 inline std::ostream &operator<<(std::ostream &out,
-                                const TaskBasedCpuContractor<TensorType> &tbcc)
+                                const TaskBasedCpuContractor<Tensor> &tbcc)
 {
     const auto &taskflow = tbcc.GetTaskflow();
     taskflow.dump(out);

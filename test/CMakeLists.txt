@@ -22,6 +22,7 @@ include(Catch)
 
 target_sources(runner PRIVATE Test_Abort.cpp
                               Test_PathInfo.cpp
+                              Test_Permuter.cpp
                               Test_TaskBasedCpuContractor.cpp
                               Test_Tensor.cpp
                               Test_TensorNetwork.cpp
@@ -30,7 +31,7 @@ target_sources(runner PRIVATE Test_Abort.cpp
 
 # Ensure CUDA modules only tested if enabled and available
 if(ENABLE_CUTENSOR)
-    add_library(test_cutensor OBJECT Test_CudaTensor.cu )
+    add_library(test_cutensor OBJECT Test_CudaTensor.cpp )
     set_target_properties(test_cutensor PROPERTIES  CUDA_SEPARABLE_COMPILATION  ON
                                                     POSITION_INDEPENDENT_CODE   ON
                                                     CUDA_RESOLVE_DEVICE_SYMBOLS ON)

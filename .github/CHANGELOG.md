@@ -2,8 +2,6 @@
 
 ### New features since last release
 
-* Support for CUDA enabled `CudaTensor` class with CuTensor v1.3 support. One-way conversion support for  `CudaTensor` to `Tensor` exists for testing and verification. []
-
 * Python bindings are now available for the `TaskBasedCpuContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 
 * Python bindings now include a factory method which accepts a `dtype` parameter. [(#18)](https://github.com/XanaduAI/jet/pull/18)
@@ -22,7 +20,9 @@
 
 ### Improvements
 
-* `CudaTensor` class has feature-parity with `Tensor` class. Support is built with `-DENABLE_CUTENSOR=on` CMake flag. []
+* Tensor transposes are now significantly faster when all the dimensions are powers of two. [(#12)](https://github.com/XanaduAI/jet/pull/12)
+
+* Use camel case for type aliases [(#17)](https://github.com/XanaduAI/jet/pull/17)
 
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
@@ -37,6 +37,8 @@
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
+
+* The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
 * `TaskBasedCpuContractor::AddReductionTask()` now handles the reduction of non-scalar tensors. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 

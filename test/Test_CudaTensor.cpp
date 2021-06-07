@@ -10,13 +10,13 @@
 #include "jet/CudaTensor.hpp"
 #include "jet/Tensor.hpp"
 
-using c_fp64_dev = cuDoubleComplex;
-using c_fp32_dev = cuComplex;
+using c128_dev = cuDoubleComplex;
+using c64_dev = cuComplex;
 
-using c_fp64_host = std::complex<double>;
-using c_fp32_host = std::complex<float>;
+using c128_host = std::complex<double>;
+using c64_host = std::complex<float>;
 
-TEMPLATE_TEST_CASE("CudaTensor::CudaTensor", "[CudaTensor]", c_fp32_dev, c_fp64_dev)
+TEMPLATE_TEST_CASE("CudaTensor::CudaTensor", "[CudaTensor]", c64_dev, c128_dev)
 {
     using namespace Jet;
 
@@ -53,7 +53,6 @@ TEMPLATE_TEST_CASE("CudaTensor::CudaTensor", "[CudaTensor]", c_fp32_dev, c_fp64_
                                   std::vector<TestType>>::value);
     }
 }
-
 
 TEST_CASE("CudaTensor::GetShape", "[CudaTensor]")
 {
@@ -140,19 +139,20 @@ TEST_CASE("CudaTensor::GetData", "[CudaTensor]")
     SECTION("Data: default")
     {
         CudaTensor tensor;
-        std::vector<c_fp32_host> host_data_buffer(1);
-        auto ptr = reinterpret_cast<c_fp32_dev*>(host_data_buffer.data());
+        std::vector<c64_host> host_data_buffer(1);
+        auto ptr = reinterpret_cast<c64_dev *>(host_data_buffer.data());
         tensor.CopyGpuDataToHost(ptr);
-        CHECK(host_data_buffer == std::vector<c_fp32_host>{{0, 0}});
+        CHECK(host_data_buffer == std::vector<c64_host>{{0, 0}});
     }
     SECTION("Size: {2,3}, Indices: {x, y}, Data: [0.5+0.25i]*6")
     {
-        std::vector<c_fp32_dev> data(6, c_fp32_dev{.x=0.5, .y=0.25});
+        std::vector<c64_dev> data(6, c64_dev{.x = 0.5, .y = 0.25});
         CudaTensor tensor({"x", "y"}, {2, 3}, data.data());
 
-        std::vector<c_fp32_host> host_data_complex(6, {0.5, 0.25});
-        std::vector<c_fp32_host> host_data_buffer(6);
-        tensor.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(host_data_buffer.data()));
+        std::vector<c64_host> host_data_complex(6, {0.5, 0.25});
+        std::vector<c64_host> host_data_buffer(6);
+        tensor.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(host_data_buffer.data()));
         CHECK(host_data_buffer == host_data_complex);
     }
 }
@@ -193,33 +193,35 @@ TEST_CASE("CudaTensor::FillRandom", "[CudaTensor]")
     {
         tensor1.FillRandom();
         tensor2.FillRandom();
-        Tensor<c_fp32_host> tensor1_host(tensor1);
-        Tensor<c_fp32_host> tensor2_host(tensor2);
+        Tensor<c64_host> tensor1_host(tensor1);
+        Tensor<c64_host> tensor2_host(tensor2);
         CHECK(tensor1_host != tensor2_host);
     }
     SECTION("Size: {3,2,3}, Indices: {a,b,c}, Data: FillRandom(7)")
     {
         tensor1.FillRandom(7);
         tensor2.FillRandom(7);
-        Tensor<c_fp32_host> tensor1_host = static_cast<Tensor<c_fp32_host>>(tensor1);
-        Tensor<c_fp32_host> tensor2_host = static_cast<Tensor<c_fp32_host>>(tensor2);
+        Tensor<c64_host> tensor1_host = static_cast<Tensor<c64_host>>(tensor1);
+        Tensor<c64_host> tensor2_host = static_cast<Tensor<c64_host>>(tensor2);
         CHECK(tensor1_host == tensor2_host);
     }
-    SECTION("Size: {3,2,3}, Indices: {a,b,c}, Data: FillRandom() and FillRandom(5)")
+    SECTION(
+        "Size: {3,2,3}, Indices: {a,b,c}, Data: FillRandom() and FillRandom(5)")
     {
         tensor1.FillRandom();
         tensor2.FillRandom(5);
-        Tensor<c_fp32_host> tensor1_host = static_cast<Tensor<c_fp32_host>>(tensor1);
-        Tensor<c_fp32_host> tensor2_host = static_cast<Tensor<c_fp32_host>>(tensor2);
-        CHECK(tensor1_host != tensor2_host);    
+        Tensor<c64_host> tensor1_host = static_cast<Tensor<c64_host>>(tensor1);
+        Tensor<c64_host> tensor2_host = static_cast<Tensor<c64_host>>(tensor2);
+        CHECK(tensor1_host != tensor2_host);
     }
-    SECTION("Size: {3,2,3}, Indices: {a,b,c}, Data: FillRandom(3) and FillRandom(5)")
+    SECTION("Size: {3,2,3}, Indices: {a,b,c}, Data: FillRandom(3) and "
+            "FillRandom(5)")
     {
         tensor1.FillRandom(3);
         tensor2.FillRandom(5);
-        Tensor<c_fp32_host> tensor1_host = static_cast<Tensor<c_fp32_host>>(tensor1);
-        Tensor<c_fp32_host> tensor2_host = static_cast<Tensor<c_fp32_host>>(tensor2);
-        CHECK(tensor1_host != tensor2_host);   
+        Tensor<c64_host> tensor1_host = static_cast<Tensor<c64_host>>(tensor1);
+        Tensor<c64_host> tensor2_host = static_cast<Tensor<c64_host>>(tensor2);
+        CHECK(tensor1_host != tensor2_host);
     }
 }
 
@@ -232,16 +234,16 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
         CHECK(tensor.GetIndices().empty());
         CHECK(tensor.GetShape().empty());
         CHECK(tensor.GetSize() == 1);
-        std::vector<c_fp32_host> host_data(1);
-        std::vector<c_fp32_host> host_data_expect(1, {0,0});
+        std::vector<c64_host> host_data(1);
+        std::vector<c64_host> host_data_expect(1, {0, 0});
 
-        tensor.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(host_data.data()));
+        tensor.CopyGpuDataToHost(reinterpret_cast<c64_dev *>(host_data.data()));
         CHECK(host_data == host_data_expect);
     }
     SECTION("Constructor, Size: {2,3}")
     {
-        std::vector<size_t> shape {2,3};
-        std::vector<std::string> expect_indices {"?a","?b"};
+        std::vector<size_t> shape{2, 3};
+        std::vector<std::string> expect_indices{"?a", "?b"};
         CudaTensor tensor(shape);
         CHECK(tensor.GetShape() == shape);
         CHECK(tensor.GetIndices() == expect_indices);
@@ -249,36 +251,39 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
     }
     SECTION("Constructor, Size: {3,2}, Indices: {i,j}")
     {
-        std::vector<size_t> shape {2,3};
-        std::vector<std::string> indices {"i","j"};
+        std::vector<size_t> shape{2, 3};
+        std::vector<std::string> indices{"i", "j"};
         CudaTensor tensor(indices, shape);
         CHECK(tensor.GetShape() == shape);
         CHECK(tensor.GetIndices() == indices);
         CHECK(tensor.GetSize() == 6);
     }
-    SECTION("Constructor, Size: {2,2}, Indices: {i,j}, data: {{1,2},{3,4},{5,6},{7,8}}")
+    SECTION("Constructor, Size: {2,2}, Indices: {i,j}, data: "
+            "{{1,2},{3,4},{5,6},{7,8}}")
     {
-        std::vector<size_t> shape {2,2};
-        std::vector<std::string> indices {"i","j"};
-        std::vector<c_fp32_dev> data {{1,2},{3,4},{5,6},{7,8}};
-        std::vector<c_fp32_host> data_expected {{1,2},{3,4},{5,6},{7,8}};
+        std::vector<size_t> shape{2, 2};
+        std::vector<std::string> indices{"i", "j"};
+        std::vector<c64_dev> data{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+        std::vector<c64_host> data_expected{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
 
         CudaTensor tensor(indices, shape, data.data());
         CHECK(tensor.GetShape() == shape);
         CHECK(tensor.GetIndices() == indices);
         CHECK(tensor.GetSize() == 4);
 
-        std::vector<c_fp32_host> data_buffer(tensor.GetSize(), {0,0});
+        std::vector<c64_host> data_buffer(tensor.GetSize(), {0, 0});
 
-        tensor.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(data_buffer.data()));
+        tensor.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(data_buffer.data()));
         CHECK(data_buffer == data_expected);
     }
-    SECTION("Copy constructor, Size: {2,2}, Indices: {i,j}, data: {{1,2},{3,4},{5,6},{7,8}}")
+    SECTION("Copy constructor, Size: {2,2}, Indices: {i,j}, data: "
+            "{{1,2},{3,4},{5,6},{7,8}}")
     {
-        std::vector<size_t> shape {2,2};
-        std::vector<std::string> indices {"i","j"};
-        std::vector<c_fp32_dev> data {{1,2},{3,4},{5,6},{7,8}};
-        std::vector<c_fp32_host> data_expected {{1,2},{3,4},{5,6},{7,8}};
+        std::vector<size_t> shape{2, 2};
+        std::vector<std::string> indices{"i", "j"};
+        std::vector<c64_dev> data{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+        std::vector<c64_host> data_expected{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
 
         CudaTensor tensor1(indices, shape, data.data());
         CudaTensor tensor2(tensor1);
@@ -291,21 +296,24 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
         CHECK(tensor1.GetSize() == 4);
         CHECK(tensor2.GetSize() == 4);
 
-        std::vector<c_fp32_host> data_buffer1(tensor1.GetSize(), {0,0});
-        std::vector<c_fp32_host> data_buffer2(tensor2.GetSize(), {0,0});
+        std::vector<c64_host> data_buffer1(tensor1.GetSize(), {0, 0});
+        std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
 
-        tensor1.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(data_buffer1.data()));
-        tensor2.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(data_buffer2.data()));
+        tensor1.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(data_buffer1.data()));
+        tensor2.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(data_buffer2.data()));
 
         CHECK(data_buffer1 == data_expected);
         CHECK(data_buffer2 == data_expected);
     }
-    SECTION("Copy assignment, Size: {2,2}, Indices: {i,j}, data: {{1,2},{3,4},{5,6},{7,8}}")
+    SECTION("Copy assignment, Size: {2,2}, Indices: {i,j}, data: "
+            "{{1,2},{3,4},{5,6},{7,8}}")
     {
-        std::vector<size_t> shape {2,2};
-        std::vector<std::string> indices {"i","j"};
-        std::vector<c_fp32_dev> data {{1,2},{3,4},{5,6},{7,8}};
-        std::vector<c_fp32_host> data_expected {{1,2},{3,4},{5,6},{7,8}};
+        std::vector<size_t> shape{2, 2};
+        std::vector<std::string> indices{"i", "j"};
+        std::vector<c64_dev> data{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+        std::vector<c64_host> data_expected{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
 
         CudaTensor tensor1(indices, shape, data.data());
         CudaTensor tensor2 = tensor1;
@@ -318,23 +326,27 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
         CHECK(tensor1.GetSize() == 4);
         CHECK(tensor2.GetSize() == 4);
 
-        std::vector<c_fp32_host> data_buffer1(tensor1.GetSize(), {0,0});
-        std::vector<c_fp32_host> data_buffer2(tensor2.GetSize(), {0,0});
+        std::vector<c64_host> data_buffer1(tensor1.GetSize(), {0, 0});
+        std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
 
-        tensor1.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(data_buffer1.data()));
-        tensor2.CopyGpuDataToHost(reinterpret_cast<c_fp32_dev*>(data_buffer2.data()));
+        tensor1.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(data_buffer1.data()));
+        tensor2.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(data_buffer2.data()));
 
         CHECK(data_buffer1 == data_expected);
         CHECK(data_buffer2 == data_expected);
     }
 }
 
-TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]"){
+TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]")
+{
     using namespace Jet;
-    SECTION("CudaTensor<cuComplex> to Tensor<complex<float>>"){
+    SECTION("CudaTensor<cuComplex> to Tensor<complex<float>>")
+    {
 
-        CudaTensor<c_fp32_dev> tensor_dev({"i"}, {2}, {{2,0},{0,1}});
-        Tensor<c_fp32_host> tensor_host({"i"}, {2}, {{2,0},{0,1}});
+        CudaTensor<c64_dev> tensor_dev({"i"}, {2}, {{2, 0}, {0, 1}});
+        Tensor<c64_host> tensor_host({"i"}, {2}, {{2, 0}, {0, 1}});
         auto tensor_cast = static_cast<Tensor<std::complex<float>>>(tensor_dev);
         CHECK(tensor_host == tensor_cast);
     }
@@ -354,7 +366,6 @@ TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
     CHECK(tensor.GetIndices() == t_indices_expected);
 }
 
-
 TEST_CASE("ContractTensors", "[CudaTensor]")
 {
     using namespace Jet;
@@ -368,21 +379,22 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"b"};
 
-        std::vector<c_fp32_dev> t_data1{ 
-                                    c_fp32_dev{ .x=0.0, .y=0.0}, c_fp32_dev{ .x=1.0, .y=0.0},
-                                    c_fp32_dev{ .x=1.0, .y=0.0}, c_fp32_dev{ .x=0.0, .y=0.0}
-                                };
-        std::vector<c_fp32_dev> t_data2{ c_fp32_dev{.x=1.0, .y=0.0}, c_fp32_dev{.x=0.0, .y=0.0}};
-        std::vector<c_fp32_host> t_data_expect{c_fp32_host(0.0, 0.0),
-                                            c_fp32_host(1.0, 0.0)};
+        std::vector<c64_dev> t_data1{
+            c64_dev{.x = 0.0, .y = 0.0}, c64_dev{.x = 1.0, .y = 0.0},
+            c64_dev{.x = 1.0, .y = 0.0}, c64_dev{.x = 0.0, .y = 0.0}};
+        std::vector<c64_dev> t_data2{c64_dev{.x = 1.0, .y = 0.0},
+                                     c64_dev{.x = 0.0, .y = 0.0}};
+        std::vector<c64_host> t_data_expect{c64_host(0.0, 0.0),
+                                            c64_host(1.0, 0.0)};
 
         CudaTensor tensor1(t_indices1, t_shape1, t_data1);
         CudaTensor tensor2(t_indices2, t_shape2, t_data2);
 
-        CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
+        CudaTensor tensor3 =
+            CudaTensor<>::ContractTensors<c64_dev>(tensor1, tensor2);
 
-        Tensor<c_fp32_host> tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
-        Tensor<c_fp32_host> tensor4_host({"a"}, {2}, t_data_expect);
+        Tensor<c64_host> tensor3_host = static_cast<Tensor<c64_host>>(tensor3);
+        Tensor<c64_host> tensor4_host({"a"}, {2}, t_data_expect);
 
         CHECK(tensor3_host == tensor4_host);
     }
@@ -397,18 +409,19 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         std::vector<std::string> t_indices2{"b", "c", "d"};
         std::vector<std::string> t_indices3{"a", "d"};
 
-        std::vector<c_fp32_dev> t_data1(2 * 3 * 4, c_fp32_dev{.x=0.5, .y=0.25});
-        std::vector<c_fp32_dev> t_data2(3 * 4 * 2, c_fp32_dev{.x=0.5, .y=0.25});
+        std::vector<c64_dev> t_data1(2 * 3 * 4, c64_dev{.x = 0.5, .y = 0.25});
+        std::vector<c64_dev> t_data2(3 * 4 * 2, c64_dev{.x = 0.5, .y = 0.25});
 
         CudaTensor tensor1(t_indices1, t_shape1, t_data1);
         CudaTensor tensor2(t_indices2, t_shape2, t_data2);
 
-        CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
+        CudaTensor tensor3 = tensor1.ContractTensors(tensor2);
 
-        Tensor<c_fp32_host> tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
-        Tensor<c_fp32_host> tensor4_host(t_indices3, t_shape3,
-                                 {c_fp32_host(2.25, 3.0), c_fp32_host(2.25, 3.0),
-                                  c_fp32_host(2.25, 3.0), c_fp32_host(2.25, 3.0)});
+        Tensor<c64_host> tensor3_host = static_cast<Tensor<c64_host>>(tensor3);
+        Tensor<c64_host> tensor4_host(t_indices3, t_shape3,
+                                      {c64_host(2.25, 3.0), c64_host(2.25, 3.0),
+                                       c64_host(2.25, 3.0),
+                                       c64_host(2.25, 3.0)});
 
         CHECK(tensor3_host == tensor4_host);
     }
@@ -421,16 +434,17 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"a", "b"};
 
-        std::vector<c_fp32_dev> t_data1(2 * 2, c_fp32_dev{.x=1.0, .y=0.0});
-        std::vector<c_fp32_dev> t_data2(2 * 2, c_fp32_dev{.x=1.0, .y=0.0});
+        std::vector<c64_dev> t_data1(2 * 2, c64_dev{.x = 1.0, .y = 0.0});
+        std::vector<c64_dev> t_data2(2 * 2, c64_dev{.x = 1.0, .y = 0.0});
 
         CudaTensor tensor1(t_indices1, t_shape1, t_data1);
         CudaTensor tensor2(t_indices2, t_shape2, t_data2);
 
-        CudaTensor tensor3 = ContractTensors(tensor1, tensor2);
+        CudaTensor tensor3 =
+            CudaTensor<>::ContractTensors<c64_dev>(tensor1, tensor2);
 
-        auto tensor3_host = static_cast<Tensor<c_fp32_host>>(tensor3);
-        Tensor<c_fp32_host> tensor4_host({}, {}, {c_fp32_host(4.0, 0.0)});
+        auto tensor3_host = static_cast<Tensor<c64_host>>(tensor3);
+        Tensor<c64_host> tensor4_host({}, {}, {c64_host(4.0, 0.0)});
 
         CHECK(tensor3_host == tensor4_host);
     }
@@ -452,32 +466,41 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
         tensor1_dev.FillRandom(7);
         tensor2_dev.FillRandom(7);
-        Tensor<c_fp32_host> tensor1_host_conv(tensor1_dev);
-        Tensor<c_fp32_host> tensor2_host_conv(tensor2_dev);
+        Tensor<c64_host> tensor1_host_conv(tensor1_dev);
+        Tensor<c64_host> tensor2_host_conv(tensor2_dev);
 
         CHECK(tensor1_host.GetIndices() == tensor1_host_conv.GetIndices());
-        CHECK(tensor1_host.GetShape()   == tensor1_host_conv.GetShape());
-        CHECK(tensor1_host.GetSize()    == tensor1_host_conv.GetSize());
+        CHECK(tensor1_host.GetShape() == tensor1_host_conv.GetShape());
+        CHECK(tensor1_host.GetSize() == tensor1_host_conv.GetSize());
         CHECK(tensor2_host.GetIndices() == tensor2_host_conv.GetIndices());
-        CHECK(tensor2_host.GetShape()   == tensor2_host_conv.GetShape());
-        CHECK(tensor2_host.GetSize()    == tensor2_host_conv.GetSize());
+        CHECK(tensor2_host.GetShape() == tensor2_host_conv.GetShape());
+        CHECK(tensor2_host.GetSize() == tensor2_host_conv.GetSize());
 
-        auto tensor3_host = Tensor<c_fp32_host>::ContractTensors(tensor1_host_conv, tensor2_host_conv);
+        auto tensor3_host = Tensor<c64_host>::ContractTensors(
+            tensor1_host_conv, tensor2_host_conv);
 
-        auto tensor3_dev = ContractTensors(tensor1_dev, tensor2_dev);
-        Tensor<c_fp32_host> tensor3_host_conv(tensor3_dev);
+        auto tensor3_dev = tensor1_dev.ContractTensors(tensor2_dev);
+        Tensor<c64_host> tensor3_host_conv(tensor3_dev);
 
         CHECK(tensor3_host_conv.GetIndices() == tensor3_host.GetIndices());
-        CHECK(tensor3_host_conv.GetShape()   == tensor3_host.GetShape());
-        CHECK(tensor3_host_conv.GetSize()    == tensor3_host.GetSize());
-        
-        CHECK(tensor3_host_conv.GetData()[0].real() == Approx(tensor3_host.GetData()[0].real()));
-        CHECK(tensor3_host_conv.GetData()[0].imag() == Approx(tensor3_host.GetData()[0].imag()));
-        CHECK(tensor3_host_conv.GetData()[1].real() == Approx(tensor3_host.GetData()[1].real()));
-        CHECK(tensor3_host_conv.GetData()[1].imag() == Approx(tensor3_host.GetData()[1].imag()));
-        CHECK(tensor3_host_conv.GetData()[2].real() == Approx(tensor3_host.GetData()[2].real() ));
-        CHECK(tensor3_host_conv.GetData()[2].imag() == Approx(tensor3_host.GetData()[2].imag() ));
-        CHECK(tensor3_host_conv.GetData()[3].real() == Approx(tensor3_host.GetData()[3].real() ));
-        CHECK(tensor3_host_conv.GetData()[3].imag() == Approx(tensor3_host.GetData()[3].imag() ));
+        CHECK(tensor3_host_conv.GetShape() == tensor3_host.GetShape());
+        CHECK(tensor3_host_conv.GetSize() == tensor3_host.GetSize());
+
+        CHECK(tensor3_host_conv.GetData()[0].real() ==
+              Approx(tensor3_host.GetData()[0].real()));
+        CHECK(tensor3_host_conv.GetData()[0].imag() ==
+              Approx(tensor3_host.GetData()[0].imag()));
+        CHECK(tensor3_host_conv.GetData()[1].real() ==
+              Approx(tensor3_host.GetData()[1].real()));
+        CHECK(tensor3_host_conv.GetData()[1].imag() ==
+              Approx(tensor3_host.GetData()[1].imag()));
+        CHECK(tensor3_host_conv.GetData()[2].real() ==
+              Approx(tensor3_host.GetData()[2].real()));
+        CHECK(tensor3_host_conv.GetData()[2].imag() ==
+              Approx(tensor3_host.GetData()[2].imag()));
+        CHECK(tensor3_host_conv.GetData()[3].real() ==
+              Approx(tensor3_host.GetData()[3].real()));
+        CHECK(tensor3_host_conv.GetData()[3].imag() ==
+              Approx(tensor3_host.GetData()[3].imag()));
     }
 }

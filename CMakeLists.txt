@@ -3,13 +3,13 @@
 ##########################
 cmake_minimum_required(VERSION 3.14)
 set(JET_LOGO "
-      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄ 
-      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀ 
-      ██     ██             ██    
-      ██     ███████        ██    
-      ██     ██             ██    
-█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██    
- ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀    
+      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄
+      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀
+      ██     ██             ██
+      ██     ███████        ██
+      ██     ██             ██
+█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██
+ ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀
 ")
 message(${JET_LOGO})
 
@@ -39,6 +39,8 @@ if(NOT CMAKE_BUILD_TYPE)
             "Default build type: Release" FORCE)
 endif()
 
+option(ENABLE_HPTT "Enable support for hptt tensor transpose backend" OFF)
+
 ##########################
 ## Enfore Compiler Support
 ##########################
@@ -54,7 +56,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
     message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
     message(FATAL_ERROR "\nJet requires clang++ at least v5.0")
-  endif() 
+  endif()
 ## AppleClang
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0")
@@ -107,11 +109,20 @@ set(TF_BUILD_TESTS OFF CACHE INTERNAL "Build Taskflow tests")
 
 FetchContent_MakeAvailable(Taskflow)
 
+if(ENABLE_HPTT)
+  FetchContent_Declare(
+    hptt
+    GIT_REPOSITORY  https://github.com/springer13/hptt
+    GIT_TAG         v1.0.5
+  )
+  FetchContent_MakeAvailable(hptt)
+endif()
+
 find_package(OpenMP QUIET)
 
 if(ENABLE_CUTENSOR)
     SET(CUDA_SEPARABLE_COMPILATION ON)
-    
+
     enable_language(CUDA)
 
     if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
@@ -122,11 +133,11 @@ if(ENABLE_CUTENSOR)
 
     find_library(CURAND_LIB
         NAMES   curand libcurand curand_static libcurand_static
-        HINTS   /usr/lib 
-                /usr/local/cuda 
-                /usr/local/lib 
-                /opt 
-                lib 
+        HINTS   /usr/lib
+                /usr/local/cuda
+                /usr/local/lib
+                /opt
+                lib
                 lib64
                 ${CUDAToolkit_LIBRARY_DIR}
                 ${CUDA_TOOLKIT_ROOT_DIR}/lib
@@ -134,29 +145,29 @@ if(ENABLE_CUTENSOR)
 
     find_library(CUTENSOR_LIB
         NAMES   cutensor.so.1.3.0 libcutensor.so.1.3.0
-        HINTS   /usr/lib 
-                /usr/local/cuda 
-                /usr/local/lib 
-                /opt 
-                lib 
+        HINTS   /usr/lib
+                /usr/local/cuda
+                /usr/local/lib
+                /opt
+                lib
                 lib64
                 ${CUDAToolkit_LIBRARY_DIR}
                 ${CUDA_TOOLKIT_ROOT_DIR}/lib
                 ${CUDA_TOOLKIT_ROOT_DIR}/lib64
-		ENV LD_LIBRARY_PATH
-	)
+                ENV LD_LIBRARY_PATH
+    )
 
     find_file(CUTENSOR_INC
-        NAMES   cutensor.h 
-        HINTS   /usr/include 
-                /usr/local/cuda 
-                /usr/local/include 
-                /opt 
-                include 
+        NAMES   cutensor.h
+        HINTS   /usr/include
+                /usr/local/cuda
+                /usr/local/include
+                /opt
+                include
                 ${CUDAToolkit_INCLUDE_DIRS}
                 ${CUDA_TOOLKIT_ROOT_DIR}/include
-		ENV CPATH
-	)
+                ENV CPATH
+    )
 
     if(NOT CUTENSOR_LIB OR NOT CUTENSOR_INC)
         message(FATAL_ERROR "Unable to find cutensor installation. Please ensure v1.3.0+ is correctly installed.")
@@ -169,7 +180,7 @@ endif()
 
 add_library(Jet INTERFACE)
 target_include_directories(Jet INTERFACE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     ${BLAS_INCLUDE_DIRS}
 )
 
@@ -199,9 +210,15 @@ endif()
 if (ENABLE_FPIC)
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fPIC>)
 endif()
+
 if(MKL_FOUND)
-	target_compile_options(Jet INTERFACE -DENABLE_MKL)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DENABLE_MKL>)
 endif()
+
+if(ENABLE_HPTT)
+  target_link_libraries(Jet INTERFACE hptt)
+endif()
+
 if (ENABLE_CUTENSOR)
     target_include_directories(Jet INTERFACE ${CUDA_TOOLKIT_ROOT_DIR}/include)
     target_link_libraries(Jet INTERFACE ${CUTENSOR_LIB} ${CURAND_LIB} ${CUDA_LIBRARIES})
