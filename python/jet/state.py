@@ -6,9 +6,10 @@ from .factory import Tensor, TensorType
 
 __all__ = [
     "State",
-    "Qubit",
     "Qudit",
     "QuditRegister",
+    "Qubit",
+    "QubitRegister",
 ]
 
 
@@ -92,33 +93,16 @@ class State(ABC):
         return Tensor(indices=indices, shape=shape, data=data, dtype=dtype)
 
 
-class Qubit(State):
-    def __init__(self, data: Optional[np.ndarray] = None):
-        """Constructs a qubit state.
-
-        Args:
-           data: optional state vector.
-        """
-        super().__init__(name=f"Qubit", num_wires=1)
-
-        if data is None:
-            self._state_vector = np.array([1, 0])
-        else:
-            self._state_vector = data.flatten()
-
-    def _data(self) -> np.ndarray:
-        return self._state_vector
-
-
 class Qudit(State):
-    def __init__(self, data: Optional[np.ndarray] = None, dim: int = 2):
+    def __init__(self, dim: int, data: Optional[np.ndarray] = None):
         """Constructs a qudit state.
 
         Args:
             data: optional state vector.
             dim: dimension of the qudit.
         """
-        super().__init__(name=f"Qu-{dim}-it", num_wires=1)
+        name = "Qubit" if dim == 2 else f"Qudit(d={dim})"
+        super().__init__(name=name, num_wires=1)
 
         if data is None:
             self._state_vector = np.arange(dim) == 0
@@ -130,15 +114,16 @@ class Qudit(State):
 
 
 class QuditRegister(State):
-    def __init__(self, size: int, data: Optional[np.ndarray] = None, dim: int = 2):
-        """Constructs a qudit state register.
+    def __init__(self, dim: int, size: int, data: Optional[np.ndarray] = None):
+        """Constructs a qudit register state.
 
         Args:
             size: number of qudits.
             data: optional state vector.
             dim: dimension of the qudits.
         """
-        super().__init__(name=f"Qu-{dim}-it[{size}]", num_wires=size)
+        name = f"Qubit[{size}]" if dim == 2 else f"Qudit(d={dim})[{size}]"
+        super().__init__(name=name, num_wires=size)
 
         if data is None:
             self._state_vector = np.arange(dim ** size) == 0
@@ -147,3 +132,13 @@ class QuditRegister(State):
 
     def _data(self) -> np.ndarray:
         return self._state_vector
+
+
+def Qubit(data: Optional[np.ndarray] = None) -> Qudit:
+    """Constructs a qubit state using an optional state vector."""
+    return Qudit(dim=2, data=data)
+
+
+def QubitRegister(size: int, data: Optional[np.ndarray] = None) -> QuditRegister:
+    """Constructs a qubit register state with the given size and optional state vector."""
+    return QuditRegister(dim=2, size=size, data=data)

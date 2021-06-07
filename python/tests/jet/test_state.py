@@ -69,63 +69,77 @@ class TestState:
         assert state0 != state1
 
 
-class TestQubit:
-    def test_default_constructor(self):
-        """Tests that the default state vector of a qubit is the vacuum state."""
-        tensor = jet.Qubit().tensor()
-        assert tensor.indices == ["0"]
-        assert tensor.shape == [2]
-        assert tensor.data == [1, 0]
-
-    def test_data_contructor(self):
-        """Tests that the state vector of a qubit can be manually specified."""
-        tensor = jet.Qubit(data=np.array([0, 1j])).tensor()
-        assert tensor.indices == ["0"]
-        assert tensor.shape == [2]
-        assert tensor.data == [0, 1j]
-
-
 class TestQudit:
-    def test_default_constructor(self):
+    def test_init(self):
         """Tests that the default state vector of a qudit is the vacuum state."""
-        tensor = jet.Qudit().tensor()
-        assert tensor.indices == ["0"]
-        assert tensor.shape == [2]
-        assert tensor.data == [1, 0]
+        qudit = jet.Qudit(dim=3)
+        assert qudit.name == "Qudit(d=3)"
 
-    def test_data_contructor(self):
-        """Tests that the state vector of a qudit can be manually specified."""
-        tensor = jet.Qudit(data=np.arange(4)).tensor()
-        assert tensor.indices == ["0"]
-        assert tensor.shape == [4]
-        assert tensor.data == [0, 1, 2, 3]
-
-    def test_dim_contructor(self):
-        """Tests that the dimension of a qudit can be manually specified."""
-        tensor = jet.Qudit(dim=3).tensor()
+        tensor = qudit.tensor()
         assert tensor.indices == ["0"]
         assert tensor.shape == [3]
         assert tensor.data == [1, 0, 0]
 
+    def test_init_with_data(self):
+        """Tests that the state vector of a qudit can be manually specified."""
+        tensor = jet.Qudit(dim=4, data=np.arange(4)).tensor()
+        assert tensor.indices == ["0"]
+        assert tensor.shape == [4]
+        assert tensor.data == [0, 1, 2, 3]
+
 
 class TestQuditRegister:
-    def test_default_constructor(self):
+    def test_init(self):
         """Tests that the default state vector of a qudit register is the vacuum state."""
-        tensor = jet.QuditRegister(size=1).tensor()
+        qudits = jet.QuditRegister(dim=3, size=2)
+        assert qudits.name == "Qudit(d=3)[2]"
+
+        tensor = qudits.tensor()
+        assert tensor.indices == ["0", "1"]
+        assert tensor.shape == [3, 3]
+        assert tensor.data == [1, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    def test_init_with_data(self):
+        """Tests that the state vector of a qudit register can be manually specified."""
+        tensor = jet.QuditRegister(dim=4, size=3, data=np.arange(4 ** 3)).tensor()
+        assert tensor.indices == ["0", "1", "2"]
+        assert tensor.shape == [4, 4, 4]
+        assert tensor.data == list(range(4 ** 3))
+
+
+class TestQubit:
+    def test_init(self):
+        """Tests that the default state vector of a qubit is the vacuum state."""
+        qubit = jet.Qubit()
+        assert qubit.name == "Qubit"
+
+        tensor = qubit.tensor()
         assert tensor.indices == ["0"]
         assert tensor.shape == [2]
         assert tensor.data == [1, 0]
 
-    def test_data_contructor(self):
-        """Tests that the state vector of a qudit register can be manually specified."""
-        tensor = jet.QuditRegister(size=3, data=np.arange(8)).tensor()
+    def test_init_with_data(self):
+        """Tests that the state vector of a qubit can be manually specified."""
+        tensor = jet.Qubit(data=np.arange(2)).tensor()
+        assert tensor.indices == ["0"]
+        assert tensor.shape == [2]
+        assert tensor.data == [0, 1]
+
+
+class TestQubitRegister:
+    def test_init(self):
+        """Tests that the default state vector of a qubit register is the vacuum state."""
+        qubits = jet.QubitRegister(size=1)
+        assert qubits.name == "Qubit[1]"
+
+        tensor = qubits.tensor()
+        assert tensor.indices == ["0"]
+        assert tensor.shape == [2]
+        assert tensor.data == [1, 0]
+
+    def test_init_with_data(self):
+        """Tests that the state vector of a qubit register can be manually specified."""
+        tensor = jet.QubitRegister(size=3, data=np.arange(8)).tensor()
         assert tensor.indices == ["0", "1", "2"]
         assert tensor.shape == [2, 2, 2]
         assert tensor.data == list(range(8))
-
-    def test_shape_contructor(self):
-        """Tests that the shape of a qudit register can be manually specified."""
-        tensor = jet.QuditRegister(size=2, dim=3).tensor()
-        assert tensor.indices == ["0", "1"]
-        assert tensor.shape == [3, 3]
-        assert tensor.data == [1, 0, 0, 0, 0, 0, 0, 0, 0]
