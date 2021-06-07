@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* Quantum circuit and state models have been added to the `jet` Python package. [](https://github.com/XanaduAI/jet/pull/)
+
 * Quantum gate models have been added to the `jet` Python package. [(#16)](https://github.com/XanaduAI/jet/pull/16)
 
 * Python bindings are now available for the `TaskBasedCpuContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
