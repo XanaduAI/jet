@@ -60,20 +60,14 @@ class Gate(ABC):
         self,
         name: str,
         num_wires: int,
-        num_params: int,
-        params: Optional[List] = None,
+        params: Optional[List[float]] = None,
         tensor_id: Optional[int] = None,
     ):
         """Constructs a quantum gate.
 
-        Raises:
-            ValueError if the number of gate parameters differs from the
-            expected number of gate parameters.
-
         Args:
             name (str): name of the gate.
             num_wires (int): number of wires the gate is applied to.
-            num_params (int): expected number of gate parameters.
             params (list or None): parameters of the gate.
             tensor_id (int or None): ID of the gate tensor.
         """
@@ -82,12 +76,7 @@ class Gate(ABC):
 
         self._indices = None
         self._num_wires = num_wires
-        self._params = params or []
-
-        if len(self._params) != num_params:
-            raise ValueError(
-                f"Received {len(params)} (!= {num_params}) parameters for a {name} gate."
-            )
+        self._params = params
 
     @property
     def indices(self) -> Optional[Sequence[str]]:
@@ -137,7 +126,7 @@ class Gate(ABC):
         return self._num_wires
 
     @property
-    def params(self) -> Optional[List]:
+    def params(self) -> Optional[List[float]]:
         """Returns the parameters of this gate."""
         return self._params
 
@@ -174,17 +163,17 @@ class Gate(ABC):
 
 
 class Displacement(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, r: float, phi: float, cutoff: int, *params, **kwargs):
         """Constructs a displacement gate.  See `thewalrus.displacement
         <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.displacement.html>`__
-        for more details on the gate parameters.
+        for more details.
 
         Args:
             r (float): displacement magnitude.
             phi (float): displacement angle.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="Displacement", num_wires=1, num_params=3, params=params, **kwargs)
+        super().__init__(name="Displacement", num_wires=1, params=[r, phi, cutoff], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -192,17 +181,17 @@ class Displacement(Gate):
 
 
 class Squeezing(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, r: float, theta: float, cutoff: int, **kwargs):
         """Constructs a squeezing gate.  See `thewalrus.squeezing
         <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.squeezing.html>`__
-        for more details on the gate parameters.
+        for more details.
 
         Args:
             r (float): squeezing magnitude.
             theta (float): squeezing angle.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="Squeezing", num_wires=1, num_params=3, params=params, **kwargs)
+        super().__init__(name="Squeezing", num_wires=1, params=[r, theta, cutoff], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -210,19 +199,17 @@ class Squeezing(Gate):
 
 
 class TwoModeSqueezing(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, r: float, theta: float, cutoff: int, **kwargs):
         """Constructs a two-mode squeezing gate.  See `thewalrus.two_mode_squeezing
         <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.two_mode_squeezing.html>`__
-        for more details on the gate parameters.
+        for more details.
 
         Args:
             r (float): squeezing magnitude.
             theta (float): squeezing angle.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(
-            name="TwoModeSqueezing", num_wires=2, num_params=3, params=params, **kwargs
-        )
+        super().__init__(name="TwoModeSqueezing", num_wires=2, params=[r, theta, cutoff], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -230,10 +217,10 @@ class TwoModeSqueezing(Gate):
 
 
 class Beamsplitter(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, theta: float, phi: float, cutoff: int, **kwargs):
         """Constructs a beamsplitter gate.  See `thewalrus.beamsplitter
         <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.beamsplitter.html>`__
-        for more details on the gate parameters.
+        for more details.
 
         Args:
             theta (float): transmissivity angle of the beamsplitter. The transmissivity is
@@ -241,7 +228,7 @@ class Beamsplitter(Gate):
             phi (float): reflection phase of the beamsplitter.
             cutoff (int): Fock ladder cutoff.
         """
-        super().__init__(name="Beamsplitter", num_wires=2, num_params=3, params=params, **kwargs)
+        super().__init__(name="Beamsplitter", num_wires=2, params=[theta, phi, cutoff], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -254,9 +241,9 @@ class Beamsplitter(Gate):
 
 
 class Hadamard(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a Hadamard gate."""
-        super().__init__(name="Hadamard", num_wires=1, num_params=0, params=params, **kwargs)
+        super().__init__(name="Hadamard", num_wires=1, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -266,9 +253,9 @@ class Hadamard(Gate):
 
 
 class PauliX(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a PauliX gate."""
-        super().__init__(name="PauliX", num_wires=1, num_params=0, params=params, **kwargs)
+        super().__init__(name="PauliX", num_wires=1, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -277,9 +264,9 @@ class PauliX(Gate):
 
 
 class PauliY(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a PauliY gate."""
-        super().__init__(name="PauliY", num_wires=1, num_params=0, params=params, **kwargs)
+        super().__init__(name="PauliY", num_wires=1, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -288,9 +275,9 @@ class PauliY(Gate):
 
 
 class PauliZ(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a PauliZ gate."""
-        super().__init__(name="PauliZ", num_wires=1, num_params=0, params=params, **kwargs)
+        super().__init__(name="PauliZ", num_wires=1, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -299,9 +286,9 @@ class PauliZ(Gate):
 
 
 class S(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a single-qubit phase gate."""
-        super().__init__(name="S", num_wires=1, num_params=0, params=params, **kwargs)
+        super().__init__(name="S", num_wires=1, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -310,9 +297,9 @@ class S(Gate):
 
 
 class T(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a single-qubit T gate."""
-        super().__init__(name="T", num_wires=1, num_params=0, params=params, **kwargs)
+        super().__init__(name="T", num_wires=1, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -321,9 +308,9 @@ class T(Gate):
 
 
 class SX(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a single-qubit Square-Root X gate."""
-        super().__init__(name="SX", num_wires=1, num_params=0, params=params, **kwargs)
+        super().__init__(name="SX", num_wires=1, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -332,9 +319,13 @@ class SX(Gate):
 
 
 class PhaseShift(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a single-qubit local phase shift gate."""
-        super().__init__(name="PhaseShift", num_wires=1, num_params=1, params=params, **kwargs)
+    def __init__(self, phi: float, **kwargs):
+        """Constructs a single-qubit local phase shift gate.
+
+        Args:
+            phi (float): phase shift.
+        """
+        super().__init__(name="PhaseShift", num_wires=1, params=[phi], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -344,9 +335,13 @@ class PhaseShift(Gate):
 
 
 class CPhaseShift(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a controlled phase shift gate."""
-        super().__init__(name="CPhaseShift", num_wires=2, num_params=1, params=params, **kwargs)
+    def __init__(self, phi: float, **kwargs):
+        """Constructs a controlled phase shift gate.
+
+        Args:
+            phi (float): phase shift.
+        """
+        super().__init__(name="CPhaseShift", num_wires=2, params=[phi], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -356,9 +351,9 @@ class CPhaseShift(Gate):
 
 
 class CNOT(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a CNOT gate."""
-        super().__init__(name="CNOT", num_wires=2, num_params=0, params=params, **kwargs)
+        super().__init__(name="CNOT", num_wires=2, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -367,9 +362,9 @@ class CNOT(Gate):
 
 
 class CY(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a controlled-Y gate."""
-        super().__init__(name="CY", num_wires=2, num_params=0, params=params, **kwargs)
+        super().__init__(name="CY", num_wires=2, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -378,9 +373,9 @@ class CY(Gate):
 
 
 class CZ(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a controlled-Z gate."""
-        super().__init__(name="CZ", num_wires=2, num_params=0, params=params, **kwargs)
+        super().__init__(name="CZ", num_wires=2, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -389,9 +384,9 @@ class CZ(Gate):
 
 
 class SWAP(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a SWAP gate."""
-        super().__init__(name="SWAP", num_wires=2, num_params=0, params=params, **kwargs)
+        super().__init__(name="SWAP", num_wires=2, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -400,9 +395,9 @@ class SWAP(Gate):
 
 
 class ISWAP(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs an ISWAP gate."""
-        super().__init__(name="ISWAP", num_wires=2, num_params=0, params=params, **kwargs)
+        super().__init__(name="ISWAP", num_wires=2, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -411,9 +406,9 @@ class ISWAP(Gate):
 
 
 class CSWAP(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a CSWAP gate."""
-        super().__init__(name="CSWAP", num_wires=3, num_params=0, params=params, **kwargs)
+        super().__init__(name="CSWAP", num_wires=3, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -431,9 +426,9 @@ class CSWAP(Gate):
 
 
 class Toffoli(Gate):
-    def __init__(self, *params, **kwargs):
+    def __init__(self, **kwargs):
         """Constructs a Toffoli gate."""
-        super().__init__(name="Toffoli", num_wires=3, num_params=0, params=params, **kwargs)
+        super().__init__(name="Toffoli", num_wires=3, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -451,9 +446,13 @@ class Toffoli(Gate):
 
 
 class RX(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a single-qubit X rotation gate."""
-        super().__init__(name="RX", num_wires=1, num_params=1, params=params, **kwargs)
+    def __init__(self, theta: float, **kwargs):
+        """Constructs a single-qubit X rotation gate.
+
+        Args:
+            theta (float): rotation angle around the X-axis.
+        """
+        super().__init__(name="RX", num_wires=1, params=[theta], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -466,9 +465,13 @@ class RX(Gate):
 
 
 class RY(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a single-qubit Y rotation gate."""
-        super().__init__(name="RY", num_wires=1, num_params=1, params=params, **kwargs)
+    def __init__(self, theta: float, **kwargs):
+        """Constructs a single-qubit Y rotation gate.
+
+        Args:
+            theta (float): rotation angle around the Y-axis.
+        """
+        super().__init__(name="RY", num_wires=1, params=[theta], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -482,9 +485,13 @@ class RY(Gate):
 
 
 class RZ(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a single-qubit Z rotation gate."""
-        super().__init__(name="RZ", num_wires=1, num_params=1, params=params, **kwargs)
+    def __init__(self, theta: float, **kwargs):
+        """Constructs a single-qubit Z rotation gate.
+
+        Args:
+            theta (float): rotation angle around the Z-axis.
+        """
+        super().__init__(name="RZ", num_wires=1, params=[theta], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -496,9 +503,20 @@ class RZ(Gate):
 
 
 class Rot(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs an arbitrary single-qubit rotation gate."""
-        super().__init__(name="Rot", num_wires=1, num_params=3, params=params, **kwargs)
+    def __init__(self, phi: float, theta: float, omega: float, **kwargs):
+        """Constructs an arbitrary single-qubit rotation gate.  Each of the Pauli
+        rotation gates can be recovered by fixing two of the three parameters:
+
+        >>> assert RX(theta).tensor() == Rot(pi/2, -pi/2, theta).tensor()
+        >>> assert RY(theta).tensor() == Rot(0, 0, theta).tensor()
+        >>> assert RZ(theta).tensor() == Rot(theta, 0, 0).tensor()
+
+        Args:
+            phi (float): first rotation angle.
+            theta (float): second rotation angle.
+            omega (float): third rotation angle.
+        """
+        super().__init__(name="Rot", num_wires=1, params=[phi, theta, omega], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -514,9 +532,13 @@ class Rot(Gate):
 
 
 class CRX(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a controlled-RX gate."""
-        super().__init__(name="CRX", num_wires=2, num_params=1, params=params, **kwargs)
+    def __init__(self, theta: float, **kwargs):
+        """Constructs a controlled-RX gate.
+
+        Args:
+            theta (float): rotation angle around the X-axis.
+        """
+        super().__init__(name="CRX", num_wires=2, params=[theta], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -529,9 +551,13 @@ class CRX(Gate):
 
 
 class CRY(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a controlled-RY gate."""
-        super().__init__(name="CRY", num_wires=2, num_params=1, params=params, **kwargs)
+    def __init__(self, theta: float, **kwargs):
+        """Constructs a controlled-RY gate.
+
+        Args:
+            theta (float): rotation angle around the Y-axis.
+        """
+        super().__init__(name="CRY", num_wires=2, params=[theta], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -544,9 +570,13 @@ class CRY(Gate):
 
 
 class CRZ(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a controlled-RZ gate."""
-        super().__init__(name="CRZ", num_wires=2, num_params=1, params=params, **kwargs)
+    def __init__(self, theta: float, **kwargs):
+        """Constructs a controlled-RZ gate.
+
+        Args:
+            theta (float): rotation angle around the Z-axis.
+        """
+        super().__init__(name="CRZ", num_wires=2, params=[theta], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -561,9 +591,15 @@ class CRZ(Gate):
 
 
 class CRot(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a controlled-rotation gate."""
-        super().__init__(name="CRot", num_wires=2, num_params=3, params=params, **kwargs)
+    def __init__(self, phi: float, theta: float, omega: float, **kwargs):
+        """Constructs a controlled-rotation gate.
+
+        Args:
+            phi (float): first rotation angle.
+            theta (float): second rotation angle.
+            omega (float): third rotation angle.
+        """
+        super().__init__(name="CRot", num_wires=2, params=[phi, theta, omega], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -581,9 +617,13 @@ class CRot(Gate):
 
 
 class U1(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a U1 gate."""
-        super().__init__(name="U1", num_wires=1, num_params=1, params=params, **kwargs)
+    def __init__(self, phi: float, **kwargs):
+        """Constructs a U1 gate.
+
+        Args:
+            phi (float): rotation angle.
+        """
+        super().__init__(name="U1", num_wires=1, params=[phi], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -593,9 +633,14 @@ class U1(Gate):
 
 
 class U2(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs a U2 gate."""
-        super().__init__(name="U2", num_wires=1, num_params=2, params=params, **kwargs)
+    def __init__(self, phi: float, lam: float, **kwargs):
+        """Constructs a U2 gate.
+
+        Args:
+            phi (float): first rotation angle.
+            lam (float): second rotation angle.
+        """
+        super().__init__(name="U2", num_wires=1, params=[phi, lam], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -608,9 +653,15 @@ class U2(Gate):
 
 
 class U3(Gate):
-    def __init__(self, *params, **kwargs):
-        """Constructs an arbitrary single-qubit unitary gate."""
-        super().__init__(name="U3", num_wires=1, num_params=3, params=params, **kwargs)
+    def __init__(self, theta: float, phi: float, lam: float, **kwargs):
+        """Constructs a U3 gate.
+
+        Args:
+            theta (float): first rotation angle.
+            phi (float): second rotation angle.
+            lam (float): third rotation angle.
+        """
+        super().__init__(name="U3", num_wires=1, params=[theta, phi, lam], **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:

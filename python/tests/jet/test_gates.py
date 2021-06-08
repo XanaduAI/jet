@@ -13,7 +13,7 @@ class MockGate(jet.Gate):
     """MockGate represents a fictional, unnormalized gate which can be applied to pairs of qutrits."""
 
     def __init__(self):
-        super().__init__(name="MockGate", num_params=0, num_wires=2)
+        super().__init__(name="MockGate", num_wires=2)
 
     def _data(self) -> np.ndarray:
         return np.eye(3 ** 2) * (1 + 1j)
