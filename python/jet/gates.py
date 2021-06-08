@@ -147,9 +147,14 @@ class Gate(ABC):
         pass
 
     def tensor(self, dtype: type = np.complex128, adjoint: bool = False) -> TensorType:
-        """Returns the tensor representation of this gate."""
+        """Returns the tensor representation of this gate.
+
+        Args:
+            dtype (type): data type of the tensor.
+            adjoint (bool): whether to take the adjoint of the tensor.
+        """
         if adjoint:
-            data = np.conj(self._data()).T.flatten()
+            data = np.linalg.inv(self._data()).flatten()
         else:
             data = self._data().flatten()
 
