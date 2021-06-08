@@ -31,12 +31,25 @@ class State(ABC):
 
     @property
     def indices(self) -> Optional[List[str]]:
-        """Returns the indices of this state."""
+        """Returns the indices of this state. An index is a label associated with
+        an axis of the tensor representation of a state; the indices of a tensor
+        determine its connectivity in the context of a tensor network.
+        """
         return self._indices
 
     @indices.setter
     def indices(self, indices: Optional[Sequence[str]]) -> None:
-        """Sets the indices of this state for connecting tensors."""
+        """Sets the indices of this state. The ``indices`` property of a state
+        is used to construct its tensor representation (unless ``indices`` is
+        None). See @indices.getter for more information about tensor indices.
+
+        Raises:
+            ValueError if the given indices are not a sequence of unique strings
+            or the number of provided indices is invalid.
+
+        Args:
+            indices (Sequence[str] or None): new indices of the state.
+        """
         # Skip the sequence property checks if `indices` is None.
         if indices is None:
             pass
@@ -60,7 +73,7 @@ class State(ABC):
 
     @property
     def num_wires(self) -> int:
-        """Returns the number of wires spanned by this state."""
+        """Returns the number of wires connected to this state."""
         return self._num_wires
 
     def __eq__(self, other) -> bool:
@@ -74,9 +87,15 @@ class State(ABC):
     @abstractmethod
     def _data(self) -> np.ndarray:
         """Returns the vector representation of this state."""
+        pass
 
     def tensor(self, dtype: type = np.complex128, adjoint: bool = False) -> TensorType:
-        """Returns the tensor representation of this state."""
+        """Returns the tensor representation of this state.
+
+        Args:
+            dtype (type): data type of the tensor.
+            adjoint (bool): whether to take the adjoint of the tensor.
+        """
         if adjoint:
             data = np.conj(self._data())
         else:
@@ -97,8 +116,8 @@ class Qudit(State):
         """Constructs a qudit state.
 
         Args:
-            dim: dimension of the qudit.
-            data: optional state vector.
+            dim (int): dimension of the qudit.
+            data (np.ndarray or None): optional state vector.
         """
         name = "Qubit" if dim == 2 else f"Qudit(d={dim})"
         super().__init__(name=name, num_wires=1)
@@ -117,9 +136,9 @@ class QuditRegister(State):
         """Constructs a qudit register state.
 
         Args:
-            dim: dimension of the qudits.
-            size: number of qudits.
-            data: optional state vector.
+            dim (int): dimension of the qudits.
+            size (int): number of qudits.
+            data (np.ndarray or None): optional state vector.
         """
         name = f"Qubit[{size}]" if dim == 2 else f"Qudit(d={dim})[{size}]"
         super().__init__(name=name, num_wires=size)
@@ -134,10 +153,25 @@ class QuditRegister(State):
 
 
 def Qubit(data: Optional[np.ndarray] = None) -> Qudit:
-    """Constructs a qubit state using an optional state vector."""
+    """Constructs a qubit state using an optional state vector.
+
+    Args:
+        data (np.ndarray or None): optional state vector.
+
+    Returns:
+        Qudit instance constructed using the specified state vector.
+    """
     return Qudit(dim=2, data=data)
 
 
 def QubitRegister(size: int, data: Optional[np.ndarray] = None) -> QuditRegister:
-    """Constructs a qubit register state with the given size and optional state vector."""
+    """Constructs a qubit register state with the given size and optional state vector.
+
+    Args:
+        size (int): number of qubits.
+        data (np.ndarray or None): optional state vector.
+
+    Returns:
+        QuditRegister instance constructed using the specified state vector.
+    """
     return QuditRegister(dim=2, size=size, data=data)
