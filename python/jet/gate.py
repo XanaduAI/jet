@@ -1,7 +1,7 @@
-import cmath
-import math
 from abc import ABC, abstractmethod
+from cmath import exp
 from functools import lru_cache
+from math import cos, sin, sqrt
 from typing import List, Optional, Sequence
 
 import numpy as np
@@ -52,7 +52,7 @@ __all__ = [
 ]
 
 
-INV_SQRT2 = 1 / math.sqrt(2)
+INV_SQRT2 = 1 / sqrt(2)
 
 
 class Gate(ABC):
@@ -303,7 +303,7 @@ class T(Gate):
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        mat = [[1, 0], [0, cmath.exp(0.25j * np.pi)]]
+        mat = [[1, 0], [0, exp(0.25j * np.pi)]]
         return np.array(mat)
 
 
@@ -330,7 +330,7 @@ class PhaseShift(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi = self.params[0]
-        mat = [[1, 0], [0, cmath.exp(1j * phi)]]
+        mat = [[1, 0], [0, exp(1j * phi)]]
         return np.array(mat)
 
 
@@ -346,7 +346,7 @@ class CPhaseShift(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi = self.params[0]
-        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, cmath.exp(1j * phi)]]
+        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, exp(1j * phi)]]
         return np.array(mat)
 
 
@@ -457,8 +457,8 @@ class RX(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        c = math.cos(theta / 2)
-        js = 1j * math.sin(-theta / 2)
+        c = cos(theta / 2)
+        js = 1j * sin(-theta / 2)
 
         mat = [[c, js], [js, c]]
         return np.array(mat)
@@ -477,8 +477,8 @@ class RY(Gate):
     def _data(self) -> np.ndarray:
         theta = self.params[0]
 
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [[c, -s], [s, c]]
         return np.array(mat)
@@ -496,7 +496,7 @@ class RZ(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        p = cmath.exp(-0.5j * theta)
+        p = exp(-0.5j * theta)
 
         mat = [[p, 0], [0, np.conj(p)]]
         return np.array(mat)
@@ -521,12 +521,12 @@ class Rot(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [
-            [cmath.exp(-0.5j * (phi + omega)) * c, -cmath.exp(0.5j * (phi - omega)) * s],
-            [cmath.exp(-0.5j * (phi - omega)) * s, cmath.exp(0.5j * (phi + omega)) * c],
+            [exp(-0.5j * (phi + omega)) * c, -exp(0.5j * (phi - omega)) * s],
+            [exp(-0.5j * (phi - omega)) * s, exp(0.5j * (phi + omega)) * c],
         ]
         return np.array(mat)
 
@@ -543,8 +543,8 @@ class CRX(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        c = math.cos(theta / 2)
-        js = 1j * math.sin(-theta / 2)
+        c = cos(theta / 2)
+        js = 1j * sin(-theta / 2)
 
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, c, js], [0, 0, js, c]]
         return np.array(mat)
@@ -562,8 +562,8 @@ class CRY(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, c, -s], [0, 0, s, c]]
         return np.array(mat)
@@ -584,8 +584,8 @@ class CRZ(Gate):
         mat = [
             [1, 0, 0, 0],
             [0, 1, 0, 0],
-            [0, 0, cmath.exp(-0.5j * theta), 0],
-            [0, 0, 0, cmath.exp(0.5j * theta)],
+            [0, 0, exp(-0.5j * theta), 0],
+            [0, 0, 0, exp(0.5j * theta)],
         ]
         return np.array(mat)
 
@@ -604,14 +604,14 @@ class CRot(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [
             [1, 0, 0, 0],
             [0, 1, 0, 0],
-            [0, 0, cmath.exp(-0.5j * (phi + omega)) * c, -cmath.exp(0.5j * (phi - omega)) * s],
-            [0, 0, cmath.exp(-0.5j * (phi - omega)) * s, cmath.exp(0.5j * (phi + omega)) * c],
+            [0, 0, exp(-0.5j * (phi + omega)) * c, -exp(0.5j * (phi - omega)) * s],
+            [0, 0, exp(-0.5j * (phi - omega)) * s, exp(0.5j * (phi + omega)) * c],
         ]
         return np.array(mat)
 
@@ -628,7 +628,7 @@ class U1(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi = self.params[0]
-        mat = [[1, 0], [0, cmath.exp(1j * phi)]]
+        mat = [[1, 0], [0, exp(1j * phi)]]
         return np.array(mat)
 
 
@@ -646,8 +646,8 @@ class U2(Gate):
     def _data(self) -> np.ndarray:
         phi, lam = self.params
         mat = [
-            [INV_SQRT2, -INV_SQRT2 * cmath.exp(1j * lam)],
-            [INV_SQRT2 * cmath.exp(1j * phi), INV_SQRT2 * cmath.exp(1j * (phi + lam))],
+            [INV_SQRT2, -INV_SQRT2 * exp(1j * lam)],
+            [INV_SQRT2 * exp(1j * phi), INV_SQRT2 * exp(1j * (phi + lam))],
         ]
         return np.array(mat)
 
@@ -666,11 +666,11 @@ class U3(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta, phi, lam = self.params
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [
-            [c, -s * cmath.exp(1j * lam)],
-            [s * cmath.exp(1j * phi), c * cmath.exp(1j * (phi + lam))],
+            [c, -s * exp(1j * lam)],
+            [s * exp(1j * phi), c * exp(1j * (phi + lam))],
         ]
         return np.array(mat)
