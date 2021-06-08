@@ -15,25 +15,23 @@ __all__ = [
 
 
 class State(ABC):
-    def __init__(self, name: str, num_wires: int, **kwargs):
+    def __init__(self, name: str, num_wires: int, tensor_id: Optional[int] = None):
         """Constructs a quantum state.
 
         Args:
-            name: name of the state.
-            num_wires: number of wires the state connects to.
-
-        Kwargs:
-            tensor_id (int): ID of the state tensor.
+            name (str): name of the state.
+            num_wires (str): number of wires the state is connected to.
+            tensor_id (int or None): ID of the state tensor.
         """
         self.name = name
-        self.tensor_id = kwargs.get("tensor_id", None)
+        self.tensor_id = tensor_id
 
         self._indices = None
         self._num_wires = num_wires
 
     @property
     def indices(self) -> Optional[List[str]]:
-        """Returns the indices of this state for connecting tensors."""
+        """Returns the indices of this state."""
         return self._indices
 
     @indices.setter
