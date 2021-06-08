@@ -163,7 +163,7 @@ class Gate(ABC):
 
 
 class Displacement(Gate):
-    def __init__(self, r: float, phi: float, cutoff: int, *params, **kwargs):
+    def __init__(self, r: float, phi: float, cutoff: int, **kwargs):
         """Constructs a displacement gate.  See `thewalrus.displacement
         <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.displacement.html>`__
         for more details.
