@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import wraps
 from typing import Callable, List, Sequence, Tuple, Union
 
 import numpy as np
@@ -56,6 +57,7 @@ class Circuit:
     def _append_validator(append_fn: Callable) -> Callable:
         """Decorator which validates the arguments to an append function."""
 
+        @wraps(append_fn)
         def validator(self, part: Union[Gate, State], wire_ids: Sequence[int]) -> None:
             if not all(0 <= i < len(self.wires) for i in wire_ids):
                 raise ValueError(f"Wire IDs must fall in the range [0, {len(self.wires)}).")
