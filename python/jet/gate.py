@@ -81,15 +81,15 @@ class Gate(ABC):
     @property
     def indices(self) -> Optional[Sequence[str]]:
         """Returns the indices of this gate. An index is a label associated with
-        an axis of the tensor representation of a gate and altogether determine
-        the connectivity of a tensor in the context of a tensor network.
+        an axis of the tensor representation of a gate; the indices of a tensor
+        determine its connectivity in the context of a tensor network.
         """
         return self._indices
 
     @indices.setter
     def indices(self, indices: Optional[Sequence[str]]) -> None:
         """Sets the indices of this gate. If the indices of a gate are not None,
-        they are used to construct the tensor representation of that gate.  See
+        they are used to construct the tensor representation of that gate. See
         @indices.getter for more information about tensor indices.
 
         Raises:
