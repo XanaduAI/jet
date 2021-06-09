@@ -337,6 +337,58 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
         CHECK(data_buffer1 == data_expected);
         CHECK(data_buffer2 == data_expected);
     }
+    SECTION("Copy constructor from Jet::Tensor: {2,2}, Indices: {i,j}, data: "
+            "{{1,2},{3,4},{5,6},{7,8}}")
+    {
+        std::vector<size_t> shape{2, 2};
+        std::vector<std::string> indices{"i", "j"};
+        std::vector<c64_host> data_expected{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+        std::vector<c64_host> data{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+
+        Tensor tensor1(indices, shape, data);
+        CudaTensor tensor2(tensor1);
+        CHECK(tensor1.GetShape() == shape);
+        CHECK(tensor2.GetShape() == shape);
+
+        CHECK(tensor1.GetIndices() == indices);
+        CHECK(tensor2.GetIndices() == indices);
+
+        CHECK(tensor1.GetSize() == 4);
+        CHECK(tensor2.GetSize() == 4);
+
+        std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
+
+        tensor2.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(data_buffer2.data()));
+
+        CHECK(data_buffer2 == data_expected);
+    }
+    SECTION("Copy assignment from Jet::Tensor: {2,2}, Indices: {i,j}, data: "
+            "{{1,2},{3,4},{5,6},{7,8}}")
+    {
+        std::vector<size_t> shape{2, 2};
+        std::vector<std::string> indices{"i", "j"};
+        std::vector<c64_host> data_expected{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+        std::vector<c64_host> data{{1, 2}, {3, 4}, {5, 6}, {7, 8}};
+
+        Tensor tensor1(indices, shape, data);
+        CudaTensor tensor2 = tensor1;
+        CHECK(tensor1.GetShape() == shape);
+        CHECK(tensor2.GetShape() == shape);
+
+        CHECK(tensor1.GetIndices() == indices);
+        CHECK(tensor2.GetIndices() == indices);
+
+        CHECK(tensor1.GetSize() == 4);
+        CHECK(tensor2.GetSize() == 4);
+
+        std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
+
+        tensor2.CopyGpuDataToHost(
+            reinterpret_cast<c64_dev *>(data_buffer2.data()));
+
+        CHECK(data_buffer2 == data_expected);
+    }
 }
 
 TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]")

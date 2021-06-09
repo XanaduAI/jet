@@ -18,6 +18,7 @@
 #include <curand.h>
 #include <cutensor.h>
 
+namespace {
 /**
  * @brief
  *
@@ -65,8 +66,8 @@ static std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
  * @param sizes The size of each indepedent dimension of the tensor data.
  * @return size_t Single index mapped to column-major (colexicographic) form.
  */
-size_t RowOrderToColumnOrder(size_t row_order_linear_index,
-                             const std::vector<size_t> &sizes)
+size_t RowMajToColMaj(size_t row_order_linear_index,
+                      const std::vector<size_t> &sizes)
 {
     using namespace Jet::Utilities;
     auto unraveled_index = UnravelIndex(row_order_linear_index, sizes);
@@ -80,6 +81,8 @@ size_t RowOrderToColumnOrder(size_t row_order_linear_index,
     }
     return column_order_linear_index;
 }
+
+} // namespace
 
 namespace Jet {
 
@@ -245,6 +248,25 @@ template <class T = cuComplex> class CudaTensor {
                    cudaMemcpyDeviceToDevice);
     }
 
+    template <class CPUData> CudaTensor(const Tensor<CPUData> &other)
+    {
+        static_assert(sizeof(CPUData) == sizeof(T));
+
+        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        CopyHostDataToGpu(const_cast<T *>(
+            reinterpret_cast<const T *>(other.GetData().data())));
+    }
+
+    template <class CPUData> CudaTensor &operator=(const Tensor<CPUData> &other)
+    {
+        static_assert(sizeof(CPUData) == sizeof(T));
+
+        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        CopyHostDataToGpu(const_cast<T *>(
+            reinterpret_cast<const T *>(other.GetData().data())));
+        return *this;
+    }
+
     CudaTensor &operator=(const CudaTensor &other)
     {
         if (this != &other) // not a self-assignment
@@ -324,7 +346,7 @@ template <class T = cuComplex> class CudaTensor {
             host_data;
 
         for (size_t idx = 0; idx < host_data_reshape.size(); idx++) {
-            auto col_idx = RowOrderToColumnOrder(idx, GetShape());
+            auto col_idx = RowMajToColMaj(idx, GetShape());
             host_data_reshape[idx] = host_data[col_idx];
         }
 
