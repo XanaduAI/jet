@@ -27,7 +27,7 @@ namespace Jet {
  * @tparam T Underlying complex tensor data type (`complex<float>` or
  *           `complex<double>`).
  */
-template <class T = std::complex<float>> class Tensor{
+template <class T = std::complex<float>> class Tensor {
 
     static_assert(TensorHelpers::is_supported_data_type<T>,
                   "Tensor data type must be one of std::complex<float>, "
@@ -370,14 +370,12 @@ template <class T = std::complex<float>> class Tensor{
     /**
      * @brief Adds two `%Tensor` objects with the same index sets.
      *
-     * The resulting tensor will have the same index set as the operand tensors. The
-     * order of the indices follows that of the first argument (i.e., `A`).
+     * The resulting tensor will have the same index set as the operand tensors.
+     * The order of the indices follows that of the first argument (i.e., `A`).
      *
-     * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition of
-     * A and B is a 2x3 tensor C(i,j):
-     * \code{.cpp}
-     *     Tensor A({"i", "j"}, {2, 3}, {0, 1, 2, 3, 4, 5});
-     *     Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
+     * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition
+     * of A and B is a 2x3 tensor C(i,j): \code{.cpp} Tensor A({"i", "j"}, {2,
+     * 3}, {0, 1, 2, 3, 4, 5}); Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
      *     Tensor C = AddTensors(A, B);  // {5, 6, 7, 9, 10, 11}
      * \endcode
      *
@@ -390,12 +388,13 @@ template <class T = std::complex<float>> class Tensor{
      * @return `%Tensor` object representing the element-wise sum of the given
      *         tensors.
      */
-    template <class U=T> static Tensor<U> AddTensors(const Tensor<U> &A, const Tensor<U> &B)
+    template <class U = T>
+    static Tensor<U> AddTensors(const Tensor<U> &A, const Tensor<U> &B)
     {
         static const Tensor<U> zero;
 
-        // The zero tensor is used in reductions where the shape of an accumulator
-        // is not known beforehand.
+        // The zero tensor is used in reductions where the shape of an
+        // accumulator is not known beforehand.
         if (A == zero) {
             return B;
         }
@@ -403,11 +402,12 @@ template <class T = std::complex<float>> class Tensor{
             return A;
         }
 
-        const auto disjoint_indices =
-            Jet::Utilities::VectorDisjunctiveUnion(A.GetIndices(), B.GetIndices());
+        const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
+            A.GetIndices(), B.GetIndices());
 
-        JET_ABORT_IF_NOT(disjoint_indices.empty(),
-                        "Tensor addition with disjoint indices is not supported.");
+        JET_ABORT_IF_NOT(
+            disjoint_indices.empty(),
+            "Tensor addition with disjoint indices is not supported.");
 
         const auto &indices = A.GetIndices();
         const auto &shape = A.GetShape();
@@ -422,9 +422,9 @@ template <class T = std::complex<float>> class Tensor{
         auto a_ptr = A.GetData().data();
         auto bt_ptr = Bt.GetData().data();
 
-    #if defined _OPENMP
-    #pragma omp parallel for schedule(static, 1024) // MAX_RIGHT_DIM)
-    #endif
+#if defined _OPENMP
+#pragma omp parallel for schedule(static, 1024) // MAX_RIGHT_DIM)
+#endif
         for (size_t i = 0; i < size; i++) {
             c_ptr[i] = a_ptr[i] + bt_ptr[i];
         }
@@ -435,11 +435,9 @@ template <class T = std::complex<float>> class Tensor{
     /**
      * @brief Adds current and other `%Tensor` object with the same index sets.
      *
-     * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition of
-     * A and B is a 2x3 tensor C(i,j):
-     * \code{.cpp}
-     *     Tensor A({"i", "j"}, {2, 3}, {0, 1, 2, 3, 4, 5});
-     *     Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
+     * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition
+     * of A and B is a 2x3 tensor C(i,j): \code{.cpp} Tensor A({"i", "j"}, {2,
+     * 3}, {0, 1, 2, 3, 4, 5}); Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
      *     Tensor C = A.AddTensors(B);  // {5, 6, 7, 9, 10, 11}
      * \endcode
      *
@@ -458,10 +456,12 @@ template <class T = std::complex<float>> class Tensor{
     /**
      * @brief Slices a `%Tensor` object index.
      *
-     * The result is a `%Tensor` object whose given indices and data are a subset of
+     * The result is a `%Tensor` object whose given indices and data are a
+    subset of
      * the provided tensor object, sliced along the given index argument.
      *
-     * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices along
+     * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices
+    along
      * each index with the resulting slices selected as required:
      * \code{.cpp}
      *     Tensor A({"i", "j"}, {2, 3});
@@ -481,9 +481,9 @@ template <class T = std::complex<float>> class Tensor{
     * @param value Value to slice the `%Tensor` index on.
     * @return Slice of the `%Tensor` object.
     */
-    template <class U=T>
-    static Tensor<U> SliceIndex(const Tensor<U> &tensor, const std::string &index,
-                        size_t value)
+    template <class U = T>
+    static Tensor<U> SliceIndex(const Tensor<U> &tensor,
+                                const std::string &index, size_t value)
     {
 
         std::vector<std::string> new_ordering = tensor.GetIndices();
@@ -494,9 +494,10 @@ template <class T = std::complex<float>> class Tensor{
 
         auto &&tensor_trans = Transpose(tensor, new_ordering);
         std::vector<std::string> sliced_indices(
-            tensor_trans.GetIndices().begin() + 1, tensor_trans.GetIndices().end());
-        std::vector<size_t> sliced_dimensions(tensor_trans.GetShape().begin() + 1,
-                                            tensor_trans.GetShape().end());
+            tensor_trans.GetIndices().begin() + 1,
+            tensor_trans.GetIndices().end());
+        std::vector<size_t> sliced_dimensions(
+            tensor_trans.GetShape().begin() + 1, tensor_trans.GetShape().end());
 
         Tensor<U> tensor_sliced(sliced_indices, sliced_dimensions);
         size_t projection_size = tensor_sliced.GetSize();
@@ -505,18 +506,17 @@ template <class T = std::complex<float>> class Tensor{
         auto data_ptr = tensor_trans.GetData().data();
         auto tensor_sliced_ptr = tensor_sliced.GetData().data();
 
-    #if defined _OPENMP
+#if defined _OPENMP
         int max_right_dim = 1024;
-    #pragma omp parallel for schedule(static, max_right_dim)
-    #endif
+#pragma omp parallel for schedule(static, max_right_dim)
+#endif
         for (size_t p = 0; p < projection_size; ++p)
             tensor_sliced_ptr[p] = data_ptr[projection_begin + p];
 
         return tensor_sliced;
     }
 
-    Tensor<T> SliceIndex(const std::string &index,
-                        size_t value) const
+    Tensor<T> SliceIndex(const std::string &index, size_t value) const
     {
         return SliceIndex<T>(*this, index, value);
     }
@@ -529,15 +529,15 @@ template <class T = std::complex<float>> class Tensor{
      * @param new_shape Index dimensionality for new tensor object.
      * @return Reshaped copy of the `%Tensor` object.
      */
-    template <class U=T>
+    template <class U = T>
     static Tensor<U> Reshape(const Tensor<U> &old_tensor,
-                    const std::vector<size_t> &new_shape)
+                             const std::vector<size_t> &new_shape)
     {
         using namespace Utilities;
 
         JET_ABORT_IF_NOT(old_tensor.GetSize() ==
-                            Jet::Utilities::ShapeToSize(new_shape),
-                        "Size is inconsistent between tensors.");
+                             Jet::Utilities::ShapeToSize(new_shape),
+                         "Size is inconsistent between tensors.");
         Tensor<U> new_tensor(new_shape);
         Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
         return new_tensor;
@@ -556,9 +556,10 @@ template <class T = std::complex<float>> class Tensor{
      * @param new_indices New `%Tensor` index label ordering.
      * @return Transposed `%Tensor` object.
      */
-    template <class U=T, const size_t BLOCKSIZE = 1024, const size_t MINSIZE = 32>
+    template <class U = T, const size_t BLOCKSIZE = 1024,
+              const size_t MINSIZE = 32>
     static Tensor<U> Transpose(const Tensor<U> &A,
-                        const std::vector<std::string> &new_indices)
+                               const std::vector<std::string> &new_indices)
     {
         using namespace Jet::Utilities;
 
@@ -576,38 +577,41 @@ template <class T = std::complex<float>> class Tensor{
             auto permuter = Permuter<QFlexPermuter<BLOCKSIZE, MINSIZE>>();
             try {
                 return Tensor<U>{new_indices, new_shape,
-                                permuter.Transpose(A.GetData(), A.GetShape(),
-                                                    A.GetIndices(), new_indices)};
+                                 permuter.Transpose(A.GetData(), A.GetShape(),
+                                                    A.GetIndices(),
+                                                    new_indices)};
             }
             catch (Jet::Exception &e) {
                 std::cerr << "Error in fast transpose with given parameters:="
-                        << e.what() << std::endl;
+                          << e.what() << std::endl;
                 std::cerr << "Using fall-back default transpose." << std::endl;
             }
         }
         auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
         return Tensor<U>{new_indices, new_shape,
-                        permuter.Transpose(A.GetData(), A.GetShape(),
+                         permuter.Transpose(A.GetData(), A.GetShape(),
                                             A.GetIndices(), new_indices)};
     }
 
     /**
      * @brief Transposes the indices of a `%Tensor` to a new ordering.
      *
-     * @warning The program is aborted if the number of elements in the new ordering
-     *          does match the number of indices in the tensor.
+     * @warning The program is aborted if the number of elements in the new
+     * ordering does match the number of indices in the tensor.
      *
      * @tparam T `%Tensor` data type.
      * @param A Reference `%Tensor` object.
      * @param new_ordering New `%Tensor` index permutation.
      * @return Transposed `%Tensor` object.
      */
-    template<class U=T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
-    static Tensor<U> Transpose(const Tensor<U> &A, const std::vector<size_t> &new_ordering)
+    template <class U = T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
+    static Tensor<U> Transpose(const Tensor<U> &A,
+                               const std::vector<size_t> &new_ordering)
     {
         const size_t num_indices = A.GetIndices().size();
-        JET_ABORT_IF_NOT(num_indices == new_ordering.size(),
-                        "Size of ordering must match number of tensor indices.");
+        JET_ABORT_IF_NOT(
+            num_indices == new_ordering.size(),
+            "Size of ordering must match number of tensor indices.");
 
         std::vector<std::string> new_indices(num_indices);
         const auto &old_indices = A.GetIndices();
@@ -616,7 +620,7 @@ template <class T = std::complex<float>> class Tensor{
             new_indices[i] = old_indices[new_ordering[i]];
         }
 
-        return Transpose<U,BLOCKSIZE,MINSIZE>(A, new_indices);
+        return Transpose<U, BLOCKSIZE, MINSIZE>(A, new_indices);
     }
 
     Tensor<T> Transpose(const std::vector<size_t> &new_ordering) const
@@ -634,7 +638,7 @@ template <class T = std::complex<float>> class Tensor{
      * @param A Reference `%Tensor` object.
      * @return `%Tensor` object representing the conjugate of `A`.
      */
-    template <class U=T> static Tensor<U> Conj(const Tensor<U> &A)
+    template <class U = T> static Tensor<U> Conj(const Tensor<U> &A)
     {
         Tensor<U> A_conj(A.GetIndices(), A.GetShape());
         for (size_t i = 0; i < A.GetSize(); i++) {
@@ -643,22 +647,18 @@ template <class T = std::complex<float>> class Tensor{
         return A_conj;
     }
 
-    Tensor<T> Conj() const
-    {
-        return Conj<T>(*this);
-    }
+    Tensor<T> Conj() const { return Conj<T>(*this); }
 
     /**
-     * @brief Contracts two `%Tensor` objects over the intersection of their index
-     *        sets.
+     * @brief Contracts two `%Tensor` objects over the intersection of their
+     * index sets.
      *
      * The resulting tensor will be formed with indices given by the symmetric
      * difference of the index sets.
      *
      * Example: Given a 3x2x4 tensor A(i,j,k) and a 2x4x2 tensor B(j,k,l), the
-     * common indices are (j,k) and the symmetric difference of the sets is (i,l).
-     * The result of the contraction is a 3x2 tensor C(i,l).
-     * \code{.cpp}
+     * common indices are (j,k) and the symmetric difference of the sets is
+     * (i,l). The result of the contraction is a 3x2 tensor C(i,l). \code{.cpp}
      *     Tensor A({"i", "j", "k"}, {3, 2, 4});
      *     Tensor B({"j", "k", "l"}, {2, 4, 2});
      *     A.FillRandom();
@@ -673,15 +673,17 @@ template <class T = std::complex<float>> class Tensor{
      * @param B tensor on the RHS of the contraction.
      * @return `%Tensor` object representing the contraction of the tensors.
      */
-    template <class U=T>
+    template <class U = T>
     static Tensor<U> ContractTensors(const Tensor<U> &A, const Tensor<U> &B)
     {
         using namespace Jet::Utilities;
         using namespace Jet::TensorHelpers;
 
         auto &&left_indices = VectorSubtraction(A.GetIndices(), B.GetIndices());
-        auto &&right_indices = VectorSubtraction(B.GetIndices(), A.GetIndices());
-        auto &&common_indices = VectorIntersection(A.GetIndices(), B.GetIndices());
+        auto &&right_indices =
+            VectorSubtraction(B.GetIndices(), A.GetIndices());
+        auto &&common_indices =
+            VectorIntersection(A.GetIndices(), B.GetIndices());
 
         size_t left_dim = 1, right_dim = 1, common_dim = 1;
         for (size_t i = 0; i < left_indices.size(); ++i) {
@@ -711,8 +713,8 @@ template <class T = std::complex<float>> class Tensor{
         auto &&Bt = Transpose<U, 1024UL, 32UL>(B, b_new_ordering);
 
         TensorHelpers::MultiplyTensorData<U>(
-            At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
-            left_dim, right_dim, common_dim);
+            At.GetData(), Bt.GetData(), C.GetData(), left_indices,
+            right_indices, left_dim, right_dim, common_dim);
 
         return C;
     }
