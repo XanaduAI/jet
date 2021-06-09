@@ -29,7 +29,7 @@ __all__ = [
     "S",
     "T",
     "SX",
-    "CNOT",
+    "CX",
     "CY",
     "CZ",
     "SWAP",
@@ -254,7 +254,7 @@ class Hadamard(Gate):
 
 class PauliX(Gate):
     def __init__(self, **kwargs):
-        """Constructs a PauliX gate."""
+        """Constructs a Pauli-X gate."""
         super().__init__(name="PauliX", num_wires=1, **kwargs)
 
     @lru_cache
@@ -265,7 +265,7 @@ class PauliX(Gate):
 
 class PauliY(Gate):
     def __init__(self, **kwargs):
-        """Constructs a PauliY gate."""
+        """Constructs a Pauli-Y gate."""
         super().__init__(name="PauliY", num_wires=1, **kwargs)
 
     @lru_cache
@@ -276,7 +276,7 @@ class PauliY(Gate):
 
 class PauliZ(Gate):
     def __init__(self, **kwargs):
-        """Constructs a PauliZ gate."""
+        """Constructs a Pauli-Z gate."""
         super().__init__(name="PauliZ", num_wires=1, **kwargs)
 
     @lru_cache
@@ -350,10 +350,10 @@ class CPhaseShift(Gate):
         return np.array(mat)
 
 
-class CNOT(Gate):
+class CX(Gate):
     def __init__(self, **kwargs):
-        """Constructs a CNOT gate."""
-        super().__init__(name="CNOT", num_wires=2, **kwargs)
+        """Constructs a controlled-X gate."""
+        super().__init__(name="CX", num_wires=2, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
