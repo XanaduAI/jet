@@ -789,5 +789,4 @@ inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
     return out;
 }
 
-
 }; // namespace Jet
