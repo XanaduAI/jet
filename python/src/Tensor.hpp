@@ -43,7 +43,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
 
         // Static functions
         // ---------------------------------------------------------------------
-
+/*
         .def_static("add_tensors", &tensor_t::AddTensors, py::arg("A"),
                     py::arg("B"), "Alias for add_tensors().")
 
@@ -56,7 +56,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
         .def_static("slice_index", &tensor_t::SliceIndex, py::arg("tensor"),
                     py::arg("index"), py::arg("value"),
                     "Alias for slice_index().")
-
+*/
         // Constructors
         // ---------------------------------------------------------------------
 
@@ -232,7 +232,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
     // Free functions
     // -------------------------------------------------------------------------
 
-    m.def("conj", Jet::Conj<T>, py::arg("tensor"), R"(
+    m.def("conj", Jet::Tensor<>::Conj<T>, py::arg("tensor"), R"(
             Returns the conjugate of the given tensor object.
 
             Args:
@@ -242,7 +242,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
                 Conjugate of the given tensor object.
           )");
 
-    m.def("add_tensors", Jet::AddTensors<T>, py::arg("A"), py::arg("B"),
+    m.def("add_tensors", Jet::Tensor<>::AddTensors<T>, py::arg("A"), py::arg("B"),
           R"(
             Adds two tensor objects with the same index sets. The resulting
             tensor will have the same indices as the first argument (i.e., `A`).
@@ -269,7 +269,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
                 Tensor object representing the element-wise sum of the tensors.
           )");
 
-    m.def("contract_tensors", Jet::ContractTensors<T>, py::arg("A"),
+    m.def("contract_tensors", Jet::Tensor<>::ContractTensors<T>, py::arg("A"),
           py::arg("B"), R"(
             Contracts two tensor objects over the intersection of their index
             sets. The resulting tensor will be formed with indices given by the
@@ -299,7 +299,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
                 Tensor object representing the contraction of the tensors.
           )");
 
-    m.def("reshape", Jet::Reshape<T>, py::arg("tensor"), py::arg("shape"), R"(
+    m.def("reshape", Jet::Tensor<>::Reshape<T>, py::arg("tensor"), py::arg("shape"), R"(
             Reshapes a tensor object to the given dimensions.
 
             Args:
@@ -310,7 +310,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
                 Reshaped copy of the given tensor object.
           )");
 
-    m.def("slice_index", Jet::SliceIndex<T>, py::arg("tensor"),
+    m.def("slice_index", Jet::Tensor<>::SliceIndex<T>, py::arg("tensor"),
           py::arg("index"), py::arg("value"), R"(
             Slices a tensor object index. The result is a tensor object whose
             indices and data are a subset of the provided tensor object, sliced
@@ -342,7 +342,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
 
     m.def("transpose",
           py::overload_cast<const tensor_t &, const std::vector<std::string> &>(
-              Jet::Transpose<T>),
+              Jet::Tensor<>::Transpose<T>),
           py::arg("tensor"), py::arg("indices"), R"(
             Transposes the indices of a tensor object.
 
@@ -356,7 +356,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
 
     m.def("transpose",
           py::overload_cast<const tensor_t &, const std::vector<size_t> &>(
-              Jet::Transpose<T>),
+              Jet::Tensor<>::Transpose<T>),
           py::arg("tensor"), py::arg("ordering"), R"(
             Transposes the indices of a tensor object.
 
