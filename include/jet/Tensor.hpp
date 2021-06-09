@@ -1,19 +1,5 @@
 #pragma once
 
-/**
- * Cache friendly size (for complex<float>) to move things around.
- */
-#ifndef MAX_RIGHT_DIM
-#define MAX_RIGHT_DIM 1024
-#endif
-
-/**
- * Smallest size of cache friendly blocks (for complex<float>).
- */
-#ifndef MIN_RIGHT_DIM
-#define MIN_RIGHT_DIM 32
-#endif
-
 #include <complex>
 #include <random>
 #include <string>
@@ -570,8 +556,8 @@ template <class T = std::complex<float>> class Tensor {
      * @param new_indices New `%Tensor` index label ordering.
      * @return Transposed `%Tensor` object.
      */
-    template <class U = T, const size_t BLOCKSIZE = 1024,
-              const size_t MINSIZE = 32>
+    template <class U = T, size_t BLOCKSIZE = 1024,
+              size_t MINSIZE = 32>
     static Tensor<U> Transpose(const Tensor<U> &A,
                                const std::vector<std::string> &new_indices)
     {
