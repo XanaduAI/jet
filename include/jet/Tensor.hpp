@@ -382,7 +382,7 @@ template <class T = std::complex<float>> class Tensor {
      * @warning The program is aborted if the index sets of the given `%Tensor`
      *          objects to not match.
      *
-     * @tparam T `%Tensor` data type.
+     * @tparam U `%Tensor` data type.
      * @param A tensor on the LHS of the addition.
      * @param B tensor on the RHS of the addition.
      * @return `%Tensor` object representing the element-wise sum of the given
@@ -444,7 +444,7 @@ template <class T = std::complex<float>> class Tensor {
      * @warning The program is aborted if the index sets of the given `%Tensor`
      *          objects to not match.
      *
-     * @param Other tensor on the RHS of the addition.
+     * @param other Tensor on the RHS of the addition.
      * @return `%Tensor` object representing the element-wise sum of the given
      *         tensors.
      */
@@ -475,7 +475,7 @@ template <class T = std::complex<float>> class Tensor {
     *     SliceIndex(A, "j", 2);  // [2x1] tensor, slice 2
     * \endcode
     *
-    * @tparam T `%Tensor` data type.
+    * @tparam U `%Tensor` data type.
     * @param tensor `%Tensor` object to slice.
     * @param index `%Tensor` index label on which to slice.
     * @param value Value to slice the `%Tensor` index on.
@@ -516,6 +516,12 @@ template <class T = std::complex<float>> class Tensor {
         return tensor_sliced;
     }
 
+    /**
+     * @brief Slices current `%Tensor` object index.
+     *
+     * @see SliceIndex(const Tensor<U> &tensor, const std::string &index, size_t
+     * value)
+     */
     Tensor<T> SliceIndex(const std::string &index, size_t value) const
     {
         return SliceIndex<T>(*this, index, value);
@@ -524,7 +530,7 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Reshapes a `%Tensor` object to the given dimensions.
      *
-     * @tparam T `%Tensor` data type.
+     * @tparam U `%Tensor` data type.
      * @param old_tensor Original tensor object to reshape.
      * @param new_shape Index dimensionality for new tensor object.
      * @return Reshaped copy of the `%Tensor` object.
@@ -543,6 +549,12 @@ template <class T = std::complex<float>> class Tensor {
         return new_tensor;
     }
 
+    /**
+     * @brief Reshapes `%Tensor` object to the given dimensions.
+     *
+     * @see Reshape(const Tensor<U> &old_tensor, const std::vector<size_t>
+     * &new_shape)
+     */
     Tensor<T> Reshape(const std::vector<size_t> &new_shape) const
     {
         return Reshape<T>(*this, new_shape);
@@ -551,13 +563,12 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Transposes the indices of a `%Tensor` object to a new ordering.
      *
-     * @tparam T `%Tensor` data type.
+     * @tparam U `%Tensor` data type.
      * @param A Reference `%Tensor` object.
      * @param new_indices New `%Tensor` index label ordering.
      * @return Transposed `%Tensor` object.
      */
-    template <class U = T, size_t BLOCKSIZE = 1024,
-              size_t MINSIZE = 32>
+    template <class U = T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
     static Tensor<U> Transpose(const Tensor<U> &A,
                                const std::vector<std::string> &new_indices)
     {
@@ -599,7 +610,7 @@ template <class T = std::complex<float>> class Tensor {
      * @warning The program is aborted if the number of elements in the new
      * ordering does match the number of indices in the tensor.
      *
-     * @tparam T `%Tensor` data type.
+     * @tparam U `%Tensor` data type.
      * @param A Reference `%Tensor` object.
      * @param new_ordering New `%Tensor` index permutation.
      * @return Transposed `%Tensor` object.
@@ -622,11 +633,22 @@ template <class T = std::complex<float>> class Tensor {
 
         return Transpose<U, BLOCKSIZE, MINSIZE>(A, new_indices);
     }
-
+    /**
+     * @brief Transposes the indices of the `%Tensor` object to a new ordering.
+     *
+     * @see Transpose(const Tensor<U> &A, const std::vector<size_t>
+     * &new_ordering)
+     */
     Tensor<T> Transpose(const std::vector<size_t> &new_ordering) const
     {
         return Transpose<T>(*this, new_ordering);
     }
+    /**
+     * @brief Transposes the indices of the `%Tensor` object to a new ordering.
+     *
+     * @see Transpose(const Tensor<U> &A, const std::vector<std::string>
+     * &new_indices)
+     */
     Tensor<T> Transpose(const std::vector<std::string> &new_indices) const
     {
         return Transpose<T>(*this, new_indices);
@@ -634,7 +656,7 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Returns the conjugate of a `%Tensor` object.
      *
-     * @tparam T `%Tensor` data type.
+     * @tparam U `%Tensor` data type.
      * @param A Reference `%Tensor` object.
      * @return `%Tensor` object representing the conjugate of `A`.
      */
@@ -647,6 +669,11 @@ template <class T = std::complex<float>> class Tensor {
         return A_conj;
     }
 
+    /**
+     * @brief Returns the conjugate of the current `%Tensor` object.
+     *
+     * @see Conj(const Tensor<U> &A)
+     */
     Tensor<T> Conj() const { return Conj<T>(*this); }
 
     /**
@@ -668,7 +695,7 @@ template <class T = std::complex<float>> class Tensor {
      *
      * @see TODO: Link to documentation
      *
-     * @tparam T `%Tensor` data type.
+     * @tparam U `%Tensor` data type.
      * @param A tensor on the LHS of the contraction.
      * @param B tensor on the RHS of the contraction.
      * @return `%Tensor` object representing the contraction of the tensors.
@@ -718,7 +745,12 @@ template <class T = std::complex<float>> class Tensor {
 
         return C;
     }
-
+    /**
+     * @brief Contracts the current `%Tensor` object with other over the
+     * intersection of their index sets.
+     *
+     * @see ContractTensors(const Tensor<U> &A, const Tensor<U> &B)
+     */
     Tensor<T> ContractTensors(const Tensor<T> &other) const
     {
         return ContractTensors<T>(*this, other);
