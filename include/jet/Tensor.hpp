@@ -1,5 +1,19 @@
 #pragma once
 
+/**
+ * Cache friendly size (for complex<float>) to move things around.
+ */
+#ifndef MAX_RIGHT_DIM
+#define MAX_RIGHT_DIM 1024
+#endif
+
+/**
+ * Smallest size of cache friendly blocks (for complex<float>).
+ */
+#ifndef MIN_RIGHT_DIM
+#define MIN_RIGHT_DIM 32
+#endif
+
 #include <complex>
 #include <random>
 #include <string>
@@ -95,7 +109,7 @@ template <class T = std::complex<float>> class Tensor {
      *             `%Tensor` object.
      */
     Tensor(const std::vector<std::string> &indices,
-           const std::vector<std::size_t> &shape, const std::vector<T> &data)
+           const std::vector<size_t> &shape, const std::vector<T> &data)
         : Tensor(indices, shape)
     {
         Utilities::FastCopy(data, data_);
@@ -737,24 +751,5 @@ template <class T = std::complex<float>> class Tensor {
     /// Complex data values in row-major order.
     std::vector<T> data_;
 };
-
-/**
- * @brief Streams a tensor to an output stream.
- *
- * @param out Output stream to be modified.
- * @param tensor Tensor to be streamed.
- * @return Reference to the given output stream.
- */
-template <class T>
-inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
-{
-    using namespace Jet::Utilities;
-
-    out << "Size=" << tensor.GetSize() << std::endl;
-    out << "Indices=" << tensor.GetIndices() << std::endl;
-    out << "Data=" << tensor.GetData() << std::endl;
-
-    return out;
-}
 
 }; // namespace Jet

@@ -3,20 +3,20 @@
 ##########################
 cmake_minimum_required(VERSION 3.14)
 set(JET_LOGO "
-      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄
-      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀
-      ██     ██             ██
-      ██     ███████        ██
-      ██     ██             ██
-█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██
- ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀
+      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄ 
+      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀ 
+      ██     ██             ██    
+      ██     ███████        ██    
+      ██     ██             ██    
+█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██    
+ ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀    
 ")
 message(${JET_LOGO})
 
 project("Jet"
         VERSION 0.1.0
         DESCRIPTION "A task-based tensor network contraction engine"
-        LANGUAGES CXX
+        LANGUAGES CXX C
 )
 
 ##########################
@@ -113,7 +113,7 @@ if(ENABLE_HPTT)
   FetchContent_Declare(
     hptt
     GIT_REPOSITORY  https://github.com/springer13/hptt
-    GIT_TAG         v1.0.5
+    GIT_TAG         v1.0.5 
   )
   FetchContent_MakeAvailable(hptt)
 endif()
@@ -180,7 +180,7 @@ endif()
 
 add_library(Jet INTERFACE)
 target_include_directories(Jet INTERFACE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
     ${BLAS_INCLUDE_DIRS}
 )
 
@@ -190,17 +190,21 @@ target_link_libraries(Jet INTERFACE ${BLAS_LIBRARIES} Taskflow)
 ## Compile options
 ##########################
 
-if (ENABLE_OPENMP AND OPENMP_FOUND)
-    target_link_libraries(Jet INTERFACE OpenMP::OpenMP_CXX)
+if(ENABLE_OPENMP AND OPENMP_FOUND)
+  target_link_libraries(Jet INTERFACE OpenMP::OpenMP_CXX)
 elseif (ENABLE_OPENMP AND NOT OPENMP_FOUND)
-    message(FATAL_ERROR "\nOpenMP is enabled but could not be found")
+  message(FATAL_ERROR "\nOpenMP is enabled but could not be found")
 endif()
+
 if(ENABLE_SANITIZERS)
-    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-g;-fsanitize=address,undefined>)
+  target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-g;-fsanitize=address,undefined>)
+  target_link_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address,undefined>)
 endif()
+
 if(ENABLE_WARNINGS)
-    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
+  target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
 endif()
+
 if(ENABLE_NATIVE)
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-march=native>)
 endif()
