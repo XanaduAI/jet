@@ -119,7 +119,7 @@ def test_add_tensors():
     """Tests that a pair of tensors can be added."""
     tensor_1 = jet.Tensor(shape=[2, 3], indices=["i", "j"], data=range(6))
     tensor_2 = jet.Tensor(shape=[2, 3], indices=["i", "j"], data=range(0, 12, 2))
-    have_tensor = jet.add_tensors(tensor_1, tensor_2)
+    have_tensor = tensor_1.add_tensors(tensor_2)
     want_tensor = jet.Tensor(shape=[2, 3], indices=["i", "j"], data=range(0, 18, 3))
     assert have_tensor == want_tensor
 
@@ -127,7 +127,7 @@ def test_add_tensors():
 def test_conj():
     """Tests that the conjugate of a tensor can be taken."""
     tensor = jet.Tensor(shape=[1, 2], indices=["i", "j"], data=[1, 2 + 3j])
-    have_tensor = jet.conj(tensor)
+    have_tensor = tensor.conj()
     want_tensor = jet.Tensor(shape=[1, 2], indices=["i", "j"], data=[1, 2 - 3j])
     assert have_tensor == want_tensor
 
@@ -136,7 +136,7 @@ def test_contract_tensors():
     """Tests that a pair of tensors can be contracted."""
     tensor_1 = jet.Tensor(shape=[2, 3, 4], indices=["i", "j", "k"])
     tensor_2 = jet.Tensor(shape=[3, 4, 1], indices=["j", "k", "l"])
-    have_tensor = jet.contract_tensors(tensor_1, tensor_2)
+    have_tensor = tensor_1.contract_tensors(tensor_2)
     want_tensor = jet.Tensor(shape=[2, 1], indices=["i", "l"])
     assert have_tensor == want_tensor
 
@@ -144,7 +144,7 @@ def test_contract_tensors():
 def test_slice_index():
     """Tests that a tensor can be sliced."""
     tensor = jet.Tensor(shape=[2, 3, 4], indices=["i", "j", "k"])
-    have_tensor = jet.slice_index(tensor, "k", 3)
+    have_tensor = tensor.slice_index("k", 3)
     want_tensor = jet.Tensor(shape=[2, 3], indices=["i", "j"])
     assert have_tensor == want_tensor
 
@@ -152,7 +152,7 @@ def test_slice_index():
 def test_reshape():
     """Tests that a tensor can be reshaped."""
     tensor = jet.Tensor(shape=[3, 4], indices=["i", "j"])
-    have_tensor = jet.reshape(tensor, [2, 6])
+    have_tensor = tensor.reshape([2, 6])
     want_tensor = jet.Tensor(shape=[2, 6])
     assert have_tensor == want_tensor
 
@@ -161,13 +161,13 @@ class TestTranspose:
     def test_transpose_by_index(self):
         """Tests that a tensor can be transposed by index."""
         tensor = jet.Tensor(shape=[2, 3, 4], indices=["i", "j", "k"])
-        have_tensor = jet.transpose(tensor, ["j", "k", "i"])
+        have_tensor = tensor.transpose(["j", "k", "i"])
         want_tensor = jet.Tensor(shape=[3, 4, 2], indices=["j", "k", "i"])
         assert have_tensor == want_tensor
 
     def test_transpose_by_order(self):
         """Tests that a tensor can be transposed by order."""
         tensor = jet.Tensor(shape=[2, 3, 4], indices=["i", "j", "k"])
-        have_tensor = jet.transpose(tensor, [1, 2, 0])
+        have_tensor = tensor.transpose([1, 2, 0])
         want_tensor = jet.Tensor(shape=[3, 4, 2], indices=["j", "k", "i"])
         assert have_tensor == want_tensor
