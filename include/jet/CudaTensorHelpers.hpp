@@ -42,7 +42,7 @@ inline void ThrowCuTensorError(cutensorStatus_t &err)
 std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
 {
     std::vector<int64_t> strides(std::max(extents.size(), 1UL), 1);
-    for (int64_t i = 1; i < static_cast<int64_t>(extents.size()); ++i) {
+    for (size_t i = 1; i < extents.size(); ++i) {
         strides[i] = static_cast<int64_t>(extents[i - 1]) * strides[i - 1];
     }
     return strides;
