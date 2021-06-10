@@ -330,28 +330,28 @@ class TestGate:
         # Control gates
         ############################################################################################
         pytest.param(
-            jet.CNOT(),
+            jet.CX(),
             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[1, 0, 0, 0]),
             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[1, 0, 0, 0]),
-            id="CNOT|00>",
+            id="CX|00>",
         ),
         pytest.param(
-            jet.CNOT(),
+            jet.CX(),
             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 1, 0, 0]),
             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 1, 0, 0]),
-            id="CNOT|01>",
+            id="CX|01>",
         ),
         pytest.param(
-            jet.CNOT(),
+            jet.CX(),
             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 1, 0]),
             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 0, 1]),
-            id="CNOT|10>",
+            id="CX|10>",
         ),
         pytest.param(
-            jet.CNOT(),
+            jet.CX(),
             jet.Tensor(indices=["2", "3"], shape=[2, 2], data=[0, 0, 0, 1]),
             jet.Tensor(indices=["0", "1"], shape=[2, 2], data=[0, 0, 1, 0]),
-            id="CNOT|11>",
+            id="CX|11>",
         ),
         pytest.param(
             jet.CY(),
