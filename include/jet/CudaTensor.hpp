@@ -63,7 +63,7 @@ static std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
  * @brief Convertor between row-major and column-major indices.
  *
  * @param row_order_linear_index Lexicographic ordered data index.
- * @param sizes The size of each indepedent dimension of the tensor data.
+ * @param sizes The size of each independent dimension of the tensor data.
  * @return size_t Single index mapped to column-major (colexicographic) form.
  */
 size_t RowMajToColMaj(size_t row_order_linear_index,
