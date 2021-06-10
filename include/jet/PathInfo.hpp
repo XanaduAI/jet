@@ -269,7 +269,9 @@ class PathInfo {
         const auto step_3_contracted_indices =
             VectorIntersection(step_1.tensor_indices, step_2.tensor_indices);
         const auto step_3_node_indices =
-            VectorDisjunctiveUnion(step_1.node_indices, step_2.node_indices);
+	  VectorSubtraction(
+            VectorConcatenation(step_1.node_indices, step_2.node_indices),
+            step_3_contracted_indices);
         const auto step_3_name = step_3_node_indices.size()
                                      ? JoinStringVector(step_3_node_indices)
                                      : "_";
