@@ -583,6 +583,14 @@ template <class T = cuComplex> class CudaTensor {
         return SliceIndex<T>(*this, index_str, index_value);
     }
 
+    /**
+     * @brief Return GPU data as host-side data vector.
+     *
+     * @warn This operation copies data from the GPU to the CPU, and will slow
+     * down any program execution if used.
+     *
+     * @return Vector containing the GPU data.
+     */
     std::vector<std::complex<scalar_type_t_precision>> GetHostDataVector() const
     {
         std::vector<std::complex<scalar_type_t_precision>> host_data_buffer(
