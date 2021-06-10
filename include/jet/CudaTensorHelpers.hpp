@@ -6,32 +6,23 @@
 #include "Abort.hpp"
 #include "Utilities.hpp"
 
+
 namespace Jet {
 namespace CudaTensorHelpers {
 
 /**
- * @brief Throws Exception from CUDA error codes
+ * @brief Macro that throws Exception from CUDA failure error codes.
  *
- * @param err CUDA function error-code
+ * @param err CUDA function error-code.
  */
-inline void ThrowCudaError(cudaError_t &err)
-{
-    if (err != cudaSuccess) {
-        throw Jet::Exception(std::string(cudaGetErrorString(err)));
-    }
-}
+#define JET_CUDA_IS_SUCCESS(err) JET_ABORT_IF_NOT(err==cudaSuccess, cudaGetErrorString(err))
 
 /**
- * @brief Throws Exception from CuTensor error codes
+ * @brief Macro that throws Exception from CuTensor failure error codes.
  *
- * @param err CuTensor function error-code
+ * @param err CuTensor function error-code.
  */
-inline void ThrowCuTensorError(cutensorStatus_t &err)
-{
-    if (err != CUTENSOR_STATUS_SUCCESS) {
-        throw Jet::Exception(std::string(cutensorGetErrorString(err)));
-    }
-}
+#define JET_CUTENSOR_IS_SUCCESS(err) JET_ABORT_IF_NOT(err==CUTENSOR_STATUS_SUCCESS, cutensorGetErrorString(err))
 
 /**
  * @brief Calculate the strides for each dimension for the CUDA array.
@@ -41,10 +32,12 @@ inline void ThrowCuTensorError(cutensorStatus_t &err)
  */
 std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
 {
+    using namespace Jet::Utilities;
+
     std::vector<int64_t> strides(std::max(extents.size(), 1UL), 1);
-    for (size_t i = 1; i < extents.size(); ++i) {
-        strides[i] = static_cast<int64_t>(extents[i - 1]) * strides[i - 1];
-    }
+    std::exclusive_scan(extents.begin(), extents.end(), strides.begin(),
+                    1, std::multiplies<int64_t>{});
+
     return strides;
 }
 
@@ -64,10 +57,10 @@ size_t RowMajToColMaj(size_t row_order_linear_index,
     auto strides = GetStrides(sizes);
 
     size_t column_order_linear_index = 0;
-    int d = sizes.size();
-    for (int k = 0; k < d; k++) {
+    for (size_t k = 0; k < sizes.size(); k++) {
         column_order_linear_index += unraveled_index[k] * strides[k];
     }
+    
     return column_order_linear_index;
 }
 
