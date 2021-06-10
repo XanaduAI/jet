@@ -3,13 +3,13 @@
 ##########################
 cmake_minimum_required(VERSION 3.14)
 set(JET_LOGO "
-      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄ 
-      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀ 
-      ██     ██             ██    
-      ██     ███████        ██    
-      ██     ██             ██    
-█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██    
- ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀    
+      ▄▄     ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄
+      ██     ██▀▀▀▀▀▀    ▀▀▀██▀▀▀
+      ██     ██             ██
+      ██     ███████        ██
+      ██     ██             ██
+█▄▄▄▄▄██     ██▄▄▄▄▄▄       ██
+ ▀▀▀▀▀       ▀▀▀▀▀▀▀▀       ▀▀
 ")
 message(${JET_LOGO})
 
@@ -29,7 +29,6 @@ option(ENABLE_OPENMP "Enable OpenMP if supported" OFF)
 option(ENABLE_NATIVE "Enable native build tuning" OFF)
 option(ENABLE_IPO "Enable interprocedural/link-time optimisation" OFF)
 option(ENABLE_CUTENSOR "Build with CuTensor GPU support" OFF)
-option(ENABLE_FPIC "Build with relocatable object support" OFF)
 
 # Build options
 option(BUILD_PYTHON "Generate Python bindings" OFF)
@@ -211,10 +210,6 @@ endif()
 if(ENABLE_IPO)
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-flto>)
 endif()
-if (ENABLE_FPIC)
-    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fPIC>)
-endif()
-
 if(MKL_FOUND)
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DENABLE_MKL>)
 endif()
