@@ -145,14 +145,6 @@ template <class T = cuComplex> class CudaTensor {
     std::vector<size_t>
     ConvertIndicesToAxes(const std::vector<std::string> &indices) const
     {
-        using namespace Utilities;
-        std::cout << "ConvertIndicesToAxes" << std::endl;
-        std::cout << "indices = " << indices << std::endl;
-        for (auto i : index_to_axes_) {
-            std::cout << "i.first = " << i.first << std::endl;
-            std::cout << "i.second = " << i.second << std::endl;
-        }
-
         std::vector<size_t> axes(indices.size());
         for (size_t i = 0; i < indices.size(); i++) {
             axes[i] = index_to_axes_.at(indices[i]);
