@@ -44,14 +44,6 @@ TEMPLATE_TEST_CASE("CudaTensor::CudaTensor", "[CudaTensor]", c64_dev, c128_dev)
                                   std::vector<std::string>, std::vector<size_t>,
                                   std::vector<TestType>>::value);
     }
-    SECTION("Require fail: Tensor<TestType> {std::vector<size_t>, "
-            "std::vector<std::string>, std::vector<TestType>}")
-    {
-        REQUIRE_FALSE(
-            std::is_constructible<CudaTensor<TestType>, std::vector<size_t>,
-                                  std::vector<std::string>,
-                                  std::vector<TestType>>::value);
-    }
 }
 
 TEST_CASE("CudaTensor::GetShape", "[CudaTensor]")
@@ -154,6 +146,19 @@ TEST_CASE("CudaTensor::GetData", "[CudaTensor]")
         tensor.CopyGpuDataToHost(
             reinterpret_cast<c64_dev *>(host_data_buffer.data()));
         CHECK(host_data_buffer == host_data_complex);
+    }
+    SECTION("CudaTensor::GetHostDataVector(), Data: default")
+    {
+        CudaTensor tensor;
+        CHECK(tensor.GetHostDataVector() == std::vector<c64_host>{{0, 0}});
+    }
+    SECTION("CudaTensor::GetHostDataVector(), Size: {2,3}, Indices: {x, y}, Data: [0.5+0.25i]*6")
+    {
+        std::vector<c64_dev> data(6, c64_dev{.x = 0.5, .y = 0.25});
+        std::vector<c64_host> host_data(6, {0.5, 0.25});
+
+        CudaTensor tensor({"x", "y"}, {2, 3}, data.data());
+        CHECK(tensor.GetHostDataVector() == host_data);
     }
 }
 

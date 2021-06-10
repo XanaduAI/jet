@@ -564,6 +564,15 @@ template <class T = cuComplex> class CudaTensor {
         return CudaTensor<U>();
     }
 
+    std::vector<std::complex<scalar_type_t_precision>> GetHostDataVector() const
+    {
+        std::vector<std::complex<scalar_type_t_precision>> host_data_buffer(GetSize());
+        auto ptr = reinterpret_cast<T *>(host_data_buffer.data());
+        CopyGpuDataToHost(ptr);
+        return host_data_buffer;
+    }
+    
+
   private:
     T *data_;
 
