@@ -216,7 +216,7 @@ template <class T = cuComplex> class CudaTensor {
 
     const std::vector<size_t> &GetShape() const { return shape_; }
 
-    size_t GetSize()
+    size_t GetSize() const
     {
         size_t total_dim = 1;
         for (size_t i = 0; i < shape_.size(); ++i)
@@ -231,7 +231,7 @@ template <class T = cuComplex> class CudaTensor {
         JET_CUDA_IS_SUCCESS(retcode);
     }
 
-    inline void CopyGpuDataToHost(T *host_tensor)
+    inline void CopyGpuDataToHost(T *host_tensor) const
     {
         cudaError_t retcode = cudaMemcpy(
             host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost);
@@ -268,7 +268,7 @@ template <class T = cuComplex> class CudaTensor {
         return index_to_dimension_;
     }
 
-    explicit operator Tensor<std::complex<scalar_type_t_precision>>()
+    explicit operator Tensor<std::complex<scalar_type_t_precision>>() const
     {
         std::vector<std::complex<scalar_type_t_precision>> host_data(
             GetSize(), {0.0, 0.0});
