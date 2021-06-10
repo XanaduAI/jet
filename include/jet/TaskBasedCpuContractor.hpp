@@ -250,7 +250,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
         reduced_ = true;
 
         auto reduce_func = [](const Tensor &a, const Tensor &b) {
-            return a.AddTensors(b);
+            return a.AddTensor(b);
         };
 
         auto reduce_task = taskflow_

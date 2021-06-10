@@ -382,10 +382,10 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c64_t, c128_t)
 
         Tensor<TestType> con_si_rij =
             Tensor<TestType>::ContractTensors(s_i, r_ij);
-        Tensor<TestType> con_si_rji = s_i.ContractTensors(r_ji);
+        Tensor<TestType> con_si_rji = s_i.ContractWithTensor(r_ji);
         Tensor<TestType> con_rij_si =
             Tensor<TestType>::ContractTensors(r_ij, s_i);
-        Tensor<TestType> con_rji_si = r_ji.ContractTensors(s_i);
+        Tensor<TestType> con_rji_si = r_ji.ContractWithTensor(s_i);
 
         Tensor<TestType> expected_rij_si(
             {"j"}, {2},
@@ -483,7 +483,7 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c64_t, c128_t)
         Tensor<TestType> tensor1(t_indices1, t_shape1, t_data1);
         Tensor<TestType> tensor2(t_indices2, t_shape2, t_data2);
 
-        Tensor<TestType> tensor3 = tensor1.ContractTensors(tensor2);
+        Tensor<TestType> tensor3 = tensor1.ContractWithTensor(tensor2);
         Tensor<TestType> tensor4({"b"}, {2}, t_data_expect);
 
         CHECK(tensor3 == tensor4);
@@ -505,7 +505,7 @@ TEMPLATE_TEST_CASE("ContractTensors", "[Tensor]", c64_t, c128_t)
         Tensor<TestType> tensor1(t_indices1, t_shape1, t_data1);
         Tensor<TestType> tensor2(t_indices2, t_shape2, t_data2);
 
-        Tensor<TestType> tensor3 = tensor1.ContractTensors(tensor2);
+        Tensor<TestType> tensor3 = tensor1.ContractWithTensor(tensor2);
         Tensor<TestType> tensor4(t_indices3, t_shape3,
                                  {TestType(2.25, 3.0), TestType(2.25, 3.0),
                                   TestType(2.25, 3.0), TestType(2.25, 3.0)});
@@ -612,7 +612,7 @@ TEST_CASE("AddTensors", "[Tensor]")
         Tensor lhs({"i"}, {3}, {1, {0, 2}, {3, 0}});
         Tensor rhs({"i"}, {3}, {1, {0, 2}, {0, 3}});
 
-        const Tensor have_tensor = lhs.AddTensors(rhs);
+        const Tensor have_tensor = lhs.AddTensor(rhs);
         const Tensor want_tensor({"i"}, {3}, {2, {0, 4}, {3, 3}});
         CHECK(have_tensor == want_tensor);
     }
@@ -622,7 +622,7 @@ TEST_CASE("AddTensors", "[Tensor]")
         Tensor lhs({"i", "j"}, {2, 2}, {1, 2, 3, 4});
         Tensor rhs({"i", "j"}, {2, 2}, {{0, 1}, {0, 2}, {0, 3}, {0, 4}});
 
-        const Tensor have_tensor = lhs.AddTensors(rhs);
+        const Tensor have_tensor = lhs.AddTensor(rhs);
         const Tensor want_tensor({"i", "j"}, {2, 2},
                                  {{1, 1}, {2, 2}, {3, 3}, {4, 4}});
         CHECK(have_tensor == want_tensor);
