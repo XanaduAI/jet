@@ -8,7 +8,7 @@ def find_number_of_modes(xir):
     """Helper function to find the number of modes in an XIR program"""
     wires = set()
     for stmt in xir.statements:
-        wires.add(stmt.wires)
+        wires |= set(stmt.wires)
 
     return len(wires)
 
