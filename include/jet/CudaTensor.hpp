@@ -367,7 +367,7 @@ template <class T = cuComplex> class CudaTensor {
         const auto &c_indices = c_tensor.GetIndices();
 
         std::unordered_map<std::string, int> index_to_mode_map;
-        std::unordered_map<int, int64_t> mode_to_dimension_map;
+        std::unordered_map<size_t, int64_t> mode_to_dimension_map;
 
         for (size_t i = 0; i < a_indices.size(); i++) {
             if (!index_to_mode_map.count(a_indices[i])) {
@@ -386,9 +386,9 @@ template <class T = cuComplex> class CudaTensor {
             }
         }
 
-        std::vector<int> a_modes(a_indices.size());
-        std::vector<int> b_modes(b_indices.size());
-        std::vector<int> c_modes(c_indices.size());
+        std::vector<int32_t> a_modes(a_indices.size());
+        std::vector<int32_t> b_modes(b_indices.size());
+        std::vector<int32_t> c_modes(c_indices.size());
 
         for (size_t i = 0; i < a_indices.size(); i++) {
             a_modes[i] = index_to_mode_map[a_indices[i]];
@@ -400,15 +400,20 @@ template <class T = cuComplex> class CudaTensor {
             c_modes[i] = index_to_mode_map[c_indices[i]];
         }
 
-        std::vector<int64_t> c_dimensions;
-        for (auto mode : c_modes)
-            c_dimensions.push_back(mode_to_dimension_map[mode]);
-        std::vector<int64_t> a_dimensions;
-        for (auto mode : a_modes)
-            a_dimensions.push_back(mode_to_dimension_map[mode]);
-        std::vector<int64_t> b_dimensions;
-        for (auto mode : b_modes)
-            b_dimensions.push_back(mode_to_dimension_map[mode]);
+        std::vector<int64_t> c_dimensions(c_modes.size());
+        for(size_t idx=0; idx < c_modes.size(); idx++){
+            c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
+        }
+
+        std::vector<int64_t> a_dimensions(a_modes.size());
+        for(size_t idx=0; idx < a_modes.size(); idx++){
+            a_dimensions[idx] = mode_to_dimension_map[a_modes[idx]];
+        }
+
+        std::vector<int64_t> b_dimensions(b_modes.size());
+        for(size_t idx=0; idx < b_modes.size(); idx++){
+            b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
+        }
 
         size_t a_elements = 1;
         for (auto mode : a_modes)
