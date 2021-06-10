@@ -782,9 +782,9 @@ inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
 {
     using namespace Jet::Utilities;
 
-    out << "Size=" << tensor.GetSize() << std::endl;
-    out << "Indices=" << tensor.GetIndices() << std::endl;
-    out << "Data=" << tensor.GetData() << std::endl;
+    out << "Size = " << tensor.GetSize() << std::endl;
+    out << "Indices = " << tensor.GetIndices() << std::endl;
+    out << "Data = " << tensor.GetData();
 
     return out;
 }
