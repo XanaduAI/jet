@@ -183,7 +183,7 @@ template <class T = cuComplex> class CudaTensor {
     template <class CPUData>
     CudaTensor(const Tensor<CPUData> &other) : data_{nullptr}
     {
-        static_assert(sizeof(CPUData) == sizeof(T));
+        static_assert(sizeof(CPUData) == sizeof(T), "Size of CPU and GPU data types do not match.");
 
         SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
         CopyHostDataToGpu(const_cast<T *>(
@@ -192,7 +192,7 @@ template <class T = cuComplex> class CudaTensor {
 
     template <class CPUData> CudaTensor &operator=(const Tensor<CPUData> &other)
     {
-        static_assert(sizeof(CPUData) == sizeof(T));
+        static_assert(sizeof(CPUData) == sizeof(T), "Size of CPU and GPU data types do not match.");
 
         SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
         CopyHostDataToGpu(const_cast<T *>(
