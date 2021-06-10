@@ -43,7 +43,7 @@ template <class T = cuComplex> class CudaTensor {
         index_to_dimension_.clear();
         index_to_axes_.clear();
 
-        for (std::size_t i = 0; i < shape_.size(); ++i) {
+        for (size_t i = 0; i < shape_.size(); ++i) {
             index_to_dimension_[indices[i]] = shape[i];
             index_to_axes_[indices[i]] = i;
         }
@@ -110,22 +110,22 @@ template <class T = cuComplex> class CudaTensor {
         auto &&right_indices =
             VectorSubtraction(b_tensor.GetIndices(), a_tensor.GetIndices());
 
-        std::size_t left_dim = 1;
-        std::size_t right_dim = 1;
+        size_t left_dim = 1;
+        size_t right_dim = 1;
 
-        for (std::size_t i = 0; i < left_indices.size(); ++i) {
+        for (size_t i = 0; i < left_indices.size(); ++i) {
             left_dim *= a_tensor.GetIndexToDimension().at(left_indices[i]);
         }
-        for (std::size_t i = 0; i < right_indices.size(); ++i) {
+        for (size_t i = 0; i < right_indices.size(); ++i) {
             right_dim *= b_tensor.GetIndexToDimension().at(right_indices[i]);
         }
 
         auto &&c_indices = VectorUnion(left_indices, right_indices);
 
-        std::vector<std::size_t> c_shape(c_indices.size());
-        for (std::size_t i = 0; i < left_indices.size(); ++i)
+        std::vector<size_t> c_shape(c_indices.size());
+        for (size_t i = 0; i < left_indices.size(); ++i)
             c_shape[i] = a_tensor.GetIndexToDimension().at(left_indices[i]);
-        for (std::size_t i = 0; i < right_indices.size(); ++i)
+        for (size_t i = 0; i < right_indices.size(); ++i)
             c_shape[i + left_indices.size()] =
                 b_tensor.GetIndexToDimension().at(right_indices[i]);
 
@@ -228,8 +228,8 @@ template <class T = cuComplex> class CudaTensor {
 
     size_t GetSize()
     {
-        std::size_t total_dim = 1;
-        for (std::size_t i = 0; i < shape_.size(); ++i)
+        size_t total_dim = 1;
+        for (size_t i = 0; i < shape_.size(); ++i)
             total_dim *= shape_[i];
         return total_dim;
     }
@@ -562,7 +562,7 @@ template <class T = cuComplex> class CudaTensor {
     template <typename U = T>
     static CudaTensor<U> SliceIndex(const CudaTensor<U> &tens,
                                     const std::string &index_str,
-                                    std::size_t index_value)
+                                    size_t index_value)
     {
         JET_ABORT("SliceIndex is not supported in this class yet");
         // dummy return
