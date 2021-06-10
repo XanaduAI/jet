@@ -16,9 +16,10 @@ using c64_dev = cuComplex;
 using c128_host = std::complex<double>;
 using c64_host = std::complex<float>;
 
+using namespace Jet;
+
 TEMPLATE_TEST_CASE("CudaTensor::CudaTensor", "[CudaTensor]", c64_dev, c128_dev)
 {
-    using namespace Jet;
 
     SECTION("Tensor") { REQUIRE(std::is_constructible<CudaTensor<>>::value); }
     SECTION("Tensor<TestType> {}")
@@ -48,8 +49,6 @@ TEMPLATE_TEST_CASE("CudaTensor::CudaTensor", "[CudaTensor]", c64_dev, c128_dev)
 
 TEST_CASE("CudaTensor::GetShape", "[CudaTensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         CudaTensor tensor;
@@ -77,8 +76,6 @@ TEST_CASE("CudaTensor::GetShape", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::GetSize", "[CudaTensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         CudaTensor tensor;
@@ -105,8 +102,6 @@ TEST_CASE("CudaTensor::GetSize", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::GetIndices", "[CudaTensor]")
 {
-    using namespace Jet;
-
     SECTION("Default size")
     {
         CudaTensor tensor;
@@ -126,8 +121,6 @@ TEST_CASE("CudaTensor::GetIndices", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::GetData", "[CudaTensor]")
 {
-    using namespace Jet;
-
     SECTION("Data: default")
     {
         CudaTensor tensor;
@@ -164,8 +157,6 @@ TEST_CASE("CudaTensor::GetData", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::GetIndexToDimension", "[CudaTensor]")
 {
-    using namespace Jet;
-
     SECTION("Default")
     {
         CudaTensor tensor;
@@ -187,8 +178,6 @@ TEST_CASE("CudaTensor::GetIndexToDimension", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::FillRandom", "[CudaTensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2, 3};
     std::vector<std::string> t_indices{"a", "b", "c"};
     CudaTensor tensor1(t_indices, t_shape);
@@ -230,9 +219,8 @@ TEST_CASE("CudaTensor::FillRandom", "[CudaTensor]")
     }
 }
 
-TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
+TEST_CASE("CudaTensor::CudaTensor(...)", "[CudaTensor]")
 {
-    using namespace Jet;
     SECTION("Default constructor")
     {
         CudaTensor tensor;
@@ -398,7 +386,6 @@ TEST_CASE("CudaTensor instantiation", "[CudaTensor]")
 
 TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]")
 {
-    using namespace Jet;
     SECTION("CudaTensor<cuComplex> to Tensor<complex<float>>")
     {
 
@@ -411,8 +398,6 @@ TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
 {
-    using namespace Jet;
-
     std::vector<std::size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<std::string> t_indices_expected{"a", "z"};
@@ -425,8 +410,6 @@ TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
 
 TEST_CASE("ContractTensors", "[CudaTensor]")
 {
-    using namespace Jet;
-
     SECTION("Contract T0(a,b) and T1(b) -> T2(a)")
     {
         std::vector<std::size_t> t_shape1{2, 2};
@@ -508,8 +491,6 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
     SECTION("Compare CudaTensor and Tensor random tensor contraction")
     {
-        using namespace Jet;
-
         std::vector<std::size_t> t1_shape{2, 3, 5};
         std::vector<std::size_t> t2_shape{5, 3, 4};
         std::vector<std::string> t1_idx{"a", "b", "c"};
