@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Abort.hpp"
+#include "CudaTensorHelpers.hpp"
 #include "Tensor.hpp"
 #include "Utilities.hpp"
 
@@ -19,30 +20,6 @@
 #include <cutensor.h>
 
 namespace {
-/**
- * @brief
- *
- * @param err
- */
-inline void ThrowCudaError(cudaError_t &err)
-{
-    auto s = std::string(cudaGetErrorString(err));
-    if (err != cudaSuccess) {
-        throw Jet::Exception(std::string(cudaGetErrorString(err)));
-    }
-}
-
-/**
- * @brief
- *
- * @param err
- */
-inline void ThrowCuTensorError(cutensorStatus_t &err)
-{
-    if (err != CUTENSOR_STATUS_SUCCESS) {
-        throw Jet::Exception(std::string(cutensorGetErrorString(err)));
-    }
-}
 
 /**
  * @brief Calculate the strides for each dimension for the CUDA array
@@ -295,7 +272,7 @@ template <class T = cuComplex> class CudaTensor {
     {
         cudaError_t retcode = cudaMemcpy(
             data_, host_tensor, sizeof(T) * GetSize(), cudaMemcpyHostToDevice);
-        ThrowCudaError(retcode);
+        CudaTensorHelpers::ThrowCudaError(retcode);
     }
 
     inline void CopyGpuDataToHost(T *host_tensor)
@@ -303,7 +280,7 @@ template <class T = cuComplex> class CudaTensor {
         cudaError_t retcode = cudaMemcpy(
             host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost);
 
-        ThrowCudaError(retcode);
+        CudaTensorHelpers::ThrowCudaError(retcode);
     }
 
     inline void CopyGpuDataToGpu(T *host_tensor)
@@ -311,7 +288,7 @@ template <class T = cuComplex> class CudaTensor {
         cudaError_t retcode =
             cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
                        cudaMemcpyDeviceToDevice);
-        ThrowCudaError(retcode);
+        CudaTensorHelpers::ThrowCudaError(retcode);
     }
 
     inline void AsyncCopyHostDataToGpu(T *host_tensor, cudaStream_t stream = 0)
@@ -319,7 +296,7 @@ template <class T = cuComplex> class CudaTensor {
         cudaError_t retcode =
             cudaMemcpyAsync(data_, host_tensor, sizeof(T) * GetSize(),
                             cudaMemcpyHostToDevice, stream);
-        ThrowCudaError(retcode);
+        CudaTensorHelpers::ThrowCudaError(retcode);
     }
 
     inline void AsyncCopyGpuDataToHost(T *host_tensor, cudaStream_t stream = 0)
@@ -327,7 +304,7 @@ template <class T = cuComplex> class CudaTensor {
         cudaError_t retcode =
             cudaMemcpyAsync(host_tensor, data_, sizeof(T) * GetSize(),
                             cudaMemcpyDeviceToHost, stream);
-        ThrowCudaError(retcode);
+        CudaTensorHelpers::ThrowCudaError(retcode);
     }
 
     const std::unordered_map<std::string, size_t> &GetIndexToDimension() const
@@ -492,37 +469,37 @@ template <class T = cuComplex> class CudaTensor {
         cutensor_err = cutensorInitTensorDescriptor(
             &handle, &a_descriptor, a_modes.size(), a_dimensions.data(),
             a_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         cutensorTensorDescriptor_t b_descriptor;
         cutensor_err = cutensorInitTensorDescriptor(
             &handle, &b_descriptor, b_modes.size(), b_dimensions.data(),
             b_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         cutensorTensorDescriptor_t c_descriptor;
         cutensor_err = cutensorInitTensorDescriptor(
             &handle, &c_descriptor, c_modes.size(), c_dimensions.data(),
             c_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         uint32_t a_alignment_requirement;
         cutensor_err = cutensorGetAlignmentRequirement(
             &handle, a_tensor.GetData(), &a_descriptor,
             &a_alignment_requirement);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         uint32_t b_alignment_requirement;
         cutensor_err = cutensorGetAlignmentRequirement(
             &handle, b_tensor.GetData(), &b_descriptor,
             &b_alignment_requirement);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         uint32_t c_alignment_requirement;
         cutensor_err = cutensorGetAlignmentRequirement(
             &handle, c_tensor.GetData(), &c_descriptor,
             &c_alignment_requirement);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         cutensorContractionDescriptor_t descriptor;
         cutensor_err = cutensorInitContractionDescriptor(
@@ -531,18 +508,18 @@ template <class T = cuComplex> class CudaTensor {
             b_alignment_requirement, &c_descriptor, c_modes.data(),
             c_alignment_requirement, &c_descriptor, c_modes.data(),
             c_alignment_requirement, compute_type);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         cutensorContractionFind_t find;
         cutensor_err =
             cutensorInitContractionFind(&handle, &find, CUTENSOR_ALGO_DEFAULT);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         uint64_t work_size = 0;
         cutensor_err = cutensorContractionGetWorkspace(
             &handle, &descriptor, &find, CUTENSOR_WORKSPACE_RECOMMENDED,
             &work_size);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         void *work = nullptr;
         if (work_size > 0) {
@@ -559,7 +536,7 @@ template <class T = cuComplex> class CudaTensor {
         cutensorContractionPlan_t plan;
         cutensor_err = cutensorInitContractionPlan(&handle, &plan, &descriptor,
                                                    &find, work_size);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
 
         CudaContractionPlan cplan;
         cplan.plan = plan;
@@ -592,7 +569,7 @@ template <class T = cuComplex> class CudaTensor {
             &c_plan.handle, &c_plan.plan, (void *)&alpha, a.GetData(),
             b.GetData(), (void *)&beta, c.GetData(), c.GetData(), c_plan.work,
             c_plan.work_size, stream);
-        ThrowCuTensorError(cutensor_err);
+        CudaTensorHelpers::ThrowCuTensorError(cutensor_err);
     }
 
     template <typename U = T>
