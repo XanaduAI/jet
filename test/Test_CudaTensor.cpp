@@ -145,7 +145,8 @@ TEST_CASE("CudaTensor::GetData", "[CudaTensor]")
         CudaTensor tensor;
         CHECK(tensor.GetHostDataVector() == std::vector<c64_host>{{0, 0}});
     }
-    SECTION("CudaTensor::GetHostDataVector(), Size: {2,3}, Indices: {x, y}, Data: [0.5+0.25i]*6")
+    SECTION("CudaTensor::GetHostDataVector(), Size: {2,3}, Indices: {x, y}, "
+            "Data: [0.5+0.25i]*6")
     {
         std::vector<c64_dev> data(6, c64_dev{.x = 0.5, .y = 0.25});
         std::vector<c64_host> host_data(6, {0.5, 0.25});
@@ -406,6 +407,36 @@ TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
     CHECK(tensor.GetIndices() == t_indices);
     tensor.RenameIndex(1, "z");
     CHECK(tensor.GetIndices() == t_indices_expected);
+}
+
+TEST_CASE("CudaTensor::Reshape", "[CudaTensor]")
+{
+    using namespace Catch::Matchers;
+
+    CudaTensor tensor({"a", "b"}, {2, 3});
+    CHECK_THROWS_AS(tensor.Reshape({3, 2}), Jet::Exception);
+    CHECK_THROWS_AS(CudaTensor<>::Reshape<c64_dev>(tensor, {6, 1}),
+                    Jet::Exception);
+    CHECK_THROWS_WITH(tensor.Reshape({1, 6}),
+                      Contains("Reshape is not supported in this class yet"));
+    CHECK_THROWS_WITH(CudaTensor<>::Reshape<c64_dev>(tensor, {3, 2}),
+                      Contains("Reshape is not supported in this class yet"));
+}
+
+TEST_CASE("CudaTensor::SliceIndex", "[CudaTensor]")
+{
+    using namespace Catch::Matchers;
+
+    CudaTensor tensor({"a", "b"}, {2, 3});
+    CHECK_THROWS_AS(tensor.SliceIndex("a", 0), Jet::Exception);
+    CHECK_THROWS_AS(CudaTensor<>::SliceIndex<c64_dev>(tensor, "a", 1),
+                    Jet::Exception);
+    CHECK_THROWS_WITH(
+        tensor.SliceIndex("b", 0),
+        Contains("SliceIndex is not supported in this class yet"));
+    CHECK_THROWS_WITH(
+        CudaTensor<>::SliceIndex<c64_dev>(tensor, "b", 1),
+        Contains("SliceIndex is not supported in this class yet"));
 }
 
 TEST_CASE("ContractTensors", "[CudaTensor]")

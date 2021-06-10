@@ -183,7 +183,8 @@ template <class T = cuComplex> class CudaTensor {
     template <class CPUData>
     CudaTensor(const Tensor<CPUData> &other) : data_{nullptr}
     {
-        static_assert(sizeof(CPUData) == sizeof(T), "Size of CPU and GPU data types do not match.");
+        static_assert(sizeof(CPUData) == sizeof(T),
+                      "Size of CPU and GPU data types do not match.");
 
         SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
         CopyHostDataToGpu(const_cast<T *>(
@@ -192,7 +193,8 @@ template <class T = cuComplex> class CudaTensor {
 
     template <class CPUData> CudaTensor &operator=(const Tensor<CPUData> &other)
     {
-        static_assert(sizeof(CPUData) == sizeof(T), "Size of CPU and GPU data types do not match.");
+        static_assert(sizeof(CPUData) == sizeof(T),
+                      "Size of CPU and GPU data types do not match.");
 
         SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
         CopyHostDataToGpu(const_cast<T *>(
@@ -352,8 +354,8 @@ template <class T = cuComplex> class CudaTensor {
         cudaDataType_t data_type;
         cutensorComputeType_t compute_type;
 
-        if constexpr (std::is_same<T, cuDoubleComplex>::value ||
-                      std::is_same<T, double2>::value) {
+        if constexpr (std::is_same<U, cuDoubleComplex>::value ||
+                      std::is_same<U, double2>::value) {
             data_type = CUDA_C_64F;
             compute_type = CUTENSOR_COMPUTE_64F;
         }
@@ -401,17 +403,17 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         std::vector<int64_t> c_dimensions(c_modes.size());
-        for(size_t idx=0; idx < c_modes.size(); idx++){
+        for (size_t idx = 0; idx < c_modes.size(); idx++) {
             c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
         }
 
         std::vector<int64_t> a_dimensions(a_modes.size());
-        for(size_t idx=0; idx < a_modes.size(); idx++){
+        for (size_t idx = 0; idx < a_modes.size(); idx++) {
             a_dimensions[idx] = mode_to_dimension_map[a_modes[idx]];
         }
 
         std::vector<int64_t> b_dimensions(b_modes.size());
-        for(size_t idx=0; idx < b_modes.size(); idx++){
+        for (size_t idx = 0; idx < b_modes.size(); idx++) {
             b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
         }
 
@@ -539,9 +541,9 @@ template <class T = cuComplex> class CudaTensor {
         cutensorStatus_t cutensor_err;
 
         cutensor_err = cutensorContraction(
-            &c_plan.handle, &c_plan.plan, static_cast<void *>(&alpha), a.GetData(),
-            b.GetData(), static_cast<void *>(&beta), c.GetData(), c.GetData(), c_plan.work,
-            c_plan.work_size, stream);
+            &c_plan.handle, &c_plan.plan, static_cast<void *>(&alpha),
+            a.GetData(), b.GetData(), static_cast<void *>(&beta), c.GetData(),
+            c.GetData(), c_plan.work, c_plan.work_size, stream);
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
     }
 
@@ -549,9 +551,17 @@ template <class T = cuComplex> class CudaTensor {
     static CudaTensor<U> Reshape(const CudaTensor<U> &old_tens,
                                  const std::vector<size_t> &new_shape)
     {
+        // Avoid unused warning
+        static_cast<void>(old_tens);
+        static_cast<void>(new_shape);
         JET_ABORT("Reshape is not supported in this class yet");
         // dummy return
         return CudaTensor<U>();
+    }
+
+    CudaTensor<T> Reshape(const std::vector<size_t> &new_shape)
+    {
+        return Reshape<T>(*this, new_shape);
     }
 
     template <typename U = T>
@@ -559,19 +569,28 @@ template <class T = cuComplex> class CudaTensor {
                                     const std::string &index_str,
                                     size_t index_value)
     {
+        // Avoid unused warning
+        static_cast<void>(tens);
+        static_cast<void>(index_str);
+        static_cast<void>(index_value);
         JET_ABORT("SliceIndex is not supported in this class yet");
         // dummy return
         return CudaTensor<U>();
     }
 
+    CudaTensor<T> SliceIndex(const std::string &index_str, size_t index_value)
+    {
+        return SliceIndex<T>(*this, index_str, index_value);
+    }
+
     std::vector<std::complex<scalar_type_t_precision>> GetHostDataVector() const
     {
-        std::vector<std::complex<scalar_type_t_precision>> host_data_buffer(GetSize());
+        std::vector<std::complex<scalar_type_t_precision>> host_data_buffer(
+            GetSize());
         auto ptr = reinterpret_cast<T *>(host_data_buffer.data());
         CopyGpuDataToHost(ptr);
         return host_data_buffer;
     }
-    
 
   private:
     T *data_;
