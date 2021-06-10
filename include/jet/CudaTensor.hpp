@@ -20,12 +20,16 @@
 #include <cutensor.h>
 
 namespace {
-    using namespace Jet::CudaTensorHelpers;
+using namespace Jet::CudaTensorHelpers;
 }
 
 namespace Jet {
 
 template <class T = cuComplex> class CudaTensor {
+
+    static_assert(CudaTensorHelpers::is_supported_data_type<T>,
+                  "CudaTensor supports cuComplex (float2) and cuDoubleComplex "
+                  "(double2) data types.");
 
   public:
     using scalar_type_t = T;
@@ -44,18 +48,23 @@ template <class T = cuComplex> class CudaTensor {
             index_to_axes_[indices[i]] = i;
         }
         JET_CUDA_IS_SUCCESS(cudaFree(data_));
-        JET_CUDA_IS_SUCCESS(cudaMalloc(reinterpret_cast<void**>(&data_), Jet::Utilities::ShapeToSize(shape_) * sizeof(T)));
+        JET_CUDA_IS_SUCCESS(
+            cudaMalloc(reinterpret_cast<void **>(&data_),
+                       Jet::Utilities::ShapeToSize(shape_) * sizeof(T)));
     }
 
     CudaTensor()
     {
         T h_dat({.x = 0.0, .y = 0.0});
-        JET_CUDA_IS_SUCCESS(cudaMalloc(reinterpret_cast<void**>(&data_), sizeof(T)));
-        JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, &h_dat, sizeof(T), cudaMemcpyHostToDevice));
+        JET_CUDA_IS_SUCCESS(
+            cudaMalloc(reinterpret_cast<void **>(&data_), sizeof(T)));
+        JET_CUDA_IS_SUCCESS(
+            cudaMemcpy(data_, &h_dat, sizeof(T), cudaMemcpyHostToDevice));
     }
 
     CudaTensor(const std::vector<std::string> &indices,
-               const std::vector<size_t> &shape) : data_{nullptr}
+               const std::vector<size_t> &shape)
+        : data_{nullptr}
     {
         SetIndicesShapeAndMemory(indices, shape);
     }
@@ -64,14 +73,18 @@ template <class T = cuComplex> class CudaTensor {
                const std::vector<size_t> &shape, const std::vector<T> data)
         : CudaTensor(indices, shape)
     {
-        JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, data.data(), sizeof(T) * data.size(), cudaMemcpyHostToDevice));
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, data.data(),
+                                       sizeof(T) * data.size(),
+                                       cudaMemcpyHostToDevice));
     }
 
     CudaTensor(const std::vector<std::string> &indices,
                const std::vector<size_t> &shape, const T *data)
         : CudaTensor(indices, shape)
     {
-        JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, data, sizeof(T) * Jet::Utilities::ShapeToSize(shape), cudaMemcpyHostToDevice));
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(
+            data_, data, sizeof(T) * Jet::Utilities::ShapeToSize(shape),
+            cudaMemcpyHostToDevice));
     }
 
     CudaTensor(const std::vector<size_t> &shape) : data_{nullptr}
@@ -177,7 +190,8 @@ template <class T = cuComplex> class CudaTensor {
                    cudaMemcpyDeviceToDevice);
     }
 
-    template <class CPUData> CudaTensor(const Tensor<CPUData> &other) : data_{nullptr}
+    template <class CPUData>
+    CudaTensor(const Tensor<CPUData> &other) : data_{nullptr}
     {
         static_assert(sizeof(CPUData) == sizeof(T));
 
@@ -345,9 +359,18 @@ template <class T = cuComplex> class CudaTensor {
     {
         using namespace Jet::Utilities;
 
-        // Note: the following 2 lines should be generalised
-        cudaDataType_t data_type = CUDA_C_32F;
-        cutensorComputeType_t compute_type = CUTENSOR_C_MIN_32F;
+        cudaDataType_t data_type;
+        cutensorComputeType_t compute_type;
+
+        if constexpr (std::is_same<T, cuDoubleComplex>::value ||
+                      std::is_same<T, double2>::value) {
+            data_type = CUDA_C_64F;
+            compute_type = CUTENSOR_COMPUTE_64F;
+        }
+        else {
+            data_type = CUDA_C_32F;
+            compute_type = CUTENSOR_COMPUTE_32F;
+        }
 
         const auto &a_indices = a_tensor.GetIndices();
         const auto &b_indices = b_tensor.GetIndices();
@@ -412,9 +435,12 @@ template <class T = cuComplex> class CudaTensor {
         cutensorHandle_t handle;
         cutensorInit(&handle);
 
-        const std::vector<int64_t> a_strides = CudaTensorHelpers::GetStrides(a_tensor.GetShape());
-        const std::vector<int64_t> b_strides = CudaTensorHelpers::GetStrides(b_tensor.GetShape());
-        const std::vector<int64_t> c_strides = CudaTensorHelpers::GetStrides(c_tensor.GetShape());
+        const std::vector<int64_t> a_strides =
+            CudaTensorHelpers::GetStrides(a_tensor.GetShape());
+        const std::vector<int64_t> b_strides =
+            CudaTensorHelpers::GetStrides(b_tensor.GetShape());
+        const std::vector<int64_t> c_strides =
+            CudaTensorHelpers::GetStrides(c_tensor.GetShape());
 
         cutensorStatus_t cutensor_err;
         cutensorTensorDescriptor_t a_descriptor;
@@ -550,7 +576,6 @@ template <class T = cuComplex> class CudaTensor {
     std::vector<size_t> shape_;
     std::unordered_map<std::string, size_t> index_to_dimension_;
     std::unordered_map<std::string, size_t> index_to_axes_;
-
 };
 
 } // namespace Jet
