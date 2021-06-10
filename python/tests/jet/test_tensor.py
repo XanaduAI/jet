@@ -122,7 +122,7 @@ class TestTensor:
         have_tensor = tensor_1.add_tensor(tensor_2)
         want_tensor = jet.Tensor(shape=[3, 2], indices=["i", "j"], data=range(0, 18, 3))
         assert have_tensor == want_tensor
-    
+
     def test_conj(self, dtype):
         """Tests that the conjugate of a tensor can be taken using class method."""
         tensor = jet.Tensor(shape=[1, 2], indices=["i", "j"], data=[1, 2 + 3j])
@@ -161,6 +161,7 @@ def test_add_tensors():
     want_tensor = jet.Tensor(shape=[3, 2], indices=["i", "j"], data=range(0, 18, 3))
     assert have_tensor == want_tensor
 
+
 def test_conj():
     """Tests that the conjugate of a tensor can be taken."""
     tensor = jet.Tensor(shape=[1, 2], indices=["i", "j"], data=[1, 2 + 3j])
@@ -170,6 +171,7 @@ def test_conj():
     assert have_tensor_member == want_tensor
     assert have_tensor_module == want_tensor
 
+
 def test_contract_tensors():
     """Tests that a pair of tensors can be contracted."""
     tensor_1 = jet.Tensor(shape=[2, 3, 4], indices=["i", "j", "k"])
@@ -178,6 +180,7 @@ def test_contract_tensors():
     want_tensor = jet.Tensor(shape=[2, 1], indices=["i", "l"])
     assert have_tensor == want_tensor
 
+
 def test_slice_index():
     """Tests that a tensor can be sliced."""
     tensor = jet.Tensor(shape=[2, 3, 4], indices=["i", "j", "k"])
@@ -185,12 +188,14 @@ def test_slice_index():
     want_tensor = jet.Tensor(shape=[2, 3], indices=["i", "j"])
     assert have_tensor == want_tensor
 
+
 def test_reshape():
     """Tests that a tensor can be reshaped."""
     tensor = jet.Tensor(shape=[3, 4], indices=["i", "j"])
     have_tensor = jet.reshape(tensor, [2, 6])
     want_tensor = jet.Tensor(shape=[2, 6])
     assert have_tensor == want_tensor
+
 
 class TestTranspose:
     def test_transpose_by_index(self):
