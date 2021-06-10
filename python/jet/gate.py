@@ -1,12 +1,8 @@
 from abc import ABC, abstractmethod
 from cmath import exp
 from functools import lru_cache
-<<<<<<< HEAD
-from typing import Callable, Dict, List, Optional, Sequence
-=======
 from math import cos, sin, sqrt
-from typing import List, Optional, Sequence
->>>>>>> xir-interface-circuit
+from typing import Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 from thewalrus.fock_gradients import (
