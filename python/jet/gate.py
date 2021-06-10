@@ -1,8 +1,12 @@
-import cmath
-import math
 from abc import ABC, abstractmethod
+from cmath import exp
 from functools import lru_cache
+<<<<<<< HEAD
 from typing import Callable, Dict, List, Optional, Sequence
+=======
+from math import cos, sin, sqrt
+from typing import List, Optional, Sequence
+>>>>>>> xir-interface-circuit
 
 import numpy as np
 from thewalrus.fock_gradients import (
@@ -24,6 +28,7 @@ __all__ = [
     "Beamsplitter",
     # Qubit gates
     "Hadamard",
+    "NOT",
     "PauliX",
     "PauliY",
     "PauliZ",
@@ -31,6 +36,7 @@ __all__ = [
     "T",
     "SX",
     "CNOT",
+    "CX",
     "CY",
     "CZ",
     "SWAP",
@@ -53,7 +59,7 @@ __all__ = [
 ]
 
 
-INV_SQRT2 = 1 / math.sqrt(2)
+INV_SQRT2 = 1 / sqrt(2)
 
 
 class Gate(ABC):
@@ -225,7 +231,7 @@ class GateFactory:
 
 @GateFactory.register(names=["Displacement", "D"])
 class Displacement(Gate):
-    def __init__(self, r: float, phi: float, cutoff: int, *params, **kwargs):
+    def __init__(self, r: float, phi: float, cutoff: int, **kwargs):
         """Constructs a displacement gate.  See `thewalrus.displacement
         <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.displacement.html>`__
         for more details.
@@ -321,7 +327,7 @@ class Hadamard(Gate):
 @GateFactory.register(names=["PauliX", "X", "NOT"])
 class PauliX(Gate):
     def __init__(self, **kwargs):
-        """Constructs a PauliX gate."""
+        """Constructs a Pauli-X gate."""
         super().__init__(name="PauliX", num_wires=1, **kwargs)
 
     @lru_cache
@@ -333,7 +339,7 @@ class PauliX(Gate):
 @GateFactory.register(names=["PauliY", "Y"])
 class PauliY(Gate):
     def __init__(self, **kwargs):
-        """Constructs a PauliY gate."""
+        """Constructs a Pauli-Y gate."""
         super().__init__(name="PauliY", num_wires=1, **kwargs)
 
     @lru_cache
@@ -345,7 +351,7 @@ class PauliY(Gate):
 @GateFactory.register(names=["PauliZ", "Z"])
 class PauliZ(Gate):
     def __init__(self, **kwargs):
-        """Constructs a PauliZ gate."""
+        """Constructs a Pauli-Z gate."""
         super().__init__(name="PauliZ", num_wires=1, **kwargs)
 
     @lru_cache
@@ -374,7 +380,7 @@ class T(Gate):
 
     @lru_cache
     def _data(self) -> np.ndarray:
-        mat = [[1, 0], [0, cmath.exp(0.25j * np.pi)]]
+        mat = [[1, 0], [0, exp(0.25j * np.pi)]]
         return np.array(mat)
 
 
@@ -403,7 +409,7 @@ class PhaseShift(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi = self.params[0]
-        mat = [[1, 0], [0, cmath.exp(1j * phi)]]
+        mat = [[1, 0], [0, exp(1j * phi)]]
         return np.array(mat)
 
 
@@ -420,15 +426,15 @@ class CPhaseShift(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi = self.params[0]
-        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, cmath.exp(1j * phi)]]
+        mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, exp(1j * phi)]]
         return np.array(mat)
 
 
 @GateFactory.register(names=["CX", "CNOT"])
-class CNOT(Gate):
+class CX(Gate):
     def __init__(self, **kwargs):
-        """Constructs a CNOT gate."""
-        super().__init__(name="CNOT", num_wires=2, **kwargs)
+        """Constructs a controlled-X gate."""
+        super().__init__(name="CX", num_wires=2, **kwargs)
 
     @lru_cache
     def _data(self) -> np.ndarray:
@@ -539,8 +545,8 @@ class RX(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        c = math.cos(theta / 2)
-        js = 1j * math.sin(-theta / 2)
+        c = cos(theta / 2)
+        js = 1j * sin(-theta / 2)
 
         mat = [[c, js], [js, c]]
         return np.array(mat)
@@ -560,8 +566,8 @@ class RY(Gate):
     def _data(self) -> np.ndarray:
         theta = self.params[0]
 
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [[c, -s], [s, c]]
         return np.array(mat)
@@ -580,7 +586,7 @@ class RZ(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        p = cmath.exp(-0.5j * theta)
+        p = exp(-0.5j * theta)
 
         mat = [[p, 0], [0, np.conj(p)]]
         return np.array(mat)
@@ -606,12 +612,12 @@ class Rot(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [
-            [cmath.exp(-0.5j * (phi + omega)) * c, -cmath.exp(0.5j * (phi - omega)) * s],
-            [cmath.exp(-0.5j * (phi - omega)) * s, cmath.exp(0.5j * (phi + omega)) * c],
+            [exp(-0.5j * (phi + omega)) * c, -exp(0.5j * (phi - omega)) * s],
+            [exp(-0.5j * (phi - omega)) * s, exp(0.5j * (phi + omega)) * c],
         ]
         return np.array(mat)
 
@@ -629,8 +635,8 @@ class CRX(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        c = math.cos(theta / 2)
-        js = 1j * math.sin(-theta / 2)
+        c = cos(theta / 2)
+        js = 1j * sin(-theta / 2)
 
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, c, js], [0, 0, js, c]]
         return np.array(mat)
@@ -649,8 +655,8 @@ class CRY(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta = self.params[0]
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, c, -s], [0, 0, s, c]]
         return np.array(mat)
@@ -672,8 +678,8 @@ class CRZ(Gate):
         mat = [
             [1, 0, 0, 0],
             [0, 1, 0, 0],
-            [0, 0, cmath.exp(-0.5j * theta), 0],
-            [0, 0, 0, cmath.exp(0.5j * theta)],
+            [0, 0, exp(-0.5j * theta), 0],
+            [0, 0, 0, exp(0.5j * theta)],
         ]
         return np.array(mat)
 
@@ -693,14 +699,14 @@ class CRot(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [
             [1, 0, 0, 0],
             [0, 1, 0, 0],
-            [0, 0, cmath.exp(-0.5j * (phi + omega)) * c, -cmath.exp(0.5j * (phi - omega)) * s],
-            [0, 0, cmath.exp(-0.5j * (phi - omega)) * s, cmath.exp(0.5j * (phi + omega)) * c],
+            [0, 0, exp(-0.5j * (phi + omega)) * c, -exp(0.5j * (phi - omega)) * s],
+            [0, 0, exp(-0.5j * (phi - omega)) * s, exp(0.5j * (phi + omega)) * c],
         ]
         return np.array(mat)
 
@@ -718,7 +724,7 @@ class U1(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         phi = self.params[0]
-        mat = [[1, 0], [0, cmath.exp(1j * phi)]]
+        mat = [[1, 0], [0, exp(1j * phi)]]
         return np.array(mat)
 
 
@@ -737,8 +743,8 @@ class U2(Gate):
     def _data(self) -> np.ndarray:
         phi, lam = self.params
         mat = [
-            [INV_SQRT2, -INV_SQRT2 * cmath.exp(1j * lam)],
-            [INV_SQRT2 * cmath.exp(1j * phi), INV_SQRT2 * cmath.exp(1j * (phi + lam))],
+            [INV_SQRT2, -INV_SQRT2 * exp(1j * lam)],
+            [INV_SQRT2 * exp(1j * phi), INV_SQRT2 * exp(1j * (phi + lam))],
         ]
         return np.array(mat)
 
@@ -758,11 +764,16 @@ class U3(Gate):
     @lru_cache
     def _data(self) -> np.ndarray:
         theta, phi, lam = self.params
-        c = math.cos(theta / 2)
-        s = math.sin(theta / 2)
+        c = cos(theta / 2)
+        s = sin(theta / 2)
 
         mat = [
-            [c, -s * cmath.exp(1j * lam)],
-            [s * cmath.exp(1j * phi), c * cmath.exp(1j * (phi + lam))],
+            [c, -s * exp(1j * lam)],
+            [s * exp(1j * phi), c * exp(1j * (phi + lam))],
         ]
         return np.array(mat)
+
+
+# Some gates have different names depending on their context.
+NOT = PauliX
+CNOT = CX
