@@ -170,7 +170,7 @@ if(ENABLE_CUTENSOR)
     )
 
     if(NOT CUTENSOR_LIB OR NOT CUTENSOR_INC)
-        message(FATAL_ERROR "Unable to find cutensor installation. Please ensure v1.3.0+ is correctly installed.")
+        message(FATAL_ERROR "\nUnable to find cutensor installation. Please ensure v1.3.0+ is correctly installed.")
     endif()
 endif()
 
