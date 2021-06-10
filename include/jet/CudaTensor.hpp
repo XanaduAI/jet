@@ -114,10 +114,10 @@ template <class T = cuComplex> class CudaTensor {
         size_t right_dim = 1;
 
         for (size_t i = 0; i < left_indices.size(); ++i) {
-            left_dim *= a_tensor.GetIndexToDimension().at(left_indices[i]);
+            left_dim *= a_tensor.index_to_dimension_.at(left_indices[i]);
         }
         for (size_t i = 0; i < right_indices.size(); ++i) {
-            right_dim *= b_tensor.GetIndexToDimension().at(right_indices[i]);
+            right_dim *= b_tensor.index_to_dimension_.at(right_indices[i]);
         }
 
         auto &&c_indices = VectorUnion(left_indices, right_indices);
