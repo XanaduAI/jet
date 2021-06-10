@@ -47,7 +47,10 @@ template <typename Tensor> class TaskBasedCpuContractor {
     /**
      * @brief Constructs a new `%TaskBasedCpuContractor` object.
      */
-    TaskBasedCpuContractor() : memory_(0), flops_(0), reduced_(false) {}
+    TaskBasedCpuContractor()
+        : executor_{}, memory_(0), flops_(0), reduced_(false)
+    {
+    }
 
     /**
      * @brief Returns the name-to-task map of this `%TaskBasedCpuContractor`.
@@ -296,14 +299,15 @@ template <typename Tensor> class TaskBasedCpuContractor {
     /**
      * @brief Executes the tasks in this `%TaskBasedCpuContractor`.
      *
+     * @return Future that becomes available once all the tasks have finished.
      */
-    void Contract()
-    {
-        tf::Executor executor;
-        executor.run(taskflow_).wait();
-    }
+    std::future<void> Contract() { return executor_.run(taskflow_); }
 
   private:
+    /// Taskflow executor to run tasks. Default-initialized to maximum number of
+    /// system threads.
+    tf::Executor executor_;
+
     /// Task graph to be executed during a contraction.
     TaskFlow taskflow_;
 
