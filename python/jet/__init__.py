@@ -5,6 +5,7 @@ from .bindings import *
 from .circuit import *
 from .factory import *
 from .gate import *
+from .interpreter import *
 from .state import *
 
 # Grab the current Jet version from the C++ headers.
