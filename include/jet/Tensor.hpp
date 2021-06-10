@@ -435,20 +435,9 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Adds current and other `%Tensor` object with the same index sets.
      *
-     * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition
-     * of A and B is a 2x3 tensor C(i,j): \code{.cpp} Tensor A({"i", "j"}, {2,
-     * 3}, {0, 1, 2, 3, 4, 5}); Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
-     *     Tensor C = A.AddTensors(B);  // {5, 6, 7, 9, 10, 11}
-     * \endcode
-     *
-     * @warning The program is aborted if the index sets of the given `%Tensor`
-     *          objects to not match.
-     *
-     * @param other Tensor on the RHS of the addition.
-     * @return `%Tensor` object representing the element-wise sum of the given
-     *         tensors.
+     * @see AddTensors(const Tensor<U> &A, const Tensor<U> &B)
      */
-    Tensor<T> AddTensors(const Tensor<T> &other) const
+    Tensor<T> AddTensor(const Tensor<T> &other) const
     {
         return AddTensors<T>(*this, other);
     }
@@ -751,7 +740,7 @@ template <class T = std::complex<float>> class Tensor {
      *
      * @see ContractTensors(const Tensor<U> &A, const Tensor<U> &B)
      */
-    Tensor<T> ContractTensors(const Tensor<T> &other) const
+    Tensor<T> ContractWithTensor(const Tensor<T> &other) const
     {
         return ContractTensors<T>(*this, other);
     }
