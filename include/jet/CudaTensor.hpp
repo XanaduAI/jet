@@ -19,48 +19,6 @@
 #include <curand.h>
 #include <cutensor.h>
 
-namespace {
-
-/**
- * @brief Calculate the strides for each dimension for the CUDA array
- *
- * @param extents
- * @return std::vector<int64_t>
- */
-static std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
-{
-    std::vector<int64_t> strides(std::max(extents.size(), 1UL), 1);
-    for (int64_t i = 1; i < static_cast<int64_t>(extents.size()); ++i) {
-        strides[i] = static_cast<int64_t>(extents[i - 1]) * strides[i - 1];
-    }
-    return strides;
-}
-
-/**
- * @brief Convertor between row-major and column-major indices.
- *
- * @param row_order_linear_index Lexicographic ordered data index.
- * @param sizes The size of each independent dimension of the tensor data.
- * @return size_t Single index mapped to column-major (colexicographic) form.
- */
-size_t RowMajToColMaj(size_t row_order_linear_index,
-                      const std::vector<size_t> &sizes)
-{
-    using namespace Jet::Utilities;
-    auto unraveled_index = UnravelIndex(row_order_linear_index, sizes);
-
-    auto strides = GetStrides(sizes);
-
-    size_t column_order_linear_index = 0;
-    int d = sizes.size();
-    for (int k = 0; k < d; k++) {
-        column_order_linear_index += unraveled_index[k] * strides[k];
-    }
-    return column_order_linear_index;
-}
-
-} // namespace
-
 namespace Jet {
 
 template <class T = cuComplex> class CudaTensor {
@@ -323,7 +281,7 @@ template <class T = cuComplex> class CudaTensor {
             host_data;
 
         for (size_t idx = 0; idx < host_data_reshape.size(); idx++) {
-            auto col_idx = RowMajToColMaj(idx, GetShape());
+            auto col_idx = CudaTensorHelpers::RowMajToColMaj(idx, GetShape());
             host_data_reshape[idx] = host_data[col_idx];
         }
 
@@ -460,9 +418,9 @@ template <class T = cuComplex> class CudaTensor {
         cutensorHandle_t handle;
         cutensorInit(&handle);
 
-        const std::vector<int64_t> a_strides = GetStrides(a_tensor.GetShape());
-        const std::vector<int64_t> b_strides = GetStrides(b_tensor.GetShape());
-        const std::vector<int64_t> c_strides = GetStrides(c_tensor.GetShape());
+        const std::vector<int64_t> a_strides = CudaTensorHelpers::GetStrides(a_tensor.GetShape());
+        const std::vector<int64_t> b_strides = CudaTensorHelpers::GetStrides(b_tensor.GetShape());
+        const std::vector<int64_t> c_strides = CudaTensorHelpers::GetStrides(c_tensor.GetShape());
 
         cutensorStatus_t cutensor_err;
         cutensorTensorDescriptor_t a_descriptor;
