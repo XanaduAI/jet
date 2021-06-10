@@ -49,7 +49,7 @@ template <class T = cuComplex> class CudaTensor {
 
     CudaTensor()
     {
-        cuComplex h_dat({.x = 0.0, .y = 0.0});
+        T h_dat({.x = 0.0, .y = 0.0});
         JET_CUDA_IS_SUCCESS(cudaMalloc(reinterpret_cast<void**>(&data_), sizeof(T)));
         JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, &h_dat, sizeof(T), cudaMemcpyHostToDevice));
     }
