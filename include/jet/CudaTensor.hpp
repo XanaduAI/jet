@@ -38,16 +38,14 @@ template <class T = cuComplex> class CudaTensor {
     void SetIndicesShapeAndMemory(const std::vector<std::string> &indices,
                                   const std::vector<size_t> &shape)
     {
+        Clear_();
         shape_ = shape;
         indices_ = indices;
-        index_to_dimension_.clear();
-        index_to_axes_.clear();
 
         for (size_t i = 0; i < shape_.size(); ++i) {
             index_to_dimension_[indices[i]] = shape[i];
             index_to_axes_[indices[i]] = i;
         }
-        JET_CUDA_IS_SUCCESS(cudaFree(data_));
         JET_CUDA_IS_SUCCESS(
             cudaMalloc(reinterpret_cast<void **>(&data_),
                        Jet::Utilities::ShapeToSize(shape_) * sizeof(T)));
