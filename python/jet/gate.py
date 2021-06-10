@@ -23,12 +23,14 @@ __all__ = [
     "Beamsplitter",
     # Qubit gates
     "Hadamard",
+    "NOT",
     "PauliX",
     "PauliY",
     "PauliZ",
     "S",
     "T",
     "SX",
+    "CNOT",
     "CX",
     "CY",
     "CZ",
@@ -674,3 +676,8 @@ class U3(Gate):
             [s * exp(1j * phi), c * exp(1j * (phi + lam))],
         ]
         return np.array(mat)
+
+
+# Some gates have different names depending on their context.
+NOT = PauliX
+CNOT = CX
