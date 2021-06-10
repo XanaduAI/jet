@@ -539,8 +539,8 @@ template <class T = cuComplex> class CudaTensor {
         cutensorStatus_t cutensor_err;
 
         cutensor_err = cutensorContraction(
-            &c_plan.handle, &c_plan.plan, (void *)&alpha, a.GetData(),
-            b.GetData(), (void *)&beta, c.GetData(), c.GetData(), c_plan.work,
+            &c_plan.handle, &c_plan.plan, static_cast<void *>(&alpha), a.GetData(),
+            b.GetData(), static_cast<void *>(&beta), c.GetData(), c.GetData(), c_plan.work,
             c_plan.work_size, stream);
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
     }
