@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, List, Sequence, Tuple, Union
+from typing import Callable, Iterator, List, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -49,17 +49,17 @@ class Circuit:
             part.indices = [wire.index]
 
     @property
-    def parts(self) -> Tuple[Union[Gate, State]]:
+    def parts(self) -> Iterator[Union[Gate, State]]:
         """Returns the gates and states that comprise this circuit.  The first
         ``self.num_wires`` parts are the qudits that begin each wire; other
         parts appear in the order they were appended to the circuit.
         """
-        return tuple(self._parts)
+        return iter(self._parts)
 
     @property
-    def wires(self) -> Tuple[Wire]:
+    def wires(self) -> Iterator[Wire]:
         """Returns the wires of this circuit in increasing order of wire ID."""
-        return tuple(self._wires)
+        return iter(self._wires)
 
     def _append_validator(append_fn: Callable) -> Callable:
         """Decorator which validates the arguments to an append function.
@@ -74,10 +74,10 @@ class Circuit:
 
         @wraps(append_fn)
         def validator(self, part: Union[Gate, State], wire_ids: Sequence[int]) -> None:
-            if not all(0 <= i < len(self.wires) for i in wire_ids):
-                raise ValueError(f"Wire IDs must fall in the range [0, {len(self.wires)}).")
+            if not all(0 <= i < len(self._wires) for i in wire_ids):
+                raise ValueError(f"Wire IDs must fall in the range [0, {len(self._wires)}).")
 
-            elif any(self.wires[i].closed is True for i in wire_ids):
+            elif any(self._wires[i].closed is True for i in wire_ids):
                 raise ValueError(f"Wire IDs must correspond to open wires.")
 
             elif len(wire_ids) != len(set(wire_ids)):
@@ -104,7 +104,7 @@ class Circuit:
         input_indices = self.indices(wire_ids)
 
         for i in wire_ids:
-            self.wires[i].depth += 1
+            self._wires[i].depth += 1
 
         output_indices = self.indices(wire_ids)
 
@@ -120,7 +120,7 @@ class Circuit:
             wire_ids (Sequence[int]): IDs of the wires the state terminates.
         """
         for i in wire_ids:
-            self.wires[i].closed = True
+            self._wires[i].closed = True
 
         state.indices = self.indices(wire_ids)
         self._parts.append(state)
@@ -134,7 +134,7 @@ class Circuit:
         Returns:
             List of index labels.
         """
-        return [self.wires[i].index for i in wire_ids]
+        return [self._wires[i].index for i in wire_ids]
 
     def tensor_network(self, dtype: type = np.complex128) -> TensorNetworkType:
         """Returns the tensor network representation of this circuit.
