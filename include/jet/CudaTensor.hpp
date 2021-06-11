@@ -51,7 +51,7 @@ template <class T = cuComplex> class CudaTensor {
                        Jet::Utilities::ShapeToSize(shape_) * sizeof(T)));
     }
 
-    CudaTensor()
+    CudaTensor() : data_{nullptr}
     {
         T h_dat({.x = 0.0, .y = 0.0});
         JET_CUDA_IS_SUCCESS(
@@ -171,12 +171,14 @@ template <class T = cuComplex> class CudaTensor {
         other.data_ = nullptr;
     }
 
-    CudaTensor(CudaTensor &&other) { Move_(std::move(other)); }
+    CudaTensor(CudaTensor &&other) : data_{nullptr} { 
+        Move_(std::move(other)); 
+    }
 
     CudaTensor(const CudaTensor &other) : data_{nullptr}
     {
         SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
-        cudaMemcpy(data_, other.GetData(), sizeof(T) * GetSize(),
+        cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
                    cudaMemcpyDeviceToDevice);
     }
 
