@@ -95,7 +95,7 @@ class Gate(ABC):
         @indices.getter for more information about tensor indices.
 
         Raises:
-            ValueError if the given indices are not a sequence of unique strings
+            ValueError: if the given indices are not a sequence of unique strings
             or the number of provided indices is invalid.
 
         Args:
