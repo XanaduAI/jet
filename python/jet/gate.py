@@ -96,7 +96,7 @@ class Gate(ABC):
 
         Raises:
             ValueError: if the given indices are not a sequence of unique strings
-            or the number of provided indices is invalid.
+                or the number of provided indices is invalid.
 
         Args:
             indices (Sequence[str] or None): new indices of the gate.
