@@ -54,7 +54,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-[Mikhail Andrenkov](https://github.com/Mandrenkov), [Jack Brown](https://github.com/brownj85), [Theodor Isacsson](https://github.com/thisac), [Lee J. O'Riordan](https://github.com/mlxd), [Trevor Vincent](https://github.com/trevor-vincent).
+[Mikhail Andrenkov](https://github.com/Mandrenkov), [Jack Brown](https://github.com/brownj85), [Theodor Isacsson](https://github.com/thisac), [Josh Izaac](https://github.com/josh146), [Lee J. O'Riordan](https://github.com/mlxd), [Antal Száva](https://github.com/antalszava), [Trevor Vincent](https://github.com/trevor-vincent).
 
 ## Release 0.1.0 (current release)
 
