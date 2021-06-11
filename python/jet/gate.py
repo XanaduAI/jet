@@ -68,10 +68,10 @@ class Gate(ABC):
         """Constructs a quantum gate.
 
         Args:
-            name (str): name of the gate
-            num_wires (int): number of wires the gate is applied to
-            params (list or None): parameters of the gate
-            tensor_id (int or None): ID of the gate tensor
+            name (str): Name of the gate.
+            num_wires (int): Number of wires the gate is applied to.
+            params (list or None): Parameters of the gate.
+            tensor_id (int or None): ID of the gate tensor.
         """
         self.name = name
         self.tensor_id = tensor_id
@@ -99,7 +99,7 @@ class Gate(ABC):
                 or the number of provided indices is invalid.
 
         Args:
-            indices (Sequence[str] or None): new indices of the gate
+            indices (Sequence[str] or None): New indices of the gate.
         """
         # Skip the sequence property checks if `indices` is None.
         if indices is None:
@@ -141,8 +141,8 @@ class Gate(ABC):
         """Returns the tensor representation of this gate.
 
         Args:
-            dtype (type): data type of the tensor
-            adjoint (bool): whether to take the adjoint of the tensor
+            dtype (type): Data type of the tensor.
+            adjoint (bool): Whether to take the adjoint of the tensor.
         """
         if adjoint:
             data = np.linalg.inv(self._data()).flatten()
@@ -171,9 +171,9 @@ class Displacement(Gate):
         for more details.
 
         Args:
-            r (float): displacement magnitude
-            phi (float): displacement angle
-            cutoff (int): Fock ladder cutoff
+            r (float): Displacement magnitude.
+            phi (float): Displacement angle.
+            cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="Displacement", num_wires=1, params=[r, phi, cutoff], **kwargs)
 
@@ -189,9 +189,9 @@ class Squeezing(Gate):
         for more details.
 
         Args:
-            r (float): squeezing magnitude
-            theta (float): squeezing angle
-            cutoff (int): Fock ladder cutoff
+            r (float): Squeezing magnitude.
+            theta (float): Squeezing angle.
+            cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="Squeezing", num_wires=1, params=[r, theta, cutoff], **kwargs)
 
@@ -207,9 +207,9 @@ class TwoModeSqueezing(Gate):
         for more details.
 
         Args:
-            r (float): squeezing magnitude
-            theta (float): squeezing angle
-            cutoff (int): Fock ladder cutoff
+            r (float): Squeezing magnitude.
+            theta (float): Squeezing angle.
+            cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="TwoModeSqueezing", num_wires=2, params=[r, theta, cutoff], **kwargs)
 
@@ -225,10 +225,10 @@ class Beamsplitter(Gate):
         for more details.
 
         Args:
-            theta (float): transmissivity angle of the beamsplitter. The
+            theta (float): Transmissivity angle of The beamsplitter. The.
                            transmissivity is :math:`t=\\cos(\\theta)`.
-            phi (float): reflection phase of the beamsplitter
-            cutoff (int): Fock ladder cutoff
+            phi (float): Reflection phase of the beamsplitter.
+            cutoff (int): Fock ladder cutoff.
         """
         super().__init__(name="Beamsplitter", num_wires=2, params=[theta, phi, cutoff], **kwargs)
 
@@ -325,7 +325,7 @@ class PhaseShift(Gate):
         """Constructs a single-qubit local phase shift gate.
 
         Args:
-            phi (float): phase shift
+            phi (float): Phase shift angle.
         """
         super().__init__(name="PhaseShift", num_wires=1, params=[phi], **kwargs)
 
@@ -341,7 +341,7 @@ class CPhaseShift(Gate):
         """Constructs a controlled phase shift gate.
 
         Args:
-            phi (float): phase shift
+            phi (float): Phase shift angle.
         """
         super().__init__(name="CPhaseShift", num_wires=2, params=[phi], **kwargs)
 
@@ -452,7 +452,7 @@ class RX(Gate):
         """Constructs a single-qubit X rotation gate.
 
         Args:
-            theta (float): rotation angle around the X-axis
+            theta (float): Rotation angle around the X-axis.
         """
         super().__init__(name="RX", num_wires=1, params=[theta], **kwargs)
 
@@ -471,7 +471,7 @@ class RY(Gate):
         """Constructs a single-qubit Y rotation gate.
 
         Args:
-            theta (float): rotation angle around the Y-axis
+            theta (float): Rotation angle around the Y-axis.
         """
         super().__init__(name="RY", num_wires=1, params=[theta], **kwargs)
 
@@ -491,7 +491,7 @@ class RZ(Gate):
         """Constructs a single-qubit Z rotation gate.
 
         Args:
-            theta (float): rotation angle around the Z-axis
+            theta (float): Rotation angle around the Z-axis.
         """
         super().__init__(name="RZ", num_wires=1, params=[theta], **kwargs)
 
@@ -514,9 +514,9 @@ class Rot(Gate):
         >>> assert RZ(theta).tensor() == Rot(theta, 0, 0).tensor()
 
         Args:
-            phi (float): first rotation angle
-            theta (float): second rotation angle
-            omega (float): third rotation angle
+            phi (float): First rotation angle.
+            theta (float): Second rotation angle.
+            omega (float): Third rotation angle.
         """
         super().__init__(name="Rot", num_wires=1, params=[phi, theta, omega], **kwargs)
 
@@ -538,7 +538,7 @@ class CRX(Gate):
         """Constructs a controlled-RX gate.
 
         Args:
-            theta (float): rotation angle around the X-axis
+            theta (float): Rotation angle around the X-axis.
         """
         super().__init__(name="CRX", num_wires=2, params=[theta], **kwargs)
 
@@ -557,7 +557,7 @@ class CRY(Gate):
         """Constructs a controlled-RY gate.
 
         Args:
-            theta (float): rotation angle around the Y-axis
+            theta (float): Rotation angle around the Y-axis.
         """
         super().__init__(name="CRY", num_wires=2, params=[theta], **kwargs)
 
@@ -576,7 +576,7 @@ class CRZ(Gate):
         """Constructs a controlled-RZ gate.
 
         Args:
-            theta (float): rotation angle around the Z-axis
+            theta (float): Rotation angle around the Z-axis.
         """
         super().__init__(name="CRZ", num_wires=2, params=[theta], **kwargs)
 
@@ -597,9 +597,9 @@ class CRot(Gate):
         """Constructs a controlled-rotation gate.
 
         Args:
-            phi (float): first rotation angle
-            theta (float): second rotation angle
-            omega (float): third rotation angle
+            phi (float): First rotation angle.
+            theta (float): Second rotation angle.
+            omega (float): Third rotation angle.
         """
         super().__init__(name="CRot", num_wires=2, params=[phi, theta, omega], **kwargs)
 
@@ -623,7 +623,7 @@ class U1(Gate):
         """Constructs a U1 gate.
 
         Args:
-            phi (float): rotation angle
+            phi (float): Rotation angle.
         """
         super().__init__(name="U1", num_wires=1, params=[phi], **kwargs)
 
@@ -639,8 +639,8 @@ class U2(Gate):
         """Constructs a U2 gate.
 
         Args:
-            phi (float): first rotation angle
-            lam (float): second rotation angle
+            phi (float): First rotation angle.
+            lam (float): Second rotation angle.
         """
         super().__init__(name="U2", num_wires=1, params=[phi, lam], **kwargs)
 
@@ -659,9 +659,9 @@ class U3(Gate):
         """Constructs a U3 gate.
 
         Args:
-            theta (float): first rotation angle
-            phi (float): second rotation angle
-            lam (float): third rotation angle
+            theta (float): First rotation angle.
+            phi (float): Second rotation angle.
+            lam (float): Third rotation angle.
         """
         super().__init__(name="U3", num_wires=1, params=[theta, phi, lam], **kwargs)
 
