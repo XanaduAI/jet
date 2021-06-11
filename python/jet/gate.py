@@ -225,7 +225,7 @@ class Beamsplitter(Gate):
         for more details.
 
         Args:
-            theta (float): Transmissivity angle of The beamsplitter. The.
+            theta (float): Transmissivity angle of the beamsplitter. The
                            transmissivity is :math:`t=\\cos(\\theta)`.
             phi (float): Reflection phase of the beamsplitter.
             cutoff (int): Fock ladder cutoff.
