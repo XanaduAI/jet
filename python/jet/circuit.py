@@ -74,20 +74,23 @@ class Circuit:
 
         @wraps(append_fn)
         def validator(self, part: Union[Gate, State], wire_ids: Sequence[int]) -> None:
-            if not all(0 <= i < len(self._wires) for i in wire_ids):
-                raise ValueError(f"Wire IDs must fall in the range [0, {len(self._wires)}).")
-
-            elif any(self._wires[i].closed is True for i in wire_ids):
-                raise ValueError(f"Wire IDs must correspond to open wires.")
-
-            elif len(wire_ids) != len(set(wire_ids)):
-                raise ValueError(f"Wire IDs must be unique.")
-
-            elif len(wire_ids) != part.num_wires:
+            if len(wire_ids) != part.num_wires:
                 raise ValueError(
                     f"Number of wire IDs ({len(wire_ids)}) must match the number of "
                     f"wires connected to the circuit component ({part.num_wires})."
                 )
+
+            num_wires = len(self._wires)
+
+            for wire_id in wire_ids:
+                if not 0 <= wire_id < num_wires:
+                    raise ValueError(f"Wire ID {wire_id} falls outside the range [0, {num_wires}).")
+
+                elif wire_ids.count(wire_id) > 1:
+                    raise ValueError(f"Wire ID {wire_id} is specified more than once.")
+
+                elif self._wires[wire_id].closed:
+                    raise ValueError(f"Wire {wire_id} is closed.")
 
             append_fn(self, part, wire_ids)
 

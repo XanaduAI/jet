@@ -27,28 +27,6 @@ class TestCircuit:
         assert list(circuit.wires) == [jet.Wire(i, 0, False) for i in range(4)]
         assert list(circuit.parts) == [jet.Qubit() for _ in range(4)]
 
-    def test_append_fake_wire(self, circuit, validator):
-        """Tests that a ValueError is raised when the append validator is given
-        a wire ID which does not exist in the circuit.
-        """
-        with pytest.raises(ValueError, match=r"Wire IDs must fall in the range \[0, 4\)."):
-            validator(self=circuit, part=None, wire_ids=[4])
-
-    def test_append_closed_wire(self, circuit, validator):
-        """Tests that a ValueError is raised when the append validator is given
-        a wire ID associated with a closed wire.
-        """
-        circuit._wires[0].closed = True
-        with pytest.raises(ValueError, match="Wire IDs must correspond to open wires."):
-            validator(self=circuit, part=None, wire_ids=[0])
-
-    def test_append_duplicate_wire(self, circuit, validator):
-        """Tests that a ValueError is raised when the append validator is given
-        a duplicate wire ID.
-        """
-        with pytest.raises(ValueError, match="Wire IDs must be unique."):
-            validator(self=circuit, part=None, wire_ids=[0, 0])
-
     def test_append_dangling_wire(self, circuit, validator):
         """Tests that a ValueError is raised when the append validator is given
         a circuit component which spans a different number of wires.
@@ -59,6 +37,28 @@ class TestCircuit:
         )
         with pytest.raises(ValueError, match=match):
             validator(self=circuit, part=jet.Qubit(), wire_ids=[0, 1])
+
+    def test_append_fake_wire(self, circuit, validator):
+        """Tests that a ValueError is raised when the append validator is given
+        a wire ID which does not exist in the circuit.
+        """
+        with pytest.raises(ValueError, match=r"Wire ID 4 falls outside the range \[0, 4\)."):
+            validator(self=circuit, part=jet.Qubit(), wire_ids=[4])
+
+    def test_append_duplicate_wire(self, circuit, validator):
+        """Tests that a ValueError is raised when the append validator is given
+        a duplicate wire ID.
+        """
+        with pytest.raises(ValueError, match="Wire ID 0 is specified more than once."):
+            validator(self=circuit, part=jet.QubitRegister(2), wire_ids=[0, 0])
+
+    def test_append_closed_wire(self, circuit, validator):
+        """Tests that a ValueError is raised when the append validator is given
+        a wire ID associated with a closed wire.
+        """
+        circuit._wires[0].closed = True
+        with pytest.raises(ValueError, match="Wire 0 is closed."):
+            validator(self=circuit, part=jet.Qubit(), wire_ids=[0])
 
     def test_append_one_wire_gate(self, circuit):
         """Tests that a gate which transforms one wire can be appended to the circuit."""
