@@ -58,7 +58,7 @@ class TestGate:
         with pytest.raises(ValueError):
             gate.indices = indices
 
-    @pytest.mark.parametrize("indices", [None, ["1", "2", "3", "4"]])
+    @pytest.mark.parametrize("indices", [None, ["1", "2", "3", "4"], ["ABC", "D", "E", "F"]])
     def test_indices_are_valid(self, gate, indices):
         """Tests that the indices of a gate can be set and retrieved."""
         assert gate.indices is None
