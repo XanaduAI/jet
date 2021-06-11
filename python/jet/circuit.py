@@ -25,7 +25,7 @@ class Wire:
     # Number of gates applied to this wire.
     depth: int = 0
     # Whether this wire has been terminated with a state.
-    closed: int = False
+    closed: bool = False
 
     @property
     def index(self) -> str:
