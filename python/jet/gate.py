@@ -90,7 +90,7 @@ class Gate(ABC):
 
     @indices.setter
     def indices(self, indices: Optional[Sequence[str]]) -> None:
-        """Sets the indices of this gate. If the indices of a gate are not None,
+        """Sets the indices of this gate. If the indices of a gate are not ``None``,
         they are used to construct the tensor representation of that gate. See
         @indices.getter for more information about tensor indices.
 
