@@ -124,7 +124,7 @@ class Gate(ABC):
 
     @property
     def num_wires(self) -> int:
-        """Returns the number of wires connected to this gate."""
+        """Returns the number of wires this gate acts on."""
         return self._num_wires
 
     @property
