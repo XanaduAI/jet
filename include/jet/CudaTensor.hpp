@@ -171,9 +171,7 @@ template <class T = cuComplex> class CudaTensor {
         other.data_ = nullptr;
     }
 
-    CudaTensor(CudaTensor &&other) : data_{nullptr} { 
-        Move_(std::move(other)); 
-    }
+    CudaTensor(CudaTensor &&other) : data_{nullptr} { Move_(std::move(other)); }
 
     CudaTensor(const CudaTensor &other) : data_{nullptr}
     {
@@ -209,7 +207,7 @@ template <class T = cuComplex> class CudaTensor {
         if (this != &other) // not a self-assignment
         {
             SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
-            cudaMemcpy(data_, other.GetData(), sizeof(T) * GetSize(),
+            cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
                        cudaMemcpyDeviceToDevice);
         }
         return *this;

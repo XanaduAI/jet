@@ -4,11 +4,10 @@
 #include <future>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <thread>
 
 #include <taskflow/taskflow.hpp>
 
@@ -47,8 +46,9 @@ template <typename Tensor> class TaskBasedCpuContractor {
     /**
      * @brief Constructs a new `%TaskBasedCpuContractor` object.
      */
-    TaskBasedCpuContractor()
-        : executor_{}, memory_(0), flops_(0), reduced_(false)
+    TaskBasedCpuContractor(
+        size_t num_threads = std::thread::hardware_concurrency())
+        : executor_{num_threads}, memory_(0), flops_(0), reduced_(false)
     {
     }
 
