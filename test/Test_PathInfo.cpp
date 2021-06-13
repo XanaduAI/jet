@@ -191,6 +191,68 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, Path)", "[PathInfo]")
             CHECK(step.tags == Tags{"apple", "banana"});
         }
     }
+
+    SECTION("Sliced tensor network with non-empty path")
+    {
+        const auto tensor_1 = MakeTensor({"A0", "B1"}, {3, 2});
+        const auto tensor_2 = MakeTensor({"B1", "C2"}, {2, 4});
+
+        tn.AddTensor(tensor_1, {"apple"});
+        tn.AddTensor(tensor_2, {"banana"});
+
+	auto sliced_tn = tn;
+	sliced_tn.SliceIndices({"A0","C2"},0);
+	
+        const PathInfo path_info(sliced_tn, {{0, 1}});
+
+        const size_t have_leaves = path_info.GetNumLeaves();
+        const size_t want_leaves = 2;
+        CHECK(have_leaves == want_leaves);
+
+        const Path have_path = path_info.GetPath();
+        const Path want_path = {{0, 1}};
+        CHECK(have_path == want_path);
+
+        const IndexToSizeMap have_index_sizes = path_info.GetIndexSizes();
+        const IndexToSizeMap want_index_sizes = {
+            {"B1", 2}};
+        CHECK(have_index_sizes == want_index_sizes);
+
+        const Steps steps = path_info.GetSteps();
+        REQUIRE(steps.size() == 3);
+
+        {
+            const auto &step = steps[0];
+            CHECK(step.id == 0);
+            CHECK(step.parent == 2);
+            CHECK(step.children == Children{-1, -1});
+            CHECK(step.node_indices == Indices{"A0(0)", "B1"});
+            CHECK(step.tensor_indices == Indices{"B1"});
+            CHECK(step.contracted_indices == Indices{});
+            CHECK(step.tags == Tags{"apple"});
+        }
+        {
+            const auto &step = steps[1];
+            CHECK(step.id == 1);
+            CHECK(step.parent == 2);
+            CHECK(step.children == Children{-1, -1});
+            CHECK(step.node_indices == Indices{"B1", "C2(0)"});
+            CHECK(step.tensor_indices == Indices{"B1"});
+            CHECK(step.contracted_indices == Indices{});
+            CHECK(step.tags == Tags{"banana"});
+        }
+        {
+            const auto &step = steps[2];
+            CHECK(step.id == 2);
+            CHECK(step.parent == -1UL);
+            CHECK(step.children == Children{0, 1});
+            CHECK(step.node_indices == Indices{"A0(0)", "C2(0)"});
+            CHECK(step.tensor_indices == Indices{});
+            CHECK(step.contracted_indices == Indices{"B1"});
+            CHECK(step.tags == Tags{"apple", "banana"});
+        }
+    }
+    
 }
 
 TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
