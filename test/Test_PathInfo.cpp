@@ -200,9 +200,9 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, Path)", "[PathInfo]")
         tn.AddTensor(tensor_1, {"apple"});
         tn.AddTensor(tensor_2, {"banana"});
 
-	auto sliced_tn = tn;
-	sliced_tn.SliceIndices({"A0","C2"},0);
-	
+        auto sliced_tn = tn;
+        sliced_tn.SliceIndices({"A0", "C2"}, 0);
+
         const PathInfo path_info(sliced_tn, {{0, 1}});
 
         const size_t have_leaves = path_info.GetNumLeaves();
@@ -214,8 +214,7 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, Path)", "[PathInfo]")
         CHECK(have_path == want_path);
 
         const IndexToSizeMap have_index_sizes = path_info.GetIndexSizes();
-        const IndexToSizeMap want_index_sizes = {
-            {"B1", 2}};
+        const IndexToSizeMap want_index_sizes = {{"B1", 2}};
         CHECK(have_index_sizes == want_index_sizes);
 
         const Steps steps = path_info.GetSteps();
@@ -252,7 +251,6 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, Path)", "[PathInfo]")
             CHECK(step.tags == Tags{"apple", "banana"});
         }
     }
-    
 }
 
 TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
