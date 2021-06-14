@@ -32,6 +32,7 @@ def run_xir_program(program: XIRProgram) -> List[np.generic]:
         name = statement.name.lower()
 
         if name in GateFactory.registry:
+            # TODO: Automatically insert the Fock cutoff dimension for CV gates.
             gate = GateFactory.create(name, *statement.params)
             circuit.append_gate(gate, wire_ids=statement.wires)
 
@@ -50,17 +51,20 @@ def run_xir_program(program: XIRProgram) -> List[np.generic]:
     return result
 
 
-def _compute_amplitude(circuit: Circuit, state: List[int]) -> np.complex128:
+def _compute_amplitude(
+    circuit: Circuit, state: List[int], dtype: type = np.complex128
+) -> np.number:
     """Computes the amplitude of a state at the end of a circuit.
 
     Args:
-        circuit (Circuit): circuit to apply the amplitude measurement to.
-        state (list[int]): state to measure the amplitude of.
+        circuit (Circuit): Circuit to apply the amplitude measurement to.
+        state (list[int]): State to measure the amplitude of.
+        dtype (type): Data type of the amplitude.
 
     Returns:
-        Complex number representing the amplitude of the given state.
+        NumPy number representing the amplitude of the given state.
     """
-    # Don't augment the original circuit with the terminal amplitude qudits.
+    # Do not modify the original circuit.
     circuit = deepcopy(circuit)
 
     for (i, value) in enumerate(state):
@@ -70,6 +74,6 @@ def _compute_amplitude(circuit: Circuit, state: List[int]) -> np.complex128:
         circuit.append_state(qudit, wire_ids=[i])
 
     # TODO: Find a contraction path and use the TBCC.
-    tn = circuit.tensor_network()
+    tn = circuit.tensor_network(dtype=dtype)
     amplitude = tn.contract()
-    return np.complex128(amplitude.scalar)
+    return dtype(amplitude.scalar)
