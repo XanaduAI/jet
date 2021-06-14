@@ -374,8 +374,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
         [](const tensor_t &tensor) -> tensor_t {
             return Jet::Tensor<>::Conj<T>(tensor);
         },
-        py::arg("tensor"),
-        R"(Returns the conjugate of the given tensor object.
+        py::arg("tensor"), R"(
+        Returns the conjugate of the given tensor object.
 
         Args:
             tensor: reference tensor object.
