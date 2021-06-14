@@ -555,21 +555,19 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CHECK(tensor3_host_conv.GetShape() == tensor3_host.GetShape());
         CHECK(tensor3_host_conv.GetSize() == tensor3_host.GetSize());
 
-        CHECK(tensor3_host_conv.GetData()[0].real() ==
-              Approx(tensor3_host.GetData()[0].real()));
-        CHECK(tensor3_host_conv.GetData()[0].imag() ==
-              Approx(tensor3_host.GetData()[0].imag()));
-        CHECK(tensor3_host_conv.GetData()[1].real() ==
-              Approx(tensor3_host.GetData()[1].real()));
-        CHECK(tensor3_host_conv.GetData()[1].imag() ==
-              Approx(tensor3_host.GetData()[1].imag()));
-        CHECK(tensor3_host_conv.GetData()[2].real() ==
-              Approx(tensor3_host.GetData()[2].real()));
-        CHECK(tensor3_host_conv.GetData()[2].imag() ==
-              Approx(tensor3_host.GetData()[2].imag()));
-        CHECK(tensor3_host_conv.GetData()[3].real() ==
-              Approx(tensor3_host.GetData()[3].real()));
-        CHECK(tensor3_host_conv.GetData()[3].imag() ==
-              Approx(tensor3_host.GetData()[3].imag()));
+        const auto& data1 = tensor3_host_conv.GetData();
+        const auto& data2 = tensor3_host.GetData();
+        
+        CHECK(data1[0].real() == Approx(data2[0].real()));
+        CHECK(data1[0].imag() == Approx(data2[0].imag()));
+        
+        CHECK(data1[1].real() == Approx(data2[1].real()));
+        CHECK(data1[1].imag() == Approx(data2[1].imag()));
+        
+        CHECK(data1[2].real() == Approx(data2[2].real()));
+        CHECK(data1[2].imag() == Approx(data2[2].imag()));
+        
+        CHECK(data1[3].real() == Approx(data2[3].real()));
+        CHECK(data1[3].imag() == Approx(data2[3].imag()));
     }
 }
