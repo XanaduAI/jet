@@ -119,25 +119,6 @@ class TestCircuit:
         assert circuit.indices([0]) == ["0-1"]
         assert circuit.indices([1, 2, 3]) == ["1-0", "2-0", "3-0"]
 
-    def test_tensor_network_ids(self):
-        """Tests that the correct tensor IDs are assigned during the tensor network conversion."""
-        gate0 = jet.Hadamard()
-        gate1 = jet.CNOT()
-        state0 = jet.Qubit(data=np.ndarray([1, 0]))
-        state1 = jet.Qubit(data=np.ndarray([1, 0]))
-
-        circuit = jet.Circuit(num_wires=2)
-        circuit.append_gate(gate0, wire_ids=[0])
-        circuit.append_gate(gate1, wire_ids=[0, 1])
-        circuit.append_state(state0, wire_ids=[0])
-        circuit.append_state(state1, wire_ids=[1])
-        circuit.tensor_network()
-
-        assert gate0.tensor_id == 2
-        assert gate1.tensor_id == 3
-        assert state0.tensor_id == 4
-        assert state1.tensor_id == 5
-
     def test_tensor_network_flip(self):
         """Tests that a quantum circuit which flips a single qubit can be
         converted into a tensor network.
