@@ -71,7 +71,7 @@ size_t RowMajToColMaj(size_t row_order_linear_index,
  * If T is a supported data type for tensors, this expression will
  * evaluate to `true`. Otherwise, it will evaluate to `false`.
  *
- * Supported data types are std::complex<float> and std::complex<double>.
+ * Supported data types are `float2`, `double2`, and their aliases.
  *
  * @tparam T candidate data type
  */
