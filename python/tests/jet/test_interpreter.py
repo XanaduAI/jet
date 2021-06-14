@@ -79,15 +79,32 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
     assert jet.run_xir_program(program) == pytest.approx(want_result)
 
 
-def test_run_xir_program_with_stateless_amplitude_statement():
+@pytest.mark.parametrize(
+    "program, match",
+    [
+        (
+            parse_xir_script("use xstd; X | [0]; amplitude | [0];"),
+            r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
+        ),
+        (
+            parse_xir_script("use xstd; X | [0]; amplitude(state: 2) | [0];"),
+            r"Statement 'amplitude\(state: 2\) \| \[0\]' has an invalid 'state' parameter\.",
+        ),
+        (
+            parse_xir_script("use xstd; CNOT | [0, 1]; amplitude(state: 0) | [0];"),
+            r"Statement 'amplitude\(state: 0\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
+        ),
+        (
+            parse_xir_script("use xstd; CNOT | [0, 1]; amplitude(state: 0) | [1, 0];"),
+            r"Statement 'amplitude\(state: 0\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
+        ),
+    ],
+)
+def test_run_xir_program_with_invalid_amplitude_statement(program, match):
     """Tests that a ValueError is raised when an XIR program contains an
-    amplitude statement that is missing a "state" parameter.
+    invalid amplitude statement.
     """
-    program = parse_xir_script("use xstd; X | [0]; amplitude | [0];")
-
-    with pytest.raises(
-        ValueError, match=r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\."
-    ):
+    with pytest.raises(ValueError, match=match):
         jet.run_xir_program(program)
 
 

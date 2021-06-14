@@ -16,6 +16,9 @@ __all__ = ["run_xir_program"]
 def run_xir_program(program: XIRProgram) -> List[np.generic]:
     """Executes an XIR program.
 
+    Raises:
+        ValueError: if the given program contains an unsupported or invalid statement.
+
     Args:
         program (XIRProgram): XIR script to execute.
 
@@ -28,25 +31,32 @@ def run_xir_program(program: XIRProgram) -> List[np.generic]:
     # TODO: Extract the Fock cutoff dimension from the XIR script.
     circuit = Circuit(num_wires=num_wires, dim=2)
 
-    for statement in program.statements:
-        name = statement.name.lower()
+    for stmt in program.statements:
+        name = stmt.name.lower()
 
         if name in GateFactory.registry:
             # TODO: Automatically insert the Fock cutoff dimension for CV gates.
-            gate = GateFactory.create(name, *statement.params)
-            circuit.append_gate(gate, wire_ids=statement.wires)
+            gate = GateFactory.create(name, *stmt.params)
+            circuit.append_gate(gate, wire_ids=stmt.wires)
 
         elif name == "amplitude":
-            if "state" not in statement.params:
-                raise ValueError(f"Statement '{statement}' is missing a 'state' parameter.")
+            if "state" not in stmt.params:
+                raise ValueError(f"Statement '{stmt}' is missing a 'state' parameter.")
 
             # TODO: Use a list representation of the "state" key.
-            state = list(map(int, bin(statement.params["state"])[2:].zfill(num_wires)))
+            state = list(map(int, bin(stmt.params["state"])[2:].zfill(num_wires)))
+
+            if len(state) != num_wires:
+                raise ValueError(f"Statement '{stmt}' has an invalid 'state' parameter.")
+
+            if stmt.wires != tuple(range(num_wires)):
+                raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
+
             output = _compute_amplitude(circuit=circuit, state=state)
             result.append(output)
 
         else:
-            raise ValueError(f"Statement '{statement}' is not supported.")
+            raise ValueError(f"Statement '{stmt}' is not supported.")
 
     return result
 
