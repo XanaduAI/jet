@@ -1,6 +1,4 @@
 from copy import deepcopy
-from decimal import Decimal
-import decimal
 from typing import List
 
 import numpy as np
@@ -62,15 +60,16 @@ def _compute_amplitude(circuit: Circuit, state: List[int]) -> np.complex128:
     Returns:
         Complex number representing the amplitude of the given state.
     """
+    # Don't augment the original circuit with the terminal amplitude qudits.
     circuit = deepcopy(circuit)
 
     for (i, value) in enumerate(state):
-        # Fill a state vector with zeros save for a single one at index `value`.
+        # Fill a state vector with zeros save for a one at index `value`.
         data = (np.arange(circuit.dimension) == value).astype(np.complex128)
         qudit = Qudit(dim=circuit.dimension, data=data)
         circuit.append_state(qudit, wire_ids=[i])
 
     # TODO: Find a contraction path and use the TBCC.
-    tensor_network = circuit.tensor_network()
-    tensor_output = tensor_network.contract()
-    return np.complex128(tensor_output.scalar)
+    tn = circuit.tensor_network()
+    amplitude = tn.contract()
+    return np.complex128(amplitude.scalar)
