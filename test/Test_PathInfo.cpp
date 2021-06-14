@@ -200,10 +200,9 @@ TEST_CASE("PathInfo::PathInfo(TensorNetwork, Path)", "[PathInfo]")
         tn.AddTensor(tensor_1, {"apple"});
         tn.AddTensor(tensor_2, {"banana"});
 
-        auto sliced_tn = tn;
-        sliced_tn.SliceIndices({"A0", "C2"}, 0);
+        tn.SliceIndices({"A0", "C2"}, 0);
 
-        const PathInfo path_info(sliced_tn, {{0, 1}});
+        const PathInfo path_info(tn, {{0, 1}});
 
         const size_t have_leaves = path_info.GetNumLeaves();
         const size_t want_leaves = 2;
