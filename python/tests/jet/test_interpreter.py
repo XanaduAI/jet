@@ -1,4 +1,3 @@
-from inspect import cleandoc
 from math import sqrt
 
 import pytest
@@ -7,36 +6,30 @@ import jet
 import xir
 
 
-@pytest.mark.parametrize(
-    "script, want_result",
-    [
-        ("", []),
-        (
-            cleandoc(
-                """
-                use xstd;
+def parse_xir_script(script: str) -> xir.XIRProgram:
+    """Parses an XIR script into an XIR program."""
+    tree = xir.xir_parser.parse(script)
+    return xir.XIRTransformer().transform(tree)
 
-                H | [0];
-                """
-            ),
-            [],
-        ),
+
+@pytest.mark.parametrize(
+    "program",
+    [
+        parse_xir_script(""),
+        parse_xir_script("use xstd;"),
+        parse_xir_script("use xstd; H | [0];"),
     ],
 )
-def test_run_xir_program_with_no_output_statements(script, want_result):
-    """Tests that running an XIR script with no output statementes gives the correct result."""
-    tree = xir.xir_parser.parse(script)
-    program = xir.XIRTransformer().transform(tree)
-
-    have_result = jet.run_xir_program(program)
-    assert have_result == pytest.approx(want_result)
+def test_run_xir_program_with_no_output_statements(program):
+    """Tests that running an XIR program with no output statements returns an empty list."""
+    assert jet.run_xir_program(program) == []
 
 
 @pytest.mark.parametrize(
-    "script, want_result",
+    "program, want_result",
     [
         (
-            cleandoc(
+            parse_xir_script(
                 """
                 use xstd;
 
@@ -49,7 +42,7 @@ def test_run_xir_program_with_no_output_statements(script, want_result):
             [0, 1],
         ),
         (
-            cleandoc(
+            parse_xir_script(
                 """
                 use xstd;
 
@@ -65,7 +58,7 @@ def test_run_xir_program_with_no_output_statements(script, want_result):
             [1 / sqrt(2), 0, 0, 1 / sqrt(2)],
         ),
         (
-            cleandoc(
+            parse_xir_script(
                 """
                 use xstd;
 
@@ -81,10 +74,6 @@ def test_run_xir_program_with_no_output_statements(script, want_result):
         ),
     ],
 )
-def test_run_xir_program_with_amplitude_statements(script, want_result):
-    """Tests that running an XIR script gives the correct result."""
-    tree = xir.xir_parser.parse(script)
-    program = xir.XIRTransformer().transform(tree)
-
-    have_result = jet.run_xir_program(program)
-    assert have_result == pytest.approx(want_result)
+def test_run_xir_program_with_amplitude_statements(program, want_result):
+    """Tests that running an XIR program with amplitude statements gives the correct result."""
+    assert jet.run_xir_program(program) == pytest.approx(want_result)
