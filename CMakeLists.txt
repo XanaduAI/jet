@@ -28,6 +28,7 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_OPENMP "Enable OpenMP if supported" OFF)
 option(ENABLE_NATIVE "Enable native build tuning" OFF)
 option(ENABLE_IPO "Enable interprocedural/link-time optimisation" OFF)
+option(ENABLE_CUTENSOR "Build with CuTensor GPU support" OFF)
 
 # Build options
 option(BUILD_PYTHON "Generate Python bindings" OFF)
@@ -118,6 +119,59 @@ endif()
 
 find_package(OpenMP QUIET)
 
+if(ENABLE_CUTENSOR)
+    SET(CUDA_SEPARABLE_COMPILATION ON)
+
+    enable_language(CUDA)
+
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 60)
+    endif()
+
+    find_package(CUDA REQUIRED)
+
+    find_library(CURAND_LIB
+        NAMES   curand libcurand curand_static libcurand_static
+        HINTS   /usr/lib
+                /usr/local/cuda
+                /usr/local/lib
+                /opt
+                lib
+                lib64
+                ${CUDAToolkit_LIBRARY_DIR}
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib64)
+
+    find_library(CUTENSOR_LIB
+        NAMES   cutensor.so.1.3.0 libcutensor.so.1.3.0
+        HINTS   /usr/lib
+                /usr/local/cuda
+                /usr/local/lib
+                /opt
+                lib
+                lib64
+                ${CUDAToolkit_LIBRARY_DIR}
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib
+                ${CUDA_TOOLKIT_ROOT_DIR}/lib64
+                ENV LD_LIBRARY_PATH
+    )
+
+    find_file(CUTENSOR_INC
+        NAMES   cutensor.h
+        HINTS   /usr/include
+                /usr/local/cuda
+                /usr/local/include
+                /opt
+                include
+                ${CUDAToolkit_INCLUDE_DIRS}
+                ${CUDA_TOOLKIT_ROOT_DIR}/include
+                ENV CPATH
+    )
+
+    if(NOT CUTENSOR_LIB OR NOT CUTENSOR_INC)
+        message(FATAL_ERROR "\nUnable to find cutensor installation. Please ensure v1.3.0+ is correctly installed.")
+    endif()
+endif()
 
 ##########################
 ## Create Jet target
@@ -125,7 +179,7 @@ find_package(OpenMP QUIET)
 
 add_library(Jet INTERFACE)
 target_include_directories(Jet INTERFACE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
     ${BLAS_INCLUDE_DIRS}
 )
 
@@ -142,28 +196,32 @@ elseif (ENABLE_OPENMP AND NOT OPENMP_FOUND)
 endif()
 
 if(ENABLE_SANITIZERS)
-  target_compile_options(Jet INTERFACE -g -fsanitize=address,undefined)
-  target_link_options(Jet INTERFACE -fsanitize=address,undefined)
+  target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-g;-fsanitize=address,undefined>)
+  target_link_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address,undefined>)
 endif()
 
 if(ENABLE_WARNINGS)
-  target_compile_options(Jet INTERFACE -Wall -Wextra -Werror)
+  target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
 endif()
 
 if(ENABLE_NATIVE)
-  target_compile_options(Jet INTERFACE -march=native)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-march=native>)
 endif()
-
 if(ENABLE_IPO)
-  target_compile_options(Jet INTERFACE -flto)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-flto>)
 endif()
-
 if(MKL_FOUND)
-  target_compile_options(Jet INTERFACE -DENABLE_MKL)
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DENABLE_MKL>)
 endif()
 
 if(ENABLE_HPTT)
   target_link_libraries(Jet INTERFACE hptt)
+endif()
+
+if (ENABLE_CUTENSOR)
+    target_include_directories(Jet INTERFACE ${CUDA_TOOLKIT_ROOT_DIR}/include)
+    target_link_libraries(Jet INTERFACE ${CUTENSOR_LIB} ${CURAND_LIB} ${CUDA_LIBRARIES})
+    target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUTENSOR>)
 endif()
 
 ##########################
