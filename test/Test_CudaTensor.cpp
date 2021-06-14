@@ -179,7 +179,7 @@ TEST_CASE("CudaTensor::GetIndexToDimension", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::FillRandom", "[CudaTensor]")
 {
-    std::vector<std::size_t> t_shape{3, 2, 3};
+    std::vector<size_t> t_shape{3, 2, 3};
     std::vector<std::string> t_indices{"a", "b", "c"};
     CudaTensor tensor1(t_indices, t_shape);
     CudaTensor tensor2(t_indices, t_shape);
@@ -399,7 +399,7 @@ TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]")
 
 TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
 {
-    std::vector<std::size_t> t_shape{3, 2};
+    std::vector<size_t> t_shape{3, 2};
     std::vector<std::string> t_indices{"a", "b"};
     std::vector<std::string> t_indices_expected{"a", "z"};
     CudaTensor tensor(t_indices, t_shape);
@@ -443,9 +443,9 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 {
     SECTION("Contract T0(a,b) and T1(b) -> T2(a)")
     {
-        std::vector<std::size_t> t_shape1{2, 2};
-        std::vector<std::size_t> t_shape2{2};
-        std::vector<std::size_t> t_shape3{2};
+        std::vector<size_t> t_shape1{2, 2};
+        std::vector<size_t> t_shape2{2};
+        std::vector<size_t> t_shape3{2};
 
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"b"};
@@ -472,9 +472,9 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
     SECTION("Contract T0(a,b,c) and T1(b,c,d) -> T2(a,d)")
     {
-        std::vector<std::size_t> t_shape1{2, 3, 4};
-        std::vector<std::size_t> t_shape2{3, 4, 2};
-        std::vector<std::size_t> t_shape3{2, 2};
+        std::vector<size_t> t_shape1{2, 3, 4};
+        std::vector<size_t> t_shape2{3, 4, 2};
+        std::vector<size_t> t_shape3{2, 2};
 
         std::vector<std::string> t_indices1{"a", "b", "c"};
         std::vector<std::string> t_indices2{"b", "c", "d"};
@@ -498,9 +498,9 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
     }
     SECTION("Contract T0(a,b) and T1(a,b) -> scalar")
     {
-        std::vector<std::size_t> t_shape1{2, 2};
-        std::vector<std::size_t> t_shape2{2, 2};
-        std::vector<std::size_t> t_shape3{1};
+        std::vector<size_t> t_shape1{2, 2};
+        std::vector<size_t> t_shape2{2, 2};
+        std::vector<size_t> t_shape3{1};
 
         std::vector<std::string> t_indices1{"a", "b"};
         std::vector<std::string> t_indices2{"a", "b"};
@@ -522,8 +522,8 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
     SECTION("Compare CudaTensor and Tensor random tensor contraction")
     {
-        std::vector<std::size_t> t1_shape{2, 3, 5};
-        std::vector<std::size_t> t2_shape{5, 3, 4};
+        std::vector<size_t> t1_shape{2, 3, 5};
+        std::vector<size_t> t2_shape{5, 3, 4};
         std::vector<std::string> t1_idx{"a", "b", "c"};
         std::vector<std::string> t2_idx{"c", "b", "d"};
 
