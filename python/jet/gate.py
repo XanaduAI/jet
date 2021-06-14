@@ -591,12 +591,17 @@ class RZ(Gate):
 @GateFactory.register(names=["Rot"])
 class Rot(Gate):
     def __init__(self, phi: float, theta: float, omega: float, **kwargs):
-        """Constructs an arbitrary single-qubit rotation gate.  Each of the Pauli
-        rotation gates can be recovered by fixing two of the three parameters:
+        """Constructs an arbitrary single-qubit rotation gate with three Euler
+        angles. Each Pauli rotation gate can be recovered by fixing two of the
+        three parameters:
 
         >>> assert RX(theta).tensor() == Rot(pi/2, -pi/2, theta).tensor()
         >>> assert RY(theta).tensor() == Rot(0, 0, theta).tensor()
         >>> assert RZ(theta).tensor() == Rot(theta, 0, 0).tensor()
+
+        See `qml.Rot
+        <https://pennylane.readthedocs.io/en/stable/code/api/pennylane.Rot.html>`__
+        for more details.
 
         Args:
             phi (float): first rotation angle.
