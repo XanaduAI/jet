@@ -90,7 +90,7 @@ template <class T = cuComplex> class CudaTensor {
         using namespace Utilities;
         std::vector<std::string> indices(shape.size());
         for (size_t i = 0; i < indices.size(); i++) {
-            indices[i] = "?" + GenerateStringIndex(i);
+            indices[i] = std::string("?") + GenerateStringIndex(i);
         }
         SetIndicesShapeAndMemory(indices, shape);
     }
