@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* Quantum gate models have been added to the `jet` Python package. [(#16)](https://github.com/XanaduAI/jet/pull/16)
+
 * Python bindings are now available for the `TaskBasedCpuContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 
 * Python bindings now include a factory method which accepts a `dtype` parameter. [(#18)](https://github.com/XanaduAI/jet/pull/18)
@@ -22,7 +24,7 @@
 
 * Tensor transposes are now significantly faster when all the dimensions are powers of two. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
-* Use camel case for type aliases [(#17)](https://github.com/XanaduAI/jet/pull/17)
+* Use camel case for type aliases. [(#17)](https://github.com/XanaduAI/jet/pull/17)
 
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
@@ -54,7 +56,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-[Mikhail Andrenkov](https://github.com/Mandrenkov), [Jack Brown](https://github.com/brownj85), [Theodor Isacsson](https://github.com/thisac), [Lee J. O'Riordan](https://github.com/mlxd), [Trevor Vincent](https://github.com/trevor-vincent).
+[Mikhail Andrenkov](https://github.com/Mandrenkov), [Jack Brown](https://github.com/brownj85), [Theodor Isacsson](https://github.com/thisac), [Josh Izaac](https://github.com/josh146), [Lee J. O'Riordan](https://github.com/mlxd), [Antal Száva](https://github.com/antalszava), [Trevor Vincent](https://github.com/trevor-vincent).
 
 ## Release 0.1.0 (current release)
 
