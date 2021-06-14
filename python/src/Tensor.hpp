@@ -458,7 +458,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
             Reshapes a tensor object to the given dimensions.
 
             Args:
-                tensor: index dimensionality of the reshaped tensor object.
+                tensor: tensor object to reshape.
                 shape: index dimensionality of the reshaped tensor object.
             
             Returns:
