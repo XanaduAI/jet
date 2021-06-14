@@ -391,9 +391,30 @@ TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
     std::vector<std::string> t_indices_expected{"a", "z"};
     CudaTensor tensor(t_indices, t_shape);
 
-    CHECK(tensor.GetIndices() == t_indices);
-    tensor.RenameIndex(1, "z");
-    CHECK(tensor.GetIndices() == t_indices_expected);
+    SECTION("Rename with new index")
+    {
+        CHECK(tensor.GetIndices() == t_indices);
+        tensor.RenameIndex(1, "z");
+        CHECK(tensor.GetIndices() == t_indices_expected);
+        CHECK(tensor.GetIndexToDimension().at("z") == 2);
+    }
+    SECTION("Rename with same index")
+    {
+        CHECK(tensor.GetIndices() == t_indices);
+        tensor.RenameIndex(0, "a");
+        CHECK(tensor.GetIndices() == t_indices);
+        CHECK(tensor.GetIndexToDimension().at("a") == 3);
+    }
+    SECTION("Rename with existing index")
+    {
+        using namespace Catch::Matchers;
+        CHECK(tensor.GetIndices() == t_indices);
+        CHECK_THROWS_AS(tensor.RenameIndex(1, "a"), Jet::Exception);
+        CHECK_THROWS_WITH(
+            tensor.RenameIndex(1, "a"),
+            Contains(
+                "Renaming index to already existing value is not allowed."));
+    }
 }
 
 TEST_CASE("CudaTensor::Reshape", "[CudaTensor]")
@@ -540,18 +561,18 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CHECK(tensor3_host_conv.GetIndices() == tensor3_host.GetIndices());
         CHECK(tensor3_host_conv.GetShape() == tensor3_host.GetShape());
 
-        const auto& data1 = tensor3_host_conv.GetData();
-        const auto& data2 = tensor3_host.GetData();
-        
+        const auto &data1 = tensor3_host_conv.GetData();
+        const auto &data2 = tensor3_host.GetData();
+
         CHECK(data1[0].real() == Approx(data2[0].real()));
         CHECK(data1[0].imag() == Approx(data2[0].imag()));
-        
+
         CHECK(data1[1].real() == Approx(data2[1].real()));
         CHECK(data1[1].imag() == Approx(data2[1].imag()));
-        
+
         CHECK(data1[2].real() == Approx(data2[2].real()));
         CHECK(data1[2].imag() == Approx(data2[2].imag()));
-        
+
         CHECK(data1[3].real() == Approx(data2[3].real()));
         CHECK(data1[3].imag() == Approx(data2[3].imag()));
     }

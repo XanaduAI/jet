@@ -218,10 +218,7 @@ template <class T = cuComplex> class CudaTensor {
 
     const std::vector<size_t> &GetShape() const { return shape_; }
 
-    size_t GetSize() const
-    {
-        return Jet::Utilities::ShapeToSize(shape_);
-    }
+    size_t GetSize() const { return Jet::Utilities::ShapeToSize(shape_); }
 
     inline void CopyHostDataToGpu(T *host_tensor)
     {
@@ -328,6 +325,11 @@ template <class T = cuComplex> class CudaTensor {
         std::string old_string = GetIndices()[ind];
 
         if (old_string != new_string) {
+            JET_ABORT_IF_NOT(
+                index_to_dimension_.find(new_string) ==
+                    index_to_dimension_.end(),
+                "Renaming index to already existing value is not allowed.")
+
             indices_[ind] = new_string;
             index_to_dimension_[new_string] = index_to_dimension_[old_string];
             index_to_dimension_.erase(old_string);
