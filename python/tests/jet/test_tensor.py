@@ -64,7 +64,6 @@ class TestTensor:
     def test_repr(self, dtype):
         """Tests that the string representation of a tensor is given by __repr__."""
         tensor = jet.Tensor(shape=[1, 2], indices=["i", "j"], data=[1j, 2 + 3j], dtype=dtype)
-        print(tensor.__repr__())
         assert tensor.__repr__() == "Size = 2\nIndices = {i  j}\nData = {(0,1)  (2,3)}"
 
     def test_fill_random(self, dtype):

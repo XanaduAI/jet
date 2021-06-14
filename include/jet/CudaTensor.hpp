@@ -220,10 +220,7 @@ template <class T = cuComplex> class CudaTensor {
 
     size_t GetSize() const
     {
-        size_t total_dim = 1;
-        for (size_t i = 0; i < shape_.size(); ++i)
-            total_dim *= shape_[i];
-        return total_dim;
+        return Jet::Utilities::ShapeToSize(shape_);
     }
 
     inline void CopyHostDataToGpu(T *host_tensor)

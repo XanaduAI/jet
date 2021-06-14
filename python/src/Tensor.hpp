@@ -374,8 +374,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
         [](const tensor_t &tensor) -> tensor_t {
             return Jet::Tensor<>::Conj<T>(tensor);
         },
-        py::arg("tensor"),
-        R"(Returns the conjugate of the given tensor object.
+        py::arg("tensor"), R"(
+        Returns the conjugate of the given tensor object.
 
         Args:
             tensor: reference tensor object.
@@ -458,7 +458,7 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
             Reshapes a tensor object to the given dimensions.
 
             Args:
-                tensor: index dimensionality of the reshaped tensor object.
+                tensor: tensor object to reshape.
                 shape: index dimensionality of the reshaped tensor object.
             
             Returns:
@@ -506,8 +506,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
            const std::vector<std::string> &new_indices) -> tensor_t {
             return Jet::Tensor<>::Transpose<T>(tensor, new_indices);
         },
-        py::arg("tensor"), py::arg("new_indices"),
-        R"(Transposes the indices of a tensor object.
+        py::arg("tensor"), py::arg("new_indices"), R"(
+        Transposes the indices of a tensor object.
 
             Args:
                 tensor: reference tensor object.
