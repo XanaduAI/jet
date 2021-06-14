@@ -59,7 +59,7 @@ class TestGate:
         with pytest.raises(ValueError):
             gate.indices = indices
 
-    @pytest.mark.parametrize("indices", [None, ["1", "2", "3", "4"]])
+    @pytest.mark.parametrize("indices", [None, ["1", "2", "3", "4"], ["ABC", "D", "E", "F"]])
     def test_indices_are_valid(self, gate, indices):
         """Tests that the indices of a gate can be set and retrieved."""
         assert gate.indices is None
@@ -97,8 +97,7 @@ class TestGateFactory:
 
     def test_create_registered_gate(self):
         """Tests that a registered gate can be created."""
-        gate = jet.GateFactory.create(name="MOCK", tensor_id=123)
-        assert gate.tensor_id == 123
+        gate = jet.GateFactory.create(name="MOCK")
         assert gate.tensor() == MockGate().tensor()
 
 
