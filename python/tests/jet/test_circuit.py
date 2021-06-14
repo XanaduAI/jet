@@ -24,30 +24,8 @@ class TestCircuit:
 
     def test_constructor(self, circuit):
         """Tests that the circuit constructor initializes the correct wires and parts."""
-        assert circuit.wires == tuple(jet.Wire(i, 0, False) for i in range(4))
-        assert circuit.parts == tuple(jet.Qubit() for _ in range(4))
-
-    def test_append_fake_wire(self, circuit, validator):
-        """Tests that a ValueError is raised when the append validator is given
-        a wire ID which does not exist in the circuit.
-        """
-        with pytest.raises(ValueError, match=r"Wire IDs must fall in the range \[0, 4\)."):
-            validator(self=circuit, part=None, wire_ids=[4])
-
-    def test_append_closed_wire(self, circuit, validator):
-        """Tests that a ValueError is raised when the append validator is given
-        a wire ID associated with a closed wire.
-        """
-        circuit._wires[0].closed = True
-        with pytest.raises(ValueError, match="Wire IDs must correspond to open wires."):
-            validator(self=circuit, part=None, wire_ids=[0])
-
-    def test_append_duplicate_wire(self, circuit, validator):
-        """Tests that a ValueError is raised when the append validator is given
-        a duplicate wire ID.
-        """
-        with pytest.raises(ValueError, match="Wire IDs must be unique."):
-            validator(self=circuit, part=None, wire_ids=[0, 0])
+        assert list(circuit.wires) == [jet.Wire(i, 0, False) for i in range(4)]
+        assert list(circuit.parts) == [jet.Qubit() for _ in range(4)]
 
     def test_append_dangling_wire(self, circuit, validator):
         """Tests that a ValueError is raised when the append validator is given
@@ -60,57 +38,79 @@ class TestCircuit:
         with pytest.raises(ValueError, match=match):
             validator(self=circuit, part=jet.Qubit(), wire_ids=[0, 1])
 
+    def test_append_fake_wire(self, circuit, validator):
+        """Tests that a ValueError is raised when the append validator is given
+        a wire ID which does not exist in the circuit.
+        """
+        with pytest.raises(ValueError, match=r"Wire ID 4 falls outside the range \[0, 4\)."):
+            validator(self=circuit, part=jet.Qubit(), wire_ids=[4])
+
+    def test_append_duplicate_wire(self, circuit, validator):
+        """Tests that a ValueError is raised when the append validator is given
+        a duplicate wire ID.
+        """
+        with pytest.raises(ValueError, match="Wire ID 0 is specified more than once."):
+            validator(self=circuit, part=jet.QubitRegister(2), wire_ids=[0, 0])
+
+    def test_append_closed_wire(self, circuit, validator):
+        """Tests that a ValueError is raised when the append validator is given
+        a wire ID associated with a closed wire.
+        """
+        circuit._wires[0].closed = True
+        with pytest.raises(ValueError, match="Wire 0 is closed."):
+            validator(self=circuit, part=jet.Qubit(), wire_ids=[0])
+
     def test_append_one_wire_gate(self, circuit):
         """Tests that a gate which transforms one wire can be appended to the circuit."""
         gate = jet.Hadamard()
         circuit.append_gate(gate, wire_ids=[3])
         assert gate.indices == ["3-1", "3-0"]
-        assert circuit.parts[-1] == gate
-        assert circuit.wires == (
+        assert list(circuit.parts)[-1] == gate
+        assert list(circuit.wires) == [
             jet.Wire(0, depth=0, closed=False),
             jet.Wire(1, depth=0, closed=False),
             jet.Wire(2, depth=0, closed=False),
             jet.Wire(3, depth=1, closed=False),
-        )
+        ]
 
     def test_append_two_wire_gate(self, circuit):
         """Tests that a gate which transforms two wires can be appended to the circuit."""
         gate = jet.CNOT()
         circuit.append_gate(gate, wire_ids=[2, 3])
         assert gate.indices == ["2-1", "3-1", "2-0", "3-0"]
-        assert circuit.parts[-1] == gate
-        assert circuit.wires == (
+        assert list(circuit.parts)[-1] == gate
+        assert list(circuit.wires) == [
             jet.Wire(0, depth=0, closed=False),
             jet.Wire(1, depth=0, closed=False),
             jet.Wire(2, depth=1, closed=False),
             jet.Wire(3, depth=1, closed=False),
-        )
+        ]
 
     def test_append_one_wire_state(self, circuit):
         """Tests that a state which terminates one wire can be appended to the circuit."""
         state = jet.Qubit()
         circuit.append_state(state, wire_ids=[0])
         assert state.indices == ["0-0"]
-        assert circuit.parts[-1] == state
-        assert circuit.wires == (
+        assert list(circuit.parts)[-1] == state
+        assert list(circuit.wires) == [
             jet.Wire(0, depth=0, closed=True),
             jet.Wire(1, depth=0, closed=False),
             jet.Wire(2, depth=0, closed=False),
             jet.Wire(3, depth=0, closed=False),
-        )
+        ]
 
     def test_append_two_wire_state(self, circuit):
         """Tests that a state which terminates two wires can be appended to the circuit."""
         state = jet.QubitRegister(size=2)
         circuit.append_state(state, wire_ids=[0, 1])
         assert state.indices == ["0-0", "1-0"]
-        assert circuit.parts[-1] == state
-        assert circuit.wires == (
+        assert list(circuit.parts)[-1] == state
+        assert list(circuit.wires) == [
             jet.Wire(0, depth=0, closed=True),
             jet.Wire(1, depth=0, closed=True),
             jet.Wire(2, depth=0, closed=False),
             jet.Wire(3, depth=0, closed=False),
-        )
+        ]
 
     def test_indices(self, circuit):
         """Tests that the correct index labels are derived for a sequence of wires."""

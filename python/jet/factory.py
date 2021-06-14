@@ -37,11 +37,18 @@ TensorNetworkSerializerType = Union[TensorNetworkSerializerC64, TensorNetworkSer
 
 
 def TaskBasedCpuContractor(*args, **kwargs) -> TaskBasedCpuContractorType:
-    """Constructs a task-based CPU contractor with the specified data type. If a
-    `dtype` keyword argument is not provided, a TaskBasedCpuContractorC128
-    instance will be returned.
+    """Constructs a task-based CPU contractor (TBCC) with the specified data
+    type. If a ``dtype`` keyword argument is not provided, a
+    ``TaskBasedCpuContractorC128`` instance will be returned.
+
+    Args:
+        *args: Positional arguments to pass to the TBCC constructor.
+        **kwargs: Keyword arguments to pass to the TBCC constructor.
+
+    Returns:
+        Task-based CPU contractor instance.
     """
-    dtype = kwargs.pop("dtype", "complex128")
+    dtype = kwargs.pop("dtype", np.complex128)
     if np.dtype(dtype) == np.complex64:
         return TaskBasedCpuContractorC64(*args, **kwargs)
     elif np.dtype(dtype) == np.complex128:
@@ -51,10 +58,17 @@ def TaskBasedCpuContractor(*args, **kwargs) -> TaskBasedCpuContractorType:
 
 
 def Tensor(*args, **kwargs) -> TensorType:
-    """Constructs a tensor with the specified data type. If a `dtype` keyword
-    argument is not provided, a TensorC128 instance will be returned.
+    """Constructs a tensor with the specified data type. If a ``dtype`` keyword
+    argument is not provided, a ``TensorC128`` instance will be returned.
+
+    Args:
+        *args: Positional arguments to pass to the tensor constructor.
+        **kwargs: Keyword arguments to pass to the tensor constructor.
+
+    Returns:
+        Tensor instance.
     """
-    dtype = kwargs.pop("dtype", "complex128")
+    dtype = kwargs.pop("dtype", np.complex128)
     if np.dtype(dtype) == np.complex64:
         return TensorC64(*args, **kwargs)
     elif np.dtype(dtype) == np.complex128:
@@ -64,11 +78,18 @@ def Tensor(*args, **kwargs) -> TensorType:
 
 
 def TensorNetwork(*args, **kwargs) -> TensorNetworkType:
-    """Constructs a tensor network with the specified data type. If a `dtype`
-    keyword argument is not provided, a TensorNetworkC128 instance will be
+    """Constructs a tensor network with the specified data type. If a ``dtype``
+    keyword argument is not provided, a ``TensorNetworkC128`` instance will be
     returned.
+
+    Args:
+        *args: Positional arguments to pass to the tensor network constructor.
+        **kwargs: Keyword arguments to pass to the tensor network constructor.
+
+    Returns:
+        Tensor network instance.
     """
-    dtype = kwargs.pop("dtype", "complex128")
+    dtype = kwargs.pop("dtype", np.complex128)
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkC64(*args, **kwargs)
     elif np.dtype(dtype) == np.complex128:
@@ -79,10 +100,17 @@ def TensorNetwork(*args, **kwargs) -> TensorNetworkType:
 
 def TensorNetworkFile(*args, **kwargs) -> TensorNetworkFileType:
     """Constructs a tensor network file with the specified data type. If a
-    `dtype` keyword argument is not provided, a TensorNetworkFileC128 instance
-    will be returned.
+    ``dtype`` keyword argument is not provided, a ``TensorNetworkFileC128``
+    instance will be returned.
+
+    Args:
+        *args: Positional arguments to pass to the tensor network file constructor.
+        **kwargs: Keyword arguments to pass to the tensor network file constructor.
+
+    Returns:
+        Tensor network file instance.
     """
-    dtype = kwargs.pop("dtype", "complex128")
+    dtype = kwargs.pop("dtype", np.complex128)
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkFileC64(*args, **kwargs)
     elif np.dtype(dtype) == np.complex128:
@@ -93,10 +121,17 @@ def TensorNetworkFile(*args, **kwargs) -> TensorNetworkFileType:
 
 def TensorNetworkSerializer(*args, **kwargs) -> TensorNetworkSerializerType:
     """Constructs a tensor network serializer with the specified data type. If a
-    `dtype` keyword argument is not provided, a TensorNetworkSerializerC128
+    ``dtype`` keyword argument is not provided, a ``TensorNetworkSerializerC128``
     instance will be returned.
+
+    Args:
+        *args: Positional arguments to pass to the tensor network serializer constructor.
+        **kwargs: Keyword arguments to pass to the tensor network serializer constructor.
+
+    Returns:
+        Tensor network serializer instance.
     """
-    dtype = kwargs.pop("dtype", "complex128")
+    dtype = kwargs.pop("dtype", np.complex128)
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkSerializerC64(*args, **kwargs)
     elif np.dtype(dtype) == np.complex128:
