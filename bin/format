@@ -13,7 +13,7 @@ CLANG_FMT_STYLE_CFG = {
     "IndentWidth": 4,
 }
 
-SRCFILE_EXT = ("c", "cpp", "cxx", "h", "hpp", "hxx")
+SRCFILE_EXT = ("c", "cpp", "cxx", "h", "hpp", "hxx", "cu", "cuh")
 IGNORE_PATTERN = "external"
 
 BASE_CMD = ("clang-format", f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}")

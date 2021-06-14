@@ -242,7 +242,7 @@ template <class Tensor> class TensorNetworkSerializer {
         size_t i = 0;
         try {
             while (i < js_data.size()) {
-                data[i] = S(js_data[i].at(0), js_data[i].at(1));
+                data[i] = S{js_data[i].at(0), js_data[i].at(1)};
                 i++;
             }
         }

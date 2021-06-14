@@ -27,332 +27,7 @@ namespace Jet {
  * @tparam T Underlying complex tensor data type (`complex<float>` or
  *           `complex<double>`).
  */
-template <class T = std::complex<float>> class Tensor;
-
-/**
- * @brief Adds two `%Tensor` objects with the same index sets.
- *
- * The resulting tensor will have the same index set as the operand tensors. The
- * order of the indices follows that of the first argument (i.e., `A`).
- *
- * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition of
- * A and B is a 2x3 tensor C(i,j):
- * \code{.cpp}
- *     Tensor A({"i", "j"}, {2, 3}, {0, 1, 2, 3, 4, 5});
- *     Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
- *     Tensor C = AddTensors(A, B);  // {5, 6, 7, 9, 10, 11}
- * \endcode
- *
- * @warning The program is aborted if the index sets of the given `%Tensor`
- *          objects to not match.
- *
- * @tparam T `%Tensor` data type.
- * @param A tensor on the LHS of the addition.
- * @param B tensor on the RHS of the addition.
- * @return `%Tensor` object representing the element-wise sum of the given
- *         tensors.
- */
-template <class T> Tensor<T> AddTensors(const Tensor<T> &A, const Tensor<T> &B)
-{
-    static const Tensor<T> zero;
-
-    // The zero tensor is used in reductions where the shape of an accumulator
-    // is not known beforehand.
-    if (A == zero) {
-        return B;
-    }
-    else if (B == zero) {
-        return A;
-    }
-
-    const auto disjoint_indices =
-        Jet::Utilities::VectorDisjunctiveUnion(A.GetIndices(), B.GetIndices());
-
-    JET_ABORT_IF_NOT(disjoint_indices.empty(),
-                     "Tensor addition with disjoint indices is not supported.");
-
-    const auto &indices = A.GetIndices();
-    const auto &shape = A.GetShape();
-
-    // Align the underlying data vectors of `A` and `B`.
-    const auto &&Bt = Transpose(B, indices);
-
-    Tensor<T> C(indices, shape);
-    const auto size = C.GetSize();
-
-    auto c_ptr = C.GetData().data();
-    auto a_ptr = A.GetData().data();
-    auto bt_ptr = Bt.GetData().data();
-
-#if defined _OPENMP
-#pragma omp parallel for schedule(static, 1024) // MAX_RIGHT_DIM)
-#endif
-    for (size_t i = 0; i < size; i++) {
-        c_ptr[i] = a_ptr[i] + bt_ptr[i];
-    }
-
-    return C;
-}
-
-/**
- * @brief Slices a `%Tensor` object index.
- *
- * The result is a `%Tensor` object whose given indices and data are a subset of
- * the provided tensor object, sliced along the given index argument.
- *
- * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices along
- * each index with the resulting slices selected as required:
- * \code{.cpp}
- *     Tensor A({"i", "j"}, {2, 3});
- *     A.FillRandom();
- *
- *     SliceIndex(A, "i", 0);  // [1x3] tensor, slice 0
- *     SliceIndex(A, "i", 1);  // [1x3] tensor, slice 1
-
- *     SliceIndex(A, "j", 0);  // [2x1] tensor, slice 0
- *     SliceIndex(A, "j", 1);  // [2x1] tensor, slice 1
- *     SliceIndex(A, "j", 2);  // [2x1] tensor, slice 2
- * \endcode
- *
- * @tparam T `%Tensor` data type.
- * @param tensor `%Tensor` object to slice.
- * @param index `%Tensor` index label on which to slice.
- * @param value Value to slice the `%Tensor` index on.
- * @return Slice of the `%Tensor` object.
- */
-template <class T>
-Tensor<T> SliceIndex(const Tensor<T> &tensor, const std::string &index,
-                     size_t value)
-{
-
-    std::vector<std::string> new_ordering = tensor.GetIndices();
-    auto it = find(new_ordering.begin(), new_ordering.end(), index);
-    size_t index_num = std::distance(new_ordering.begin(), it);
-    new_ordering.erase(new_ordering.begin() + index_num);
-    new_ordering.insert(new_ordering.begin(), index);
-
-    auto &&tensor_trans = Transpose(tensor, new_ordering);
-    std::vector<std::string> sliced_indices(
-        tensor_trans.GetIndices().begin() + 1, tensor_trans.GetIndices().end());
-    std::vector<size_t> sliced_dimensions(tensor_trans.GetShape().begin() + 1,
-                                          tensor_trans.GetShape().end());
-
-    Tensor<T> tensor_sliced(sliced_indices, sliced_dimensions);
-    size_t projection_size = tensor_sliced.GetSize();
-    size_t projection_begin = projection_size * value;
-
-    auto data_ptr = tensor_trans.GetData().data();
-    auto tensor_sliced_ptr = tensor_sliced.GetData().data();
-
-#if defined _OPENMP
-    int max_right_dim = 1024;
-#pragma omp parallel for schedule(static, max_right_dim)
-#endif
-    for (size_t p = 0; p < projection_size; ++p)
-        tensor_sliced_ptr[p] = data_ptr[projection_begin + p];
-
-    return tensor_sliced;
-}
-
-/**
- * @brief Reshapes a `%Tensor` object to the given dimensions.
- *
- * @tparam T `%Tensor` data type.
- * @param old_tensor Original tensor object to reshape.
- * @param new_shape Index dimensionality for new tensor object.
- * @return Reshaped copy of the `%Tensor` object.
- */
-template <class T>
-Tensor<T> Reshape(const Tensor<T> &old_tensor,
-                  const std::vector<size_t> &new_shape)
-{
-    using namespace Utilities;
-
-    JET_ABORT_IF_NOT(old_tensor.GetSize() ==
-                         Jet::Utilities::ShapeToSize(new_shape),
-                     "Size is inconsistent between tensors.");
-    Tensor<T> new_tensor(new_shape);
-    Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
-    return new_tensor;
-}
-
-/**
- * @brief Returns the conjugate of a `%Tensor` object.
- *
- * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
- * @return `%Tensor` object representing the conjugate of `A`.
- */
-template <class T> Tensor<T> Conj(const Tensor<T> &A)
-{
-    Tensor<T> A_conj(A.GetIndices(), A.GetShape());
-    for (size_t i = 0; i < A.GetSize(); i++) {
-        A_conj[i] = std::conj(A[i]);
-    }
-    return A_conj;
-}
-
-/**
- * @brief Transposes the indices of a `%Tensor` object to a new ordering.
- *
- * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
- * @param new_indices New `%Tensor` index label ordering.
- * @return Transposed `%Tensor` object.
- */
-template <class T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
-Tensor<T> Transpose(const Tensor<T> &A,
-                    const std::vector<std::string> &new_indices)
-{
-    using namespace Jet::Utilities;
-
-    if (A.GetIndices() == new_indices)
-        return A;
-
-    if (A.GetIndices().size() == 0)
-        JET_ABORT("Number of indices cannot be zero.");
-
-    std::vector<size_t> new_shape(A.GetShape().size());
-    for (size_t i = 0; i < new_indices.size(); i++)
-        new_shape[i] = A.GetIndexToDimension().at(new_indices[i]);
-
-    if (is_pow_2(A.GetSize())) {
-        auto permuter = Permuter<QFlexPermuter<BLOCKSIZE, MINSIZE>>();
-        try {
-            return Tensor<T>{new_indices, new_shape,
-                             permuter.Transpose(A.GetData(), A.GetShape(),
-                                                A.GetIndices(), new_indices)};
-        }
-        catch (Jet::Exception &e) {
-            std::cerr << "Error in fast transpose with given parameters:="
-                      << e.what() << std::endl;
-            std::cerr << "Using fall-back default transpose." << std::endl;
-        }
-    }
-    auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
-    return Tensor<T>{new_indices, new_shape,
-                     permuter.Transpose(A.GetData(), A.GetShape(),
-                                        A.GetIndices(), new_indices)};
-}
-
-/**
- * @brief Transposes the indices of a `%Tensor` to a new ordering.
- *
- * @warning The program is aborted if the number of elements in the new ordering
- *          does match the number of indices in the tensor.
- *
- * @tparam T `%Tensor` data type.
- * @param A Reference `%Tensor` object.
- * @param new_ordering New `%Tensor` index permutation.
- * @return Transposed `%Tensor` object.
- */
-template <class T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
-Tensor<T> Transpose(const Tensor<T> &A, const std::vector<size_t> &new_ordering)
-{
-    const size_t num_indices = A.GetIndices().size();
-    JET_ABORT_IF_NOT(num_indices == new_ordering.size(),
-                     "Size of ordering must match number of tensor indices.");
-
-    std::vector<std::string> new_indices(num_indices);
-    const auto &old_indices = A.GetIndices();
-
-    for (size_t i = 0; i < num_indices; i++) {
-        new_indices[i] = old_indices[new_ordering[i]];
-    }
-
-    return Transpose<T, BLOCKSIZE, MINSIZE>(A, new_indices);
-}
-
-/**
- * @brief Contracts two `%Tensor` objects over the intersection of their index
- *        sets.
- *
- * The resulting tensor will be formed with indices given by the symmetric
- * difference of the index sets.
- *
- * Example: Given a 3x2x4 tensor A(i,j,k) and a 2x4x2 tensor B(j,k,l), the
- * common indices are (j,k) and the symmetric difference of the sets is (i,l).
- * The result of the contraction is a 3x2 tensor C(i,l).
- * \code{.cpp}
- *     Tensor A({"i", "j", "k"}, {3, 2, 4});
- *     Tensor B({"j", "k", "l"}, {2, 4, 2});
- *     A.FillRandom();
- *     B.FillRandom();
- *     Tensor C = ContractTensors(A, B);
- * \endcode
- *
- * @see TODO: Link to documentation
- *
- * @tparam T `%Tensor` data type.
- * @param A tensor on the LHS of the contraction.
- * @param B tensor on the RHS of the contraction.
- * @return `%Tensor` object representing the contraction of the tensors.
- */
-template <class T>
-Tensor<T> ContractTensors(const Tensor<T> &A, const Tensor<T> &B)
-{
-    using namespace Jet::Utilities;
-    using namespace Jet::TensorHelpers;
-
-    auto &&left_indices = VectorSubtraction(A.GetIndices(), B.GetIndices());
-    auto &&right_indices = VectorSubtraction(B.GetIndices(), A.GetIndices());
-    auto &&common_indices = VectorIntersection(A.GetIndices(), B.GetIndices());
-
-    size_t left_dim = 1, right_dim = 1, common_dim = 1;
-    for (size_t i = 0; i < left_indices.size(); ++i) {
-        left_dim *= A.GetIndexToDimension().at(left_indices[i]);
-    }
-    for (size_t i = 0; i < right_indices.size(); ++i) {
-        right_dim *= B.GetIndexToDimension().at(right_indices[i]);
-    }
-    for (size_t i = 0; i < common_indices.size(); ++i) {
-        size_t a_dim = A.GetIndexToDimension().at(common_indices[i]);
-        common_dim *= a_dim;
-    }
-
-    auto &&a_new_ordering = VectorUnion(left_indices, common_indices);
-    auto &&b_new_ordering = VectorUnion(common_indices, right_indices);
-
-    auto &&C_indices = VectorUnion(left_indices, right_indices);
-    std::vector<size_t> C_dimensions(C_indices.size());
-    for (size_t i = 0; i < left_indices.size(); ++i)
-        C_dimensions[i] = A.GetIndexToDimension().at(left_indices[i]);
-    for (size_t i = 0; i < right_indices.size(); ++i)
-        C_dimensions[i + left_indices.size()] =
-            B.GetIndexToDimension().at(right_indices[i]);
-
-    Tensor<T> C(C_indices, C_dimensions);
-    auto &&At = Transpose<T, 1024UL, 32UL>(A, a_new_ordering);
-    auto &&Bt = Transpose<T, 1024UL, 32UL>(B, b_new_ordering);
-
-    TensorHelpers::MultiplyTensorData<T>(
-        At.GetData(), Bt.GetData(), C.GetData(), left_indices, right_indices,
-        left_dim, right_dim, common_dim);
-
-    return C;
-}
-
-/**
- * @brief Streams a tensor to an output stream.
- *
- * @param out Output stream to be modified.
- * @param tensor Tensor to be streamed.
- * @return Reference to the given output stream.
- */
-template <class T>
-inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
-{
-    using namespace Jet::Utilities;
-
-    out << "Size=" << tensor.GetSize() << std::endl;
-    out << "Indices=" << tensor.GetIndices() << std::endl;
-    out << "Data=" << tensor.GetData() << std::endl;
-
-    return out;
-}
-
-// Default template parameters belong in the forward declaration.
-template <class T> class Tensor {
+template <class T = std::complex<float>> class Tensor {
 
     static_assert(TensorHelpers::is_supported_data_type<T>,
                   "Tensor data type must be one of std::complex<float>, "
@@ -361,26 +36,6 @@ template <class T> class Tensor {
   public:
     /// Type of the real and imaginary components of the tensor data.
     using scalar_type_t = T;
-
-    /**
-     * @see Jet::AddTensors().
-     */
-    static constexpr auto &AddTensors = Jet::AddTensors<T>;
-
-    /**
-     * @see Jet::ContractTensors().
-     */
-    static constexpr auto &ContractTensors = Jet::ContractTensors<T>;
-
-    /**
-     * @see Jet::Reshape().
-     */
-    static constexpr auto &Reshape = Jet::Reshape<T>;
-
-    /**
-     * @see Jet::SliceIndex().
-     */
-    static constexpr auto &SliceIndex = Jet::SliceIndex<T>;
 
     /**
      * @brief Constructs a default `%Tensor` object.
@@ -712,6 +367,384 @@ template <class T> class Tensor {
         }
     }
 
+    /**
+     * @brief Adds two `%Tensor` objects with the same index sets.
+     *
+     * The resulting tensor will have the same index set as the operand tensors.
+     * The order of the indices follows that of the first argument (i.e., `A`).
+     *
+     * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition
+     * of A and B is a 2x3 tensor C(i,j): \code{.cpp} Tensor A({"i", "j"}, {2,
+     * 3}, {0, 1, 2, 3, 4, 5}); Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
+     *     Tensor C = AddTensors(A, B);  // {5, 6, 7, 9, 10, 11}
+     * \endcode
+     *
+     * @warning The program is aborted if the index sets of the given `%Tensor`
+     *          objects to not match.
+     *
+     * @tparam U `%Tensor` data type.
+     * @param A tensor on the LHS of the addition.
+     * @param B tensor on the RHS of the addition.
+     * @return `%Tensor` object representing the element-wise sum of the given
+     *         tensors.
+     */
+    template <class U = T>
+    static Tensor<U> AddTensors(const Tensor<U> &A, const Tensor<U> &B)
+    {
+        static const Tensor<U> zero;
+
+        // The zero tensor is used in reductions where the shape of an
+        // accumulator is not known beforehand.
+        if (A == zero) {
+            return B;
+        }
+        else if (B == zero) {
+            return A;
+        }
+
+        const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
+            A.GetIndices(), B.GetIndices());
+
+        JET_ABORT_IF_NOT(
+            disjoint_indices.empty(),
+            "Tensor addition with disjoint indices is not supported.");
+
+        const auto &indices = A.GetIndices();
+        const auto &shape = A.GetShape();
+
+        // Align the underlying data vectors of `A` and `B`.
+        const auto &&Bt = Transpose(B, indices);
+
+        Tensor<U> C(indices, shape);
+        const auto size = C.GetSize();
+
+        auto c_ptr = C.GetData().data();
+        auto a_ptr = A.GetData().data();
+        auto bt_ptr = Bt.GetData().data();
+
+#if defined _OPENMP
+#pragma omp parallel for schedule(static, 1024) // MAX_RIGHT_DIM)
+#endif
+        for (size_t i = 0; i < size; i++) {
+            c_ptr[i] = a_ptr[i] + bt_ptr[i];
+        }
+
+        return C;
+    }
+
+    /**
+     * @brief Adds current and other `%Tensor` object with the same index sets.
+     *
+     * @see AddTensors(const Tensor<U> &A, const Tensor<U> &B)
+     */
+    Tensor<T> AddTensor(const Tensor<T> &other) const
+    {
+        return AddTensors<T>(*this, other);
+    }
+
+    /**
+     * @brief Slices a `%Tensor` object index.
+     *
+     * The result is a `%Tensor` object whose given indices and data are a
+    subset of
+     * the provided tensor object, sliced along the given index argument.
+     *
+     * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices
+    along
+     * each index with the resulting slices selected as required:
+     * \code{.cpp}
+     *     Tensor A({"i", "j"}, {2, 3});
+     *     A.FillRandom();
+     *
+     *     SliceIndex(A, "i", 0);  // [1x3] tensor, slice 0
+     *     SliceIndex(A, "i", 1);  // [1x3] tensor, slice 1
+
+    *     SliceIndex(A, "j", 0);  // [2x1] tensor, slice 0
+    *     SliceIndex(A, "j", 1);  // [2x1] tensor, slice 1
+    *     SliceIndex(A, "j", 2);  // [2x1] tensor, slice 2
+    * \endcode
+    *
+    * @tparam U `%Tensor` data type.
+    * @param tensor `%Tensor` object to slice.
+    * @param index `%Tensor` index label on which to slice.
+    * @param value Value to slice the `%Tensor` index on.
+    * @return Slice of the `%Tensor` object.
+    */
+    template <class U = T>
+    static Tensor<U> SliceIndex(const Tensor<U> &tensor,
+                                const std::string &index, size_t value)
+    {
+
+        std::vector<std::string> new_ordering = tensor.GetIndices();
+        auto it = find(new_ordering.begin(), new_ordering.end(), index);
+        size_t index_num = std::distance(new_ordering.begin(), it);
+        new_ordering.erase(new_ordering.begin() + index_num);
+        new_ordering.insert(new_ordering.begin(), index);
+
+        auto &&tensor_trans = Transpose(tensor, new_ordering);
+        std::vector<std::string> sliced_indices(
+            tensor_trans.GetIndices().begin() + 1,
+            tensor_trans.GetIndices().end());
+        std::vector<size_t> sliced_dimensions(
+            tensor_trans.GetShape().begin() + 1, tensor_trans.GetShape().end());
+
+        Tensor<U> tensor_sliced(sliced_indices, sliced_dimensions);
+        size_t projection_size = tensor_sliced.GetSize();
+        size_t projection_begin = projection_size * value;
+
+        auto data_ptr = tensor_trans.GetData().data();
+        auto tensor_sliced_ptr = tensor_sliced.GetData().data();
+
+#if defined _OPENMP
+        int max_right_dim = 1024;
+#pragma omp parallel for schedule(static, max_right_dim)
+#endif
+        for (size_t p = 0; p < projection_size; ++p)
+            tensor_sliced_ptr[p] = data_ptr[projection_begin + p];
+
+        return tensor_sliced;
+    }
+
+    /**
+     * @brief Slices current `%Tensor` object index.
+     *
+     * @see SliceIndex(const Tensor<U> &tensor, const std::string &index, size_t
+     * value)
+     */
+    Tensor<T> SliceIndex(const std::string &index, size_t value) const
+    {
+        return SliceIndex<T>(*this, index, value);
+    }
+
+    /**
+     * @brief Reshapes a `%Tensor` object to the given dimensions.
+     *
+     * @tparam U `%Tensor` data type.
+     * @param old_tensor Original tensor object to reshape.
+     * @param new_shape Index dimensionality for new tensor object.
+     * @return Reshaped copy of the `%Tensor` object.
+     */
+    template <class U = T>
+    static Tensor<U> Reshape(const Tensor<U> &old_tensor,
+                             const std::vector<size_t> &new_shape)
+    {
+        using namespace Utilities;
+
+        JET_ABORT_IF_NOT(old_tensor.GetSize() ==
+                             Jet::Utilities::ShapeToSize(new_shape),
+                         "Size is inconsistent between tensors.");
+        Tensor<U> new_tensor(new_shape);
+        Utilities::FastCopy(old_tensor.GetData(), new_tensor.GetData());
+        return new_tensor;
+    }
+
+    /**
+     * @brief Reshapes `%Tensor` object to the given dimensions.
+     *
+     * @see Reshape(const Tensor<U> &old_tensor, const std::vector<size_t>
+     * &new_shape)
+     */
+    Tensor<T> Reshape(const std::vector<size_t> &new_shape) const
+    {
+        return Reshape<T>(*this, new_shape);
+    }
+
+    /**
+     * @brief Transposes the indices of a `%Tensor` object to a new ordering.
+     *
+     * @tparam U `%Tensor` data type.
+     * @param A Reference `%Tensor` object.
+     * @param new_indices New `%Tensor` index label ordering.
+     * @return Transposed `%Tensor` object.
+     */
+    template <class U = T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
+    static Tensor<U> Transpose(const Tensor<U> &A,
+                               const std::vector<std::string> &new_indices)
+    {
+        using namespace Jet::Utilities;
+
+        if (A.GetIndices() == new_indices)
+            return A;
+
+        if (A.GetIndices().size() == 0)
+            JET_ABORT("Number of indices cannot be zero.");
+
+        std::vector<size_t> new_shape(A.GetShape().size());
+        for (size_t i = 0; i < new_indices.size(); i++)
+            new_shape[i] = A.GetIndexToDimension().at(new_indices[i]);
+
+        if (is_pow_2(A.GetSize())) {
+            auto permuter = Permuter<QFlexPermuter<BLOCKSIZE, MINSIZE>>();
+            try {
+                return Tensor<U>{new_indices, new_shape,
+                                 permuter.Transpose(A.GetData(), A.GetShape(),
+                                                    A.GetIndices(),
+                                                    new_indices)};
+            }
+            catch (Jet::Exception &e) {
+                std::cerr << "Error in fast transpose with given parameters:="
+                          << e.what() << std::endl;
+                std::cerr << "Using fall-back default transpose." << std::endl;
+            }
+        }
+        auto permuter = Permuter<DefaultPermuter<BLOCKSIZE>>();
+        return Tensor<U>{new_indices, new_shape,
+                         permuter.Transpose(A.GetData(), A.GetShape(),
+                                            A.GetIndices(), new_indices)};
+    }
+
+    /**
+     * @brief Transposes the indices of a `%Tensor` to a new ordering.
+     *
+     * @warning The program is aborted if the number of elements in the new
+     * ordering does match the number of indices in the tensor.
+     *
+     * @tparam U `%Tensor` data type.
+     * @param A Reference `%Tensor` object.
+     * @param new_ordering New `%Tensor` index permutation.
+     * @return Transposed `%Tensor` object.
+     */
+    template <class U = T, size_t BLOCKSIZE = 1024, size_t MINSIZE = 32>
+    static Tensor<U> Transpose(const Tensor<U> &A,
+                               const std::vector<size_t> &new_ordering)
+    {
+        const size_t num_indices = A.GetIndices().size();
+        JET_ABORT_IF_NOT(
+            num_indices == new_ordering.size(),
+            "Size of ordering must match number of tensor indices.");
+
+        std::vector<std::string> new_indices(num_indices);
+        const auto &old_indices = A.GetIndices();
+
+        for (size_t i = 0; i < num_indices; i++) {
+            new_indices[i] = old_indices[new_ordering[i]];
+        }
+
+        return Transpose<U, BLOCKSIZE, MINSIZE>(A, new_indices);
+    }
+    /**
+     * @brief Transposes the indices of the `%Tensor` object to a new ordering.
+     *
+     * @see Transpose(const Tensor<U> &A, const std::vector<size_t>
+     * &new_ordering)
+     */
+    Tensor<T> Transpose(const std::vector<size_t> &new_ordering) const
+    {
+        return Transpose<T>(*this, new_ordering);
+    }
+    /**
+     * @brief Transposes the indices of the `%Tensor` object to a new ordering.
+     *
+     * @see Transpose(const Tensor<U> &A, const std::vector<std::string>
+     * &new_indices)
+     */
+    Tensor<T> Transpose(const std::vector<std::string> &new_indices) const
+    {
+        return Transpose<T>(*this, new_indices);
+    }
+    /**
+     * @brief Returns the conjugate of a `%Tensor` object.
+     *
+     * @tparam U `%Tensor` data type.
+     * @param A Reference `%Tensor` object.
+     * @return `%Tensor` object representing the conjugate of `A`.
+     */
+    template <class U = T> static Tensor<U> Conj(const Tensor<U> &A)
+    {
+        Tensor<U> A_conj(A.GetIndices(), A.GetShape());
+        for (size_t i = 0; i < A.GetSize(); i++) {
+            A_conj[i] = std::conj(A[i]);
+        }
+        return A_conj;
+    }
+
+    /**
+     * @brief Returns the conjugate of the current `%Tensor` object.
+     *
+     * @see Conj(const Tensor<U> &A)
+     */
+    Tensor<T> Conj() const { return Conj<T>(*this); }
+
+    /**
+     * @brief Contracts two `%Tensor` objects over the intersection of their
+     * index sets.
+     *
+     * The resulting tensor will be formed with indices given by the symmetric
+     * difference of the index sets.
+     *
+     * Example: Given a 3x2x4 tensor A(i,j,k) and a 2x4x2 tensor B(j,k,l), the
+     * common indices are (j,k) and the symmetric difference of the sets is
+     * (i,l). The result of the contraction is a 3x2 tensor C(i,l). \code{.cpp}
+     *     Tensor A({"i", "j", "k"}, {3, 2, 4});
+     *     Tensor B({"j", "k", "l"}, {2, 4, 2});
+     *     A.FillRandom();
+     *     B.FillRandom();
+     *     Tensor C = ContractTensors(A, B);
+     * \endcode
+     *
+     * @see TODO: Link to documentation
+     *
+     * @tparam U `%Tensor` data type.
+     * @param A tensor on the LHS of the contraction.
+     * @param B tensor on the RHS of the contraction.
+     * @return `%Tensor` object representing the contraction of the tensors.
+     */
+    template <class U = T>
+    static Tensor<U> ContractTensors(const Tensor<U> &A, const Tensor<U> &B)
+    {
+        using namespace Jet::Utilities;
+        using namespace Jet::TensorHelpers;
+
+        auto &&left_indices = VectorSubtraction(A.GetIndices(), B.GetIndices());
+        auto &&right_indices =
+            VectorSubtraction(B.GetIndices(), A.GetIndices());
+        auto &&common_indices =
+            VectorIntersection(A.GetIndices(), B.GetIndices());
+
+        size_t left_dim = 1, right_dim = 1, common_dim = 1;
+        for (size_t i = 0; i < left_indices.size(); ++i) {
+            left_dim *= A.GetIndexToDimension().at(left_indices[i]);
+        }
+        for (size_t i = 0; i < right_indices.size(); ++i) {
+            right_dim *= B.GetIndexToDimension().at(right_indices[i]);
+        }
+        for (size_t i = 0; i < common_indices.size(); ++i) {
+            size_t a_dim = A.GetIndexToDimension().at(common_indices[i]);
+            common_dim *= a_dim;
+        }
+
+        auto &&a_new_ordering = VectorUnion(left_indices, common_indices);
+        auto &&b_new_ordering = VectorUnion(common_indices, right_indices);
+
+        auto &&C_indices = VectorUnion(left_indices, right_indices);
+        std::vector<size_t> C_dimensions(C_indices.size());
+        for (size_t i = 0; i < left_indices.size(); ++i)
+            C_dimensions[i] = A.GetIndexToDimension().at(left_indices[i]);
+        for (size_t i = 0; i < right_indices.size(); ++i)
+            C_dimensions[i + left_indices.size()] =
+                B.GetIndexToDimension().at(right_indices[i]);
+
+        Tensor<U> C(C_indices, C_dimensions);
+        auto &&At = Transpose<U, 1024UL, 32UL>(A, a_new_ordering);
+        auto &&Bt = Transpose<U, 1024UL, 32UL>(B, b_new_ordering);
+
+        TensorHelpers::MultiplyTensorData<U>(
+            At.GetData(), Bt.GetData(), C.GetData(), left_indices,
+            right_indices, left_dim, right_dim, common_dim);
+
+        return C;
+    }
+    /**
+     * @brief Contracts the current `%Tensor` object with other over the
+     * intersection of their index sets.
+     *
+     * @see ContractTensors(const Tensor<U> &A, const Tensor<U> &B)
+     */
+    Tensor<T> ContractWithTensor(const Tensor<T> &other) const
+    {
+        return ContractTensors<T>(*this, other);
+    }
+
   private:
     /// Index labels.
     std::vector<std::string> indices_;
@@ -725,5 +758,24 @@ template <class T> class Tensor {
     /// Complex data values in row-major order.
     std::vector<T> data_;
 };
+
+/**
+ * @brief Streams a tensor to an output stream.
+ *
+ * @param out Output stream to be modified.
+ * @param tensor Tensor to be streamed.
+ * @return Reference to the given output stream.
+ */
+template <class T>
+inline std::ostream &operator<<(std::ostream &out, const Tensor<T> &tensor)
+{
+    using namespace Jet::Utilities;
+
+    out << "Size = " << tensor.GetSize() << std::endl;
+    out << "Indices = " << tensor.GetIndices() << std::endl;
+    out << "Data = " << tensor.GetData();
+
+    return out;
+}
 
 }; // namespace Jet
