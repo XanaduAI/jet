@@ -77,3 +77,25 @@ def test_run_xir_program_with_no_output_statements(program):
 def test_run_xir_program_with_amplitude_statements(program, want_result):
     """Tests that running an XIR program with amplitude statements gives the correct result."""
     assert jet.run_xir_program(program) == pytest.approx(want_result)
+
+
+def test_run_xir_program_with_stateless_amplitude_statement():
+    """Tests that a ValueError is raised when an XIR program contains an
+    amplitude statement that is missing a "state" parameter.
+    """
+    program = parse_xir_script("use xstd; X | [0]; amplitude | [0];")
+
+    with pytest.raises(
+        ValueError, match=r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\."
+    ):
+        jet.run_xir_program(program)
+
+
+def test_run_xir_program_with_unsupported_statement():
+    """Tests that a ValueError is raised when an XIR program contains an
+    unsupported statement.
+    """
+    program = parse_xir_script("use xstd; halt | [0];")
+
+    with pytest.raises(ValueError, match=r"Statement 'halt \| \[0\]' is not supported\."):
+        jet.run_xir_program(program)
