@@ -506,8 +506,8 @@ template <class T> void AddBindingsForTensor(py::module_ &m)
            const std::vector<std::string> &new_indices) -> tensor_t {
             return Jet::Tensor<>::Transpose<T>(tensor, new_indices);
         },
-        py::arg("tensor"), py::arg("new_indices"),
-        R"(Transposes the indices of a tensor object.
+        py::arg("tensor"), py::arg("new_indices"), R"(
+        Transposes the indices of a tensor object.
 
             Args:
                 tensor: reference tensor object.
