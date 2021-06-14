@@ -43,7 +43,7 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
 
     {
         data_out = data_;
-        std::vector<DataType> scratch(data_);
+        std::vector<DataType> scratch(data_.size());
         PlanData precomputed_data = PrecomputeFastTransposeData(
             data_out, shape, old_indices, new_indices);
         FastTranspose(data_out, precomputed_data, scratch);
