@@ -154,6 +154,5 @@ class Circuit:
         tn = TensorNetwork(dtype=dtype)
         for part in self._parts:
             tensor = part.tensor(dtype=dtype)
-            tensor_id = tn.add_tensor(tensor)
-            part.tensor_id = tensor_id
+            tn.add_tensor(tensor)
         return tn
