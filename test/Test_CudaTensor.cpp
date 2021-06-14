@@ -287,9 +287,6 @@ TEST_CASE("CudaTensor::CudaTensor(...)", "[CudaTensor]")
         CHECK(tensor1.GetIndices() == indices);
         CHECK(tensor2.GetIndices() == indices);
 
-        CHECK(tensor1.GetSize() == 4);
-        CHECK(tensor2.GetSize() == 4);
-
         std::vector<c64_host> data_buffer1(tensor1.GetSize(), {0, 0});
         std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
 
@@ -316,9 +313,6 @@ TEST_CASE("CudaTensor::CudaTensor(...)", "[CudaTensor]")
 
         CHECK(tensor1.GetIndices() == indices);
         CHECK(tensor2.GetIndices() == indices);
-
-        CHECK(tensor1.GetSize() == 4);
-        CHECK(tensor2.GetSize() == 4);
 
         std::vector<c64_host> data_buffer1(tensor1.GetSize(), {0, 0});
         std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
@@ -347,9 +341,6 @@ TEST_CASE("CudaTensor::CudaTensor(...)", "[CudaTensor]")
         CHECK(tensor1.GetIndices() == indices);
         CHECK(tensor2.GetIndices() == indices);
 
-        CHECK(tensor1.GetSize() == 4);
-        CHECK(tensor2.GetSize() == 4);
-
         std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
 
         tensor2.CopyGpuDataToHost(
@@ -373,9 +364,6 @@ TEST_CASE("CudaTensor::CudaTensor(...)", "[CudaTensor]")
         CHECK(tensor1.GetIndices() == indices);
         CHECK(tensor2.GetIndices() == indices);
 
-        CHECK(tensor1.GetSize() == 4);
-        CHECK(tensor2.GetSize() == 4);
-
         std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
 
         tensor2.CopyGpuDataToHost(
@@ -389,7 +377,6 @@ TEST_CASE("CudaTensor conversion to Tensor", "[CudaTensor]")
 {
     SECTION("CudaTensor<cuComplex> to Tensor<complex<float>>")
     {
-
         CudaTensor<c64_dev> tensor_dev({"i"}, {2}, {{2, 0}, {0, 1}});
         Tensor<c64_host> tensor_host({"i"}, {2}, {{2, 0}, {0, 1}});
         auto tensor_cast = static_cast<Tensor<std::complex<float>>>(tensor_dev);
@@ -540,10 +527,9 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
         CHECK(tensor1_host.GetIndices() == tensor1_host_conv.GetIndices());
         CHECK(tensor1_host.GetShape() == tensor1_host_conv.GetShape());
-        CHECK(tensor1_host.GetSize() == tensor1_host_conv.GetSize());
+
         CHECK(tensor2_host.GetIndices() == tensor2_host_conv.GetIndices());
         CHECK(tensor2_host.GetShape() == tensor2_host_conv.GetShape());
-        CHECK(tensor2_host.GetSize() == tensor2_host_conv.GetSize());
 
         auto tensor3_host = Tensor<c64_host>::ContractTensors(
             tensor1_host_conv, tensor2_host_conv);
@@ -553,7 +539,6 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
         CHECK(tensor3_host_conv.GetIndices() == tensor3_host.GetIndices());
         CHECK(tensor3_host_conv.GetShape() == tensor3_host.GetShape());
-        CHECK(tensor3_host_conv.GetSize() == tensor3_host.GetSize());
 
         const auto& data1 = tensor3_host_conv.GetData();
         const auto& data2 = tensor3_host.GetData();
