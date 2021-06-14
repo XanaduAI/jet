@@ -330,9 +330,11 @@ template <class T = cuComplex> class CudaTensor {
     {
         std::string old_string = GetIndices()[ind];
 
-        indices_[ind] = new_string;
-        index_to_dimension_[new_string] = index_to_dimension_[old_string];
-        index_to_dimension_.erase(old_string);
+        if (old_string != new_string) {
+            indices_[ind] = new_string;
+            index_to_dimension_[new_string] = index_to_dimension_[old_string];
+            index_to_dimension_.erase(old_string);
+        }
     }
 
     struct CudaContractionPlan {
