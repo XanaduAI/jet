@@ -141,7 +141,8 @@ template <class Tensor> class TensorNetworkSerializer {
      *
      * @return TensorNetworkFile containing contents of js_str
      */
-    TensorNetworkFile<Tensor> operator()(std::string js_str)
+    TensorNetworkFile<Tensor> operator()(std::string js_str,
+                                         bool col_major = false)
     {
         TensorNetworkFile<Tensor> tf;
         LoadAndValidateJSON_(js_str);
@@ -151,8 +152,17 @@ template <class Tensor> class TensorNetworkSerializer {
             auto data = TensorDataFromJSON_<typename Tensor::scalar_type_t>(
                 js_tensor[3], i);
 
-            tf.tensors.AddTensor(Tensor(js_tensor[1], js_tensor[2], data),
-                                 js_tensor[0]);
+            if (col_major) {
+                std::vector<std::string> rev_idx(js_tensor[1].rbegin(),
+                                                 js_tensor[1].rend());
+                std::vector<size_t> rev_shape(js_tensor[2].rbegin(),
+                                              js_tensor[2].rend());
+                tf.tensors.AddTensor(Tensor(rev_idx, rev_shape, data),
+                                     js_tensor[0]);
+            }
+            else
+                tf.tensors.AddTensor(Tensor(js_tensor[1], js_tensor[2], data),
+                                     js_tensor[0]);
             i++;
         }
 
