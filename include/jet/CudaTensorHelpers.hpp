@@ -37,7 +37,7 @@ namespace CudaTensorHelpers {
  * @param extents Vector of the size for each dimension.
  * @return std::vector<int64_t> Memory strides for each dimension.
  */
-std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
+static inline std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
 {
     using namespace Jet::Utilities;
 
@@ -55,7 +55,7 @@ std::vector<int64_t> GetStrides(const std::vector<size_t> &extents)
  * @param sizes The size of each independent dimension of the tensor data.
  * @return size_t Single index mapped to column-major (colexicographic) form.
  */
-size_t RowMajToColMaj(size_t row_order_linear_index,
+static inline size_t RowMajToColMaj(size_t row_order_linear_index,
                       const std::vector<size_t> &sizes)
 {
     using namespace Jet::Utilities;
