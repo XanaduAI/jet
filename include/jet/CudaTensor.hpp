@@ -196,7 +196,7 @@ template <class T = cuComplex> class CudaTensor {
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
-        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        SetIndicesShapeAndMemory(ReverseVector(other.GetIndices()), ReverseVector(other.GetShape()));
         CopyHostDataToGpu(const_cast<T *>(
             reinterpret_cast<const T *>(other.GetData().data())));
         return *this;
@@ -264,6 +264,13 @@ template <class T = cuComplex> class CudaTensor {
         return index_to_dimension_;
     }
 
+    template<class DataType>
+    static inline std::vector<DataType> ReverseVector(const std::vector<DataType> &input)
+    {
+        return std::vector<DataType>{input.rbegin(), input.rend()};
+    }
+
+
     explicit operator Tensor<std::complex<scalar_type_t_precision>>() const
     {
         std::vector<std::complex<scalar_type_t_precision>> host_data(
@@ -271,16 +278,16 @@ template <class T = cuComplex> class CudaTensor {
 
         CopyGpuDataToHost(reinterpret_cast<T *>(host_data.data()));
 
-        std::vector<std::complex<scalar_type_t_precision>> host_data_reshape =
-            host_data;
+        //std::vector<std::complex<scalar_type_t_precision>> host_data_reshape =
+        //    host_data;
 
-        for (size_t idx = 0; idx < host_data_reshape.size(); idx++) {
+        /*for (size_t idx = 0; idx < host_data_reshape.size(); idx++) {
             auto col_idx = CudaTensorHelpers::RowMajToColMaj(idx, GetShape());
             host_data_reshape[idx] = host_data[col_idx];
-        }
+        }*/
 
         auto t = Tensor<std::complex<scalar_type_t_precision>>(
-            GetIndices(), GetShape(), host_data_reshape);
+            ReverseVector(GetIndices()), ReverseVector(GetShape()), host_data);
         return t;
     }
 

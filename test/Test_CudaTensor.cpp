@@ -480,6 +480,8 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
     SECTION("Contract T0(a,b,c) and T1(b,c,d) -> T2(a,d)")
     {
+        using namespace Jet::CudaTensorHelpers;
+        
         std::vector<size_t> t_shape1{2, 3, 4};
         std::vector<size_t> t_shape2{3, 4, 2};
         std::vector<size_t> t_shape3{2, 2};
@@ -497,7 +499,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CudaTensor tensor3 = tensor1.ContractTensors(tensor2);
 
         Tensor<c64_host> tensor3_host = static_cast<Tensor<c64_host>>(tensor3);
-        Tensor<c64_host> tensor4_host(t_indices3, t_shape3,
+        Tensor<c64_host> tensor4_host(ReverseVector(t_indices3), ReverseVector(t_shape3),
                                       {c64_host(2.25, 3.0), c64_host(2.25, 3.0),
                                        c64_host(2.25, 3.0),
                                        c64_host(2.25, 3.0)});
@@ -530,6 +532,8 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
 
     SECTION("Compare CudaTensor and Tensor random tensor contraction")
     {
+        using namespace Jet::CudaTensorHelpers;
+
         std::vector<size_t> t1_shape{2, 3, 5};
         std::vector<size_t> t2_shape{5, 3, 4};
         std::vector<std::string> t1_idx{"a", "b", "c"};
@@ -538,8 +542,8 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CudaTensor tensor1_dev(t1_idx, t1_shape);
         CudaTensor tensor2_dev(t2_idx, t2_shape);
 
-        Tensor tensor1_host(t1_idx, t1_shape);
-        Tensor tensor2_host(t2_idx, t2_shape);
+        Tensor tensor1_host(ReverseVector(t1_idx), ReverseVector(t1_shape));
+        Tensor tensor2_host(ReverseVector(t2_idx), ReverseVector(t2_shape));
 
         tensor1_dev.FillRandom(7);
         tensor2_dev.FillRandom(7);
@@ -558,22 +562,35 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         auto tensor3_dev = tensor1_dev.ContractTensors(tensor2_dev);
         Tensor<c64_host> tensor3_host_conv(tensor3_dev);
 
-        CHECK(tensor3_host_conv.GetIndices() == tensor3_host.GetIndices());
-        CHECK(tensor3_host_conv.GetShape() == tensor3_host.GetShape());
+        CHECK(tensor3_host_conv.GetIndices() == ReverseVector(tensor3_host.GetIndices()));
+        CHECK(tensor3_host_conv.GetShape() == ReverseVector(tensor3_host.GetShape()));
 
         const auto &data1 = tensor3_host_conv.GetData();
         const auto &data2 = tensor3_host.GetData();
 
+        // 2x4 RowMaj to ColMaj mapping
         CHECK(data1[0].real() == Approx(data2[0].real()));
         CHECK(data1[0].imag() == Approx(data2[0].imag()));
 
-        CHECK(data1[1].real() == Approx(data2[1].real()));
-        CHECK(data1[1].imag() == Approx(data2[1].imag()));
+        CHECK(data1[1].real() == Approx(data2[4].real()));
+        CHECK(data1[1].imag() == Approx(data2[4].imag()));
 
-        CHECK(data1[2].real() == Approx(data2[2].real()));
-        CHECK(data1[2].imag() == Approx(data2[2].imag()));
+        CHECK(data1[2].real() == Approx(data2[1].real()));
+        CHECK(data1[2].imag() == Approx(data2[1].imag()));
 
-        CHECK(data1[3].real() == Approx(data2[3].real()));
-        CHECK(data1[3].imag() == Approx(data2[3].imag()));
+        CHECK(data1[3].real() == Approx(data2[5].real()));
+        CHECK(data1[3].imag() == Approx(data2[5].imag()));
+
+        CHECK(data1[4].real() == Approx(data2[2].real()));
+        CHECK(data1[4].imag() == Approx(data2[2].imag()));
+
+        CHECK(data1[5].real() == Approx(data2[6].real()));
+        CHECK(data1[5].imag() == Approx(data2[6].imag()));
+
+        CHECK(data1[6].real() == Approx(data2[3].real()));
+        CHECK(data1[6].imag() == Approx(data2[3].imag()));
+
+        CHECK(data1[7].real() == Approx(data2[7].real()));
+        CHECK(data1[7].imag() == Approx(data2[7].imag()));
     }
 }

@@ -84,5 +84,20 @@ constexpr bool is_supported_data_type =
     std::is_same_v<T, cuComplex> || std::is_same_v<T, float2> ||
     std::is_same_v<T, cuDoubleComplex> || std::is_same_v<T, double2>;
 
+
+/**
+ * @brief Copy and reverse a given vector.
+ * 
+ * @tparam DataType Vector underlying data type.
+ * @param input Input vector.
+ * @return Reversed copy of vector.
+ */
+template<class DataType>
+static inline std::vector<DataType> ReverseVector(const std::vector<DataType> &input)
+{
+    return std::vector<DataType>{input.rbegin(), input.rend()};
+}
+
+
 } // namespace CudaTensorHelpers
 } // namespace Jet
