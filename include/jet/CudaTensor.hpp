@@ -35,7 +35,7 @@ template <class T = cuComplex> class CudaTensor {
     using scalar_type_t = T;
     using scalar_type_t_precision = decltype(std::declval<T>().x);
 
-    void SetIndicesShapeAndMemory(const std::vector<std::string> &indices,
+    void InitIndicesAndShape(const std::vector<std::string> &indices,
                                   const std::vector<size_t> &shape)
     {
         Clear_();
@@ -64,7 +64,7 @@ template <class T = cuComplex> class CudaTensor {
                const std::vector<size_t> &shape)
         : data_{nullptr}
     {
-        SetIndicesShapeAndMemory(indices, shape);
+        InitIndicesAndShape(indices, shape);
     }
 
     CudaTensor(const std::vector<std::string> &indices,
@@ -92,7 +92,7 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < indices.size(); i++) {
             indices[i] = std::string("?") + GenerateStringIndex(i);
         }
-        SetIndicesShapeAndMemory(indices, shape);
+        InitIndicesAndShape(indices, shape);
     }
 
     ~CudaTensor() { JET_CUDA_IS_SUCCESS(cudaFree(data_)); }
@@ -175,7 +175,7 @@ template <class T = cuComplex> class CudaTensor {
 
     CudaTensor(const CudaTensor &other) : data_{nullptr}
     {
-        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        InitIndicesAndShape(other.GetIndices(), other.GetShape());
         cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
                    cudaMemcpyDeviceToDevice);
     }
@@ -186,7 +186,7 @@ template <class T = cuComplex> class CudaTensor {
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
-        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        InitIndicesAndShape(other.GetIndices(), other.GetShape());
         CopyHostDataToGpu(const_cast<T *>(
             reinterpret_cast<const T *>(other.GetData().data())));
     }
@@ -196,7 +196,7 @@ template <class T = cuComplex> class CudaTensor {
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
-        SetIndicesShapeAndMemory(ReverseVector(other.GetIndices()), ReverseVector(other.GetShape()));
+        InitIndicesAndShape(ReverseVector(other.GetIndices()), ReverseVector(other.GetShape()));
         CopyHostDataToGpu(const_cast<T *>(
             reinterpret_cast<const T *>(other.GetData().data())));
         return *this;
@@ -206,7 +206,7 @@ template <class T = cuComplex> class CudaTensor {
     {
         if (this != &other) // not a self-assignment
         {
-            SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+            InitIndicesAndShape(other.GetIndices(), other.GetShape());
             cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
                        cudaMemcpyDeviceToDevice);
         }
@@ -263,13 +263,6 @@ template <class T = cuComplex> class CudaTensor {
     {
         return index_to_dimension_;
     }
-
-    template<class DataType>
-    static inline std::vector<DataType> ReverseVector(const std::vector<DataType> &input)
-    {
-        return std::vector<DataType>{input.rbegin(), input.rend()};
-    }
-
 
     explicit operator Tensor<std::complex<scalar_type_t_precision>>() const
     {

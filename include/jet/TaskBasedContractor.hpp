@@ -370,7 +370,7 @@ template <typename TensorType> class TaskBasedContractor {
                              const std::string &name_3) noexcept
     {
         const auto runner = [this, name_1, name_2, name_3]() {
-            name_to_tensor_map_[name_3] = std::make_unique<Tensor>(
+            name_to_tensor_map_[name_3] = std::make_unique<TensorType>(
                 TensorType::ContractTensors(*name_to_tensor_map_.at(name_1),
                                         *name_to_tensor_map_.at(name_2)));
         };
