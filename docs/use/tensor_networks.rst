@@ -254,8 +254,8 @@ instance:
 
 .. code-block:: cpp
 
-    TaskBasedContractor<Tensor<std::complex<float>>> tbcc;
-    tbcc.AddContractionTasks(tn, path_info);
+    TaskBasedContractor<Tensor<std::complex<float>>> tbc;
+    tbc.AddContractionTasks(tn, path_info);
 
 Finally, ``TaskBasedContractor::Contract()`` launches the contraction and
 returns a future that becomes available when the contraction is complete:
@@ -263,11 +263,11 @@ returns a future that becomes available when the contraction is complete:
 .. code-block:: cpp
 
     // Start the tensor network contraction and wait for it to finish.
-    auto future = tbcc.Contract();
+    auto future = tbc.Contract();
     future.wait();
 
     // Each call to AddContractionTasks() generates a new result.
-    const auto results = tbcc.GetResults();
+    const auto results = tbc.GetResults();
     const auto result = results[0];
 
 .. note::

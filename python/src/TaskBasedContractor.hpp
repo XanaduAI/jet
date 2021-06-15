@@ -46,10 +46,10 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
 
         .def_property_readonly(
             "name_to_tensor_map",
-            [](const TaskBasedContractor &tbcc) {
+            [](const TaskBasedContractor &tbc) {
                 std::unordered_map<std::string, Jet::Tensor<T> *>
                     name_to_tensor_map;
-                for (const auto &[name, ptr] : tbcc.GetNameToTensorMap()) {
+                for (const auto &[name, ptr] : tbc.GetNameToTensorMap()) {
                     name_to_tensor_map.emplace(name, ptr.get());
                 }
                 return name_to_tensor_map;
@@ -111,7 +111,7 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
 
         .def(
             "contract",
-            [](TaskBasedContractor &tbcc) { tbcc.Contract().wait(); }, R"(
+            [](TaskBasedContractor &tbc) { tbc.Contract().wait(); }, R"(
             Executes the tasks in this task-based contractor.
 
             Warning:
