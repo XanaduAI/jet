@@ -2,9 +2,11 @@
 
 ### New features since last release
 
+* The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`.
+
 * Quantum gate models have been added to the `jet` Python package. [(#16)](https://github.com/XanaduAI/jet/pull/16)
 
-* Python bindings are now available for the `TaskBasedCpuContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
+* Python bindings are now available for the `TaskBasedContractor` class. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 
 * Python bindings now include a factory method which accepts a `dtype` parameter. [(#18)](https://github.com/XanaduAI/jet/pull/18)
 
@@ -28,7 +30,7 @@
 
 * Exceptions are now favoured in place of `std::terminate` with `Exception` being the new base type for all exceptions thrown by Jet. [(#3)](https://github.com/XanaduAI/jet/pull/3)
 
-* `TaskBasedCpuContractor` now stores `Tensor` results. [(#8)](https://github.com/XanaduAI/jet/pull/8)
+* `TaskBasedContractor` now stores `Tensor` results. [(#8)](https://github.com/XanaduAI/jet/pull/8)
 
 * `Tensor` class now checks data type at compile-time. [(#4)](https://github.com/XanaduAI/jet/pull/4)
 
@@ -40,11 +42,11 @@
 
 ### Bug Fixes
 
-* The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
+* The output of `TensorNetwork::Contract()` and `TaskBasedContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
-* `TaskBasedCpuContractor::AddReductionTask()` now handles the reduction of non-scalar tensors. [(#19)](https://github.com/XanaduAI/jet/pull/19)
+* `TaskBasedContractor::AddReductionTask()` now handles the reduction of non-scalar tensors. [(#19)](https://github.com/XanaduAI/jet/pull/19)
 
-* The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with one another. [(#6)](https://github.com/XanaduAI/jet/pull/6)
+* The output of `TensorNetwork::Contract()` and `TaskBasedContractor::Contract()` now agree with one another. [(#6)](https://github.com/XanaduAI/jet/pull/6)
 
 * `PathInfo` now correctly names intermediary tensors in a sliced tensor network [(#22)](https://github.com/XanaduAI/jet/pull/22).
 

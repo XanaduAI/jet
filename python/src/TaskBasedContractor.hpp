@@ -20,11 +20,11 @@ namespace py = pybind11;
  */
 template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
 {
-    using TaskBasedCpuContractor = Jet::TaskBasedContractor<Jet::Tensor<T>>;
+    using TaskBasedContractor = Jet::TaskBasedContractor<Jet::Tensor<T>>;
 
     const std::string class_name = "TaskBasedContractor" + Type<T>::suffix;
 
-    py::class_<TaskBasedCpuContractor>(m, class_name.c_str(), R"(
+    py::class_<TaskBasedContractor>(m, class_name.c_str(), R"(
         This class is a tensor network contractor that contracts tensors
         concurrently using a task-based scheduler.
     )")
@@ -111,7 +111,7 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
 
         .def(
             "contract",
-            [](TaskBasedCpuContractor &tbcc) { tbcc.Contract().wait(); }, R"(
+            [](TaskBasedContractor &tbcc) { tbcc.Contract().wait(); }, R"(
             Executes the tasks in this task-based contractor.
 
             Warning:

@@ -219,7 +219,7 @@ Task-based contraction
 
 While ``TensorNetwork::Contract()`` is simple to use, it is unlikely to exhibit
 optimal performance for large tensor networks.  One alternative to the vanilla
-tensor network contractor is the ``TaskBasedCpuContractor`` class which models a
+tensor network contractor is the ``TaskBasedContractor`` class which models a
 tensor network contraction as a parallel task scheduling problem where each task
 encapsulates a local tensor contraction.  Such a formulation enables
 intermediate tensors which do not depend on each another to be contracted
@@ -241,7 +241,7 @@ top row (the other :math:`\vert 0 \rangle` and :math:`H`); however, the
 contraction representing the final output of the circuit may only be performed
 once nodes :math:`A_k` and :math:`B_{m,n,k}` have been computed.
 
-Despite its underlying complexity, the interface to ``TaskBasedCpuContractor``
+Despite its underlying complexity, the interface to ``TaskBasedContractor``
 is relatively straightforward.  After constructing the ``TensorNetwork`` in the
 previous section, the contraction path is specified using a ``PathInfo`` object:
 
@@ -249,15 +249,15 @@ previous section, the contraction path is specified using a ``PathInfo`` object:
 
     PathInfo path_info(tn, {{0, 2}, {1, 3}, {4, 5}});
 
-The contraction tasks can then be added to a new ``TaskBasedCpuContractor``
+The contraction tasks can then be added to a new ``TaskBasedContractor``
 instance:
 
 .. code-block:: cpp
 
-    TaskBasedCpuContractor<Tensor<std::complex<float>>> tbcc;
+    TaskBasedContractor<Tensor<std::complex<float>>> tbcc;
     tbcc.AddContractionTasks(tn, path_info);
 
-Finally, ``TaskBasedCpuContractor::Contract()`` launches the contraction and
+Finally, ``TaskBasedContractor::Contract()`` launches the contraction and
 returns a future that becomes available when the contraction is complete:
 
 .. code-block:: cpp
@@ -272,5 +272,5 @@ returns a future that becomes available when the contraction is complete:
 
 .. note::
 
-    Currently, ``TaskBasedCpuContractor`` expects the final contraction of a
+    Currently, ``TaskBasedContractor`` expects the final contraction of a
     tensor network to be a scalar.  This may change in a future release of Jet.
