@@ -17,8 +17,8 @@
 namespace Jet {
 
 /**
- * @brief TaskBasedCpuContractor is a tensor network contractor that contracts
- *        tensors concurrently on the CPU using a task-based scheduler.
+ * @brief TaskBasedContractor is a tensor network contractor that contracts
+ *        tensors concurrently on using a task-based scheduler.
  *
  * @tparam Tensor Type of the tensors to be contracted. The only requirement
  *                for this type is that the following member functions exist:
@@ -27,7 +27,7 @@ namespace Jet {
  *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
-template <typename Tensor> class TaskBasedCpuContractor {
+template <typename Tensor> class TaskBasedContractor {
   public:
     /// Type of the name-to-task map.
     using NameToTaskMap = std::unordered_map<std::string, tf::Task>;
@@ -44,16 +44,16 @@ template <typename Tensor> class TaskBasedCpuContractor {
     using TaskFlow = tf::Taskflow;
 
     /**
-     * @brief Constructs a new `%TaskBasedCpuContractor` object.
+     * @brief Constructs a new `%TaskBasedContractor` object.
      */
-    TaskBasedCpuContractor(
+    TaskBasedContractor(
         size_t num_threads = std::thread::hardware_concurrency())
         : executor_{num_threads}, memory_(0), flops_(0), reduced_(false)
     {
     }
 
     /**
-     * @brief Returns the name-to-task map of this `%TaskBasedCpuContractor`.
+     * @brief Returns the name-to-task map of this `%TaskBasedContractor`.
      *
      * @return Map which associates names to tasks.
      */
@@ -63,7 +63,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     }
 
     /**
-     * @brief Returns the name-to-tensor map of this `%TaskBasedCpuContractor`.
+     * @brief Returns the name-to-tensor map of this `%TaskBasedContractor`.
      *
      * @return Map which associates names to tensors.
      */
@@ -73,7 +73,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     }
 
     /**
-     * @brief Returns the name-to-parents map of this `%TaskBasedCpuContractor`.
+     * @brief Returns the name-to-parents map of this `%TaskBasedContractor`.
      *
      * @return Map which associates names to a vector of parent node IDs.
      */
@@ -113,7 +113,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     }
 
     /**
-     * @brief Returns the taskflow of this `%TaskBasedCpuContractor`.
+     * @brief Returns the taskflow of this `%TaskBasedContractor`.
      *
      * @return Taskflow instance representing the task dependency graph.
      */
@@ -237,7 +237,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @brief Adds a reduction task to sum the result tensors.
      *
      * @warning Only one reduction task should be added per
-     *          `%TaskBasedCpuContractor` instance.
+     *          `%TaskBasedContractor` instance.
      *
      * @return Number of created reduction tasks.
      */
@@ -301,7 +301,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     }
 
     /**
-     * @brief Executes the tasks in this `%TaskBasedCpuContractor`.
+     * @brief Executes the tasks in this `%TaskBasedContractor`.
      *
      * @return Future that becomes available once all the tasks have finished.
      */
@@ -413,10 +413,10 @@ template <typename Tensor> class TaskBasedCpuContractor {
 };
 
 /**
- * @brief Streams a `TaskBasedCpuContractor` to an output stream.
+ * @brief Streams a `TaskBasedContractor` to an output stream.
  *
  * Currently, this function just dumps the task dependency graph of the given
- * `%TaskBasedCpuContractor` instance in a DOT format to the specified output
+ * `%TaskBasedContractor` instance in a DOT format to the specified output
  * stream.
  *
  * @see See <a
@@ -425,12 +425,12 @@ template <typename Tensor> class TaskBasedCpuContractor {
  *
  * @tparam Tensor Type of the tensors to be contracted.
  * @param out Output stream to be modified.
- * @param tbcc Task-based CPU contractor with the taskflow to be inserted.
+ * @param tbcc Task-based contractor with the taskflow to be inserted.
  * @return Reference to the given output stream.
  */
 template <class Tensor>
 inline std::ostream &operator<<(std::ostream &out,
-                                const TaskBasedCpuContractor<Tensor> &tbcc)
+                                const TaskBasedContractor<Tensor> &tbcc)
 {
     const auto &taskflow = tbcc.GetTaskflow();
     taskflow.dump(out);

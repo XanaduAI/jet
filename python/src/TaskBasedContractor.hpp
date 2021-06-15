@@ -11,22 +11,22 @@
 namespace py = pybind11;
 
 /**
- * @brief Adds Python bindings for the `TaskBasedCpuContractor` class.
+ * @brief Adds Python bindings for the `TaskBasedContractor` class.
  *
  * @note Functions that return objects from the taskflow library are not bound.
  *
  * @tparam T Template parameter of the `Tensor` class.
  * @param m Jet pybind11 module.
  */
-template <class T> void AddBindingsForTaskBasedCpuContractor(py::module_ &m)
+template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
 {
-    using TaskBasedCpuContractor = Jet::TaskBasedCpuContractor<Jet::Tensor<T>>;
+    using TaskBasedCpuContractor = Jet::TaskBasedContractor<Jet::Tensor<T>>;
 
-    const std::string class_name = "TaskBasedCpuContractor" + Type<T>::suffix;
+    const std::string class_name = "TaskBasedContractor" + Type<T>::suffix;
 
     py::class_<TaskBasedCpuContractor>(m, class_name.c_str(), R"(
         This class is a tensor network contractor that contracts tensors
-        concurrently on the CPU using a task-based scheduler.
+        concurrently using a task-based scheduler.
     )")
 
         // Static properties
@@ -34,19 +34,19 @@ template <class T> void AddBindingsForTaskBasedCpuContractor(py::module_ &m)
 
         .def_property_readonly_static(
             "dtype", [](const py::object &) { return Type<T>::dtype; },
-            "Data type of this task-based CPU contractor.")
+            "Data type of this task-based contractor.")
 
         // Constructors
         // ---------------------------------------------------------------------
 
-        .def(py::init<>(), "Constructs a new task-based CPU contractor.")
+        .def(py::init<>(), "Constructs a new task-based contractor.")
 
         // Properties
         // ---------------------------------------------------------------------
 
         .def_property_readonly(
             "name_to_tensor_map",
-            [](const TaskBasedCpuContractor &tbcc) {
+            [](const TaskBasedContractor &tbcc) {
                 std::unordered_map<std::string, Jet::Tensor<T> *>
                     name_to_tensor_map;
                 for (const auto &[name, ptr] : tbcc.GetNameToTensorMap()) {
@@ -57,29 +57,29 @@ template <class T> void AddBindingsForTaskBasedCpuContractor(py::module_ &m)
             "Dictionary which maps names to tensors.")
 
         .def_property_readonly(
-            "name_to_parents_map", &TaskBasedCpuContractor::GetNameToParentsMap,
+            "name_to_parents_map", &TaskBasedContractor::GetNameToParentsMap,
             "Dictionary which maps names to lists of parent node IDs.")
 
-        .def_property_readonly("results", &TaskBasedCpuContractor::GetResults,
+        .def_property_readonly("results", &TaskBasedContractor::GetResults,
                                "List of tensor results.")
 
         .def_property_readonly("reduction_result",
-                               &TaskBasedCpuContractor::GetReductionResult,
+                               &TaskBasedContractor::GetReductionResult,
                                "Tensor at the end of the reduction task.")
 
-        .def_property_readonly("flops", &TaskBasedCpuContractor::GetFlops, R"(
+        .def_property_readonly("flops", &TaskBasedContractor::GetFlops, R"(
             Number of floating-point additions and multiplications required
             to implement the contraction tasks.
         )")
 
-        .def_property_readonly("memory", &TaskBasedCpuContractor::GetMemory,
+        .def_property_readonly("memory", &TaskBasedContractor::GetMemory,
                                "Number of elements in the non-leaf tensors.")
 
         // Other
         // ---------------------------------------------------------------------
 
         .def("add_contraction_tasks",
-             &TaskBasedCpuContractor::AddContractionTasks, py::arg("tn"),
+             &TaskBasedContractor::AddContractionTasks, py::arg("tn"),
              py::arg("path_info"), R"(
             Adds contraction tasks for a tensor network.
 
@@ -92,7 +92,7 @@ template <class T> void AddBindingsForTaskBasedCpuContractor(py::module_ &m)
                 method.
         )")
 
-        .def("add_reduction_task", &TaskBasedCpuContractor::AddReductionTask,
+        .def("add_reduction_task", &TaskBasedContractor::AddReductionTask,
              R"(
             Adds a reduction task to sum the result tensors.
 
@@ -100,7 +100,7 @@ template <class T> void AddBindingsForTaskBasedCpuContractor(py::module_ &m)
                 Number of created reduction tasks.
         )")
 
-        .def("add_deletion_tasks", &TaskBasedCpuContractor::AddDeletionTasks,
+        .def("add_deletion_tasks", &TaskBasedContractor::AddDeletionTasks,
              R"(
             Adds deletion tasks for intermediate tensors, deallocating each one
             when it is no longer needed.
@@ -112,7 +112,7 @@ template <class T> void AddBindingsForTaskBasedCpuContractor(py::module_ &m)
         .def(
             "contract",
             [](TaskBasedCpuContractor &tbcc) { tbcc.Contract().wait(); }, R"(
-            Executes the tasks in this task-based CPU contractor.
+            Executes the tasks in this task-based contractor.
 
             Warning:
                 This is a blocking call.

@@ -7,7 +7,7 @@
 #include <catch2/catch.hpp>
 
 #include "jet/PathInfo.hpp"
-#include "jet/TaskBasedCpuContractor.hpp"
+#include "jet/TaskBasedContractor.hpp"
 #include "jet/Tensor.hpp"
 #include "jet/TensorNetwork.hpp"
 #include "jet/Utilities.hpp"
@@ -49,10 +49,10 @@ Tensor<std::complex<float>> MakeTensor(const Indices &indices,
 /**
  * @brief Returns a name-to-task map that is suitable for equality comparison.
  *
- * @param tbcc Task-based CPU contractor holding the name-to-task map.
+ * @param tbcc Task-based contractor holding the name-to-task map.
  * @return Modified name-to-task map with a defined `==` operator.
  */
-TaskMap GetTaskMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
+TaskMap GetTaskMap(const TaskBasedContractor<tensor_t> &tbcc)
 {
     TaskMap task_map;
     for (const auto &[name, task] : tbcc.GetNameToTaskMap()) {
@@ -64,10 +64,10 @@ TaskMap GetTaskMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
 /**
  * @brief Returns a name-to-tensor map that is suitable for equality comparison.
  *
- * @param tbcc Task-based CPU contractor holding the name-to-tensor map.
+ * @param tbcc Task-based contractor holding the name-to-tensor map.
  * @return Modified name-to-tensor map with a defined `==` operator.
  */
-TensorMap GetTensorMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
+TensorMap GetTensorMap(const TaskBasedContractor<tensor_t> &tbcc)
 {
     TensorMap tensor_map;
     for (const auto &[name, tensor_ptr] : tbcc.GetNameToTensorMap()) {
@@ -81,10 +81,10 @@ TensorMap GetTensorMap(const TaskBasedCpuContractor<tensor_t> &tbcc)
 }
 } // namespace
 
-TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
-          "[TaskBasedCpuContractor]")
+TEST_CASE("TaskBasedContractor::AddContractionTasks()",
+          "[TaskBasedContractor]")
 {
-    TaskBasedCpuContractor<tensor_t> tbcc;
+    TaskBasedContractor<tensor_t> tbcc;
 
     SECTION("Tensor network is empty")
     {
@@ -272,9 +272,9 @@ TEST_CASE("TaskBasedCpuContractor::AddContractionTasks()",
     }
 }
 
-TEST_CASE("TaskBasedCpuContractor::Contract()", "[TaskBasedCpuContractor]")
+TEST_CASE("TaskBasedContractor::Contract()", "[TaskBasedContractor]")
 {
-    TaskBasedCpuContractor<tensor_t> tbcc;
+    TaskBasedContractor<tensor_t> tbcc;
 
     SECTION("Taskflow is empty")
     {
@@ -353,10 +353,10 @@ TEST_CASE("TaskBasedCpuContractor::Contract()", "[TaskBasedCpuContractor]")
     }
 }
 
-TEST_CASE("TaskBasedCpuContractor::AddDeletionTasks()",
-          "[TaskBasedCpuContractor]")
+TEST_CASE("TaskBasedContractor::AddDeletionTasks()",
+          "[TaskBasedContractor]")
 {
-    TaskBasedCpuContractor<tensor_t> tbcc;
+    TaskBasedContractor<tensor_t> tbcc;
 
     SECTION("No results")
     {
@@ -431,10 +431,10 @@ TEST_CASE("TaskBasedCpuContractor::AddDeletionTasks()",
     }
 }
 
-TEST_CASE("TaskBasedCpuContractor::AddReductionTask()",
-          "[TaskBasedCpuContractor]")
+TEST_CASE("TaskBasedContractor::AddReductionTask()",
+          "[TaskBasedContractor]")
 {
-    TaskBasedCpuContractor<tensor_t> tbcc;
+    TaskBasedContractor<tensor_t> tbcc;
 
     SECTION("Results vector is empty")
     {
