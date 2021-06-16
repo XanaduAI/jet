@@ -46,6 +46,11 @@ gate h(a)[0, 1]:
     // rz(pi / sin(3 * 4 / 2 - 2)) | [a, 2];
 end;
 
+gate H2:
+    H | [0];
+    H | [1];
+end;
+
 operator o(a):
     0.7 * sin(a), X[0] @ Z[1];
     -1.6, X[0];
