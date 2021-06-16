@@ -8,6 +8,12 @@ with open("m10.json", "r") as f:
 # The __call__ operator deserializes a circuit into a "tensor network file" object.
 tnf = jet.TensorNetworkSerializer()(m10_json)
 
+
+# The memory reported by a contraction path assumes single-byte tensor elements.
+num_nodes = len(tnf.tensors.nodes)
+num_bytes = int(tnf.path.total_memory()) * 8 * 2
+print(f"Loaded tensor network with {num_nodes} nodes and an uncompressed size of {num_bytes / 10**9:.1f}GB.")
+
 # Choose a set of index labels to slice; some sets reduce latency better than others.
 index_labels_to_slice = ["p7", "s7", "h4", "m1", "m2", "I2"]
 
