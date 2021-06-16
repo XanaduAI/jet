@@ -21,7 +21,7 @@ class MockGate(jet.Gate):
 
 class TestGate:
     @pytest.fixture
-    def gate(self):
+    def gate(self) -> MockGate:
         """Returns a mock gate instance."""
         return MockGate()
 
