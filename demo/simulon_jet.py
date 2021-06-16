@@ -93,4 +93,5 @@ conn = Connection()
 result = conn.run_job(target="simulon_jet", script=xir_script)
 
 # Display the returned amplitudes.
-print(f"Amplitudes = {result}")
+for i in range(len(result)):
+    print(f"Amplitude |{i:03b}> = {result[i]}")
