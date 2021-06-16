@@ -1,28 +1,31 @@
 import jet
+import numpy as np
 import timeit
 
 # Load the Sycamore (m=10) circuit from a JSON file.
 with open("m10.json", "r") as f:
     m10_json = f.read()
 
-# The __call__ operator deserializes a circuit into a "tensor network file" object.
-tnf = jet.TensorNetworkSerializer()(m10_json)
+# Currently, Jet supports 64-bit and 128-bit complex data types.
+dtype = np.dtype(np.complex64)
 
+# The __call__ operator deserializes a circuit into a "tensor network file" object.
+tnf = jet.TensorNetworkSerializer(dtype=dtype)(m10_json)
 
 # The memory reported by a contraction path assumes single-byte tensor elements.
 num_nodes = len(tnf.tensors.nodes)
-num_bytes = int(tnf.path.total_memory()) * 8 * 2
+num_bytes = int(tnf.path.total_memory()) * dtype.itemsize
 print(f"Loaded tensor network with {num_nodes} nodes and an uncompressed size of {num_bytes / 10**9:.1f}GB.")
 
 # Choose a set of index labels to slice; some sets reduce latency better than others.
 index_labels_to_slice = ["p7", "s7", "h4", "m1", "m2", "I2"]
 
 # The TBCC uses task-based parallelism to accelerate tensor network contractions.
-tbcc = jet.TaskBasedCpuContractor()
+tbcc = jet.TaskBasedCpuContractor(dtype=dtype)
 
 for index in range(1 << len(index_labels_to_slice)):
     # Support for cloning tensor networks using deepcopy() is coming soon.
-    tn = jet.TensorNetwork()
+    tn = jet.TensorNetwork(dtype=dtype)
     for node in tnf.tensors.nodes:
         tn.add_tensor(node.tensor)
 
