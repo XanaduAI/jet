@@ -84,7 +84,9 @@ amplitude(state: [1, 1]) | [0, 1];
 class TestParser:
     """Integration tests for parsing, and serializing, XIR scripts"""
 
-    @pytest.mark.parametrize("circuit", [qubit_script, photonics_script, photonics_script_no_decl, jet_script])
+    @pytest.mark.parametrize(
+        "circuit", [qubit_script, photonics_script, photonics_script_no_decl, jet_script]
+    )
     def test_parse_and_serialize(self, circuit):
         """Test parsing and serializing an XIR script.
 
