@@ -20,9 +20,10 @@ obs_group: obs "[" uint "]" ("@" obs "[" uint "]")*
 // list-types
 wires : "[" (uint | range | name) ("," (uint | range | name))* "]"
 params: ["(" val ("," val)* ")"]  // always optional (easier to parse)
+array : "[" val ("," val)* "]"
 
 // value-types
-?val  : bool | expr
+?val  : bool | expr | array
 float : SIGNED_FLOAT
 int   : SIGNED_INT
 uint  : INT
