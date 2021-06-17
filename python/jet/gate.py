@@ -236,7 +236,7 @@ class Displacement(Gate):
         """
         super().__init__(name="Displacement", num_wires=1, params=[r, phi, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return displacement(*self.params)
 
@@ -255,7 +255,7 @@ class Squeezing(Gate):
         """
         super().__init__(name="Squeezing", num_wires=1, params=[r, theta, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return squeezing(*self.params)
 
@@ -274,7 +274,7 @@ class TwoModeSqueezing(Gate):
         """
         super().__init__(name="TwoModeSqueezing", num_wires=2, params=[r, theta, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return two_mode_squeezing(*self.params)
 
@@ -294,7 +294,7 @@ class Beamsplitter(Gate):
         """
         super().__init__(name="Beamsplitter", num_wires=2, params=[theta, phi, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return beamsplitter(*self.params)
 
@@ -310,7 +310,7 @@ class Hadamard(Gate):
         """Constructs a Hadamard gate."""
         super().__init__(name="Hadamard", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         """Hadamard matrix"""
         mat = [[INV_SQRT2, INV_SQRT2], [INV_SQRT2, -INV_SQRT2]]
@@ -323,7 +323,7 @@ class PauliX(Gate):
         """Constructs a Pauli-X gate."""
         super().__init__(name="PauliX", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[0, 1], [1, 0]]
         return np.array(mat)
@@ -335,7 +335,7 @@ class PauliY(Gate):
         """Constructs a Pauli-Y gate."""
         super().__init__(name="PauliY", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[0, -1j], [1j, 0]]
         return np.array(mat)
@@ -347,7 +347,7 @@ class PauliZ(Gate):
         """Constructs a Pauli-Z gate."""
         super().__init__(name="PauliZ", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0], [0, -1]]
         return np.array(mat)
@@ -359,7 +359,7 @@ class S(Gate):
         """Constructs a single-qubit phase gate."""
         super().__init__(name="S", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0], [0, 1j]]
         return np.array(mat)
@@ -371,7 +371,7 @@ class T(Gate):
         """Constructs a single-qubit T gate."""
         super().__init__(name="T", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0], [0, exp(0.25j * np.pi)]]
         return np.array(mat)
@@ -383,7 +383,7 @@ class SX(Gate):
         """Constructs a single-qubit Square-Root X gate."""
         super().__init__(name="SX", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]]
         return np.array(mat)
@@ -399,7 +399,7 @@ class PhaseShift(Gate):
         """
         super().__init__(name="PhaseShift", num_wires=1, params=[phi])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi = self.params[0]
         mat = [[1, 0], [0, exp(1j * phi)]]
@@ -416,7 +416,7 @@ class CPhaseShift(Gate):
         """
         super().__init__(name="CPhaseShift", num_wires=2, params=[phi])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi = self.params[0]
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, exp(1j * phi)]]
@@ -429,7 +429,7 @@ class CX(Gate):
         """Constructs a controlled-X gate."""
         super().__init__(name="CX", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
         return np.array(mat)
@@ -441,7 +441,7 @@ class CY(Gate):
         """Constructs a controlled-Y gate."""
         super().__init__(name="CY", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j], [0, 0, 1j, 0]]
         return np.array(mat)
@@ -453,7 +453,7 @@ class CZ(Gate):
         """Constructs a controlled-Z gate."""
         super().__init__(name="CZ", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]
         return np.array(mat)
@@ -465,7 +465,7 @@ class SWAP(Gate):
         """Constructs a SWAP gate."""
         super().__init__(name="SWAP", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
         return np.array(mat)
@@ -477,7 +477,7 @@ class ISWAP(Gate):
         """Constructs an ISWAP gate."""
         super().__init__(name="ISWAP", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]]
         return np.array(mat)
@@ -489,7 +489,7 @@ class CSWAP(Gate):
         """Constructs a CSWAP gate."""
         super().__init__(name="CSWAP", num_wires=3)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [
             [1, 0, 0, 0, 0, 0, 0, 0],
@@ -510,7 +510,7 @@ class Toffoli(Gate):
         """Constructs a Toffoli gate."""
         super().__init__(name="Toffoli", num_wires=3)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [
             [1, 0, 0, 0, 0, 0, 0, 0],
@@ -535,7 +535,7 @@ class RX(Gate):
         """
         super().__init__(name="RX", num_wires=1, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         c = cos(theta / 2)
@@ -555,7 +555,7 @@ class RY(Gate):
         """
         super().__init__(name="RY", num_wires=1, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
 
@@ -576,7 +576,7 @@ class RZ(Gate):
         """
         super().__init__(name="RZ", num_wires=1, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         p = exp(-0.5j * theta)
@@ -607,7 +607,7 @@ class Rot(Gate):
         """
         super().__init__(name="Rot", num_wires=1, params=[phi, theta, omega])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
         c = cos(theta / 2)
@@ -630,7 +630,7 @@ class CRX(Gate):
         """
         super().__init__(name="CRX", num_wires=2, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         c = cos(theta / 2)
@@ -650,7 +650,7 @@ class CRY(Gate):
         """
         super().__init__(name="CRY", num_wires=2, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         c = cos(theta / 2)
@@ -670,7 +670,7 @@ class CRZ(Gate):
         """
         super().__init__(name="CRZ", num_wires=2, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         mat = [
@@ -694,7 +694,7 @@ class CRot(Gate):
         """
         super().__init__(name="CRot", num_wires=2, params=[phi, theta, omega])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
         c = cos(theta / 2)
@@ -719,7 +719,7 @@ class U1(Gate):
         """
         super().__init__(name="U1", num_wires=1, params=[phi])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi = self.params[0]
         mat = [[1, 0], [0, exp(1j * phi)]]
@@ -737,7 +737,7 @@ class U2(Gate):
         """
         super().__init__(name="U2", num_wires=1, params=[phi, lam])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi, lam = self.params
         mat = [
@@ -759,7 +759,7 @@ class U3(Gate):
         """
         super().__init__(name="U3", num_wires=1, params=[theta, phi, lam])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta, phi, lam = self.params
         c = cos(theta / 2)
