@@ -4,6 +4,8 @@ import strawberryfields as sf
 import time
 
 class Connection(sf.api.Connection):
+    """Connection represents a connection to the Xanadu Quantum Cloud (XQC)."""
+
     @property
     def api_version(self) -> str:
         """str: The platform API version to request."""
@@ -21,7 +23,7 @@ class Connection(sf.api.Connection):
         """
         response = self._request(
             "POST", self._url("/jobs"), headers=self._headers, json={
-                "name": "reveal_single_xor",
+                "name": "ghz",
                 "target": target,
                 "language": "xir:0.1",
                 "circuit": script,
@@ -46,6 +48,7 @@ class Connection(sf.api.Connection):
             connection=self,
         )
 
+        # Wait for the job to finish.
         try:
             while time.sleep(1) is None:
                 job.refresh()
@@ -64,17 +67,15 @@ class Connection(sf.api.Connection):
             raise KeyboardInterrupt("The job has been cancelled.") from e
 
 
-# Write an XIR program to be executed on the XQC.
+# Write an XIR program to prepare a Greenberger–Horne–Zeilinger (GHZ) state.
 xir_script = inspect.cleandoc(
     """
     use xstd;
 
-    // Prepare the GHZ state.
     H | [0];
     CNOT | [0, 1];
     CNOT | [0, 2];
 
-    // Measure the resulting amplitudes.
     amplitude(state: 0) | [0, 1, 2];
     amplitude(state: 1) | [0, 1, 2];
     amplitude(state: 2) | [0, 1, 2];
@@ -89,7 +90,7 @@ xir_script = inspect.cleandoc(
 # Establish a connection to the cloud platform.
 conn = Connection()
 
-# Submit the XIR program to run on Jet.
+# Submit the program to the Xanadu Quantum Cloud (XQC) and wait for the results.
 result = conn.run_job(target="simulon_jet", script=xir_script)
 
 # Display the returned amplitudes.

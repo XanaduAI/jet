@@ -2,17 +2,15 @@ import inspect
 import jet
 import xir
 
-# Write an XIR program to be executed using Jet.
+# Write an XIR program to prepare a Greenberger–Horne–Zeilinger (GHZ) state.
 xir_script = inspect.cleandoc(
     """
     use xstd;
 
-    // Prepare the GHZ state.
     H | [0];
     CNOT | [0, 1];
     CNOT | [0, 2];
 
-    // Measure the resulting amplitudes.
     amplitude(state: 0) | [0, 1, 2];
     amplitude(state: 1) | [0, 1, 2];
     amplitude(state: 2) | [0, 1, 2];
@@ -27,7 +25,7 @@ xir_script = inspect.cleandoc(
 # Parse the XIR script into an XIR program.
 xir_program = xir.XIRTransformer().transform(xir.xir_parser.parse(xir_script))
 
-# Run the program locally using Jet.
+# Run the program locally using Jet and wait for the results.
 result = jet.run_xir_program(xir_program)
 
 # Display the returned amplitudes.
