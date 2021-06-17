@@ -39,12 +39,12 @@ template <class T = cuComplex> class CudaTensor {
                                   const std::vector<size_t> &shape)
     {
         Clear_();
-        shape_ = shape;
-        indices_ = indices;
+        shape_ = (shape);
+        indices_ = (indices);
 
         for (size_t i = 0; i < shape_.size(); ++i) {
-            index_to_dimension_[indices[i]] = shape[i];
-            index_to_axes_[indices[i]] = i;
+            index_to_dimension_[indices_[i]] = shape_[i];
+            index_to_axes_[indices_[i]] = i;
         }
         JET_CUDA_IS_SUCCESS(
             cudaMalloc(reinterpret_cast<void **>(&data_),
@@ -186,7 +186,7 @@ template <class T = cuComplex> class CudaTensor {
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
-        InitIndicesAndShape(other.GetIndices(), other.GetShape());
+        InitIndicesAndShape(ReverseVector(other.GetIndices()), ReverseVector(other.GetShape()));
         CopyHostDataToGpu(const_cast<T *>(
             reinterpret_cast<const T *>(other.GetData().data())));
     }
@@ -343,6 +343,84 @@ template <class T = cuComplex> class CudaTensor {
         size_t work_size;
         void *work;
     };
+
+/*
+    struct PlanMaps{
+        const std::vector<std::string> &indices;
+
+        std::unordered_map<std::string, int> index_to_mode_map;
+        std::unordered_map<size_t, int64_t> mode_to_dimension_map;
+        std::vector<int32_t> modes;
+
+        PlanMaps(const CudaTensor<T> &tensor) : indices{ tensor.GetIndices() }, modes(indices.size()), 
+        {
+            for (size_t i = 0; i < indices.size(); i++) {
+                if (!index_to_mode_map.count(indices[i])) {
+                    index_to_mode_map[indices[i]] = i;
+                    mode_to_dimension_map[i] = static_cast<int64_t>(
+                        idx_to_dim.at(indices[i]));
+                }
+            }
+            for (size_t i = 0; i < indices.size(); i++) {
+                modes[i] = index_to_mode_map[indices[i]];
+            }
+
+        }
+
+
+        size_t stride = a_indices.size();
+        for (size_t i = 0; i < b_indices.size(); i++) {
+            if (!index_to_mode_map.count(b_indices[i])) {
+                index_to_mode_map[b_indices[i]] = stride + i;
+                mode_to_dimension_map[stride + i] = static_cast<int64_t>(
+                    b_tensor.GetIndexToDimension().at(b_indices[i]));
+            }
+        }
+
+        std::vector<int32_t> a_modes(a_indices.size());
+        std::vector<int32_t> b_modes(b_indices.size());
+        std::vector<int32_t> c_modes(c_indices.size());
+
+        for (size_t i = 0; i < a_indices.size(); i++) {
+            a_modes[i] = index_to_mode_map[a_indices[i]];
+        }
+        for (size_t i = 0; i < b_indices.size(); i++) {
+            b_modes[i] = index_to_mode_map[b_indices[i]];
+        }
+        for (size_t i = 0; i < c_indices.size(); i++) {
+            c_modes[i] = index_to_mode_map[c_indices[i]];
+        }
+
+        std::vector<int64_t> c_dimensions(c_modes.size());
+        for (size_t idx = 0; idx < c_modes.size(); idx++) {
+            c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
+        }
+
+        std::vector<int64_t> a_dimensions(a_modes.size());
+        for (size_t idx = 0; idx < a_modes.size(); idx++) {
+            a_dimensions[idx] = mode_to_dimension_map[a_modes[idx]];
+        }
+
+        std::vector<int64_t> b_dimensions(b_modes.size());
+        for (size_t idx = 0; idx < b_modes.size(); idx++) {
+            b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
+        }
+
+        size_t a_elements = 1;
+        for (auto mode : a_modes)
+            a_elements *= mode_to_dimension_map[mode];
+
+        size_t b_elements = 1;
+        for (auto mode : b_modes)
+            b_elements *= mode_to_dimension_map[mode];
+
+        size_t c_elements = 1;
+        for (auto mode : c_modes)
+            c_elements *= mode_to_dimension_map[mode];
+
+
+    };
+*/
 
     template <class U = T>
     static CudaContractionPlan
@@ -552,19 +630,25 @@ template <class T = cuComplex> class CudaTensor {
     static CudaTensor<U> Reshape(const CudaTensor<U> &old_tens,
                                  const std::vector<size_t> &new_shape)
     {
-        // Avoid unused warning
-        static_cast<void>(old_tens);
-        static_cast<void>(new_shape);
-        JET_ABORT("Reshape is not supported in this class yet");
-        // dummy return
-        return CudaTensor<U>();
+        using namespace Jet::Utilities;
+        std::cout<< "old_tens_indices=" << old_tens.GetIndices() << std::endl;
+        Tensor<std::complex<decltype(std::declval<U>().x)>> host_tensor(old_tens);
+        std::cout<< "host_tensor_indices=" << host_tensor.GetIndices() << std::endl;
+
+        auto host_tensor_reshaped = host_tensor.Reshape(new_shape);
+        std::cout<< "host_tensor_reshaped_indices=" << host_tensor_reshaped.GetIndices() << std::endl;
+
+        auto cudatensor_reshaped = CudaTensor<U>(host_tensor_reshaped);
+        std::cout<< "cudatensor_reshaped_dindices=" << cudatensor_reshaped.GetIndices() << std::endl;
+        return cudatensor_reshaped;
+
     }
 
     CudaTensor<T> Reshape(const std::vector<size_t> &new_shape)
     {
         return Reshape<T>(*this, new_shape);
     }
-
+/*
     template <typename U = T>
     static CudaTensor<U> SliceIndex(const CudaTensor<U> &tens,
                                     const std::string &index_str,
@@ -575,8 +659,85 @@ template <class T = cuComplex> class CudaTensor {
         static_cast<void>(index_str);
         static_cast<void>(index_value);
         JET_ABORT("SliceIndex is not supported in this class yet");
-        // dummy return
-        return CudaTensor<U>();
+
+
+        std::vector<std::string> new_ordering = tensor.GetIndices();
+        auto it = find(new_ordering.begin(), new_ordering.end(), index);
+        size_t index_num = std::distance(new_ordering.begin(), it);
+        new_ordering.erase(new_ordering.begin() + index_num);
+        new_ordering.insert(new_ordering.begin(), index);
+
+        cutensorHandle_t handle;
+        cutensorInit(&handle);
+        cutensorTensorDescriptor_t a_descriptor, b_descriptor;
+
+        std::unordered_map<std::string, int> index_to_mode_map;
+        std::unordered_map<size_t, int64_t> mode_to_dimension_map;
+
+        for (size_t i = 0; i < a_indices.size(); i++) {
+            if (!index_to_mode_map.count(a_indices[i])) {
+                index_to_mode_map[a_indices[i]] = i;
+                mode_to_dimension_map[i] = static_cast<int64_t>(
+                    a_tensor.GetIndexToDimension().at(a_indices[i]));
+            }
+        }
+
+        size_t stride = a_indices.size();
+        for (size_t i = 0; i < b_indices.size(); i++) {
+            if (!index_to_mode_map.count(b_indices[i])) {
+                index_to_mode_map[b_indices[i]] = stride + i;
+                mode_to_dimension_map[stride + i] = static_cast<int64_t>(
+                    b_tensor.GetIndexToDimension().at(b_indices[i]));
+            }
+        }
+
+
+        std::vector<int32_t> a_modes(a_indices.size());
+        std::vector<int32_t> b_modes(b_indices.size());
+
+        for (size_t i = 0; i < a_indices.size(); i++) {
+            a_modes[i] = index_to_mode_map[a_indices[i]];
+        }
+
+
+        cutensorPermutation(const cutensorHandle_t *handle, 0, data_, a_descriptor, const int32_t modeA[], void *B, const cutensorTensorDescriptor_t *descB, const int32_t modeB[], const cudaDataType_t typeScalar, const cudaStream_t stream)
+
+
+        auto &&tensor_trans = Transpose(tensor, new_ordering);
+        std::vector<std::string> sliced_indices(
+            tensor_trans.GetIndices().begin() + 1,
+            tensor_trans.GetIndices().end());
+        std::vector<size_t> sliced_dimensions(
+            tensor_trans.GetShape().begin() + 1, tensor_trans.GetShape().end());
+
+        CudaTensor<U> tensor_sliced(sliced_indices, sliced_dimensions);
+        size_t projection_size = tensor_sliced.GetSize();
+        size_t projection_offset = projection_size * value;
+
+        auto data_ptr = tensor_trans.GetData().data();
+        auto tensor_sliced_ptr = tensor_sliced.GetData().data();
+
+#if defined _OPENMP
+        int max_right_dim = 1024;
+#pragma omp parallel for schedule(static, max_right_dim)
+#endif
+        for (size_t p = 0; p < projection_size; ++p)
+            tensor_sliced_ptr[p] = data_ptr[projection_offset + p];
+
+        return tensor_sliced;
+
+        //return CudaTensor<U>();
+    }
+*/
+    template <typename U = T>
+    static CudaTensor<U> SliceIndex(const CudaTensor<U> &tens,
+                                    const std::string &index_str,
+                                    size_t index_value)
+    {
+        using HostU = Tensor<std::complex<decltype(std::declval<U>().x)>>;
+        HostU host_tensor = static_cast<HostU>(tens);
+        auto host_tensor_sliced = host_tensor.SliceIndex(index_str, index_value);
+        return CudaTensor<U>(host_tensor_sliced);
     }
 
     CudaTensor<T> SliceIndex(const std::string &index_str, size_t index_value)
