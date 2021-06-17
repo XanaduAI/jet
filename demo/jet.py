@@ -12,10 +12,14 @@ dtype = np.dtype(np.complex64)
 # The __call__ operator deserializes a circuit into a "tensor network file" object.
 tnf = jet.TensorNetworkSerializer(dtype=dtype)(m10_json)
 
+num_tensors = tnf.tensors.num_tensors
+num_indices = tnf.tensors.num_indices
+print(f"Loaded tensor network with {num_tensors} tensors and {num_indices} indices.")
+
 # The memory reported by a contraction path assumes single-byte tensor elements.
-num_nodes = len(tnf.tensors.nodes)
+num_steps = len(tnf.path.steps)
 num_bytes = int(tnf.path.total_memory()) * dtype.itemsize
-print(f"Loaded tensor network with {num_nodes} nodes and an uncompressed size of {num_bytes / 10**9:.1f}GB.")
+print(f"Loaded contraction path with {num_steps} steps that uses {num_bytes / 10**9:.1f}GB of memory.")
 
 # Choose a set of index labels to slice; some sets reduce latency better than others.
 index_labels_to_slice = ["p7", "s7", "h4", "m1", "m2", "I2"]
