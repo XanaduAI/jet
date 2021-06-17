@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from cmath import exp
 from functools import lru_cache
 from math import cos, sin, sqrt
-from typing import List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 from thewalrus.fock_gradients import (
@@ -16,6 +16,7 @@ from .factory import Tensor, TensorType
 
 __all__ = [
     "Gate",
+    "GateFactory",
     # CV Fock gates
     "Displacement",
     "Squeezing",
@@ -156,11 +157,72 @@ class Gate(ABC):
         return Tensor(indices=indices, shape=shape, data=data, dtype=dtype)
 
 
+class GateFactory:
+    """GateFactory is an implementation of the factory design pattern for the
+    Gate class. The create() method constructs a Gate instance from a name that
+    has been registered by a Gate subclass using the @register decorator.
+    """
+
+    """Map that associates names with concrete Gate subclasses."""
+    registry: Dict[str, type] = {}
+
+    @staticmethod
+    def create(name: str, *params: float, **kwargs) -> Gate:
+        """Constructs a gate by name.
+
+        Raises:
+            KeyError if there is no entry for the given name in the registry.
+
+        Args:
+            name (str): registered name of the desired gate.
+            params (float): Parameters to pass to the gate constructor.
+            kwargs: Keyword arguments to pass to the gate constructor.
+
+        Returns:
+            The constructed gate.
+        """
+        key = name.lower()
+        if key not in GateFactory.registry:
+            raise KeyError(f"The key '{key}' does not exist in the gate registry.")
+
+        subclass = GateFactory.registry[key]
+        return subclass(*params, **kwargs)
+
+    @staticmethod
+    def register(names: Sequence[str]) -> Callable[[type], type]:
+        """Registers a set of names with a class type.
+
+        Raises:
+            ValueError if the provided class does not inherit from Gate.
+
+            KeyError if a name has already been registered to another class.
+        """
+
+        def wrapper(subclass: type) -> type:
+            if not issubclass(subclass, Gate):
+                raise ValueError(f"The type '{subclass.__name__}' is not a subclass of Gate")
+
+            # Let the caller specify duplicate keys if they wish.
+            keys = set(name.lower() for name in names)
+
+            conflicts = keys & set(GateFactory.registry)
+            if conflicts:
+                raise KeyError(f"The keys {conflicts} already exist in the gate registry.")
+
+            for key in keys:
+                GateFactory.registry[key] = subclass
+
+            return subclass
+
+        return wrapper
+
+
 ####################################################################################################
 # Continuous variable Fock gates
 ####################################################################################################
 
 
+@GateFactory.register(names=["Displacement", "D"])
 class Displacement(Gate):
     def __init__(self, r: float, phi: float, cutoff: int):
         """Constructs a displacement gate.  See `thewalrus.displacement
@@ -179,6 +241,7 @@ class Displacement(Gate):
         return displacement(*self.params)
 
 
+@GateFactory.register(names=["Squeezing"])
 class Squeezing(Gate):
     def __init__(self, r: float, theta: float, cutoff: int):
         """Constructs a squeezing gate.  See `thewalrus.squeezing
@@ -197,6 +260,7 @@ class Squeezing(Gate):
         return squeezing(*self.params)
 
 
+@GateFactory.register(names=["TwoModeSqueezing"])
 class TwoModeSqueezing(Gate):
     def __init__(self, r: float, theta: float, cutoff: int):
         """Constructs a two-mode squeezing gate.  See `thewalrus.two_mode_squeezing
@@ -215,6 +279,7 @@ class TwoModeSqueezing(Gate):
         return two_mode_squeezing(*self.params)
 
 
+@GateFactory.register(names=["Beamsplitter", "BS"])
 class Beamsplitter(Gate):
     def __init__(self, theta: float, phi: float, cutoff: int):
         """Constructs a beamsplitter gate.  See `thewalrus.beamsplitter
@@ -239,6 +304,7 @@ class Beamsplitter(Gate):
 ####################################################################################################
 
 
+@GateFactory.register(names=["Hadamard", "H"])
 class Hadamard(Gate):
     def __init__(self):
         """Constructs a Hadamard gate."""
@@ -251,6 +317,7 @@ class Hadamard(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["PauliX", "X", "NOT"])
 class PauliX(Gate):
     def __init__(self):
         """Constructs a Pauli-X gate."""
@@ -262,6 +329,7 @@ class PauliX(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["PauliY", "Y"])
 class PauliY(Gate):
     def __init__(self):
         """Constructs a Pauli-Y gate."""
@@ -273,6 +341,7 @@ class PauliY(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["PauliZ", "Z"])
 class PauliZ(Gate):
     def __init__(self):
         """Constructs a Pauli-Z gate."""
@@ -284,6 +353,7 @@ class PauliZ(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["S"])
 class S(Gate):
     def __init__(self):
         """Constructs a single-qubit phase gate."""
@@ -295,6 +365,7 @@ class S(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["T"])
 class T(Gate):
     def __init__(self):
         """Constructs a single-qubit T gate."""
@@ -306,6 +377,7 @@ class T(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["SX"])
 class SX(Gate):
     def __init__(self):
         """Constructs a single-qubit Square-Root X gate."""
@@ -317,6 +389,7 @@ class SX(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["PhaseShift"])
 class PhaseShift(Gate):
     def __init__(self, phi: float):
         """Constructs a single-qubit local phase shift gate.
@@ -333,6 +406,7 @@ class PhaseShift(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CPhaseShift"])
 class CPhaseShift(Gate):
     def __init__(self, phi: float):
         """Constructs a controlled phase shift gate.
@@ -349,6 +423,7 @@ class CPhaseShift(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CX", "CNOT"])
 class CX(Gate):
     def __init__(self):
         """Constructs a controlled-X gate."""
@@ -360,6 +435,7 @@ class CX(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CY"])
 class CY(Gate):
     def __init__(self):
         """Constructs a controlled-Y gate."""
@@ -371,6 +447,7 @@ class CY(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CZ"])
 class CZ(Gate):
     def __init__(self):
         """Constructs a controlled-Z gate."""
@@ -382,6 +459,7 @@ class CZ(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["SWAP"])
 class SWAP(Gate):
     def __init__(self):
         """Constructs a SWAP gate."""
@@ -393,6 +471,7 @@ class SWAP(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["ISWAP"])
 class ISWAP(Gate):
     def __init__(self):
         """Constructs an ISWAP gate."""
@@ -404,6 +483,7 @@ class ISWAP(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CSWAP"])
 class CSWAP(Gate):
     def __init__(self):
         """Constructs a CSWAP gate."""
@@ -424,6 +504,7 @@ class CSWAP(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["Toffoli"])
 class Toffoli(Gate):
     def __init__(self):
         """Constructs a Toffoli gate."""
@@ -444,6 +525,7 @@ class Toffoli(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["RX"])
 class RX(Gate):
     def __init__(self, theta: float):
         """Constructs a single-qubit X rotation gate.
@@ -463,6 +545,7 @@ class RX(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["RY"])
 class RY(Gate):
     def __init__(self, theta: float):
         """Constructs a single-qubit Y rotation gate.
@@ -483,6 +566,7 @@ class RY(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["RZ"])
 class RZ(Gate):
     def __init__(self, theta: float):
         """Constructs a single-qubit Z rotation gate.
@@ -501,14 +585,20 @@ class RZ(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["Rot"])
 class Rot(Gate):
     def __init__(self, phi: float, theta: float, omega: float):
-        """Constructs an arbitrary single-qubit rotation gate.  Each of the Pauli
-        rotation gates can be recovered by fixing two of the three parameters:
+        """Constructs an arbitrary single-qubit rotation gate with three Euler
+        angles. Each Pauli rotation gate can be recovered by fixing two of the
+        three parameters:
 
         >>> assert RX(theta).tensor() == Rot(pi/2, -pi/2, theta).tensor()
         >>> assert RY(theta).tensor() == Rot(0, 0, theta).tensor()
         >>> assert RZ(theta).tensor() == Rot(theta, 0, 0).tensor()
+
+        See `qml.Rot
+        <https://pennylane.readthedocs.io/en/stable/code/api/pennylane.Rot.html>`__
+        for more details.
 
         Args:
             phi (float): First rotation angle.
@@ -530,6 +620,7 @@ class Rot(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CRX"])
 class CRX(Gate):
     def __init__(self, theta: float):
         """Constructs a controlled-RX gate.
@@ -549,6 +640,7 @@ class CRX(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CRY"])
 class CRY(Gate):
     def __init__(self, theta: float):
         """Constructs a controlled-RY gate.
@@ -568,6 +660,7 @@ class CRY(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CRZ"])
 class CRZ(Gate):
     def __init__(self, theta: float):
         """Constructs a controlled-RZ gate.
@@ -589,6 +682,7 @@ class CRZ(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["CRot"])
 class CRot(Gate):
     def __init__(self, phi: float, theta: float, omega: float):
         """Constructs a controlled-rotation gate.
@@ -615,6 +709,7 @@ class CRot(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["U1"])
 class U1(Gate):
     def __init__(self, phi: float):
         """Constructs a U1 gate.
@@ -631,6 +726,7 @@ class U1(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["U2"])
 class U2(Gate):
     def __init__(self, phi: float, lam: float):
         """Constructs a U2 gate.
@@ -651,6 +747,7 @@ class U2(Gate):
         return np.array(mat)
 
 
+@GateFactory.register(names=["U3"])
 class U3(Gate):
     def __init__(self, theta: float, phi: float, lam: float):
         """Constructs a U3 gate.
