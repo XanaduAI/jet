@@ -4,8 +4,29 @@ from decimal import Decimal
 from typing import Union, List, Dict, Set, Tuple, Sequence
 
 from .utils import strip
+from .decimal_complex import DecimalComplex
 
 """This module contains the XIRProgram class and classes for the Xanadu IR"""
+
+
+def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
+    params_with_floats = params.copy()
+
+    if isinstance(params, List):
+        for i, p in enumerate(params_with_floats):
+            if isinstance(p, DecimalComplex):
+                params_with_floats[i] = complex(p)
+            if isinstance(p, Decimal):
+                params_with_floats[i] = float(p)
+
+    elif isinstance(params, Dict):
+        for k, v in params_with_floats.items():
+            if isinstance(v, DecimalComplex):
+                params_with_floats[k] = complex(v)
+            if isinstance(v, Decimal):
+                params_with_floats[k] = float(v)
+
+    return params_with_floats
 
 
 class Statement:
@@ -20,10 +41,12 @@ class Statement:
         wires (tuple): the wires on which the statement is applied
     """
 
-    def __init__(self, name: str, params: Union[List, Dict], wires: Tuple):
-        self.name = name
-        self.params = params
-        self.wires = wires
+    def __init__(self, name: str, params: Union[List, Dict], wires: Tuple, use_floats: bool = True):
+        self._name = name
+        self._params = params
+        self._wires = wires
+
+        self._use_floats = use_floats
 
     def __str__(self):
         if isinstance(self.params, dict):
@@ -38,6 +61,24 @@ class Statement:
             return f"{self.name} | [{wires}]"
         return f"{self.name}({params_str}) | [{wires}]"
 
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def params(self) -> Union[List, Dict]:
+        if self.use_floats:
+            return get_floats(self._params)
+        return self._params
+
+    @property
+    def wires(self) -> Tuple:
+        return self._wires
+
+    @property
+    def use_floats(self) -> bool:
+        return self._use_floats
+
 
 class OperatorStmt:
     """Operator statements to be used in operator definitions
@@ -47,9 +88,11 @@ class OperatorStmt:
         terms (list): list of operators and the wire(s) they are applied to
     """
 
-    def __init__(self, pref: Union[Decimal, int, str], terms: List):
-        self.pref = pref
-        self.terms = terms
+    def __init__(self, pref: Union[Decimal, int, str], terms: List, use_floats: bool = True):
+        self._pref = pref
+        self._terms = terms
+
+        self._use_floats = use_floats
 
     def __str__(self):
         terms = [f"{t[0]}[{t[1]}]" for t in self.terms]
@@ -57,6 +100,20 @@ class OperatorStmt:
         pref = str(self.pref)
 
         return f"{pref}, {terms_as_string}"
+
+    @property
+    def pref(self) -> Union[Decimal, float, int, str]:
+        if isinstance(self._pref, Decimal) and self.use_floats:
+            return float(self._pref)
+        return self._pref
+
+    @property
+    def terms(self) -> List:
+        return self._terms
+
+    @property
+    def use_floats(self) -> bool:
+        return self._use_floats
 
 
 class Declaration:

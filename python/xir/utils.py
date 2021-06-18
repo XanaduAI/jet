@@ -3,8 +3,7 @@
 import re
 from typing import List, Tuple
 
-
-def beautify_math(numstr: List[str]) -> List[str]:
+def simplify_math(numstr: List[str]) -> List[str]:
     """Simplifies specified substrings and removes unnecessary parantheses
 
     Used for e.g. statement parameter inputs to beautify mathematical expressions.
@@ -32,11 +31,11 @@ def beautify_math(numstr: List[str]) -> List[str]:
         if n[0] == "+":
             numstr[i] = numstr[i][1:]
 
-    numstr = remove_paranth(numstr)
+    numstr = remove_parantheses(numstr)
     return numstr
 
 
-def remove_paranth(numstr: List[str]) -> List[str]:
+def remove_parantheses(numstr: List[str]) -> List[str]:
     """Removes matching parantheses where unnecessary
 
     For example, ``((a+b)+c)`` becomes ``a+b+c``.
