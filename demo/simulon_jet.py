@@ -1,3 +1,4 @@
+import io
 import inspect
 import numpy as np
 import strawberryfields as sf
@@ -10,6 +11,36 @@ class Connection(sf.api.Connection):
     def api_version(self) -> str:
         """str: The platform API version to request."""
         return "0.4.0"
+
+    def get_job_result(self, job_id: str) -> sf.api.Result:
+        """Returns the result of a job.
+
+        Args:
+            job_id (str): the job ID
+
+        Returns:
+            sf.api.Result: the job result
+        """
+        path = f"/jobs/{job_id}/result"
+        response = self._request(
+            "GET", self._url(path), headers={"Accept": "application/x-numpy", **self._headers}
+        )
+
+        if response.status_code == 200:
+            # Read the numpy binary data in the payload into memory
+            with io.BytesIO() as buf:
+                buf.write(response.content)
+                buf.seek(0)
+
+                npz = np.load(buf, allow_pickle=False)
+
+                result = [npz[fname] for fname in npz.files]
+
+            return sf.api.Result(result, is_stateful=False)
+
+        raise sf.api.RequestFailedError(
+            "Failed to get job result: {}".format(self._format_error_message(response))
+        )
 
     def run_job(self, target: str, script: str) -> np.generic:
         """Runs the given XIR script on a remote device.
@@ -25,7 +56,7 @@ class Connection(sf.api.Connection):
             "POST", self._url("/jobs"), headers=self._headers, json={
                 "name": "ghz",
                 "target": target,
-                "language": "xir:0.1",
+                "language": "xir",
                 "circuit": script,
                 # The fields below are required until the 0.4.0 API is updated.
                 "result_type": "amplitude",
@@ -42,11 +73,14 @@ class Connection(sf.api.Connection):
                 "Failed to create job: {}".format(self._format_error_message(response))
             )
 
-        job = sf.Job(
+        job = sf.api.Job(
             id_=response.json()["id"],
-            status=sf.JobStatus(response.json()["status"]),
+            status=sf.api.JobStatus(response.json()["status"]),
             connection=self,
         )
+
+        if self._verbose:
+            self.log.info(f"Job {job.id} was successfully submitted.")
 
         # Wait for the job to finish.
         try:
