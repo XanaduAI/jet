@@ -12,7 +12,10 @@ from .program import (
     FuncDeclaration,
     OutputDeclaration,
 )
-from .utils import beautify_math, check_wires
+from .utils import simplify_math, check_wires
+from .decimal_complex import DecimalComplex
+
+import math
 
 
 p = Path(__file__).parent / "ir.lark"
@@ -27,11 +30,42 @@ class XIRTransformer(Transformer):
 
     Transformers visit each node of the tree, and run the appropriate method on it according to the
     node's data. All method names mirror the corresponding symbols from the grammar.
+
+    Keyword args:
+        eval_pi (bool): Whether pi should be evaluated and stored as a float
+            instead of symbolically as a string. Defaults to False.
     """
 
     def __init__(self, *args, **kwargs):
+        self._eval_pi = kwargs.pop("eval_pi", False)
+        self._use_floats = kwargs.pop("use_floats", True)
+
         self._program = XIRProgram()
         super().__init__(self, *args, **kwargs)
+
+
+    @property
+    def eval_pi(self) -> bool:
+        """Evaluated pi to its numerical value.
+
+        Returns:
+            bool: Whether pi should be evaluated and stored as a float instead
+            of symbolically as a string. Defaults to False.
+        """
+        return self._eval_pi
+
+    @property
+    def use_floats(self) -> bool:
+        """Whether floats and complex types are used.
+
+        Floats and complex types are stored as ``Decimal`` and ``DecimalComplex``
+        objects internally.
+
+        Returns:
+            bool: whether floats and complex types are returned instead of ``Decimal``
+            and ``DecimalComplex`` objects
+        """
+        return self._use_floats
 
     def program(self, args):
         """Root of AST containing:
@@ -76,6 +110,10 @@ class XIRTransformer(Transformer):
     def float(self, d):
         """Floating point numbers"""
         return Decimal(d[0])
+
+    def complex(self, c):
+        """Complex numbers"""
+        return DecimalComplex("0.0", float(c[0]))
 
     def bool(self, b):
         """Boolean expressions"""
@@ -155,7 +193,7 @@ class XIRTransformer(Transformer):
         a gate declaration."""
         name = args[0]
         if isinstance(args[1], list):
-            params = beautify_math(args[1])
+            params = simplify_math(args[1])
             wires = args[2]
         elif isinstance(args[1], dict):
             params = args[1]
@@ -164,7 +202,7 @@ class XIRTransformer(Transformer):
             params = []
             wires = args[1]
 
-        return Statement(name, params, wires)
+        return Statement(name, params, wires, use_floats=self.use_floats)
 
     def opstmt(self, args):
         """Operator statements defined inside an operator declaration
@@ -172,9 +210,9 @@ class XIRTransformer(Transformer):
         Returns:
             OperatorStmt: object containing statement data
         """
-        pref = beautify_math([args[0]])[0]
+        pref = simplify_math([args[0]])[0]
         term = args[1]
-        return OperatorStmt(pref, term)
+        return OperatorStmt(pref, term, use_floats=self.use_floats)
 
     def obs_group(self, args):
         """Group of observables used to define an Operator statement
@@ -213,28 +251,28 @@ class XIRTransformer(Transformer):
         return str(args[0]) + "(" + str(args[1]) + ")"
 
     def add(self, args):
-        if all(isinstance(a, (int, Decimal)) for a in args):
+        if all(isinstance(a, (int, Decimal, DecimalComplex)) for a in args):
             return args[0] + args[1]
         return "(" + " + ".join([str(i) for i in args]) + ")"
 
     def sub(self, args):
-        if all(isinstance(a, (int, Decimal)) for a in args):
+        if all(isinstance(a, (int, Decimal, DecimalComplex)) for a in args):
             return args[0] - args[1]
         return "(" + " - ".join([str(i) for i in args]) + ")"
 
     def prod(self, args):
-        if all(isinstance(a, (int, Decimal)) for a in args):
+        if all(isinstance(a, (int, Decimal, DecimalComplex)) for a in args):
             return args[0] * args[1]
         return " * ".join([str(i) for i in args])
 
     def div(self, args):
-        if all(isinstance(a, (int, Decimal)) for a in args):
+        if all(isinstance(a, (int, Decimal, DecimalComplex)) for a in args):
             return Decimal(args[0]) / args[1]
         return " / ".join([str(i) for i in args])
 
     def neg(self, args):
-        if isinstance(args[0], (int, Decimal)):
+        if isinstance(args[0], (int, Decimal, DecimalComplex)):
             return -args[0]
         return "-" + str(args[0])
 
-    PI = lambda self, _: "PI"
+    PI = lambda self, _: "PI" if not self._eval_pi else Decimal(str(math.pi))

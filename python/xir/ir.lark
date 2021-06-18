@@ -22,10 +22,11 @@ wires : "[" (uint | range | name) ("," (uint | range | name))* "]"
 params: ["(" val ("," val)* ")"]  // always optional (easier to parse)
 
 // value-types
-?val  : bool | expr
-float : SIGNED_FLOAT
-int   : SIGNED_INT
-uint  : INT
+?val    : bool | expr
+float   : SIGNED_FLOAT
+int     : SIGNED_INT
+uint    : INT
+complex : (float | int) "j"
 
 name: CNAME
 bool: TRUE_ | FALSE_
@@ -41,6 +42,7 @@ range: INT ".." INT
 
 ?atom: int
      | float
+     | complex
      | name -> var
      | "-" (name | "(" expr ")" | name "(" expr ")") -> neg
      | "(" expr ")"
