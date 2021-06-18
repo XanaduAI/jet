@@ -339,7 +339,7 @@ TEST_CASE("CudaTensor::CudaTensor(...)", "[CudaTensor]")
         CHECK(tensor2.GetShape() == shape);
 
         CHECK(tensor1.GetIndices() == indices);
-        CHECK(tensor2.GetIndices() == indices);
+        CHECK(tensor2.GetIndices() == ReverseVector(indices));
 
         std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
 
@@ -362,7 +362,7 @@ TEST_CASE("CudaTensor::CudaTensor(...)", "[CudaTensor]")
         CHECK(tensor2.GetShape() == shape);
 
         CHECK(tensor1.GetIndices() == indices);
-        CHECK(tensor2.GetIndices() == indices);
+        CHECK(tensor2.GetIndices() == ReverseVector(indices));
 
         std::vector<c64_host> data_buffer2(tensor2.GetSize(), {0, 0});
 
@@ -420,31 +420,60 @@ TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
 TEST_CASE("CudaTensor::Reshape", "[CudaTensor]")
 {
     using namespace Catch::Matchers;
+    using namespace Jet::Utilities;
 
-    CudaTensor tensor({"a", "b"}, {2, 3});
-    CHECK_THROWS_AS(tensor.Reshape({3, 2}), Jet::Exception);
-    CHECK_THROWS_AS(CudaTensor<>::Reshape<c64_dev>(tensor, {6, 1}),
-                    Jet::Exception);
-    CHECK_THROWS_WITH(tensor.Reshape({1, 6}),
-                      Contains("Reshape is not supported in this class yet"));
-    CHECK_THROWS_WITH(CudaTensor<>::Reshape<c64_dev>(tensor, {3, 2}),
-                      Contains("Reshape is not supported in this class yet"));
+    SECTION("Equal data size")
+    {
+        std::vector<std::size_t> t_shape{2, 3};
+        std::vector<std::string> t_indices{"x", "y"};
+        std::vector<c64_dev> t_data{{1, 0}, {2, 0}, {3, 0},
+                                    {4, 0}, {5, 0}, {6, 0}};
+
+        CudaTensor tensor(t_indices, t_shape, t_data);
+        CudaTensor tensor_r({"?b", "?a"}, {3, 2}, t_data);
+        CHECK(tensor_r.GetShape() == tensor.Reshape({3, 2}).GetShape());
+        CHECK(tensor_r.GetIndices() == tensor.Reshape({3, 2}).GetIndices());
+    }
+    SECTION("Unequal data size")
+    {
+        std::vector<std::size_t> t_shape{2, 3};
+        std::vector<std::string> t_indices{"x", "y"};
+        std::vector<c64_dev> t_data{{1, 0}, {2, 0}, {3, 0},
+                                    {4, 0}, {5, 0}, {6, 0}};
+
+        CudaTensor tensor(t_indices, t_shape, t_data);
+        CudaTensor tensor_r({"?b", "?a"}, {3, 2}, t_data);
+        CHECK_THROWS_WITH(CudaTensor<>::Reshape(tensor, {3, 3}),
+                          Contains("Size is inconsistent between tensors."));
+        CHECK(tensor_r.GetSize() != Jet::Utilities::ShapeToSize({3, 3}));
+    }
 }
 
 TEST_CASE("CudaTensor::SliceIndex", "[CudaTensor]")
 {
-    using namespace Catch::Matchers;
+    std::vector<std::size_t> t_shape{2, 3};
+    std::vector<std::string> t_indices{"x", "y"};
+    std::vector<c64_dev> t_data{{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}};
 
-    CudaTensor tensor({"a", "b"}, {2, 3});
-    CHECK_THROWS_AS(tensor.SliceIndex("a", 0), Jet::Exception);
-    CHECK_THROWS_AS(CudaTensor<>::SliceIndex<c64_dev>(tensor, "a", 1),
-                    Jet::Exception);
-    CHECK_THROWS_WITH(
-        tensor.SliceIndex("b", 0),
-        Contains("SliceIndex is not supported in this class yet"));
-    CHECK_THROWS_WITH(
-        CudaTensor<>::SliceIndex<c64_dev>(tensor, "b", 1),
-        Contains("SliceIndex is not supported in this class yet"));
+    CudaTensor tensor(t_indices, t_shape, t_data);
+
+    CudaTensor t_x0({"y"}, {3}, std::vector<c64_dev>{{1, 0}, {3, 0}, {5, 0}});
+    CudaTensor t_x1({"y"}, {3}, std::vector<c64_dev>{{2, 0}, {4, 0}, {6, 0}});
+    CudaTensor t_y0({"x"}, {2}, std::vector<c64_dev>{{1, 0}, {2, 0}});
+    CudaTensor t_y1({"x"}, {2}, std::vector<c64_dev>{{3, 0}, {4, 0}});
+    CudaTensor t_y2({"x"}, {2}, std::vector<c64_dev>{{5, 0}, {6, 0}});
+
+    CHECK(static_cast<Tensor<c64_host>>(t_x0) ==
+          static_cast<Tensor<c64_host>>(tensor.SliceIndex("x", 0)));
+    CHECK(static_cast<Tensor<c64_host>>(t_x1) ==
+          static_cast<Tensor<c64_host>>(tensor.SliceIndex("x", 1)));
+
+    CHECK(static_cast<Tensor<c64_host>>(t_y0) ==
+          static_cast<Tensor<c64_host>>(tensor.SliceIndex("y", 0)));
+    CHECK(static_cast<Tensor<c64_host>>(t_y1) ==
+          static_cast<Tensor<c64_host>>(tensor.SliceIndex("y", 1)));
+    CHECK(static_cast<Tensor<c64_host>>(t_y2) ==
+          static_cast<Tensor<c64_host>>(tensor.SliceIndex("y", 2)));
 }
 
 TEST_CASE("ContractTensors", "[CudaTensor]")
@@ -481,7 +510,7 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
     SECTION("Contract T0(a,b,c) and T1(b,c,d) -> T2(a,d)")
     {
         using namespace Jet::CudaTensorHelpers;
-        
+
         std::vector<size_t> t_shape1{2, 3, 4};
         std::vector<size_t> t_shape2{3, 4, 2};
         std::vector<size_t> t_shape3{2, 2};
@@ -499,10 +528,10 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CudaTensor tensor3 = tensor1.ContractTensors(tensor2);
 
         Tensor<c64_host> tensor3_host = static_cast<Tensor<c64_host>>(tensor3);
-        Tensor<c64_host> tensor4_host(ReverseVector(t_indices3), ReverseVector(t_shape3),
-                                      {c64_host(2.25, 3.0), c64_host(2.25, 3.0),
-                                       c64_host(2.25, 3.0),
-                                       c64_host(2.25, 3.0)});
+        Tensor<c64_host> tensor4_host(
+            ReverseVector(t_indices3), ReverseVector(t_shape3),
+            {c64_host(2.25, 3.0), c64_host(2.25, 3.0), c64_host(2.25, 3.0),
+             c64_host(2.25, 3.0)});
 
         CHECK(tensor3_host == tensor4_host);
     }
@@ -562,8 +591,10 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         auto tensor3_dev = tensor1_dev.ContractTensors(tensor2_dev);
         Tensor<c64_host> tensor3_host_conv(tensor3_dev);
 
-        CHECK(tensor3_host_conv.GetIndices() == ReverseVector(tensor3_host.GetIndices()));
-        CHECK(tensor3_host_conv.GetShape() == ReverseVector(tensor3_host.GetShape()));
+        CHECK(tensor3_host_conv.GetIndices() ==
+              ReverseVector(tensor3_host.GetIndices()));
+        CHECK(tensor3_host_conv.GetShape() ==
+              ReverseVector(tensor3_host.GetShape()));
 
         const auto &data1 = tensor3_host_conv.GetData();
         const auto &data2 = tensor3_host.GetData();

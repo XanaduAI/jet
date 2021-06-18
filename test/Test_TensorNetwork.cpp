@@ -59,7 +59,7 @@ Tensor<std::complex<float>> MakeTensor(const Indices &indices,
  * @param tn Tensor network holding the tag-to-nodes map.
  * @return Modified tag-to-nodes map with a defined `==` operator.
  */
-template<class TensorType>
+template <class TensorType>
 TagToNodeIDsMap GetTagToNodeIDsMap(const TensorNetwork<TensorType> &tn)
 {
     TagToNodeIDsMap tag_map;
@@ -614,7 +614,6 @@ TEST_CASE("TensorNetwork::Contract", "[TensorNetwork]")
     }
 }
 
-
 #ifdef CUTENSOR
 
 using TestCudaTensor = CudaTensor<cuComplex>;
@@ -631,15 +630,14 @@ namespace {
  * @return Tensor with the given indices and shape.  Each element in the tensor
  *         is populated with the value of its linear index.
  */
-TestCudaTensor MakeCudaTensor(const Indices &indices,
-                                       const Shape &shape)
+TestCudaTensor MakeCudaTensor(const Indices &indices, const Shape &shape)
 {
     TestCudaTensor tensor(indices, shape);
     if (!shape.empty()) {
         std::vector<cuComplex> host_data(tensor.GetSize());
         for (size_t i = 0; i < tensor.GetSize(); i++) {
-            host_data[i] = cuComplex{static_cast<float>(i),
-                                           static_cast<float>(2 * i)};
+            host_data[i] =
+                cuComplex{static_cast<float>(i), static_cast<float>(2 * i)};
         }
         tensor.CopyHostDataToGpu(host_data.data());
     }
@@ -714,7 +712,7 @@ TEST_CASE("TensorNetwork<CudaTensor>::AddTensor", "[TensorNetwork]")
 
         const CudaIndexToEdgeMap have_edge_map = tn.GetIndexToEdgeMap();
         const CudaIndexToEdgeMap want_edge_map = {{"A0", {2, {0}}},
-                                              {"B1", {3, {0}}}};
+                                                  {"B1", {3, {0}}}};
         CHECK(have_edge_map == want_edge_map);
 
         const TagToNodeIDsMap have_tag_map = GetTagToNodeIDsMap(tn);
@@ -751,7 +749,7 @@ TEST_CASE("TensorNetwork<CudaTensor>::AddTensor", "[TensorNetwork]")
 
         const CudaIndexToEdgeMap have_edge_map = tn.GetIndexToEdgeMap();
         const CudaIndexToEdgeMap want_edge_map = {{"D3", {4, {0, 1}}},
-                                              {"E4", {2, {1}}}};
+                                                  {"E4", {2, {1}}}};
         CHECK(have_edge_map == want_edge_map);
 
         const TagToNodeIDsMap have_tag_map = GetTagToNodeIDsMap(tn);
@@ -824,9 +822,9 @@ TEST_CASE("TensorNetwork<CudaTensor>::SliceIndices", "[TensorNetwork]")
         CHECK(have_tensor_shape == want_tensor_shape);
 
         const Data have_tensor_data = node.tensor.GetHostDataVector();
-        const Data want_tensor_data = {{0, 0},  {1, 2},  {2, 4},   {3, 6},
-                                       {4, 8},  {5, 10}, {6, 12},  {7, 14},
-                                       {8, 16}, {9, 18}, {10, 20}, {11, 22}};
+        const Data want_tensor_data = {{0, 0},   {2, 4},   {4, 8},   {6, 12},
+                                       {8, 16},  {10, 20}, {12, 24}, {14, 28},
+                                       {16, 32}, {18, 36}, {20, 40}, {22, 44}};
         CHECK(have_tensor_data == want_tensor_data);
     }
 
@@ -852,9 +850,9 @@ TEST_CASE("TensorNetwork<CudaTensor>::SliceIndices", "[TensorNetwork]")
         CHECK(have_tensor_shape == want_tensor_shape);
 
         const Data have_tensor_data = node.tensor.GetHostDataVector();
-        const Data want_tensor_data = {{12, 24}, {13, 26}, {14, 28}, {15, 30},
-                                       {16, 32}, {17, 34}, {18, 36}, {19, 38},
-                                       {20, 40}, {21, 42}, {22, 44}, {23, 46}};
+        const Data want_tensor_data = {{1, 2},   {3, 6},   {5, 10},  {7, 14},
+                                       {9, 18},  {11, 22}, {13, 26}, {15, 30},
+                                       {17, 34}, {19, 38}, {21, 42}, {23, 46}};
         CHECK(have_tensor_data == want_tensor_data);
     }
 
@@ -880,7 +878,7 @@ TEST_CASE("TensorNetwork<CudaTensor>::SliceIndices", "[TensorNetwork]")
         CHECK(have_tensor_shape == want_tensor_shape);
 
         const Data have_tensor_data = node.tensor.GetHostDataVector();
-        const Data want_tensor_data = {{14, 28}, {18, 36}, {22, 44}};
+        const Data want_tensor_data = {{13, 26}, {15, 30}, {17, 34}};
         CHECK(have_tensor_data == want_tensor_data);
     }
 
@@ -986,7 +984,7 @@ TEST_CASE("TensorNetwork<CudaTensor>::Contract", "[TensorNetwork]")
 
     SECTION("Implicit contraction of network [3, 2] -(0)- [3]")
     {
-        const auto tensor_1 = MakeCudaTensor({"A0", "B1"}, {3, 2});
+        const auto tensor_1 = MakeCudaTensor({"B1", "A0"}, {2, 3});
         const auto tensor_2 = MakeCudaTensor({"A0"}, {3});
 
         tn.AddTensor(tensor_1, {});
@@ -1060,8 +1058,18 @@ TEST_CASE("TensorNetwork<CudaTensor>::Contract", "[TensorNetwork]")
 
     SECTION("Implicit contraction of network [2, 3] -(1)- [3, 3]")
     {
-        const auto tensor_1 = MakeCudaTensor({"A0", "B1"}, {2, 3});
-        const auto tensor_2 = MakeCudaTensor({"C2", "B1"}, {3, 3});
+        // Note: CuTensor is Col-major, so indices are reversed here.
+        // Output data will also be Col-major, unless explicitly converted to
+        // Tensor
+        std::vector<std::string> Indices1{"A0", "B1"};
+        std::vector<std::string> Indices2{"C2", "B1"};
+        std::vector<size_t> Sizes1{2, 3};
+        std::vector<size_t> Sizes2{3, 3};
+
+        const auto tensor_1 =
+            MakeCudaTensor(ReverseVector(Indices1), ReverseVector(Sizes1));
+        const auto tensor_2 =
+            MakeCudaTensor(ReverseVector(Indices2), ReverseVector(Sizes2));
 
         tn.AddTensor(tensor_1, {});
         tn.AddTensor(tensor_2, {});
@@ -1077,8 +1085,8 @@ TEST_CASE("TensorNetwork<CudaTensor>::Contract", "[TensorNetwork]")
         REQUIRE(have_tensor_shape == want_tensor_shape);
 
         const Data have_tensor_data = result.GetHostDataVector();
-        const Data want_tensor_data = {{-15, 20}, {-42, 56},   {-69, 92},
-                                       {-42, 56}, {-150, 200}, {-258, 344}};
+        const Data want_tensor_data = {{-15, 20},   {-42, 56}, {-42, 56},
+                                       {-150, 200}, {-69, 92}, {-258, 344}};
         CHECK(have_tensor_data == want_tensor_data);
 
         const auto &nodes = tn.GetNodes();
@@ -1096,15 +1104,26 @@ TEST_CASE("TensorNetwork<CudaTensor>::Contract", "[TensorNetwork]")
         }
 
         const CudaIndexToEdgeMap have_map = tn.GetIndexToEdgeMap();
-        const CudaIndexToEdgeMap want_map = {{"A0", {2, {2}}}, {"C2", {3, {2}}}};
+        const CudaIndexToEdgeMap want_map = {{"A0", {2, {2}}},
+                                             {"C2", {3, {2}}}};
         CHECK(have_map == want_map);
     }
 
     SECTION("Explicit contraction of network [2, 3] -(1)- [2, 3] -(0)- [2, 2]")
     {
-        const auto tensor_1 = MakeCudaTensor({"A0", "B1"}, {2, 3});
-        const auto tensor_2 = MakeCudaTensor({"C2", "B1"}, {2, 3});
-        const auto tensor_3 = MakeCudaTensor({"C2", "D3"}, {2, 2});
+        std::vector<std::string> Idx1{"A0", "B1"};
+        std::vector<std::string> Idx2{"C2", "B1"};
+        std::vector<std::string> Idx3{"C2", "D3"};
+
+        std::vector<size_t> Size23{2, 3};
+        std::vector<size_t> Size22{2, 2};
+
+        const auto tensor_1 =
+            MakeCudaTensor(ReverseVector(Idx1), ReverseVector(Size23));
+        const auto tensor_2 =
+            MakeCudaTensor(ReverseVector(Idx2), ReverseVector(Size23));
+        const auto tensor_3 =
+            MakeCudaTensor(ReverseVector(Idx3), ReverseVector(Size22));
 
         tn.AddTensor(tensor_1, {});
         tn.AddTensor(tensor_2, {});
@@ -1120,10 +1139,15 @@ TEST_CASE("TensorNetwork<CudaTensor>::Contract", "[TensorNetwork]")
         const Shape want_tensor_shape = {2, 2};
         REQUIRE(have_tensor_shape == want_tensor_shape);
 
-        const Data have_tensor_data = result.GetHostDataVector();
+        auto t_host =
+            static_cast<Tensor<std::complex<float>>>(result).Transpose(
+                std::vector<std::string>{"A0", "D3"});
+
+        const Data have_tensor_data_col = result.GetHostDataVector();
+        const Data have_tensor_data_row = t_host.GetData();
         const Data want_tensor_data = {
             {-308, -56}, {-517, -94}, {-1100, -200}, {-1804, -328}};
-        CHECK(have_tensor_data == want_tensor_data);
+        CHECK(have_tensor_data_row == want_tensor_data);
 
         const auto &nodes = tn.GetNodes();
         REQUIRE(nodes.size() == 5);
@@ -1148,7 +1172,8 @@ TEST_CASE("TensorNetwork<CudaTensor>::Contract", "[TensorNetwork]")
         }
 
         const CudaIndexToEdgeMap have_map = tn.GetIndexToEdgeMap();
-        const CudaIndexToEdgeMap want_map = {{"D3", {2, {4}}}, {"A0", {2, {4}}}};
+        const CudaIndexToEdgeMap want_map = {{"D3", {2, {4}}},
+                                             {"A0", {2, {4}}}};
         CHECK(have_map == want_map);
     }
 

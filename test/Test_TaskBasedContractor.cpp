@@ -81,8 +81,7 @@ TensorMap GetTensorMap(const TaskBasedContractor<tensor_t> &tbc)
 }
 } // namespace
 
-TEST_CASE("TaskBasedContractor::AddContractionTasks()",
-          "[TaskBasedContractor]")
+TEST_CASE("TaskBasedContractor::AddContractionTasks()", "[TaskBasedContractor]")
 {
     TaskBasedContractor<tensor_t> tbc;
 
@@ -353,8 +352,7 @@ TEST_CASE("TaskBasedContractor::Contract()", "[TaskBasedContractor]")
     }
 }
 
-TEST_CASE("TaskBasedContractor::AddDeletionTasks()",
-          "[TaskBasedContractor]")
+TEST_CASE("TaskBasedContractor::AddDeletionTasks()", "[TaskBasedContractor]")
 {
     TaskBasedContractor<tensor_t> tbc;
 
@@ -431,8 +429,7 @@ TEST_CASE("TaskBasedContractor::AddDeletionTasks()",
     }
 }
 
-TEST_CASE("TaskBasedContractor::AddReductionTask()",
-          "[TaskBasedContractor]")
+TEST_CASE("TaskBasedContractor::AddReductionTask()", "[TaskBasedContractor]")
 {
     TaskBasedContractor<tensor_t> tbc;
 

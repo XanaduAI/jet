@@ -145,7 +145,7 @@ template <class TensorType> class TensorNetworkSerializer {
      * @return TensorNetworkFile containing contents of js_str
      */
     TensorNetworkFile<TensorType> operator()(std::string js_str,
-                                         bool col_major = false)
+                                             bool col_major = false)
     {
         TensorNetworkFile<TensorType> tf;
         LoadAndValidateJSON_(js_str);
@@ -164,8 +164,8 @@ template <class TensorType> class TensorNetworkSerializer {
                                      js_tensor[0]);
             }
             else
-                tf.tensors.AddTensor(TensorType(js_tensor[1], js_tensor[2], data),
-                                     js_tensor[0]);
+                tf.tensors.AddTensor(
+                    TensorType(js_tensor[1], js_tensor[2], data), js_tensor[0]);
             i++;
         }
 
@@ -215,14 +215,19 @@ template <class TensorType> class TensorNetworkSerializer {
         auto js_tensor = json::array();
 
         js_tensor.push_back(tags);
-        if constexpr (std::is_same_v<TensorType, Jet::Tensor<std::complex<float>>> || std::is_same_v<TensorType, Jet::Tensor<std::complex<double>>>){
+        if constexpr (std::is_same_v<TensorType,
+                                     Jet::Tensor<std::complex<float>>> ||
+                      std::is_same_v<TensorType,
+                                     Jet::Tensor<std::complex<double>>>) {
             js_tensor.push_back(tensor.GetIndices());
             js_tensor.push_back(tensor.GetShape());
             js_tensor.push_back(TensorDataToJSON_(tensor.GetData()));
         }
-        else{ // CudaTensor column-major branch
-            std::vector<std::string> rev_idx{tensor.GetIndices().rbegin(), tensor.GetIndices().rend()};
-            std::vector<size_t> rev_shape{tensor.GetShape().rbegin(), tensor.GetShape().rend()};
+        else { // CudaTensor column-major branch
+            std::vector<std::string> rev_idx{tensor.GetIndices().rbegin(),
+                                             tensor.GetIndices().rend()};
+            std::vector<size_t> rev_shape{tensor.GetShape().rbegin(),
+                                          tensor.GetShape().rend()};
             js_tensor.push_back(rev_idx);
             js_tensor.push_back(rev_shape);
             js_tensor.push_back(TensorDataToJSON_(tensor.GetHostDataVector()));
