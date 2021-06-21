@@ -27,8 +27,7 @@ namespace TensorHelpers {
  */
 template <class T>
 constexpr bool is_supported_data_type =
-    std::is_same_v<T, float>,
-    std::is_same_v<T, double>,
+    std::is_same_v<T, float> || std::is_same_v<T, double> ||
     std::is_same_v<T, std::complex<float>> ||
     std::is_same_v<T, std::complex<double>>;
 
@@ -47,16 +46,14 @@ constexpr bool is_supported_data_type =
  * @param C_data Output matrix C
  */
 template <typename T>
-constexpr void
-gemmBinding(size_t m, size_t n, size_t k, T alpha,
-            T beta, const T *A_data,
-            const T *B_data, T *C_data)
+constexpr void gemmBinding(size_t m, size_t n, size_t k, T alpha, T beta,
+                           const T *A_data, const T *B_data, T *C_data)
 {
-    if constexpr (std::is_same_v<T, float)
+    if constexpr (std::is_same_v<T, float>)
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), beta,
                     C_data, std::max(1ul, n));
-    else if constexpr (std::is_same<T, double)
+    else if constexpr (std::is_same_v<T, double>)
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), beta,
                     C_data, std::max(1ul, n));
@@ -67,7 +64,7 @@ gemmBinding(size_t m, size_t n, size_t k, T alpha,
     else if constexpr (std::is_same_v<T, std::complex<double>>)
         cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), &beta,
-                    C_data, std::max(1ul, n);
+                    C_data, std::max(1ul, n));
 };
 
 /**
@@ -85,15 +82,14 @@ gemmBinding(size_t m, size_t n, size_t k, T alpha,
  * @param transpose Transpose flag for matrix A
  */
 template <typename T>
-constexpr void
-gemvBinding(size_t m, size_t k, T alpha, T beta,
-            const T *A_data, const T *B_data,
-            T *C_data, const CBLAS_TRANSPOSE &transpose)
+constexpr void gemvBinding(size_t m, size_t k, T alpha, T beta, const T *A_data,
+                           const T *B_data, T *C_data,
+                           const CBLAS_TRANSPOSE &transpose)
 {
     if constexpr (std::is_same_v<T, float>)
         cblas_sgemv(CblasRowMajor, transpose, m, k, alpha, (A_data),
                     std::max(1ul, k), (B_data), 1, beta, (C_data), 1);
-    else if constexpr (std::is_same_v<T, double)
+    else if constexpr (std::is_same_v<T, double>)
         cblas_dgemv(CblasRowMajor, transpose, m, k, alpha, (A_data),
                     std::max(1ul, k), (B_data), 1, beta, (C_data), 1);
     else if constexpr (std::is_same_v<T, std::complex<float>>)
@@ -115,8 +111,7 @@ gemvBinding(size_t m, size_t k, T alpha, T beta,
  * @param C_data Output vector from dot product
  */
 template <typename T>
-constexpr void dotuBinding(size_t k, const T *A_data,
-                           const T *B_data,
+constexpr void dotuBinding(size_t k, const T *A_data, const T *B_data,
                            T *C_data)
 {
     if constexpr (std::is_same_v<T, float>)
@@ -144,11 +139,8 @@ constexpr void dotuBinding(size_t k, const T *A_data,
  * @param right_dim Columns in right tensor B and resulting tensor C.
  * @param common_dim Rows in left tensor A and columns in right tensor B.
  */
-template <
-    typename T,
-    std::enable_if_t<is_supported_data_type<T>, bool> = true>
-inline void MultiplyTensorData(const std::vector<T> &A,
-                               const std::vector<T> &B,
+template <typename T, std::enable_if_t<is_supported_data_type<T>, bool> = true>
+inline void MultiplyTensorData(const std::vector<T> &A, const std::vector<T> &B,
                                std::vector<T> &C,
                                const std::vector<std::string> &left_indices,
                                const std::vector<std::string> &right_indices,
@@ -167,8 +159,7 @@ inline void MultiplyTensorData(const std::vector<T> &A,
         size_t m = left_dim;
         size_t n = right_dim;
         size_t k = common_dim;
-        gemmBinding<T>(m, n, k, alpha, beta, A_data, B_data,
-                                      C_data);
+        gemmBinding<T>(m, n, k, alpha, beta, A_data, B_data, C_data);
     }
     else if (left_indices.size() > 0 && right_indices.size() == 0) {
         size_t m = left_dim;
