@@ -33,7 +33,9 @@ class XIRTransformer(Transformer):
 
     Keyword args:
         eval_pi (bool): Whether pi should be evaluated and stored as a float
-            instead of symbolically as a string. Defaults to False.
+            instead of symbolically as a string. Defaults to ``False``.
+        use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
+            and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
     def __init__(self, *args, **kwargs):

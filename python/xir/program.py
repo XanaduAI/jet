@@ -10,6 +10,8 @@ from .decimal_complex import DecimalComplex
 
 
 def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
+    """Converts `decimal.Decimal` and `DecimalComplex` objects to ``float`` and
+    ``complex`` respectively"""
     params_with_floats = params.copy()
 
     if isinstance(params, List):
@@ -39,6 +41,8 @@ class Statement:
         name (str): name of the statement
         params (list, Dict): parameters for the statement (can be empty)
         wires (tuple): the wires on which the statement is applied
+        use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
+            and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
     def __init__(self, name: str, params: Union[List, Dict], wires: Tuple, use_floats: bool = True):

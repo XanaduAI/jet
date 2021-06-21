@@ -88,8 +88,8 @@ def to_xir(prog, **kwargs):
 
     Kwargs:
         add_decl (bool): Whether gate and output declarations should be added to
-            the IR program. Default is False.
-        version (str): Version number for the program. Default is 0.1.0.
+            the IR program. Default is ``False``.
+        version (str): Version number for the program. Default is ``0.1.0``.
 
     Returns:
         XIRProgram
