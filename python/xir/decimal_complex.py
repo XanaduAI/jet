@@ -8,12 +8,12 @@ from numbers import Number
 
 
 class DecimalComplex:
-    """Complex numberss represented by precision decimal.Decimal float terms.
+    """Complex numbers represented by precision ``decimal.Decimal`` terms.
 
     Args:
         real (str, Decimal): the real part of the complex number
         imag (str, Decimal): The imaginary part of the complex number. Defaults
-            to 0.0 if not input.
+            to ``0.0`` if not input.
     """
 
     def __init__(
