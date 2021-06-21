@@ -508,8 +508,7 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Slices current `%Tensor` object index.
      *
-     * @see SliceIndex(const Tensor<U> &tensor, const std::string &index, size_t
-     * value)
+     * @see SliceIndex(const Tensor<U> &, const std::string &, size_t)
      */
     Tensor<T> SliceIndex(const std::string &index, size_t value) const
     {
@@ -541,8 +540,7 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Reshapes `%Tensor` object to the given dimensions.
      *
-     * @see Reshape(const Tensor<U> &old_tensor, const std::vector<size_t>
-     * &new_shape)
+     * @see Reshape(const Tensor<U>&, const std::vector<size_t>&)
      */
     Tensor<T> Reshape(const std::vector<size_t> &new_shape) const
     {
@@ -625,8 +623,7 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Transposes the indices of the `%Tensor` object to a new ordering.
      *
-     * @see Transpose(const Tensor<U> &A, const std::vector<size_t>
-     * &new_ordering)
+     * @see Transpose(const Tensor<U>&, const std::vector<size_t>&)
      */
     Tensor<T> Transpose(const std::vector<size_t> &new_ordering) const
     {
@@ -635,8 +632,7 @@ template <class T = std::complex<float>> class Tensor {
     /**
      * @brief Transposes the indices of the `%Tensor` object to a new ordering.
      *
-     * @see Transpose(const Tensor<U> &A, const std::vector<std::string>
-     * &new_indices)
+     * @see Transpose(const Tensor<U>&, const std::vector<std::string>&)
      */
     Tensor<T> Transpose(const std::vector<std::string> &new_indices) const
     {
