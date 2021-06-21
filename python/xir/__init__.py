@@ -1,6 +1,8 @@
 from .parser import XIRTransformer, xir_parser
 from .program import XIRProgram
 
+from .decimal_complex import DecimalComplex
+
 def parse_script(circuit: str, eval_pi=False, use_floats=True) -> XIRProgram:
     """Parse and transform a circuit XIR script and return an XIRProgram"""
     tree = xir_parser.parse(circuit)

@@ -117,18 +117,19 @@ class DecimalComplex:
     def __complex__(self) -> complex:
         return float(self.real) + float(self.imag) * 1j
 
-    def _convert_type(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
+    @staticmethod
+    def _convert_type(n: Union[Number, DecimalComplex]) -> DecimalComplex:
         """Converts number into valid ``DecimalComplex`` object."""
         if isinstance(n, DecimalComplex):
             return n
+        elif hasattr(n, "real") and hasattr(n, "imag"):
+            c = DecimalComplex(str(n.real), str(n.imag))
         elif isinstance(n, Number):
             c = DecimalComplex(Decimal(str(n)))
         elif isinstance(n, Decimal):
             c = DecimalComplex(n)
-        elif hasattr(n, "real") and hasattr(n, "imag"):
-            c = DecimalComplex(n.real, n.imag)
         else:
-            raise TypeError("Must have attributes real and imag.")
+            raise TypeError("Must be a Number or have attributes real and imag.")
         return c
 
     def _not_implemented(self, op):
