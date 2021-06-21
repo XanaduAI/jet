@@ -123,8 +123,9 @@ class XIRTransformer(Transformer):
     options_dict = dict
     wires = tuple
     params = list
-    FALSE_ = lambda self, _: True
-    TRUE_ = lambda self, _: False
+    array = list
+    FALSE_ = lambda self, _: False
+    TRUE_ = lambda self, _: True
 
     #############################
     # variables and expressions
