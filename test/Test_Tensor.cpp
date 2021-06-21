@@ -10,13 +10,15 @@
 #include "jet/Tensor.hpp"
 #include "jet/Utilities.hpp"
 
+using f32_t = float;
+using f64_t = double;
 using c128_t = std::complex<double>;
 using c64_t = std::complex<float>;
 using Data = std::vector<c64_t>;
 
 using namespace Jet;
 
-TEMPLATE_TEST_CASE("Tensor::Tensor", "[Tensor]", c64_t, c128_t)
+TEMPLATE_TEST_CASE("Tensor::Tensor", "[Tensor]", f32_t, f64_t, c64_t, c128_t)
 {
     SECTION("Tensor") { REQUIRE(std::is_constructible<Tensor<>>::value); }
     SECTION("Tensor<TestType> {}")
