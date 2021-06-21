@@ -17,7 +17,7 @@ def run_xir_program(program: XIRProgram) -> List[np.generic]:
     """Executes an XIR program.
 
     Raises:
-        ValueError: if the given program contains an unsupported or invalid statement.
+        ValueError: If the given program contains an unsupported or invalid statement.
 
     Args:
         program (XIRProgram): XIR script to execute.
