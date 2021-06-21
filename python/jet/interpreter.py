@@ -13,7 +13,7 @@ from .state import Qudit
 __all__ = ["run_xir_program"]
 
 
-def run_xir_program(program: XIRProgram) -> List[np.generic]:
+def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     """Executes an XIR program.
 
     Raises:
@@ -25,7 +25,7 @@ def run_xir_program(program: XIRProgram) -> List[np.generic]:
     Returns:
         List of NumPy values representing the output of the XIR program.
     """
-    result: List[np.generic] = []
+    result: List[Union[np.number, np.ndarray]] = []
 
     num_wires = find_number_of_modes(program)
     # TODO: Extract the Fock cutoff dimension from the XIR script.
