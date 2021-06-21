@@ -1,11 +1,11 @@
 """Unit tests for the parser"""
 
+import textwrap
+
 import pytest
 
 from xir import XIRTransformer, xir_parser
 from xir.program import XIRProgram
-
-import textwrap
 
 
 def parse_script(circuit: str) -> XIRProgram:
