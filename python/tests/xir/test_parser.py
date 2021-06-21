@@ -4,14 +4,7 @@ import textwrap
 
 import pytest
 
-from xir import XIRTransformer, xir_parser
-from xir.program import XIRProgram
-
-
-def parse_script(circuit: str) -> XIRProgram:
-    """Parse and transform a circuit XIR script and return an XIRProgram"""
-    tree = xir_parser.parse(circuit)
-    return XIRTransformer().transform(tree)
+from xir import parse_script
 
 
 class TestParser:
@@ -32,3 +25,9 @@ class TestParser:
         irprog = parse_script(circuit)
 
         assert irprog.statements[0].params["array"] == res
+
+    def test_use_floats(self):
+        """TODO"""
+
+    def test_eval_pi(self):
+        """TODO"""
