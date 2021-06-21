@@ -135,10 +135,11 @@ class XIRTransformer(Transformer):
         if isinstance(args[2], tuple):
             params = args[1]
             wires = args[2]
+            stmts = args[3:]
         else:
             params = args[1]
             wires = ()
-        stmts = args[3:]
+            stmts = args[2:]
 
         if len(wires) > 0:
             check_wires(wires, stmts)

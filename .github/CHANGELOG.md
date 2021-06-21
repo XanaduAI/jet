@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* Gates may now be instantiated by name using the `GateFactory` Python class. [(#23)](https://github.com/XanaduAI/jet/pull/23)
+
 * Quantum circuit and state models have been added to the `jet` Python package. [(#21)](https://github.com/XanaduAI/jet/pull/21)
 
 * Quantum gate models have been added to the `jet` Python package. [(#16)](https://github.com/XanaduAI/jet/pull/16)
@@ -43,6 +45,8 @@
 ### Bug Fixes
 
 * The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
+
+* The documentation build no longer emits any Doxygen warnings. [(#25)](https://github.com/XanaduAI/jet/pull/25)
 
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
