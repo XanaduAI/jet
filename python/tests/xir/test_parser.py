@@ -1,10 +1,11 @@
 """Unit tests for the parser"""
 
-import textwrap
+import math
+from decimal import Decimal
 
 import pytest
 
-from xir import parse_script
+from xir import parse_script, DecimalComplex
 
 
 class TestParser:
@@ -26,8 +27,32 @@ class TestParser:
 
         assert irprog.statements[0].params["array"] == res
 
-    def test_use_floats(self):
-        """TODO"""
+    @pytest.mark.parametrize("use_floats", [True, False])
+    @pytest.mark.parametrize("param", [3, 4.2, 2j])
+    def test_use_floats(self, use_floats, param):
+        """Test the ``use_floats`` kwarg to return float and complex types"""
+        if use_floats:
+            t = type(param)
+        else:
+            if isinstance(param, complex):
+                t = DecimalComplex
+            elif isinstance(param, float):
+                t = Decimal
+            elif isinstance(param, int):
+                t = int
 
-    def test_eval_pi(self):
-        """TODO"""
+        circuit = f"a_gate({param}) | [0, 1];"
+        irprog = parse_script(circuit, use_floats=use_floats)
+
+        assert isinstance(irprog.statements[0].params[0], t)
+
+    @pytest.mark.parametrize("eval_pi", [True, False])
+    @pytest.mark.parametrize("param, expected", [("pi", math.pi), ("pi / 2", math.pi / 2)])
+    def test_eval_pi(self, eval_pi, param, expected):
+        """Test the ``eval_pi`` kwarg to evaluate mathematical expressions containing pi"""
+        circuit = f"a_gate({param}) | [0, 1];"
+        irprog = parse_script(circuit, eval_pi=eval_pi)
+        if eval_pi:
+            assert irprog.statements[0].params[0] == expected
+        else:
+            assert irprog.statements[0].params[0] == param.upper()
