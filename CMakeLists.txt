@@ -144,6 +144,7 @@ if(ENABLE_CUTENSOR)
 
     find_library(CUTENSOR_LIB
         NAMES   cutensor.so.1.3.0 libcutensor.so.1.3.0
+        	cutensor.so.1.3.1 libcutensor.so.1.3.1
         HINTS   /usr/lib
                 /usr/local/cuda
                 /usr/local/lib
