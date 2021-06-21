@@ -31,8 +31,6 @@ def test_run_xir_program_with_no_output_statements(program):
         (
             parse_xir_script(
                 """
-                use xstd;
-
                 X | [0];
 
                 amplitude(state: 0) | [0];
@@ -44,8 +42,6 @@ def test_run_xir_program_with_no_output_statements(program):
         (
             parse_xir_script(
                 """
-                use xstd;
-
                 H | [0];
                 CNOT | [0, 1];
 
@@ -60,8 +56,6 @@ def test_run_xir_program_with_no_output_statements(program):
         (
             parse_xir_script(
                 """
-                use xstd;
-
                 TwoModeSqueezing(3, 1, 2) | [0, 1];
 
                 amplitude(state: 0) | [0, 1];
@@ -83,19 +77,19 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
     "program, match",
     [
         (
-            parse_xir_script("use xstd; X | [0]; amplitude | [0];"),
+            parse_xir_script("X | [0]; amplitude | [0];"),
             r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
         ),
         (
-            parse_xir_script("use xstd; X | [0]; amplitude(state: 2) | [0];"),
+            parse_xir_script("X | [0]; amplitude(state: 2) | [0];"),
             r"Statement 'amplitude\(state: 2\) \| \[0\]' has a 'state' parameter which is too large\.",
         ),
         (
-            parse_xir_script("use xstd; CNOT | [0, 1]; amplitude(state: 0) | [0];"),
+            parse_xir_script("CNOT | [0, 1]; amplitude(state: 0) | [0];"),
             r"Statement 'amplitude\(state: 0\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
         ),
         (
-            parse_xir_script("use xstd; CNOT | [0, 1]; amplitude(state: 0) | [1, 0];"),
+            parse_xir_script("CNOT | [0, 1]; amplitude(state: 0) | [1, 0];"),
             r"Statement 'amplitude\(state: 0\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
         ),
     ],
