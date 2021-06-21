@@ -24,17 +24,20 @@ In Jet we can create these four different tensors easily in a simple C++ program
 
 .. code-block:: cpp
 
-    #include "Jet.hpp"
+    #include <complex>
 
-    int main() {
-        using namespace Jet;
+    #include <Jet.hpp>
 
-        Tensor A; // a scalar
-        Tensor B({"i"}, {2}); // a vector, with index i and size 2
-        Tensor C({"i","j"},{4,3}); // a matrix, with indices i,j and size 4x3
-        Tensor D({"i","j","k"},{3,2,4}); // a rank 3 tensor, with indices i,j,k, and size 3x2x4
+    int main()
+    {
+        using Tensor = Jet::Tensor<std::complex<float>>;
 
-        //Fill the tensors with random values
+        Tensor A;                             // Scalar
+        Tensor B({"i"}, {2});                 // Vector with index (i) and size 2
+        Tensor C({"i", "j"}, {4, 3});         // Matrix with indices (i,j) and size 4x3
+        Tensor D({"i", "j", "k"}, {3, 2, 4}); // Rank 3 tensor with indices (i,j,k) and size 3x2x4
+
+        // Fill the tensors with random values
         A.FillRandom();
         B.FillRandom();
         C.FillRandom(7); // Seed RNG with value
@@ -42,7 +45,6 @@ In Jet we can create these four different tensors easily in a simple C++ program
 
         return 0;
     };
-
 
 For any given tensor, each leg corresponds to an index variable (:math:`i, j, k,` etc). The power of the tensor representation comes from the intuitive way it expresses problems. Let us take a rank 2 tensor (i.e., a matrix) of size 2x2 as an example.
 
@@ -57,25 +59,24 @@ For any given tensor, each leg corresponds to an index variable (:math:`i, j, k,
 
 |br|
 
-Here, we can showcase the various constructors offered by the ``Tensor`` class, allowing you to choose whichever best suits your needs. 
+Here, we can showcase the various constructors offered by the ``Tensor`` class, allowing you to choose whichever best suits your needs.
 
 .. code-block:: cpp
 
-    /// Create a tensor with single datum of complex<float> {0.0, 0.0}
+    // Create a tensor with single datum of `complex<float>{0.0, 0.0}`.
     Tensor M0;
 
-    /// Create a 3x2 tensor, with automatically labeled indices, and data zero-initialised
-    Tensor M1({3,2});
+    // Create a 3x2 tensor with automatically-labeled indices and zero-initialized data.
+    Tensor M1({3, 2});
 
-    /// Create a 2x3x2 tensor, with labeled indices (i,j,k), and data zero-initialised
-    Tensor M2({"i","j","k"}, {2,3,2});
+    // Create a 2x3x2 tensor with labeled indices (i,j,k) and zero-initialized data.
+    Tensor M2({"i", "j", "k"}, {2, 3, 2});
 
-    /// Create a copy of the M2 2x3x2 tensor
+    // Create a copy of the M2 tensor.
     Tensor M3(M2);
 
-    /// Create a 2x2 tensor, with labeled indices (i,j), 
-    /// and data as provided in row-major encoding
-    Tensor M4({"i","j"}, {2,2}, {{0,0}, {1,0}, {1,0}, {0,0}});
+    // Create a 2x2 tensor with labeled indices (i,j) and data provided in row-major encoding.
+    Tensor M4({"i", "j"}, {2, 2}, {{0, 0}, {1, 0}, {1, 0}, {0, 0}});
 
 |br|
 
@@ -83,12 +84,12 @@ Let us now generate a few familiar rank 2 tensors, the Pauli operators, using th
 
 .. code-block:: cpp
 
-    std::vector<size_t> size {2,2};
-    std::vector<std::string> indices {"i","j"};
-    
-    std::vector<std::complex<float>> pauli_x_data { {0,0}, {1,0}, {1,0}, {0,0} };
-    std::vector<std::complex<float>> pauli_y_data { {0,0}, {0,-1}, {0,1}, {0,0} };
-    std::vector<std::complex<float>> pauli_z_data { {1,0}, {0,0}, {0,0}, {-1,0} };
+    std::vector<size_t> size{2, 2};
+    std::vector<std::string> indices{"i", "j"};
+
+    std::vector<std::complex<float>> pauli_x_data{{0, 0}, {1, 0}, {1, 0}, {0, 0}};
+    std::vector<std::complex<float>> pauli_y_data{{0, 0}, {0, -1}, {0, 1}, {0, 0}};
+    std::vector<std::complex<float>> pauli_z_data{{1, 0}, {0, 0}, {0, 0}, {-1, 0}};
 
     Tensor X(indices, size, pauli_x_data);
     Tensor Y(indices, size, pauli_y_data);
@@ -158,20 +159,20 @@ Since we already know the result of this calculation (:math:`1.0`), we can easil
 
 .. code-block:: cpp
 
-    Tensor bra ({"i"}, {2}, {{1,0},{0,0}});
-    Tensor ket = bra; //Transposes are handled internally
+    Tensor bra({"i"}, {2}, {{1, 0}, {0, 0}});
+    Tensor ket = bra; // Transposes are handled internally
 
-    Tensor op_ket = ContractTensors(Z, ket);
-    Tensor bra_op_ket = ContractTensors(bra, op_ket);
+    Tensor op_ket = Z.ContractWithTensor(ket);
+    Tensor bra_op_ket = bra.ContractWithTensor(op_ket);
 
-    std::cout << "<0|sigma_z|0>=" << bra_op_ket.GetScalar() << std::endl;
+    std::cout << "<0|sigma_z|0> = " << bra_op_ket.GetScalar() << std::endl;
 
 
 which outputs 
 
 .. code-block:: text
 
-    <0|sigma_z|0>=(1,0)
+    <0|sigma_z|0> = (1,0)
 
 as expected.
 
