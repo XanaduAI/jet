@@ -6,15 +6,6 @@ from strawberryfields import ops
 from xir.program import GateDeclaration, OutputDeclaration, Statement, XIRProgram
 
 
-def find_number_of_modes(xir):
-    """Helper function to find the number of modes in an XIR program"""
-    wires = set()
-    for stmt in xir.statements:
-        wires.add(stmt.wires)
-
-    return len(wires)
-
-
 def to_program(xir, **kwargs):
     """Convert an IR Program to a Strawberry Fields Program.
 
@@ -30,7 +21,7 @@ def to_program(xir, **kwargs):
     Returns:
         Program: corresponding Strawberry Fields program
     """
-    num_of_modes = find_number_of_modes(xir)
+    num_of_modes = len(xir.wires)
     name = kwargs.get("name", "xir")
     if num_of_modes == 0:
         raise ValueError(

@@ -239,6 +239,15 @@ class XIRProgram:
         return self._version
 
     @property
+    def wires(self):
+        """Get the wires of an XIR program"""
+        wires = []
+        for stmt in self.statements:
+            wires.extend(stmt.wires)
+
+        return wires
+
+    @property
     def include(self) -> List[str]:
         """Included XIR libraries/files used in the program
 
