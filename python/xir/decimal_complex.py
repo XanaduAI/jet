@@ -2,9 +2,9 @@
 ``decimal.Decimal`` precision."""
 from __future__ import annotations
 
-from typing import Union
 from decimal import Decimal
 from numbers import Number
+from typing import Union
 
 
 class DecimalComplex:
@@ -16,9 +16,7 @@ class DecimalComplex:
             to ``0.0`` if not input.
     """
 
-    def __init__(
-        self, real: Union[str, Decimal], imag: Union[str, Decimal] = "0.0"
-    ) -> None:
+    def __init__(self, real: Union[str, Decimal], imag: Union[str, Decimal] = "0.0") -> None:
         self._real = Decimal(real)
         self._imag = Decimal(imag)
 

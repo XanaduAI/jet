@@ -1,22 +1,21 @@
 """This module contains the XIRTransformer and xir_parser"""
+import math
 from decimal import Decimal
 from pathlib import Path
+
 from lark import Lark, Transformer
 
+from .decimal_complex import DecimalComplex
 from .program import (
-    XIRProgram,
-    Statement,
-    OperatorStmt,
+    FuncDeclaration,
     GateDeclaration,
     OperatorDeclaration,
-    FuncDeclaration,
+    OperatorStmt,
     OutputDeclaration,
+    Statement,
+    XIRProgram,
 )
-from .utils import simplify_math, check_wires
-from .decimal_complex import DecimalComplex
-
-import math
-
+from .utils import check_wires, simplify_math
 
 p = Path(__file__).parent / "ir.lark"
 with p.open("r") as _f:
@@ -44,7 +43,6 @@ class XIRTransformer(Transformer):
 
         self._program = XIRProgram()
         super().__init__(self, *args, **kwargs)
-
 
     @property
     def eval_pi(self) -> bool:

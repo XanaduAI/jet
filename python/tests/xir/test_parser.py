@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from xir import parse_script, DecimalComplex
+from xir import DecimalComplex, parse_script
 
 
 class TestParser:

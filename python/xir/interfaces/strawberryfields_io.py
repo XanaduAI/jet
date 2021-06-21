@@ -1,7 +1,9 @@
 from decimal import Decimal
+
 import strawberryfields as sf
 from strawberryfields import ops
-from xir.program import XIRProgram, Statement, GateDeclaration, OutputDeclaration
+
+from xir.program import GateDeclaration, OutputDeclaration, Statement, XIRProgram
 
 
 def find_number_of_modes(xir):
