@@ -46,6 +46,8 @@
 
 ### Bug Fixes
 
+* Building the documentation no longer emits any warnings. [(#25)](https://github.com/XanaduAI/jet/pull/25)
+
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
 * `TaskBasedCpuContractor::AddReductionTask()` now handles the reduction of non-scalar tensors. [(#19)](https://github.com/XanaduAI/jet/pull/19)
