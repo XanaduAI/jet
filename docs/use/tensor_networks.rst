@@ -130,10 +130,10 @@ The :math:`CNOT` gate is then given by
 .. code-block:: cpp
 
     Tensor CNOT({"k", "j", "m", "n"}, {2, 2, 2, 2});
-    CNOT.SetValue({0, 0, 0, 0}, 1);  // |00> -> |00>
-    CNOT.SetValue({0, 1, 0, 1}, 1);  // |01> -> |01>
-    CNOT.SetValue({1, 0, 1, 1}, 1);  // |10> -> |11>
-    CNOT.SetValue({1, 1, 1, 0}, 1);  // |11> -> |10>
+    CNOT.SetValue({0, 0, 0, 0}, 1); // |00> -> |00>
+    CNOT.SetValue({0, 1, 0, 1}, 1); // |01> -> |01>
+    CNOT.SetValue({1, 0, 1, 1}, 1); // |10> -> |11>
+    CNOT.SetValue({1, 1, 1, 0}, 1); // |11> -> |10>
 
 Now, creating the tensor network is easy with the ``TensorNetwork`` class:
 
