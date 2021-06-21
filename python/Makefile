@@ -62,6 +62,7 @@ clean:
 
 
 $(.VENV_DIR)/requirements.txt.touch: $(.VENV_DIR)/touch requirements.txt
+	$(.VENV_DIR)/bin/pip install wheel
 	$(.VENV_DIR)/bin/pip install -r requirements.txt
 	@touch $@
 
