@@ -435,7 +435,7 @@ inline size_t Factorial(size_t n)
  * @param shape Index dimensions.
  * @return Product of the index dimensions in the shape.
  */
-inline size_t ShapeToSize(const std::vector<size_t> &shape) noexcept
+inline size_t ShapeToSize(const std::vector<size_t> &shape)
 {
     size_t size = 1;
     for (const auto &dim : shape) {
