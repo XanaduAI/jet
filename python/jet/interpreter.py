@@ -47,7 +47,7 @@ def run_xir_program(program: XIRProgram) -> List[np.generic]:
             state = list(map(int, bin(stmt.params["state"])[2:].zfill(num_wires)))
 
             if len(state) != num_wires:
-                raise ValueError(f"Statement '{stmt}' has an invalid 'state' parameter.")
+                raise ValueError(f"Statement '{stmt}' has a 'state' parameter which is too large.")
 
             if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
