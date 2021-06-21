@@ -24,6 +24,7 @@ class TestParser:
             ("[true, false]", [True, False]),
             ("[3+2, sin(3)]", [5, "sin(3)"]),
             ("[[0, 1], [[2], [3, 4]], [5, 6]]", [[0, 1], [[2], [3, 4]], [5, 6]]),
+            ("[]", [])
         ],
     )
     def test_output_with_array(self, array, res):
