@@ -72,7 +72,7 @@ gate H2:
     H | [1];
 end;
 
-H2 | [0];
+H2 | [0, 1];
 CNOT | [0, 1];
 amplitude(state: [0, 0]) | [0, 1];
 amplitude(state: [0, 1]) | [0, 1];
