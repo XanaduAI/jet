@@ -22,12 +22,6 @@ class DecimalComplex:
         self._real = Decimal(real)
         self._imag = Decimal(imag)
 
-    def __instancecheck__(self, instance):
-        return isinstance(instance, (complex, DecimalComplex))
-
-    def __subclasscheck__(self, subclass):
-        return issubclass(subclass, (complex, DecimalComplex))
-
     def __add__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
         c = self._convert_type(n)
 
