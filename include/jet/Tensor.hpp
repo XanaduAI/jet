@@ -356,14 +356,21 @@ template <class T = std::complex<float>> class Tensor {
      * The real and imaginary components of each datum will be independently
      * sampled from a uniform distribution with support over [-1, 1].
      */
-    void FillRandom()
+    template <> void FillRandom()
     {
         static std::mt19937 mt_engine(std::random_device{}());
-        static std::uniform_real_distribution<typename T::value_type> r_dist(-1,
-                                                                             1);
-
-        for (size_t i = 0; i < GetSize(); i++) {
-            data_[i] = {r_dist(mt_engine), r_dist(mt_engine)};
+        if constexpr (Jet::TensorHelpers::is_complex_data_type<T>) {
+            static std::uniform_real_distribution<typename T::value_type>
+                r_dist(-1, 1);
+            for (size_t i = 0; i < GetSize(); i++) {
+                data_[i] = {r_dist(mt_engine), r_dist(mt_engine)};
+            }
+        }
+        else {
+            static std::uniform_real_distribution<T> r_dist(-1, 1);
+            for (size_t i = 0; i < GetSize(); i++) {
+                data_[i] = r_dist(mt_engine);
+            }
         }
     }
 
@@ -647,11 +654,17 @@ template <class T = std::complex<float>> class Tensor {
      */
     template <class U = T> static Tensor<U> Conj(const Tensor<U> &A)
     {
-        Tensor<U> A_conj(A.GetIndices(), A.GetShape());
-        for (size_t i = 0; i < A.GetSize(); i++) {
-            A_conj[i] = std::conj(A[i]);
+        // If U is real, just return a copy
+        if constexpr (std::is_arithmetic_v<U>) {
+            return Tensor<U>(A);
         }
-        return A_conj;
+        else {
+            Tensor<U> A_conj(A.GetIndices(), A.GetShape());
+            for (size_t i = 0; i < A.GetSize(); i++) {
+                A_conj[i] = std::conj(A[i]);
+            }
+            return A_conj;
+        }
     }
 
     /**
