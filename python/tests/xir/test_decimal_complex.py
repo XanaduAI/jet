@@ -13,105 +13,95 @@ class TestDecimalComplex:
         "lhs, rhs, expected",
         [
             (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("4", "6")),
-            (
-                DecimalComplex("0.2", "0.4"),
-                DecimalComplex("8", "0.16"),
-                DecimalComplex("8.2", "0.56"),
-            ),
+            (DecimalComplex("3", "0.4"), DecimalComplex("8", "0.2"), DecimalComplex("11", "0.6")),
         ],
     )
     def test_addition(self, lhs, rhs, expected):
         """Test the addition operator"""
         result = lhs + rhs
+        assert result.real == expected.real
+        assert result.imag == expected.imag
+
+    @pytest.mark.parametrize(
+        "lhs, rhs, expected",
+        [
+            (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("-2", "-2")),
+            (DecimalComplex("3", "0.4"), DecimalComplex("8", "0.2"), DecimalComplex("-5", "0.2")),
+        ],
+    )
+    def test_subtraction(self, lhs, rhs, expected):
+        """Test the subtraction operator"""
+        result = lhs - rhs
+        assert result.real == expected.real
+        assert result.imag == expected.imag
+
+    @pytest.mark.parametrize(
+        "lhs, rhs, expected",
+        [
+            (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("-5", "10")),
+            (DecimalComplex("3", "0.4"), DecimalComplex("8", "0.2"), DecimalComplex("23.92", "3.8")),
+        ],
+    )
+    def test_multiplication(self, lhs, rhs, expected):
+        """Test the multiplication operator"""
+        result = lhs * rhs
+        assert result.real == expected.real
+        assert result.imag == expected.imag
+
+    @pytest.mark.parametrize(
+        "lhs, rhs, expected",
+        [
+            (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("0.44", "0.08")),
+            (DecimalComplex("2", "4"), DecimalComplex("1", "2"), DecimalComplex("2", "0")),
+            (DecimalComplex("2.5", "4.2"), DecimalComplex("1.3", "0.2"), DecimalComplex("2.3641618497", "2.8670520231")),
+        ],
+    )
+    def test_division(self, lhs, rhs, expected):
+        """Test the division operator"""
+        result = lhs / rhs
         assert result.real == pytest.approx(expected.real)
         assert result.imag == pytest.approx(expected.imag)
 
     @pytest.mark.parametrize(
-        "re_1, im_1, re_2, im_2", [("1", "2", "3", "4"), ("0.2", "0.4", "8", "0.16")]
+        "c, expected",
+        [
+            (DecimalComplex("3", "-4"), Decimal("5")),
+            (DecimalComplex("6", "8"), Decimal("10")),
+            (DecimalComplex("2.5", "4.2"), Decimal("4.8877397639")),
+        ],
     )
-    def test_subtraction(self, re_1, im_1, re_2, im_2):
-        """Test the subtraction operator"""
-        re_sub = Decimal(re_1) - Decimal(re_2)
-        im_sub = Decimal(im_1) - Decimal(im_2)
-
-        c_1 = DecimalComplex(re_1, im_1)
-        c_2 = DecimalComplex(re_2, im_2)
-
-        expected = DecimalComplex(re_sub, im_sub)
-
-        assert c_1 - c_2 == expected
-        assert (c_1 - c_2).real == re_sub
-        assert (c_1 - c_2).imag == im_sub
-
-    @pytest.mark.parametrize(
-        "re_1, im_1, re_2, im_2", [("1", "2", "3", "4"), ("0.2", "0.4", "8", "0.16")]
-    )
-    def test_multiplication(self, re_1, im_1, re_2, im_2):
-        """Test the multiplication operator"""
-        re_prod = Decimal(re_1) * Decimal(re_2) - Decimal(im_1) * Decimal(im_2)
-        im_prod = Decimal(re_1) * Decimal(im_2) + Decimal(re_2) * Decimal(im_1)
-
-        c_1 = DecimalComplex(re_1, im_1)
-        c_2 = DecimalComplex(re_2, im_2)
-
-        expected = DecimalComplex(re_prod, im_prod)
-
-        assert c_1 * c_2 == expected
-        assert (c_1 * c_2).real == re_prod
-        assert (c_1 * c_2).imag == im_prod
-
-    @pytest.mark.parametrize(
-        "re_1, im_1, re_2, im_2", [("1", "2", "3", "4"), ("0.2", "0.4", "8", "0.16")]
-    )
-    def test_division(self, re_1, im_1, re_2, im_2):
-        """Test the division operator"""
-        re_div = (Decimal(re_1) * Decimal(re_2) + Decimal(im_1) * Decimal(im_2)) / (
-            Decimal(re_2) ** 2 + Decimal(im_2) ** 2
-        )
-        im_div = (Decimal(im_1) * Decimal(re_2) - Decimal(re_1) * Decimal(im_2)) / (
-            Decimal(re_2) ** 2 + Decimal(im_2) ** 2
-        )
-
-        c_1 = DecimalComplex(re_1, im_1)
-        c_2 = DecimalComplex(re_2, im_2)
-
-        expected = DecimalComplex(re_div, im_div)
-
-        assert c_1 / c_2 == expected
-        assert (c_1 / c_2).real == re_div
-        assert (c_1 / c_2).imag == im_div
-
-    @pytest.mark.parametrize("re, im", [("1", "2"), ("0.2", "0.4")])
-    def test_absolute(self, re, im):
+    def test_absolute(self, c, expected):
         """Test the abs operation"""
-        c = DecimalComplex(re, im)
-        expected = (Decimal(re) ** 2 + Decimal(im) ** 2).sqrt()
+        result = abs(c)
+        assert result == pytest.approx(expected)
 
-        assert abs(c) == expected
-
-    @pytest.mark.parametrize("re, im", [("1", "2"), ("0.2", "0.4")])
-    def test_negate(self, re, im):
+    @pytest.mark.parametrize(
+        "c, expected",
+        [
+            (DecimalComplex("1", "2"), DecimalComplex("-1", "-2")),
+            (DecimalComplex("3", "0.4"), DecimalComplex("-3", "-0.4")),
+        ],
+    )
+    def test_negate(self, c, expected):
         """Test negating a DecimalComplex object"""
-        re_neg = -Decimal(re)
-        im_neg = -Decimal(im)
+        result = -c
+        assert result.real == expected.real
+        assert result.imag == expected.imag
 
-        c = DecimalComplex(re, im)
-        expected = DecimalComplex(re_neg, im_neg)
-
-        assert -c == expected
-        assert (-c).real == re_neg
-        assert (-c).imag == im_neg
-
-    @pytest.mark.parametrize("ob", [2, 1j, 3 + 4j, 0, -1])
-    def test_power(self, ob):
+    @pytest.mark.parametrize("c, po, expected",
+        [
+            (DecimalComplex("3", "2"), 2, DecimalComplex(5, 12)),
+            (DecimalComplex("3", "2"), 1j, DecimalComplex(0.1579345325, 0.5325085840)),
+            (DecimalComplex("3", "2"), 3 + 4j, DecimalComplex(3.6547543594, 2.5583022069)),
+            (DecimalComplex("3", "2"), 0, DecimalComplex(1, 0)),
+            (DecimalComplex("3", "2"), -1, DecimalComplex(0.2307692308, -0.1538461538))
+        ],
+    )
+    def test_power(self, c, po, expected):
         """Test the pow operation"""
-        c = DecimalComplex("3", "2")
-
-        c_res = (3 + 2j) ** ob
-        re_pow = str(c_res.real)
-        im_pow = str(c_res.imag)
-
-        assert c ** ob == DecimalComplex(re_pow, im_pow)
+        res = c ** po
+        assert res.real == pytest.approx(expected.real)
+        assert res.imag == pytest.approx(expected.imag)
 
     @pytest.mark.parametrize("term", [2, 3j, "2", Decimal("1"), -4.3])
     def test_greater_than(self, term):
