@@ -11,13 +11,13 @@ template <class> struct Type;
 template <> struct Type<float> {
     inline static const std::string suffix = "F32";
     inline static const std::string dtype = "float32";
-}
+};
 
 template <>
 struct Type<double> {
     inline static const std::string suffix = "F64";
     inline static const std::string dtype = "float64";
-}
+};
 
 template <>
 struct Type<std::complex<float>> {
