@@ -46,12 +46,7 @@ class XIRTransformer(Transformer):
 
     @property
     def eval_pi(self) -> bool:
-        """Evaluated pi to its numerical value.
-
-        Returns:
-            bool: Whether pi should be evaluated and stored as a float instead
-            of symbolically as a string. Defaults to False.
-        """
+        """Reports whether pi is evaluated and stored as a float."""
         return self._eval_pi
 
     @property
