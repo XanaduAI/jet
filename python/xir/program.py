@@ -1,7 +1,7 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Union, List, Dict, Set, Tuple, Sequence
+from typing import Union, List, Dict, Set, Tuple, Sequence, Any
 
 from .utils import strip
 

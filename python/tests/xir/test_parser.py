@@ -34,10 +34,37 @@ class TestParser:
 
         assert irprog.statements[0].params["array"] == res
 
-    @pytest.mark.parametrize("key, val", [("cutoff", 5), ("anything", 4.2), ("a_string", "hello")])
+    @pytest.mark.parametrize(
+        "key, val",
+        [
+            ("cutoff", 5),
+            # ("anything", 4.2),
+            ("a_string", "hello"),
+            ("True", "False"),
+            # ("", "value"),
+            # ("key", "")
+        ],
+    )
     def test_options(self, key, val):
         """Test script-level options"""
         irprog = parse_script(f"{key}: {val}")
+
+        assert key in irprog.options
+        assert irprog.options[key] == val
+
+    @pytest.mark.parametrize(
+        "key, val",
+        [
+            ("key", ["compound", "value"]),
+            ("True", [1, 2, "False"]),
+            ("key", [1, [2, [3, 4]]]),
+        ],
+    )
+    def test_options_lists(self, key, val):
+        """Test script-level options"""
+        val_str = "[" + ", ".join(str(v) for v in val) + "]"
+        print(val_str)
+        irprog = parse_script(f"{key}: {val_str}")
 
         assert key in irprog.options
         assert irprog.options[key] == val
