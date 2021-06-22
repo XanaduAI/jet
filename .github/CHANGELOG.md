@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* The `jet` Python package now includes an interpreter for XIR programs. [(#24)](https://github.com/XanaduAI/jet/pull/24)
+
 * Gates may now be instantiated by name using the `GateFactory` Python class. [(#23)](https://github.com/XanaduAI/jet/pull/23)
 
 * Quantum circuit and state models have been added to the `jet` Python package. [(#21)](https://github.com/XanaduAI/jet/pull/21)
@@ -47,6 +49,8 @@
 * The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
 * The documentation build no longer emits any Doxygen warnings. [(#25)](https://github.com/XanaduAI/jet/pull/25)
+
+* Running `make build` in the `python` directory now correctly uses the virtual environment. [(#31)](https://github.com/XanaduAI/jet/pull/31)
 
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
