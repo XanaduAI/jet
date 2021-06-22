@@ -92,6 +92,7 @@ class DecimalComplex:
         return f"DecimalComplex('{self.__str__()}')"
 
     def __pow__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
+        # TODO: calculate powers with precision using Decimal
         res = complex(self) ** complex(n)
         return DecimalComplex(str(res.real), str(res.imag))
 
