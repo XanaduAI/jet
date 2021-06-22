@@ -18,14 +18,14 @@ def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
         for i, p in enumerate(params_with_floats):
             if isinstance(p, DecimalComplex):
                 params_with_floats[i] = complex(p)
-            if isinstance(p, Decimal):
+            elif isinstance(p, Decimal):
                 params_with_floats[i] = float(p)
 
     elif isinstance(params, Dict):
         for k, v in params_with_floats.items():
             if isinstance(v, DecimalComplex):
                 params_with_floats[k] = complex(v)
-            if isinstance(v, Decimal):
+            elif isinstance(v, Decimal):
                 params_with_floats[k] = float(v)
 
     return params_with_floats
@@ -239,13 +239,13 @@ class XIRProgram:
         return self._version
 
     @property
-    def wires(self):
+    def wires(self) -> Set[int]:
         """Get the wires of an XIR program"""
         wires = []
         for stmt in self.statements:
             wires.extend(stmt.wires)
 
-        return wires
+        return set(wires)
 
     @property
     def include(self) -> List[str]:

@@ -111,8 +111,8 @@ class XIRTransformer(Transformer):
         """Floating point numbers"""
         return Decimal(d[0])
 
-    def complex(self, c):
-        """Complex numbers"""
+    def imag(self, c):
+        """Imaginary numbers"""
         return DecimalComplex("0.0", float(c[0]))
 
     def bool(self, b):

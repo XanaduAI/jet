@@ -118,7 +118,7 @@ class TestDecimalComplex:
         """Test the > operator"""
         c = DecimalComplex("2", "3")
 
-        match = "Cannot use > with complex numbers"
+        match = r"Cannot use > with complex numbers"
         with pytest.raises(TypeError, match=match):
             c > term
 
@@ -130,7 +130,7 @@ class TestDecimalComplex:
         """Test the < operator"""
         c = DecimalComplex("2", "3")
 
-        match = "Cannot use < with complex numbers"
+        match = r"Cannot use < with complex numbers"
         with pytest.raises(TypeError, match=match):
             c < term
 
@@ -142,7 +142,7 @@ class TestDecimalComplex:
         """Test the >= operator"""
         c = DecimalComplex("2", "3")
 
-        match = "Cannot use >= with complex numbers"
+        match = r"Cannot use >= with complex numbers"
         with pytest.raises(TypeError, match=match):
             c >= term
 
@@ -154,7 +154,7 @@ class TestDecimalComplex:
         """Test the <= operator"""
         c = DecimalComplex("2", "3")
 
-        match = "Cannot use <= with complex numbers"
+        match = r"Cannot use <= with complex numbers"
         with pytest.raises(TypeError, match=match):
             c <= term
 
@@ -165,7 +165,7 @@ class TestDecimalComplex:
         """Test casting a DecimalComplex object to int"""
         c = DecimalComplex("2", "3")
 
-        match = "Cannot convert DecimalComplex to int"
+        match = r"Cannot convert DecimalComplex to int"
         with pytest.raises(TypeError, match=match):
             int(c)
 
@@ -173,9 +173,21 @@ class TestDecimalComplex:
         """Test casting a DecimalComplex object to float"""
         c = DecimalComplex("2", "3")
 
-        match = "Cannot convert DecimalComplex to float"
+        match = r"Cannot convert DecimalComplex to float"
         with pytest.raises(TypeError, match=match):
             float(c)
+
+    @pytest.mark.parametrize("c, expected", [
+        (DecimalComplex("2", "3"), True),
+        (DecimalComplex("5", "0"), True),
+        (DecimalComplex("0", "5"), True),
+        (DecimalComplex("2", "3"), True),
+        (DecimalComplex("0", "0"), False),
+        (DecimalComplex(0, 0), False),
+    ])
+    def test_cast_to_bool(self, c, expected):
+        """Test casting a DecimalComplex object to float"""
+        assert bool(c) == expected
 
     def test_cast_to_complex(self):
         """Test casting a DecimalComplex object to complex"""
@@ -184,21 +196,26 @@ class TestDecimalComplex:
 
         assert complex(c) == expected
 
-    @pytest.mark.parametrize("n", [2, Decimal("1"), -4.3, 0.2 + 7j, 3j, DecimalComplex("4", "2")])
+    @pytest.mark.parametrize("n", [2, Decimal("1"), -4.3])
     def test_convert_type(self, n):
         """Test the ``_convert_type`` method with valid arguments"""
         res = DecimalComplex._convert_type(n)
 
         assert isinstance(res, DecimalComplex)
-        if hasattr(n, "imag"):
-            assert res == DecimalComplex(str(n.real), str(n.imag))
-        else:
-            assert res == DecimalComplex(str(n))
+        assert res == DecimalComplex(str(n))
+
+    @pytest.mark.parametrize("n", [0.2 + 7j, 3j, DecimalComplex("4", "2")])
+    def test_convert_type_with_imag(self, n):
+        """Test the ``_convert_type`` method with valid complex arguments"""
+        res = DecimalComplex._convert_type(n)
+
+        assert isinstance(res, DecimalComplex)
+        assert res == DecimalComplex(str(n.real), str(n.imag))
 
     @pytest.mark.parametrize("n", ["2", "string"])
     def test_convert_real_type(self, n):
         """Test the ``_convert_type`` method with invalid arguments"""
-        match = "Must be a Number or have attributes real and imag."
+        match = r"Must be a Number or have attributes real and imag."
         with pytest.raises(TypeError, match=match):
             _ = DecimalComplex._convert_type(n)
 
@@ -210,9 +227,9 @@ class TestDecimalComplex:
         assert c.real == Decimal(re)
         assert c.imag == Decimal(im)
 
-    @pytest.mark.parametrize("re, im", [("1", "2"), ("0.2", "0.4")])
+    @pytest.mark.parametrize("re, im", [("1", "2"), ("0.2", "0.4"), ("0.2", "-0.4"), ("-0.2", "-0.4")])
     def test_conjugate(self, re, im):
         """Test the ``conjugate`` function"""
         c = DecimalComplex(re, im)
 
-        assert c.conjugate() == DecimalComplex(re, "-" + im)
+        assert c.conjugate() == DecimalComplex(re, -Decimal(im))

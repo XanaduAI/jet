@@ -26,7 +26,7 @@ array : "[" (val ("," val)*)? "]"
 float : SIGNED_FLOAT
 int   : SIGNED_INT
 uint  : INT
-complex : (float | int) "j"
+imag : (float | int) "j"
 
 name: CNAME
 bool: TRUE_ | FALSE_
@@ -42,7 +42,7 @@ range: INT ".." INT
 
 ?atom: int
      | float
-     | complex
+     | imag
      | name -> var
      | "-" (name | "(" expr ")" | name "(" expr ")") -> neg
      | "(" expr ")"
