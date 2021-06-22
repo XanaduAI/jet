@@ -21,13 +21,27 @@ namespace TensorHelpers {
  * If T is a supported data type for tensors, this expression will
  * evaluate to `true`. Otherwise, it will evaluate to `false`.
  *
- * Supported data types are std::complex<float> and std::complex<double>.
+ * Supported data types are float, double, std::complex<float> 
+ * and std::complex<double>.
  *
  * @tparam T candidate data type
  */
 template <class T>
 constexpr bool is_supported_data_type =
     std::is_same_v<T, float> || std::is_same_v<T, double> ||
+    std::is_same_v<T, std::complex<float>> ||
+    std::is_same_v<T, std::complex<double>>;
+
+/**
+ * If T is a supported complex data type for tensors, this expression will
+ * evaluate to `true`. Otherwise, it will evaluate to `false`.
+ *
+ * Supported complex data types are std::complex<float> and std::complex<double>.
+ *
+ * @tparam T candidate data type
+ */
+template <class T>
+constexpr bool is_complex_data_type = 
     std::is_same_v<T, std::complex<float>> ||
     std::is_same_v<T, std::complex<double>>;
 
@@ -54,7 +68,7 @@ constexpr void gemmBinding(size_t m, size_t n, size_t k, T alpha, T beta,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), beta,
                     C_data, std::max(1ul, n));
     else if constexpr (std::is_same_v<T, double>)
-        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha,
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha,
                     A_data, std::max(1ul, k), B_data, std::max(1ul, n), beta,
                     C_data, std::max(1ul, n));
     else if constexpr (std::is_same_v<T, std::complex<float>>)
