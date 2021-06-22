@@ -2,12 +2,32 @@
 ``decimal.Decimal`` precision."""
 from __future__ import annotations
 
+import functools
 from decimal import Decimal
-from numbers import Number
-from typing import Union
+from numbers import Complex
+from typing import Union, Callable
 
 
-class DecimalComplex:
+def convert_input(func: Callable) -> Callable:
+    """Converts inputs into valid ``DecimalComplex`` objects."""
+
+    @functools.wraps(func)
+    def convert_wrapper(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        if isinstance(c, DecimalComplex):
+            return func(self, c)
+        elif isinstance(c, Decimal):
+            c = DecimalComplex(c)
+            return func(self, c)
+        elif isinstance(c, Complex):
+            c = DecimalComplex(str(c.real), str(c.imag))
+            return func(self, c)
+
+        raise TypeError("Must be of type numbers.Complex.")
+
+    return convert_wrapper
+
+
+class DecimalComplex(Complex):
     """Complex numbers represented by precision ``decimal.Decimal`` terms.
 
     Args:
@@ -21,64 +41,68 @@ class DecimalComplex:
         self._real = Decimal(real)
         self._imag = Decimal(imag)
 
-    def __add__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        c = self._convert_type(n)
-
+    @convert_input
+    def __add__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         real = self.real + c.real
         imag = self.imag + c.imag
         return DecimalComplex(real, imag)
 
-    def __radd__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        return self.__add__(n)
+    def __radd__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        return self + c
 
-    def __sub__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        c = self._convert_type(n)
-
+    @convert_input
+    def __sub__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         real = self.real - c.real
         imag = self.imag - c.imag
         return DecimalComplex(real, imag)
 
-    def __rsub__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        c = self._convert_type(n)
-        return c.__sub__(self)
+    def __rsub__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        return -(self - c)
 
-    def __mul__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        c = self._convert_type(n)
-
+    @convert_input
+    def __mul__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         real = self.real * c.real - self.imag * c.imag
         imag = self.imag * c.real + self.real * c.imag
         return DecimalComplex(real, imag)
 
-    def __rmul__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        return self.__mul__(n)
+    def __rmul__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        return self * c
 
-    def __div__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        c = self._convert_type(n)
-
+    @convert_input
+    def __div__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         real = (self.real * c.real + self.imag * c.imag) / (c.real ** 2 + c.imag ** 2)
         imag = (self.imag * c.real - self.real * c.imag) / (c.real ** 2 + c.imag ** 2)
         return DecimalComplex(real, imag)
 
-    def __rdiv__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        c = self._convert_type(n)
-        return c.__div__(self)
+    @convert_input
+    def __rdiv__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        return c / self
 
-    def __truediv__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        return self.__div__(n)
+    @convert_input
+    def __truediv__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        return self.__div__(c)
 
-    def __rtruediv__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        c = self._convert_type(n)
-        return c.__truediv__(self)
+    @convert_input
+    def __rtruediv__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        return c / self
+
+    def __floordiv__(self, _: Union[Decimal, Complex]) -> DecimalComplex:
+        raise TypeError("Cannot take floor of DecimalComplex")
 
     def __abs__(self) -> Decimal:
         return Decimal(self.real ** 2 + self.imag ** 2).sqrt()
 
+    def __pos__(self) -> DecimalComplex:
+        return self
+
     def __neg__(self) -> DecimalComplex:
         return DecimalComplex(-self.real, -self.imag)
 
+    @convert_input
     def __eq__(self, c: DecimalComplex) -> bool:
         return self.real == c.real and self.imag == c.imag
 
+    @convert_input
     def __ne__(self, c: DecimalComplex) -> bool:
         return not self.__eq__(c)
 
@@ -91,21 +115,26 @@ class DecimalComplex:
     def __repr__(self):
         return f"DecimalComplex('{self.__str__()}')"
 
-    def __pow__(self, n: Union[Number, DecimalComplex]) -> DecimalComplex:
+    def __pow__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         # TODO: calculate powers with precision using Decimal
-        res = complex(self) ** complex(n)
+        res = complex(self) ** complex(c)
         return DecimalComplex(str(res.real), str(res.imag))
 
-    def __gt__(self, n: Union[Number, DecimalComplex]):
+    def __rpow__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
+        # TODO: calculate powers with precision using Decimal
+        res = complex(c) ** complex(self)
+        return DecimalComplex(str(res.real), str(res.imag))
+
+    def __gt__(self, _: Union[Decimal, Complex]):
         self._not_implemented(">")
 
-    def __lt__(self, n: Union[Number, DecimalComplex]):
+    def __lt__(self, _: Union[Decimal, Complex]):
         self._not_implemented("<")
 
-    def __ge__(self, n: Union[Number, DecimalComplex]):
+    def __ge__(self, _: Union[Decimal, Complex]):
         self._not_implemented(">=")
 
-    def __le__(self, n: Union[Number, DecimalComplex]):
+    def __le__(self, _: Union[Decimal, Complex]):
         self._not_implemented("<=")
 
     def __int__(self) -> int:
@@ -120,20 +149,11 @@ class DecimalComplex:
     def __complex__(self) -> complex:
         return float(self.real) + float(self.imag) * 1j
 
-    @staticmethod
-    def _convert_type(n: Union[Number, DecimalComplex]) -> DecimalComplex:
-        """Converts number into valid ``DecimalComplex`` object."""
-        if isinstance(n, DecimalComplex):
-            return n
-        elif hasattr(n, "real") and hasattr(n, "imag"):
-            return DecimalComplex(str(n.real), str(n.imag))
-        elif isinstance(n, Number):
-            return DecimalComplex(Decimal(str(n)))
-
-        raise TypeError("Must be a Number or have attributes real and imag.")
-
     def _not_implemented(self, op):
         raise TypeError(f"Cannot use {op} with complex numbers")
+
+    def __hash__(self):
+        return hash((self.real, self.imag))
 
     @property
     def real(self):

@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from xir import DecimalComplex
+from xir.decimal_complex import convert_input
 
 
 class TestDecimalComplex:
@@ -14,6 +15,10 @@ class TestDecimalComplex:
         [
             (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("4", "6")),
             (DecimalComplex("3", "0.4"), DecimalComplex("8", "0.2"), DecimalComplex("11", "0.6")),
+            (DecimalComplex("3", "0.4"), 3, DecimalComplex("6", "0.4")),
+            (2, DecimalComplex("3", "0.4"), DecimalComplex("5", "0.4")),
+            (DecimalComplex("3", "0.4"), 3j, DecimalComplex("3", "3.4")),
+            (2j, DecimalComplex("3", "0.4"), DecimalComplex("3", "2.4")),
         ],
     )
     def test_addition(self, lhs, rhs, expected):
@@ -27,6 +32,10 @@ class TestDecimalComplex:
         [
             (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("-2", "-2")),
             (DecimalComplex("3", "0.4"), DecimalComplex("8", "0.2"), DecimalComplex("-5", "0.2")),
+            (DecimalComplex("3", "0.4"), 3, DecimalComplex("0", "0.4")),
+            (2, DecimalComplex("3", "0.4"), DecimalComplex("-1", "-0.4")),
+            (DecimalComplex("3", "0.4"), 3j, DecimalComplex("3", "-2.6")),
+            (2j, DecimalComplex("3", "0.4"), DecimalComplex("-3", "1.6")),
         ],
     )
     def test_subtraction(self, lhs, rhs, expected):
@@ -39,7 +48,15 @@ class TestDecimalComplex:
         "lhs, rhs, expected",
         [
             (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("-5", "10")),
-            (DecimalComplex("3", "0.4"), DecimalComplex("8", "0.2"), DecimalComplex("23.92", "3.8")),
+            (
+                DecimalComplex("3", "0.4"),
+                DecimalComplex("8", "0.2"),
+                DecimalComplex("23.92", "3.8"),
+            ),
+            (DecimalComplex("3", "0.4"), 3, DecimalComplex("9", "1.2")),
+            (2, DecimalComplex("3", "0.4"), DecimalComplex("6", "0.8")),
+            (DecimalComplex("3", "0.4"), 3j, DecimalComplex("-1.2", "9")),
+            (2j, DecimalComplex("3", "0.4"), DecimalComplex("-0.8", "6")),
         ],
     )
     def test_multiplication(self, lhs, rhs, expected):
@@ -53,7 +70,15 @@ class TestDecimalComplex:
         [
             (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("0.44", "0.08")),
             (DecimalComplex("2", "4"), DecimalComplex("1", "2"), DecimalComplex("2", "0")),
-            (DecimalComplex("2.5", "4.2"), DecimalComplex("1.3", "0.2"), DecimalComplex("2.3641618497", "2.8670520231")),
+            (
+                DecimalComplex("2.5", "4.2"),
+                DecimalComplex("1.3", "0.2"),
+                DecimalComplex("2.3641618497", "2.8670520231"),
+            ),
+            (DecimalComplex("2", "4"), 2, DecimalComplex("1", "2")),
+            (2, DecimalComplex("2", "4"), DecimalComplex("0.2", "-0.4")),
+            (DecimalComplex("2", "4"), 3j, DecimalComplex("1.3333333333", "-0.6666666666")),
+            (2.2j, DecimalComplex("2", "4"), DecimalComplex("0.44", "0.22")),
         ],
     )
     def test_division(self, lhs, rhs, expected):
@@ -88,13 +113,14 @@ class TestDecimalComplex:
         assert result.real == expected.real
         assert result.imag == expected.imag
 
-    @pytest.mark.parametrize("c, po, expected",
+    @pytest.mark.parametrize(
+        "c, po, expected",
         [
             (DecimalComplex("3", "2"), 2, DecimalComplex(5, 12)),
             (DecimalComplex("3", "2"), 1j, DecimalComplex(0.1579345325, 0.5325085840)),
             (DecimalComplex("3", "2"), 3 + 4j, DecimalComplex(3.6547543594, 2.5583022069)),
             (DecimalComplex("3", "2"), 0, DecimalComplex(1, 0)),
-            (DecimalComplex("3", "2"), -1, DecimalComplex(0.2307692308, -0.1538461538))
+            (DecimalComplex("3", "2"), -1, DecimalComplex(0.2307692308, -0.1538461538)),
         ],
     )
     def test_power(self, c, po, expected):
@@ -192,7 +218,7 @@ class TestDecimalComplex:
     @pytest.mark.parametrize("n", [2, Decimal("1"), -4.3])
     def test_convert_type(self, n):
         """Test the ``_convert_type`` method with valid arguments"""
-        res = DecimalComplex._convert_type(n)
+        res = convert_input(lambda _, c: c)(None, n)
 
         assert isinstance(res, DecimalComplex)
         assert res == DecimalComplex(str(n))
@@ -200,7 +226,7 @@ class TestDecimalComplex:
     @pytest.mark.parametrize("n", [0.2 + 7j, 3j, DecimalComplex("4", "2")])
     def test_convert_type_with_imag(self, n):
         """Test the ``_convert_type`` method with valid complex arguments"""
-        res = DecimalComplex._convert_type(n)
+        res = convert_input(lambda _, c: c)(None, n)
 
         assert isinstance(res, DecimalComplex)
         assert res == DecimalComplex(str(n.real), str(n.imag))
@@ -208,9 +234,9 @@ class TestDecimalComplex:
     @pytest.mark.parametrize("n", ["2", "string"])
     def test_convert_real_type(self, n):
         """Test the ``_convert_type`` method with invalid arguments"""
-        match = r"Must be a Number or have attributes real and imag."
+        match = r"Must be of type numbers.Complex."
         with pytest.raises(TypeError, match=match):
-            _ = DecimalComplex._convert_type(n)
+            _ = convert_input(lambda _, c: c)(None, n)
 
     @pytest.mark.parametrize("re, im", [("1", "2"), ("0.2", "0.4")])
     def test_real_and_imag(self, re, im):
