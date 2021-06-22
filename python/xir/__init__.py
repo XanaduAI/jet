@@ -1,4 +1,3 @@
-from .decimal_complex import DecimalComplex
 from .parser import XIRTransformer, xir_parser
 from .program import XIRProgram
 

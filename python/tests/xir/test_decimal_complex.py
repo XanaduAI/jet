@@ -12,17 +12,13 @@ class TestDecimalComplex:
     @pytest.mark.parametrize(
         "lhs, rhs, expected",
         [
-            (
-                DecimalComplex("1", "2"),
-                DecimalComplex("3", "4"),
-                DecimalComplex("4", "6")
-            ),
+            (DecimalComplex("1", "2"), DecimalComplex("3", "4"), DecimalComplex("4", "6")),
             (
                 DecimalComplex("0.2", "0.4"),
                 DecimalComplex("8", "0.16"),
-                DecimalComplex("8.2", "0.56")
-            )
-        ]
+                DecimalComplex("8.2", "0.56"),
+            ),
+        ],
     )
     def test_addition(self, lhs, rhs, expected):
         """Test the addition operator"""
@@ -181,14 +177,17 @@ class TestDecimalComplex:
         with pytest.raises(TypeError, match=match):
             float(c)
 
-    @pytest.mark.parametrize("c, expected", [
-        (DecimalComplex("2", "3"), True),
-        (DecimalComplex("5", "0"), True),
-        (DecimalComplex("0", "5"), True),
-        (DecimalComplex("2", "3"), True),
-        (DecimalComplex("0", "0"), False),
-        (DecimalComplex(0, 0), False),
-    ])
+    @pytest.mark.parametrize(
+        "c, expected",
+        [
+            (DecimalComplex("2", "3"), True),
+            (DecimalComplex("5", "0"), True),
+            (DecimalComplex("0", "5"), True),
+            (DecimalComplex("2", "3"), True),
+            (DecimalComplex("0", "0"), False),
+            (DecimalComplex(0, 0), False),
+        ],
+    )
     def test_cast_to_bool(self, c, expected):
         """Test casting a DecimalComplex object to float"""
         assert bool(c) == expected
@@ -231,7 +230,9 @@ class TestDecimalComplex:
         assert c.real == Decimal(re)
         assert c.imag == Decimal(im)
 
-    @pytest.mark.parametrize("re, im", [("1", "2"), ("0.2", "0.4"), ("0.2", "-0.4"), ("-0.2", "-0.4")])
+    @pytest.mark.parametrize(
+        "re, im", [("1", "2"), ("0.2", "0.4"), ("0.2", "-0.4"), ("-0.2", "-0.4")]
+    )
     def test_conjugate(self, re, im):
         """Test the ``conjugate`` function"""
         c = DecimalComplex(re, im)
