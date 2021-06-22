@@ -188,7 +188,7 @@ class XIRProgram:
         return self._include
 
     @property
-    def options(self) -> Dict:
+    def options(self) -> Dict[str, Any]:
         """Script-level options declared in the program
 
         Returns:
