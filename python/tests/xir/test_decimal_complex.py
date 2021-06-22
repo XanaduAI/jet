@@ -10,21 +10,25 @@ class TestDecimalComplex:
     """Tests for the DecimalComplex class"""
 
     @pytest.mark.parametrize(
-        "re_1, im_1, re_2, im_2", [("1", "2", "3", "4"), ("0.2", "0.4", "8", "0.16")]
+        "lhs, rhs, expected",
+        [
+            (
+                DecimalComplex("1", "2"),
+                DecimalComplex("3", "4"),
+                DecimalComplex("4", "6")
+            ),
+            (
+                DecimalComplex("0.2", "0.4"),
+                DecimalComplex("8", "0.16"),
+                DecimalComplex("8.2", "0.56")
+            )
+        ]
     )
-    def test_addition(self, re_1, im_1, re_2, im_2):
+    def test_addition(self, lhs, rhs, expected):
         """Test the addition operator"""
-        re_sum = Decimal(re_1) + Decimal(re_2)
-        im_sum = Decimal(im_1) + Decimal(im_2)
-
-        c_1 = DecimalComplex(re_1, im_1)
-        c_2 = DecimalComplex(re_2, im_2)
-
-        expected = DecimalComplex(re_sum, im_sum)
-
-        assert c_1 + c_2 == expected
-        assert (c_1 + c_2).real == re_sum
-        assert (c_1 + c_2).imag == im_sum
+        result = lhs + rhs
+        assert result.real == pytest.approx(expected.real)
+        assert result.imag == pytest.approx(expected.imag)
 
     @pytest.mark.parametrize(
         "re_1, im_1, re_2, im_2", [("1", "2", "3", "4"), ("0.2", "0.4", "8", "0.16")]
