@@ -321,7 +321,30 @@ TEST_CASE("Tensor::SetValue", "[Tensor]")
 
 TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
 {
-    SECTION("Matrix-vector product")
+    SECTION("Real vector-vector product")
+    {
+        std::vector<f32_t> left = {1, 2, 3, 4};
+        std::vector<f32_t> right = {0.25, 0.125, 0.25 / 3.0, 0.0625};
+        std::vector<f32_t> result(1);
+
+        TensorHelpers::MultiplyTensorData(left, right, result, {}, {}, 1, 1, 4);
+
+        CHECK(result[0] == Approx(1.0));
+    }
+    SECTION("Real Matrix-vector product")
+    {
+        std::vector<f32_t> left = {11, 12, 13, 21, 22, 23};
+        std::vector<f32_t> right = {1, 2, 3};
+        std::vector<f32_t> result_expect = {74, 134};
+        std::vector<f32_t> result(2);
+
+        TensorHelpers::MultiplyTensorData(left, right, result, {"i", "j"}, {},
+                                          2, 1, 3);
+
+        CHECK(result == result_expect);
+    }
+
+    SECTION("Complex Matrix-vector product")
     {
         std::vector<c64_t> t_data_left{c64_t(0.5, 0.0), c64_t(0.5, 0.0),
                                        c64_t(0.5, 0.0), c64_t(-0.5, 0.0)};
@@ -336,7 +359,24 @@ TEST_CASE("Inline helper MultiplyTensorData", "[Tensor]")
         CHECK(t_out[1].real() == Approx(0.5));
         CHECK(t_out[1].imag() == Approx(0.0));
     }
-    SECTION("Matrix-matrix product")
+
+    SECTION("Real Matrix-matrix product")
+    {
+        std::vector<f32_t> left = {11, 12, 21, 22, 31, 32};
+        std::vector<f32_t> right = {11, 12, 13, 21, 22, 23};
+        std::vector<f32_t> result(9);
+        std::vector<f32_t> result_expect = {373, 396,  419,  693, 736,
+                                            779, 1013, 1076, 1139};
+
+        std::vector<std::string> indices = {"i", "j"};
+
+        TensorHelpers::MultiplyTensorData(left, right, result, {"i", "j"},
+                                          {"i", "j"}, 3, 3, 2);
+
+        CHECK(result == result_expect);
+    }
+
+    SECTION("Complex Matrix-matrix product")
     {
         std::vector<std::size_t> t_shape_left{2, 3, 4};
         std::vector<std::size_t> t_shape_right{3, 4, 2};

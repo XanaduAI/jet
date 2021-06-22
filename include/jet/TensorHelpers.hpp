@@ -115,9 +115,9 @@ constexpr void dotuBinding(size_t k, const T *A_data, const T *B_data,
                            T *C_data)
 {
     if constexpr (std::is_same_v<T, float>)
-        cblas_sdotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
+        C_data[0] = cblas_sdot(k, (A_data), 1, (B_data), 1);
     else if constexpr (std::is_same_v<T, double>)
-        cblas_ddotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
+        C_data[0] = cblas_ddot(k, (A_data), 1, (B_data), 1);
     else if constexpr (std::is_same_v<T, std::complex<float>>)
         cblas_cdotu_sub(k, (A_data), 1, (B_data), 1, (C_data));
     else if constexpr (std::is_same_v<T, std::complex<double>>)
@@ -147,8 +147,8 @@ inline void MultiplyTensorData(const std::vector<T> &A, const std::vector<T> &B,
                                size_t left_dim, size_t right_dim,
                                size_t common_dim)
 {
-    T alpha{1.0, 0.0};
-    T beta{0.0, 0.0};
+    T alpha(1.0);
+    T beta(0.0);
 
     auto A_data = A.data();
     auto B_data = B.data();
