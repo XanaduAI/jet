@@ -51,15 +51,7 @@ class XIRTransformer(Transformer):
 
     @property
     def use_floats(self) -> bool:
-        """Whether floats and complex types are used.
-
-        Floats and complex types are stored as ``Decimal`` and ``DecimalComplex``
-        objects internally.
-
-        Returns:
-            bool: whether floats and complex types are returned instead of ``Decimal``
-            and ``DecimalComplex`` objects
-        """
+        """Reports whether floats and complex types are used."""
         return self._use_floats
 
     def program(self, args):
