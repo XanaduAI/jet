@@ -28,7 +28,16 @@ class TestParser:
         ],
     )
     def test_output_with_array(self, array, res):
+        """Test outputs with arrays as parameter values"""
         circuit = f"an_output_statement(array: {array}) | [0, 1];"
         irprog = parse_script(circuit)
 
         assert irprog.statements[0].params["array"] == res
+
+    @pytest.mark.parametrize("key, val", [("cutoff", 5), ("anything", 4.2), ("a_string", "hello")])
+    def test_options(self, key, val):
+        """Test script-level options"""
+        irprog = parse_script(f"{key}: {val}")
+
+        assert key in irprog.options
+        assert irprog.options[key] == val
