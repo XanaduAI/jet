@@ -69,7 +69,7 @@ include path and OpenBLAS is installed on your system, you can compile the
 
         tensors[0].FillRandom();
         tensors[1].FillRandom();
-        tensors[2] = Jet::ContractTensors(tensors[0], tensors[1]);
+        tensors[2] = Tensor::ContractTensors(tensors[0], tensors[1]);
         
         for (const auto &datum : tensors[2].GetData()) {
             std::cout << datum << std::endl;
@@ -85,7 +85,7 @@ by running
 .. code-block:: bash
 
     git clone https://github.com/XanaduAI/jet
-    g++ --std=c++17 -O3 -I$PWD/jet/include -lopenblas ./hellojet.cpp -o hellojet
+    g++ --std=c++17 -O3 -Ijet/include hellojet.cpp -lopenblas
 
 The output of this program should resemble
 
@@ -96,7 +96,7 @@ The output of this program should resemble
     (1.53207,0)
     (0.414398,0)
     (0.721263,0)
-    You have successfully used Jet version 0.1.0
+    You have successfully used Jet version 0.2.0
 
 For more detailed instructions, see the `development guide
 <https://quantum-jet.readthedocs.io/en/stable/dev/guide.html>`_.
