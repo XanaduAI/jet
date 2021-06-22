@@ -39,24 +39,27 @@ contraction path and initialize the serializer:
 
     #include <Jet.hpp>
 
-    int main(){
+    int main()
+    {
         using Tensor = Jet::Tensor<std::complex<float>>;
 
-        Jet::TensorNetwork<Tensor> tn;
-
         Tensor A({"i", "j"}, {2, 2}, {{1, 0}, {0, 1}, {0, -1}, {1, 0}});
-        tn.AddTensor(A, {"A", "hermitian"});
-
         Tensor B({"j", "k"}, {2, 2}, {{1, 0}, {0, 0}, {0, 0}, {1, 0}});
-        tn.AddTensor(B, {"B", "identity", "real"});
+        Tensor C({"k"}, {2}, {{1, 0}, {0, 0}});
 
-        Tensor C({"k"}, {2}, {{1,0}, {0, 0}});
+        Jet::TensorNetwork<Tensor> tn;
+        tn.AddTensor(A, {"A", "hermitian"});
+        tn.AddTensor(B, {"B", "identity", "real"});
         tn.AddTensor(C, {"C", "vec", "real"});
-        
+
         Jet::PathInfo path(tn, {{0, 2}, {2, 1}});
 
-        Jet::TensorNetworkSerializer<Tensor> serializer();
-        ...
+        Jet::TensorNetworkSerializer<Tensor> serializer;
+
+        // ...
+
+        return 0;
+    }
 
 
 Serialization
@@ -64,14 +67,13 @@ Serialization
 To serialize, call the serializer with a tensor network (and an optional path):
 
 .. code-block:: cpp
-    
-    ...
-    
+
+    // ... (1)
+
     std::string tn_json = serializer(tn, path);
-    std::cout << tn_json;
+    std::cout << tn_json << std::endl;
 
-
-The output of this program will be:
+The (formatted) output of this program will be:
 
 .. code-block:: json
 
@@ -91,15 +93,12 @@ To deserialize a tensor network, call the serializer with a string:
 
 .. code-block:: cpp
 
-    ...
-    
-    std::string tn_json = serializer(tn_path);
+    // ... (2)
 
-    TensorNetworkFile<Tensor> tensor_file = serializer(tn_json);
+    Jet::TensorNetworkFile<Tensor> tensor_file = serializer(tn_json);
 
     Jet::TensorNetwork<Tensor> tn_copy = tensor_file.tensors;
-    Jet::PathInfo path_copy = tensor_file.path.value(); // uses std::optional
-
+    Jet::PathInfo path_copy = tensor_file.path.value(); // Uses std::optional.
 
 
 JSON Schema

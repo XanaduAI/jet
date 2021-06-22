@@ -46,9 +46,11 @@
 
 ### Bug Fixes
 
-* `make build` in `python` directory correctly uses virtual environment [(#31)](https://github.com/XanaduAI/jet/pull/31)
+* The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
-* Building the documentation no longer emits any warnings. [(#25)](https://github.com/XanaduAI/jet/pull/25)
+* The documentation build no longer emits any Doxygen warnings. [(#25)](https://github.com/XanaduAI/jet/pull/25)
+
+* Running `make build` in the `python` directory now correctly uses the virtual environment. [(#31)](https://github.com/XanaduAI/jet/pull/31)
 
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
@@ -59,6 +61,8 @@
 * `PathInfo` now correctly names intermediary tensors in a sliced tensor network [(#22)](https://github.com/XanaduAI/jet/pull/22).
 
 ### Documentation
+
+* The "Using Jet" section of the Sphinx documentation website now compiles with the latest Jet headers. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
 * The license comment headers at the top of the IR source files have been removed. [(#14)](https://github.com/XanaduAI/jet/pull/14)
 
