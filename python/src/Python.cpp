@@ -14,9 +14,9 @@ PYBIND11_MODULE(bindings, m)
     m.doc() = "Python bindings for the C++ tensor network contraction headers.";
 
     using f32_t = float;
-    using f64_t = f64_t;
+    using f64_t = double;
     using c64_t = std::complex<float>;
-    using c128_t = std::complex<f64_t>;
+    using c128_t = std::complex<double>;
 
     AddBindingsForPathInfo<f32_t, f64_t, c64_t, c128_t>(m);
 
@@ -35,8 +35,6 @@ PYBIND11_MODULE(bindings, m)
     AddBindingsForTensorNetwork<c64_t>(m);
     AddBindingsForTensorNetwork<c128_t>(m);
 
-    AddBindingsForTensorNetworkIO<f32_t>(m);
-    AddBindingsForTensorNetworkIO<f64_t>(m);
     AddBindingsForTensorNetworkIO<c64_t>(m);
     AddBindingsForTensorNetworkIO<c128_t>(m);
 
