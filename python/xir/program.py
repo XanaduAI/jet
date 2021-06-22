@@ -155,6 +155,7 @@ class XIRProgram:
         self._version = version
 
         self._include = []
+        self._options = dict()
         self._statements = []
 
         self._declarations = {"gate": [], "func": [], "output": [], "operator": []}
@@ -185,6 +186,15 @@ class XIRProgram:
             list[str]: included libraries/files
         """
         return self._include
+
+    @property
+    def options(self) -> Dict:
+        """Script-level options declared in the program
+
+        Returns:
+            Dict: declared scipt-level options
+        """
+        return self._options
 
     @property
     def statements(self) -> List[Statement]:
@@ -293,6 +303,10 @@ class XIRProgram:
         res = []
         res.extend([f"use {use};" for use in self._include])
         if len(self._include) != 0:
+            res.append("")
+
+        res.extend([f"{k}: {v}" for k, v in self.options.items()])
+        if len(self.options) != 0:
             res.append("")
 
         res.extend([f"gate {dec};" for dec in self._declarations["gate"]])

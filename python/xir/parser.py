@@ -149,7 +149,10 @@ class XIRTransformer(Transformer):
     def statement(self, args):
         """Any statement that is part of the circuit."""
         if args[0] is not None:
-            self._program._statements.append(args[0])
+            if isinstance(args[0], tuple):
+                self._program._options[args[0][0]] = args[0][1]
+            else:
+                self._program._statements.append(args[0])
 
     def gatestmt(self, args):
         """Gate statements that are defined directly in the circuit or inside

@@ -67,6 +67,9 @@ sample(observable: o(0.2), shots: 1000) | [0, 1];
 jet_script = """
 use xstd;
 
+cutoff: 13
+anything: 42
+
 gate H2:
     H | [0];
     H | [1];

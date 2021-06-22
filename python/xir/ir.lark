@@ -4,7 +4,7 @@ include: "use" name ";"
 
 // the main circuit
 circuit: statement+
-statement: gatestmt | gate_def | operator_def
+statement: gatestmt | gate_def | operator_def | option
 gatestmt: name (params | options_dict) "|" wires ";"
 opstmt: expr "," obs_group";"
 
