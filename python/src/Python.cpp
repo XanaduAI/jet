@@ -18,23 +18,23 @@ PYBIND11_MODULE(bindings, m)
     using c64_t = std::complex<float>;
     using c128_t = std::complex<f64_t>;
 
-    AddBindingsForPathInfo<float, f64_t, c64_t, c128_t>(m);
-    
-    AddBindingsForTaskBasedCpuContractor<float>(m);
+    AddBindingsForPathInfo<f32_t, f64_t, c64_t, c128_t>(m);
+
+    AddBindingsForTaskBasedCpuContractor<f32_t>(m);
     AddBindingsForTaskBasedCpuContractor<f64_t>(m);
     AddBindingsForTaskBasedCpuContractor<c64_t>(m);
     AddBindingsForTaskBasedCpuContractor<c128_t>(m);
-    
+
     AddBindingsForTensor<f32_t>(m);
     AddBindingsForTensor<f64_t>(m);
     AddBindingsForTensor<c64_t>(m);
     AddBindingsForTensor<c128_t>(m);
-    
+
     AddBindingsForTensorNetwork<f32_t>(m);
     AddBindingsForTensorNetwork<f64_t>(m);
     AddBindingsForTensorNetwork<c64_t>(m);
     AddBindingsForTensorNetwork<c128_t>(m);
-    
+
     AddBindingsForTensorNetworkIO<f32_t>(m);
     AddBindingsForTensorNetworkIO<f64_t>(m);
     AddBindingsForTensorNetworkIO<c64_t>(m);
