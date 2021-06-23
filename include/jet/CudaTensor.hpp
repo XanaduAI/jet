@@ -54,7 +54,7 @@ template <class T = cuComplex> class CudaTensor {
 
         const U one = {1.0, 0.0};
 
-        cutensorTensorDescriptor_t a_descriptor, b_descriptor, c_descriptor;
+        cutensorTensorDescriptor_t b_descriptor, c_descriptor;
         cutensorStatus_t cutensor_err;
         cudaDataType_t data_type;
 
@@ -66,12 +66,9 @@ template <class T = cuComplex> class CudaTensor {
             data_type = CUDA_C_32F;
         }
 
-        const auto &a_indices = A.GetIndices();
         const auto &b_indices = B.GetIndices();
         const auto &c_indices = C.GetIndices();
 
-        const std::vector<int64_t> a_strides =
-            CudaTensorHelpers::GetStrides(A.GetShape());
         const std::vector<int64_t> b_strides =
             CudaTensorHelpers::GetStrides(B.GetShape());
         const std::vector<int64_t> c_strides =
@@ -80,15 +77,15 @@ template <class T = cuComplex> class CudaTensor {
         std::unordered_map<std::string, int> index_to_mode_map;
         std::unordered_map<size_t, int64_t> mode_to_dimension_map;
 
-        for (size_t i = 0; i < a_indices.size(); i++) {
-            if (!index_to_mode_map.count(a_indices[i])) {
-                index_to_mode_map[a_indices[i]] = i;
+        for (size_t i = 0; i < c_indices.size(); i++) {
+            if (!index_to_mode_map.count(c_indices[i])) {
+                index_to_mode_map[c_indices[i]] = i;
                 mode_to_dimension_map[i] = static_cast<int64_t>(
-                    A.GetIndexToDimension().at(a_indices[i]));
+                    C.GetIndexToDimension().at(c_indices[i]));
             }
         }
 
-        size_t stride = a_indices.size();
+        size_t stride = c_indices.size();
         for (size_t i = 0; i < b_indices.size(); i++) {
             if (!index_to_mode_map.count(b_indices[i])) {
                 index_to_mode_map[b_indices[i]] = stride + i;
@@ -97,13 +94,9 @@ template <class T = cuComplex> class CudaTensor {
             }
         }
 
-        std::vector<int32_t> a_modes(a_indices.size());
         std::vector<int32_t> b_modes(b_indices.size());
         std::vector<int32_t> c_modes(c_indices.size());
 
-        for (size_t i = 0; i < a_indices.size(); i++) {
-            a_modes[i] = index_to_mode_map[a_indices[i]];
-        }
         for (size_t i = 0; i < b_indices.size(); i++) {
             b_modes[i] = index_to_mode_map[b_indices[i]];
         }
@@ -111,25 +104,14 @@ template <class T = cuComplex> class CudaTensor {
             c_modes[i] = index_to_mode_map[c_indices[i]];
         }
 
-        std::vector<int64_t> a_dimensions(a_modes.size());
-        for (size_t idx = 0; idx < a_modes.size(); idx++) {
-            a_dimensions[idx] = mode_to_dimension_map[a_modes[idx]];
-        }
-
         std::vector<int64_t> b_dimensions(b_modes.size());
         for (size_t idx = 0; idx < b_modes.size(); idx++) {
             b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
         }
-
         std::vector<int64_t> c_dimensions(c_modes.size());
         for (size_t idx = 0; idx < c_modes.size(); idx++) {
             c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
         }
-
-        cutensor_err = cutensorInitTensorDescriptor(
-            &handle, &a_descriptor, a_modes.size(), a_dimensions.data(),
-            a_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
-        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
 
         cutensor_err = cutensorInitTensorDescriptor(
             &handle, &b_descriptor, b_modes.size(), b_dimensions.data(),
