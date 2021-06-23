@@ -625,3 +625,51 @@ TEST_CASE("ContractTensors", "[CudaTensor]")
         CHECK(data1[7].imag() == Approx(data2[7].imag()));
     }
 }
+
+TEST_CASE("CudaTensor::AddTensors", "[CudaTensor]")
+{
+    SECTION("Scalars")
+    {
+        using namespace Jet::CudaTensorHelpers;
+
+        CudaTensor lhs({}, {}, {{1,0}});
+        CudaTensor rhs({}, {}, {{2,4}});
+
+        const CudaTensor have_tensor = CudaTensor<>::AddTensors(lhs, rhs);
+        const CudaTensor want_tensor({}, {}, {{3, 4}});
+
+        CHECK(static_cast<Tensor<c64_host>>(have_tensor) == static_cast<Tensor<c64_host>>(want_tensor));
+    }
+
+    SECTION("Vectors")
+    {
+        CudaTensor lhs({"i"}, {3}, {{1, 0}, {0, 2}, {3, 0}});
+        CudaTensor rhs({"i"}, {3}, {{1, 0}, {0, 2}, {0, 3}});
+
+        const CudaTensor have_tensor = lhs.AddTensor(rhs);
+        const CudaTensor want_tensor({"i"}, {3}, {{2,0}, {0, 4}, {3, 3}});
+        CHECK(static_cast<Tensor<c64_host>>(have_tensor) == static_cast<Tensor<c64_host>>(want_tensor));
+    }
+
+    SECTION("Matrices")
+    {
+        CudaTensor lhs({"i", "j"}, {2, 2}, {{1,0}, {2,0}, {3,0}, {4,0} });
+        CudaTensor rhs({"i", "j"}, {2, 2}, {{0, 1}, {0, 2}, {0, 3}, {0, 4}});
+
+        const CudaTensor have_tensor = lhs.AddTensor(rhs);
+        const CudaTensor want_tensor({"i", "j"}, {2, 2},
+                                 {{1, 1}, {2, 2}, {3, 3}, {4, 4}});
+        CHECK(static_cast<Tensor<c64_host>>(have_tensor) == static_cast<Tensor<c64_host>>(want_tensor));
+    }
+
+    SECTION("Matrices with swapped indices")
+    {
+        CudaTensor lhs({"i", "j"}, {2, 2}, {{1,0}, {2,0}, {3,0}, {4,0}});
+        CudaTensor rhs({"j", "i"}, {2, 2}, {{0, 1}, {0, 2}, {0, 3}, {0, 4}});
+
+        const CudaTensor have_tensor = CudaTensor<>::AddTensors(lhs, rhs);
+        const CudaTensor want_tensor({"i", "j"}, {2, 2},
+                                 {{1, 1}, {2, 3}, {3, 2}, {4, 4}});
+        CHECK(static_cast<Tensor<c64_host>>(have_tensor) == static_cast<Tensor<c64_host>>(want_tensor));
+    }
+}

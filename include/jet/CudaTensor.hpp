@@ -35,6 +35,123 @@ template <class T = cuComplex> class CudaTensor {
     using scalar_type_t = T;
     using scalar_type_t_precision = decltype(std::declval<T>().x);
 
+    template <class U = T>
+    static CudaTensor<U> AddTensors(const CudaTensor<U> &A, const CudaTensor<U> &B)
+    {
+
+        const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
+            A.GetIndices(), B.GetIndices());
+
+        JET_ABORT_IF_NOT(
+            disjoint_indices.empty(),
+            "Tensor addition with disjoint indices is not supported.");
+
+        CudaTensor<U> C(A);
+
+        // Align the underlying data vectors of `A` and `B`.
+        cutensorHandle_t handle;
+        cutensorInit(&handle);
+
+        const U one = {1.0, 0.0};
+
+        cutensorTensorDescriptor_t a_descriptor, b_descriptor, c_descriptor;
+        cutensorStatus_t cutensor_err;
+        cudaDataType_t data_type;
+
+        if constexpr (std::is_same<U, cuDoubleComplex>::value ||
+                      std::is_same<U, double2>::value) {
+            data_type = CUDA_C_64F;
+        }
+        else {
+            data_type = CUDA_C_32F;
+        }
+
+        const auto &a_indices = A.GetIndices();
+        const auto &b_indices = B.GetIndices();
+        const auto &c_indices = C.GetIndices();
+
+        const std::vector<int64_t> a_strides =
+            CudaTensorHelpers::GetStrides(A.GetShape());
+        const std::vector<int64_t> b_strides =
+            CudaTensorHelpers::GetStrides(B.GetShape());
+        const std::vector<int64_t> c_strides =
+            CudaTensorHelpers::GetStrides(C.GetShape());
+
+        std::unordered_map<std::string, int> index_to_mode_map;
+        std::unordered_map<size_t, int64_t> mode_to_dimension_map;
+
+        for (size_t i = 0; i < a_indices.size(); i++) {
+            if (!index_to_mode_map.count(a_indices[i])) {
+                index_to_mode_map[a_indices[i]] = i;
+                mode_to_dimension_map[i] = static_cast<int64_t>(
+                    A.GetIndexToDimension().at(a_indices[i]));
+            }
+        }
+
+        size_t stride = a_indices.size();
+        for (size_t i = 0; i < b_indices.size(); i++) {
+            if (!index_to_mode_map.count(b_indices[i])) {
+                index_to_mode_map[b_indices[i]] = stride + i;
+                mode_to_dimension_map[stride + i] = static_cast<int64_t>(
+                    B.GetIndexToDimension().at(b_indices[i]));
+            }
+        }
+
+        std::vector<int32_t> a_modes(a_indices.size());
+        std::vector<int32_t> b_modes(b_indices.size());
+        std::vector<int32_t> c_modes(c_indices.size());
+
+        for (size_t i = 0; i < a_indices.size(); i++) {
+            a_modes[i] = index_to_mode_map[a_indices[i]];
+        }
+        for (size_t i = 0; i < b_indices.size(); i++) {
+            b_modes[i] = index_to_mode_map[b_indices[i]];
+        }
+        for (size_t i = 0; i < c_indices.size(); i++) {
+            c_modes[i] = index_to_mode_map[c_indices[i]];
+        }
+
+        std::vector<int64_t> a_dimensions(a_modes.size());
+        for (size_t idx = 0; idx < a_modes.size(); idx++) {
+            a_dimensions[idx] = mode_to_dimension_map[a_modes[idx]];
+        }
+
+        std::vector<int64_t> b_dimensions(b_modes.size());
+        for (size_t idx = 0; idx < b_modes.size(); idx++) {
+            b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
+        }
+
+        std::vector<int64_t> c_dimensions(c_modes.size());
+        for (size_t idx = 0; idx < c_modes.size(); idx++) {
+            c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
+        }
+
+        cutensor_err = cutensorInitTensorDescriptor(
+            &handle, &a_descriptor, a_modes.size(), a_dimensions.data(),
+            a_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        cutensor_err = cutensorInitTensorDescriptor(
+            &handle, &b_descriptor, b_modes.size(), b_dimensions.data(),
+            b_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        cutensor_err = cutensorInitTensorDescriptor(
+            &handle, &c_descriptor, c_modes.size(), c_dimensions.data(),
+            c_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        cutensor_err = cutensorElementwiseBinary(&handle, &one, B.GetData(), &b_descriptor, b_modes.data(), &one, C.GetData(), &c_descriptor, c_modes.data(), C.GetData(), &c_descriptor, c_modes.data(), CUTENSOR_OP_ADD, data_type, nullptr);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        return C;
+    }
+
+    CudaTensor<T> AddTensor(const CudaTensor<T> &other) const
+    {
+        return AddTensors<T>(*this, other);
+    }
+
     void InitIndicesAndShape(const std::vector<std::string> &indices,
                              const std::vector<size_t> &shape)
     {
@@ -46,6 +163,7 @@ template <class T = cuComplex> class CudaTensor {
             index_to_dimension_[indices_[i]] = shape_[i];
             index_to_axes_[indices_[i]] = i;
         }
+
         JET_CUDA_IS_SUCCESS(
             cudaMalloc(reinterpret_cast<void **>(&data_),
                        Jet::Utilities::ShapeToSize(shape_) * sizeof(T)));
@@ -411,18 +529,6 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t idx = 0; idx < b_modes.size(); idx++) {
             b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
         }
-
-        size_t a_elements = 1;
-        for (auto mode : a_modes)
-            a_elements *= mode_to_dimension_map[mode];
-
-        size_t b_elements = 1;
-        for (auto mode : b_modes)
-            b_elements *= mode_to_dimension_map[mode];
-
-        size_t c_elements = 1;
-        for (auto mode : c_modes)
-            c_elements *= mode_to_dimension_map[mode];
 
         cutensorHandle_t handle;
         cutensorInit(&handle);
