@@ -27,7 +27,7 @@ namespace Jet {
  *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
-template <typename TensorType> class TaskBasedContractor {
+template <class TensorType> class TaskBasedContractor {
   public:
     /// Type of the name-to-task map.
     using NameToTaskMap = std::unordered_map<std::string, tf::Task>;
