@@ -36,7 +36,8 @@ template <class T = cuComplex> class CudaTensor {
     using scalar_type_t_precision = decltype(std::declval<T>().x);
 
     template <class U = T>
-    static CudaTensor<U> AddTensors(const CudaTensor<U> &A, const CudaTensor<U> &B)
+    static CudaTensor<U> AddTensors(const CudaTensor<U> &A,
+                                    const CudaTensor<U> &B)
     {
 
         const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
@@ -123,7 +124,10 @@ template <class T = cuComplex> class CudaTensor {
             c_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
 
-        cutensor_err = cutensorElementwiseBinary(&handle, &one, B.GetData(), &b_descriptor, b_modes.data(), &one, C.GetData(), &c_descriptor, c_modes.data(), C.GetData(), &c_descriptor, c_modes.data(), CUTENSOR_OP_ADD, data_type, nullptr);
+        cutensor_err = cutensorElementwiseBinary(
+            &handle, &one, B.GetData(), &b_descriptor, b_modes.data(), &one,
+            C.GetData(), &c_descriptor, c_modes.data(), C.GetData(),
+            &c_descriptor, c_modes.data(), CUTENSOR_OP_ADD, data_type, nullptr);
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
 
         return C;
