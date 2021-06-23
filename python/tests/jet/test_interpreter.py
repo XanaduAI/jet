@@ -1,3 +1,4 @@
+from inspect import cleandoc
 from math import sqrt
 
 import pytest
@@ -10,6 +11,53 @@ def parse_xir_script(script: str) -> xir.XIRProgram:
     """Parses an XIR script into an XIR program."""
     tree = xir.xir_parser.parse(script)
     return xir.XIRTransformer().transform(tree)
+
+
+def test_get_xir_program():
+    """Tests that the correct XIRProgram is returned."""
+    assert jet.get_xir_program().serialize() == cleandoc(
+        """
+        gate beamsplitter, 3, 2;
+        gate bs, 3, 2;
+        gate cnot, 0, 2;
+        gate cphaseshift, 1, 2;
+        gate crot, 3, 2;
+        gate crx, 1, 2;
+        gate cry, 1, 2;
+        gate crz, 1, 2;
+        gate cswap, 0, 3;
+        gate cx, 0, 2;
+        gate cy, 0, 2;
+        gate cz, 0, 2;
+        gate d, 3, 1;
+        gate displacement, 3, 1;
+        gate h, 0, 1;
+        gate hadamard, 0, 1;
+        gate iswap, 0, 2;
+        gate not, 0, 1;
+        gate paulix, 0, 1;
+        gate pauliy, 0, 1;
+        gate pauliz, 0, 1;
+        gate phaseshift, 1, 1;
+        gate rot, 3, 1;
+        gate rx, 1, 1;
+        gate ry, 1, 1;
+        gate rz, 1, 1;
+        gate s, 0, 1;
+        gate squeezing, 3, 1;
+        gate swap, 0, 2;
+        gate sx, 0, 1;
+        gate t, 0, 1;
+        gate toffoli, 0, 3;
+        gate twomodesqueezing, 3, 2;
+        gate u1, 1, 1;
+        gate u2, 2, 1;
+        gate u3, 3, 1;
+        gate x, 0, 1;
+        gate y, 0, 1;
+        gate z, 0, 1;
+        """
+    )
 
 
 @pytest.mark.parametrize(

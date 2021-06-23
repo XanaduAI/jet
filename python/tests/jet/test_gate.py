@@ -9,12 +9,14 @@ import jet
 INV_SQRT2 = 1 / sqrt(2)
 
 
-@jet.GateFactory.register(names=["Mock"])
 class MockGate(jet.Gate):
-    """MockGate represents a fictional, unnormalized gate which can be applied to pairs of qutrits."""
+    """MockGate represents a fictional, unnormalized gate which can be applied
+    to pairs of qutrits. This gate is NOT automatically registered in order to
+    avoid polluting the registry singleton.
+    """
 
-    def __init__(self, **kwargs):
-        super().__init__(name="MockGate", num_wires=2, **kwargs)
+    def __init__(self):
+        super().__init__(name="MockGate", num_wires=2)
 
     def _data(self) -> np.ndarray:
         return np.eye(3 ** 2) * (1 + 1j)
@@ -81,12 +83,16 @@ class TestGateFactory:
             class TicTacToeGate(jet.Gate):
                 pass
 
+            jet.GateFactory.unregister(TicTacToeGate)
+
     def test_register_duplicate_keys(self):
         """Tests that a Gate subclass can be registered with duplicate keys."""
 
         @jet.GateFactory.register(names=["n", "N", "no", "NO", "No"])
         class CancelGate(jet.Gate):
             pass
+
+        jet.GateFactory.unregister(CancelGate)
 
     def test_create_unregistered_gate(self):
         """Tests that a KeyError is raised when the name of an unregistered gate
@@ -97,8 +103,12 @@ class TestGateFactory:
 
     def test_create_registered_gate(self):
         """Tests that a registered gate can be created."""
+        jet.GateFactory.register(names=["Mock"])(MockGate)
+
         gate = jet.GateFactory.create(name="MOCK")
         assert gate.tensor() == MockGate().tensor()
+
+        jet.GateFactory.unregister(MockGate)
 
 
 @pytest.mark.parametrize(
