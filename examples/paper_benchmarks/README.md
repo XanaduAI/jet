@@ -1,5 +1,11 @@
 The scripts in this directory allow a user to replicate the benchmarking results included in the JET paper [link]().
 
+To build all Jet example, we use the following CMake command:
+
+```bash
+cmake . -DENABLE_OPENMP=1 -DENABLE_NATIVE=1 -DENABLE_WARNINGS=0 -DCMAKE_BUILD_TYPE=Release
+```
+
 Since we compare with Cotengra and 
 
 
