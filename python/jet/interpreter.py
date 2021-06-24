@@ -61,7 +61,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
         program (XIRProgram): XIR script to execute.
 
     Returns:
-        List of NumPy values representing the output of the XIR program.
+        List of NumPy values representing the output of the ``XIRProgram``.
     """
     result: List[Union[np.number, np.ndarray]] = []
 
@@ -69,7 +69,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     # TODO: Extract the Fock cutoff dimension from the XIR script.
     circuit = Circuit(num_wires=num_wires, dim=2)
 
-    for stmt in _expand_xir_program_statements(program):
+    for stmt in _resolve_xir_program_statements(program):
         if stmt.name in GateFactory.registry:
             # TODO: Automatically insert the Fock cutoff dimension for CV gates.
             gate = GateFactory.create(stmt.name, **stmt.params)
@@ -97,7 +97,16 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     return result
 
 
-def _expand_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
+def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
+    """Resolves the statements in an ``XIRProgram`` such that each yielded
+    gate application ``Statement`` is applied to a registered Jet gate.
+
+    Args:
+        program (XIRProgram): Program with the statements to be resolved.
+
+    Returns:
+        Iterator: Resolved statements in the given ``XIRProgram``.
+    """
     # TODO: Merge the two XIRPrograms (once merging is implemented) and use
     #       gate declarations when parameter and wire names are supported.
     gate_signature_map = {**get_xir_library().gates, **program.gates}
