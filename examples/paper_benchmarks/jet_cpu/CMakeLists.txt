@@ -30,5 +30,5 @@ FetchContent_MakeAvailable(Jet)
 add_executable(jet_sliced jet_sliced.cpp)
 target_link_libraries(jet_sliced Jet)
 
-add_executable(jet_default jet_default.cpp)
-target_link_libraries(jet_default Jet)
+add_executable(jet_full jet_full.cpp)
+target_link_libraries(jet_full Jet)

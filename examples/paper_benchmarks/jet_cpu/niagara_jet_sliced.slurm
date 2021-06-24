@@ -1,7 +1,7 @@
 #!/bin/bash 
 #SBATCH --nodes=1
 #SBATCH --time=24:00:00
-#SBATCH --job-name=jet_m10_full
+#SBATCH --job-name=jet_m10_sliced
 #SBATCH --tasks-per-node=80
 
 module load intel/2019u4 cmake
@@ -13,10 +13,10 @@ export OMP_PLACES=cores
 export OMP_DYNAMIC=false 
 export OMP_SCHEDULE=static 
 
-# JET: full network simulations
+# JET: sliced network simulations (2, 4, 6 slices)
 for sl in 2 4 6; do
     for p in 1 2 4 8 16; do
-        for th in 1 2 4 8 16 32; do
+        for th in 1 2 4 8 16; do
             for i in $(seq 1 $num_runs); do
                 echo "### RUN=${i} ###" >> jet_omp${th}_pthread${p}_slice${sl}.out;
                 OMP_NUM_THREADS=${th} ./jet_sliced ../data_files/m10.json ${p} ${sl} >> jet_omp${th}_pthread${p}_slice${sl}.out
