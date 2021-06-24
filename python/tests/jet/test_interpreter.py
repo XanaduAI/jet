@@ -30,9 +30,17 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate X, 0, 1;
-                    gate Y, 0, 1;
-                    gate Z, 0, 1;
+                    gate X[0]:
+                        X | [0];
+                    end;
+
+                    gate Y[0]:
+                        Y | [0];
+                    end;
+
+                    gate Z[0]:
+                        Z | [0];
+                    end;
                     """
                 ),
                 id="Ordering",
@@ -45,9 +53,17 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate U1, 1, 1;
-                    gate U2, 2, 1;
-                    gate U3, 3, 1;
+                    gate U1(phi)[0]:
+                        U1(phi) | [0];
+                    end;
+
+                    gate U2(phi, lam)[0]:
+                        U2(phi, lam) | [0];
+                    end;
+
+                    gate U3(theta, phi, lam)[0]:
+                        U3(theta, phi, lam) | [0];
+                    end;
                     """
                 ),
                 id="Parameters",
@@ -59,8 +75,13 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate CSWAP, 0, 3;
-                    gate SWAP, 0, 2;
+                    gate CSWAP[0, 1, 2]:
+                        CSWAP | [0, 1, 2];
+                    end;
+
+                    gate SWAP[0, 1]:
+                        SWAP | [0, 1];
+                    end;
                     """
                 ),
                 id="Wires",
@@ -72,8 +93,13 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate H, 0, 1;
-                    gate Hadamard, 0, 1;
+                    gate H[0]:
+                        H | [0];
+                    end;
+
+                    gate Hadamard[0]:
+                        Hadamard | [0];
+                    end;
                     """
                 ),
                 id="Duplicate",
@@ -88,88 +114,88 @@ class TestGetXIRLibrary:
 
     def test_real_registry(self):
         """Tests that the correct XIRProgram is returned for the real gate registry."""
-        assert jet.get_xir_library().serialize() == cleandoc(
-            """
-            gate BS, 3, 2;
-            gate Beamsplitter, 3, 2;
-            gate CNOT, 0, 2;
-            gate CPhaseShift, 1, 2;
-            gate CRX, 1, 2;
-            gate CRY, 1, 2;
-            gate CRZ, 1, 2;
-            gate CRot, 3, 2;
-            gate CSWAP, 0, 3;
-            gate CX, 0, 2;
-            gate CY, 0, 2;
-            gate CZ, 0, 2;
-            gate D, 3, 1;
-            gate Displacement, 3, 1;
-            gate H, 0, 1;
-            gate Hadamard, 0, 1;
-            gate ISWAP, 0, 2;
-            gate NOT, 0, 1;
-            gate PauliX, 0, 1;
-            gate PauliY, 0, 1;
-            gate PauliZ, 0, 1;
-            gate PhaseShift, 1, 1;
-            gate RX, 1, 1;
-            gate RY, 1, 1;
-            gate RZ, 1, 1;
-            gate Rot, 3, 1;
-            gate S, 0, 1;
-            gate SWAP, 0, 2;
-            gate SX, 0, 1;
-            gate Squeezing, 3, 1;
-            gate T, 0, 1;
-            gate Toffoli, 0, 3;
-            gate TwoModeSqueezing, 3, 2;
-            gate U1, 1, 1;
-            gate U2, 2, 1;
-            gate U3, 3, 1;
-            gate X, 0, 1;
-            gate Y, 0, 1;
-            gate Z, 0, 1;
-            gate beamsplitter, 3, 2;
-            gate bs, 3, 2;
-            gate cnot, 0, 2;
-            gate cphaseshift, 1, 2;
-            gate crot, 3, 2;
-            gate crx, 1, 2;
-            gate cry, 1, 2;
-            gate crz, 1, 2;
-            gate cswap, 0, 3;
-            gate cx, 0, 2;
-            gate cy, 0, 2;
-            gate cz, 0, 2;
-            gate d, 3, 1;
-            gate displacement, 3, 1;
-            gate h, 0, 1;
-            gate hadamard, 0, 1;
-            gate iswap, 0, 2;
-            gate not, 0, 1;
-            gate paulix, 0, 1;
-            gate pauliy, 0, 1;
-            gate pauliz, 0, 1;
-            gate phaseshift, 1, 1;
-            gate rot, 3, 1;
-            gate rx, 1, 1;
-            gate ry, 1, 1;
-            gate rz, 1, 1;
-            gate s, 0, 1;
-            gate squeezing, 3, 1;
-            gate swap, 0, 2;
-            gate sx, 0, 1;
-            gate t, 0, 1;
-            gate toffoli, 0, 3;
-            gate twomodesqueezing, 3, 2;
-            gate u1, 1, 1;
-            gate u2, 2, 1;
-            gate u3, 3, 1;
-            gate x, 0, 1;
-            gate y, 0, 1;
-            gate z, 0, 1;
-            """
+        have_xir_program = jet.get_xir_library().serialize(minimize=True)
+        want_xir_program = (
+            "gate BS(theta, phi, cutoff)[0, 1]: BS(theta, phi, cutoff) | [0, 1]; end; "
+            "gate Beamsplitter(theta, phi, cutoff)[0, 1]: Beamsplitter(theta, phi, cutoff) | [0, 1]; end; "
+            "gate CNOT[0, 1]: CNOT | [0, 1]; end; "
+            "gate CPhaseShift(phi)[0, 1]: CPhaseShift(phi) | [0, 1]; end; "
+            "gate CRX(theta)[0, 1]: CRX(theta) | [0, 1]; end; "
+            "gate CRY(theta)[0, 1]: CRY(theta) | [0, 1]; end; "
+            "gate CRZ(theta)[0, 1]: CRZ(theta) | [0, 1]; end; "
+            "gate CRot(phi, theta, omega)[0, 1]: CRot(phi, theta, omega) | [0, 1]; end; "
+            "gate CSWAP[0, 1, 2]: CSWAP | [0, 1, 2]; end; "
+            "gate CX[0, 1]: CX | [0, 1]; end; "
+            "gate CY[0, 1]: CY | [0, 1]; end; "
+            "gate CZ[0, 1]: CZ | [0, 1]; end; "
+            "gate D(r, phi, cutoff)[0]: D(r, phi, cutoff) | [0]; end; "
+            "gate Displacement(r, phi, cutoff)[0]: Displacement(r, phi, cutoff) | [0]; end; "
+            "gate H[0]: H | [0]; end; "
+            "gate Hadamard[0]: Hadamard | [0]; end; "
+            "gate ISWAP[0, 1]: ISWAP | [0, 1]; end; "
+            "gate NOT[0]: NOT | [0]; end; "
+            "gate PauliX[0]: PauliX | [0]; end; "
+            "gate PauliY[0]: PauliY | [0]; end; "
+            "gate PauliZ[0]: PauliZ | [0]; end; "
+            "gate PhaseShift(phi)[0]: PhaseShift(phi) | [0]; end; "
+            "gate RX(theta)[0]: RX(theta) | [0]; end; "
+            "gate RY(theta)[0]: RY(theta) | [0]; end; "
+            "gate RZ(theta)[0]: RZ(theta) | [0]; end; "
+            "gate Rot(phi, theta, omega)[0]: Rot(phi, theta, omega) | [0]; end; "
+            "gate S[0]: S | [0]; end; "
+            "gate SWAP[0, 1]: SWAP | [0, 1]; end; "
+            "gate SX[0]: SX | [0]; end; "
+            "gate Squeezing(r, theta, cutoff)[0]: Squeezing(r, theta, cutoff) | [0]; end; "
+            "gate T[0]: T | [0]; end; "
+            "gate Toffoli[0, 1, 2]: Toffoli | [0, 1, 2]; end; "
+            "gate TwoModeSqueezing(r, theta, cutoff)[0, 1]: TwoModeSqueezing(r, theta, cutoff) | [0, 1]; end; "
+            "gate U1(phi)[0]: U1(phi) | [0]; end; "
+            "gate U2(phi, lam)[0]: U2(phi, lam) | [0]; end; "
+            "gate U3(theta, phi, lam)[0]: U3(theta, phi, lam) | [0]; end; "
+            "gate X[0]: X | [0]; end; "
+            "gate Y[0]: Y | [0]; end; "
+            "gate Z[0]: Z | [0]; end; "
+            "gate beamsplitter(theta, phi, cutoff)[0, 1]: beamsplitter(theta, phi, cutoff) | [0, 1]; end; "
+            "gate bs(theta, phi, cutoff)[0, 1]: bs(theta, phi, cutoff) | [0, 1]; end; "
+            "gate cnot[0, 1]: cnot | [0, 1]; end; "
+            "gate cphaseshift(phi)[0, 1]: cphaseshift(phi) | [0, 1]; end; "
+            "gate crot(phi, theta, omega)[0, 1]: crot(phi, theta, omega) | [0, 1]; end; "
+            "gate crx(theta)[0, 1]: crx(theta) | [0, 1]; end; "
+            "gate cry(theta)[0, 1]: cry(theta) | [0, 1]; end; "
+            "gate crz(theta)[0, 1]: crz(theta) | [0, 1]; end; "
+            "gate cswap[0, 1, 2]: cswap | [0, 1, 2]; end; "
+            "gate cx[0, 1]: cx | [0, 1]; end; "
+            "gate cy[0, 1]: cy | [0, 1]; end; "
+            "gate cz[0, 1]: cz | [0, 1]; end; "
+            "gate d(r, phi, cutoff)[0]: d(r, phi, cutoff) | [0]; end; "
+            "gate displacement(r, phi, cutoff)[0]: displacement(r, phi, cutoff) | [0]; end; "
+            "gate h[0]: h | [0]; end; "
+            "gate hadamard[0]: hadamard | [0]; end; "
+            "gate iswap[0, 1]: iswap | [0, 1]; end; "
+            "gate not[0]: not | [0]; end; "
+            "gate paulix[0]: paulix | [0]; end; "
+            "gate pauliy[0]: pauliy | [0]; end; "
+            "gate pauliz[0]: pauliz | [0]; end; "
+            "gate phaseshift(phi)[0]: phaseshift(phi) | [0]; end; "
+            "gate rot(phi, theta, omega)[0]: rot(phi, theta, omega) | [0]; end; "
+            "gate rx(theta)[0]: rx(theta) | [0]; end; "
+            "gate ry(theta)[0]: ry(theta) | [0]; end; "
+            "gate rz(theta)[0]: rz(theta) | [0]; end; "
+            "gate s[0]: s | [0]; end; "
+            "gate squeezing(r, theta, cutoff)[0]: squeezing(r, theta, cutoff) | [0]; end; "
+            "gate swap[0, 1]: swap | [0, 1]; end; "
+            "gate sx[0]: sx | [0]; end; "
+            "gate t[0]: t | [0]; end; "
+            "gate toffoli[0, 1, 2]: toffoli | [0, 1, 2]; end; "
+            "gate twomodesqueezing(r, theta, cutoff)[0, 1]: twomodesqueezing(r, theta, cutoff) | [0, 1]; end; "
+            "gate u1(phi)[0]: u1(phi) | [0]; end; "
+            "gate u2(phi, lam)[0]: u2(phi, lam) | [0]; end; "
+            "gate u3(theta, phi, lam)[0]: u3(theta, phi, lam) | [0]; end; "
+            "gate x[0]: x | [0]; end; "
+            "gate y[0]: y | [0]; end; "
+            "gate z[0]: z | [0]; end;"
         )
+        assert have_xir_program == want_xir_program
 
 
 @pytest.mark.parametrize(
