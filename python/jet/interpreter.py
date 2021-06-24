@@ -25,7 +25,7 @@ StatementGenerator = Callable[[Params, Wires, Stack], Iterator[Statement]]
 
 
 def get_xir_library() -> XIRProgram:
-    """Returns an XIRProgram containing the gate declarations supported by Jet."""
+    """Returns an XIRProgram containing the gate definitions supported by Jet."""
     lines = []
 
     for name, cls in sorted(GateFactory.registry.items()):
@@ -105,7 +105,7 @@ def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
         program (XIRProgram): Program with the statements to be resolved.
 
     Returns:
-        Iterator: Resolved statements in the given ``XIRProgram``.
+        Iterator[Statement]: Resolved statements in the given ``XIRProgram``.
     """
     # TODO: Merge the two XIRPrograms (once merging is implemented) and use
     #       gate declarations when parameter and wire names are supported.
@@ -139,7 +139,7 @@ def _create_statement_generator_for_terminal_gate(name: str) -> StatementGenerat
         name (str): Name of the terminal gate.
 
     Returns:
-        StatementGenerator: Function that yields a sequence ``xir.Statement``
+        StatementGenerator: Function that yields a sequence of ``Statement``
             objects which implement the given terminal gate.
     """
 
@@ -164,7 +164,7 @@ def _create_statement_generator_for_composite_gate(
         gate_signature_map (Dict): Map which associates gate names with gate signatures.
 
     Returns:
-        StatementGenerator: Function that yields a sequence ``xir.Statement``
+        StatementGenerator: Function that yields a sequence of ``Statement``
             objects which implement the given composite gate.
     """
 
@@ -197,7 +197,7 @@ def _bind_statement_params(gate_signature_map: Dict[str, GateSignature], stmt: S
 
     Returns:
         Params: Map which associates the names of the parameters of the gate in
-            the statement with with the values of the parameters in the statement.
+            the statement with the values of the parameters in the statement.
     """
     if stmt.name not in gate_signature_map:
         raise ValueError(f"Statement '{stmt}' applies a gate which has not been defined.")
@@ -225,7 +225,7 @@ def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: St
 
     Returns:
         Params: Map which associates the names of the wires of the gate in the
-            statement with the with the values of the wires in the statement.
+            statement with the values of the wires in the statement.
     """
     if stmt.name not in gate_signature_map:
         raise ValueError(f"Statement '{stmt}' applies a gate which has not been defined.")
