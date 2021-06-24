@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     std::cout << "number_of_slices = " << number_of_slices << std::endl;
 
     std::vector<TensorNetwork<Tensor>> slices(number_of_slices);
-    std::vector<const TensorNetwork<Tensor>&> slice_subset;
+    std::vector<TensorNetwork<Tensor>> slice_subset;
 
     for (size_t i = 0; i < 1; i++) {
         slices[i] = tn;
@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
     size_t shared = 0;
 
     std::sample(slices.begin(), slices.end(), std::back_inserter(slice_subset), contract_subset, std::mt19937{std::random_device{}()});
+    slices.clear();
 
     TaskBasedCpuContractor<Tensor> contractor(num_threads);
     for (size_t i = 0; i < contract_subset; i++) {
