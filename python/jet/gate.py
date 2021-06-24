@@ -196,7 +196,7 @@ class GateFactory:
 
         def wrapper(subclass: type) -> type:
             if not issubclass(subclass, Gate):
-                raise ValueError(f"The type '{subclass.__name__}' is not a subclass of Gate")
+                raise ValueError(f"The type '{subclass.__name__}' is not a subclass of Gate.")
 
             # Let the caller specify duplicate keys if they wish.
             conflicts = set(names) & set(GateFactory.registry)
