@@ -1,2 +1,2 @@
 from .parser import XIRTransformer, xir_parser
-from .program import XIRProgram
+from .program import GateDeclaration, Statement, XIRProgram
