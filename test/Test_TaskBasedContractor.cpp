@@ -687,6 +687,8 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddContractionTasks()",
 
     SECTION("Path is not empty")
     {
+        using namespace Jet::CudaTensorHelpers;
+
         const auto tensor_1 = MakeCudaTensor({"A0", "C2"}, {2, 4});
         const auto tensor_2 = MakeCudaTensor({"A0", "B1"}, {2, 3});
         const auto tensor_3 = MakeCudaTensor({"B1", "C2"}, {3, 4});
@@ -721,13 +723,34 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddContractionTasks()",
 
         const TensorMap have_tensor_map = GetTensorMap(tbc);
         const TensorMap want_tensor_map = {
-            {"0:A0C2", {0, 1, 2, 3, 4, 5, 6, 7}},
-            {"1:A0B1", {0, 1, 2, 3, 4, 5}},
-            {"2:B1C2", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}},
+            {"0:A0C2",
+             {{0, 0},
+              {1, 2},
+              {2, 4},
+              {3, 6},
+              {4, 8},
+              {5, 10},
+              {6, 12},
+              {7, 14}}},
+            {"1:A0B1", {{0, 0}, {1, 2}, {2, 4}, {3, 6}, {4, 8}, {5, 10}}},
+            {"2:B1C2",
+             {{0, 0},
+              {1, 2},
+              {2, 4},
+              {3, 6},
+              {4, 8},
+              {5, 10},
+              {6, 12},
+              {7, 14},
+              {8, 16},
+              {9, 18},
+              {10, 20},
+              {11, 22}}},
             {"3:C2B1", {}},
             {"4:A0C2", {}},
             {"5:B1A0:results[0]", {}},
         };
+
         CHECK(have_tensor_map == want_tensor_map);
 
         const ParentsMap have_parents_map = tbc.GetNameToParentsMap();
@@ -781,9 +804,9 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddContractionTasks()",
 
         const TensorMap have_tensor_map = GetTensorMap(tbc);
         const TensorMap want_tensor_map = {
-            {"0:A0B1", {0, 1, 2, 3, 4, 5}},
-            {"1:A0", {0, 1}},
-            {"2:B1", {0, 1, 2}},
+            {"0:A0B1", {{0, 0}, {1, 2}, {2, 4}, {3, 6}, {4, 8}, {5, 10}}},
+            {"1:A0", {{0, 0}, {1, 2}}},
+            {"2:B1", {{0, 0}, {1, 2}, {2, 4}}},
             {"3:B1", {}},
             {"4:_:results[0]", {}},
             {"4:_:results[1]", {}},
@@ -811,9 +834,10 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::Contract()",
         tbc.Contract().wait();
 
         const std::vector<CudaTensor_t> have_results = tbc.GetResults();
-        const std::vector<CudaTensor_t> want_results = {CudaTensor_t{}};
-        CHECK(static_cast<tensor_t>(have_results[0]) ==
-              static_cast<tensor_t>(want_results[0]));
+        const std::vector<CudaTensor_t> want_results = {};
+
+        CHECK(have_results.size() == 0);
+        CHECK(have_results.size() == want_results.size());
     }
 
     SECTION("Taskflow has a single contraction task")
@@ -832,7 +856,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::Contract()",
 
         const std::vector<CudaTensor_t> have_results = tbc.GetResults();
         const std::vector<CudaTensor_t> want_results = {
-            CudaTensor_t({"B1"}, {3}, {{3, 0}, {4, 0}, {5, 0}})};
+            CudaTensor_t({"B1"}, {3}, {{-3, 4}, {-9, 12}, {-15, 20}})};
         CHECK(static_cast<tensor_t>(have_results[0]) ==
               static_cast<tensor_t>(want_results[0]));
     }
@@ -855,7 +879,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::Contract()",
 
         const std::vector<CudaTensor_t> have_results = tbc.GetResults();
         const std::vector<CudaTensor_t> want_results = {
-            CudaTensor_t({}, {}, {{14, 0}})};
+            CudaTensor_t({}, {}, {{-143, -26}})};
         CHECK(static_cast<tensor_t>(have_results[0]) ==
               static_cast<tensor_t>(want_results[0]));
     }
@@ -882,9 +906,12 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::Contract()",
 
         const std::vector<CudaTensor_t> have_results = tbc.GetResults();
         const std::vector<CudaTensor_t> want_results = {
-            CudaTensor_t({}, {}, {{5, 0}}), CudaTensor_t({}, {}, {{14, 0}})};
+            CudaTensor_t({}, {}, {{-15, 20}}),
+            CudaTensor_t({}, {}, {{-42, 56}})};
         CHECK(static_cast<tensor_t>(have_results[0]) ==
               static_cast<tensor_t>(want_results[0]));
+        CHECK(static_cast<tensor_t>(have_results[1]) ==
+              static_cast<tensor_t>(want_results[1]));
     }
 }
 
@@ -930,7 +957,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddDeletionTasks()",
         const TensorMap want_tensor_map = {
             {"0:A0", {}},
             {"1:A0", {}},
-            {"2:_:results[0]", {5}},
+            {"2:_:results[0]", {{-15, 20}}},
         };
         CHECK(have_tensor_map == want_tensor_map);
     }
@@ -959,9 +986,13 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddDeletionTasks()",
 
         const TensorMap have_tensor_map = GetTensorMap(tbc);
         const TensorMap want_tensor_map = {
-            {"0:A0B1", {}},           {"1:A0", {}}, {"2:B1", {}}, {"3:B1", {}},
-            {"4:_:results[0]", {14}},
+            {"0:A0B1", {}},
+            {"1:A0", {}},
+            {"2:B1", {}},
+            {"3:B1", {}},
+            {"4:_:results[0]", {{-143, -26}}},
         };
+
         CHECK(have_tensor_map == want_tensor_map);
     }
 }
@@ -995,7 +1026,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddReductionTask()",
         tbc.Contract().wait();
 
         const CudaTensor_t have_result = tbc.GetReductionResult();
-        const CudaTensor_t want_result = CudaTensor_t({}, {}, {{5, 0}});
+        const CudaTensor_t want_result = CudaTensor_t({}, {}, {{-15, 20}});
         CHECK(static_cast<tensor_t>(have_result) ==
               static_cast<tensor_t>(want_result));
     }
@@ -1017,7 +1048,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddReductionTask()",
 
         const CudaTensor_t have_result = tbc.GetReductionResult();
         const CudaTensor_t want_result =
-            CudaTensor_t({"B1"}, {3}, {{3, 0}, {4, 0}, {5, 0}});
+            CudaTensor_t({"B1"}, {3}, {{-3, 4}, {-9, 12}, {-15, 20}});
         CHECK(static_cast<tensor_t>(have_result) ==
               static_cast<tensor_t>(want_result));
     }
@@ -1044,7 +1075,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddReductionTask()",
         tbc.Contract().wait();
 
         const CudaTensor_t have_result = tbc.GetReductionResult();
-        const CudaTensor_t want_result = CudaTensor_t({}, {}, {{5 + 14, 0}});
+        const CudaTensor_t want_result = CudaTensor_t({}, {}, {{-57, 76}});
         CHECK(static_cast<tensor_t>(have_result) ==
               static_cast<tensor_t>(want_result));
     }
@@ -1071,7 +1102,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddReductionTask()",
         CHECK(return_val_3 == 0);
 
         const CudaTensor_t have_result = tbc.GetReductionResult();
-        const CudaTensor_t want_result = CudaTensor_t{{}, {}, {{5, 0}}};
+        const CudaTensor_t want_result = CudaTensor_t{{}, {}, {{-15, 20}}};
         CHECK(static_cast<tensor_t>(have_result) ==
               static_cast<tensor_t>(want_result));
     }

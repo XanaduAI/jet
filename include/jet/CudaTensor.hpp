@@ -40,6 +40,23 @@ template <class T = cuComplex> class CudaTensor {
                                     const CudaTensor<U> &B)
     {
 
+        static const CudaTensor<U> zero;
+
+        // The zero tensor is used in reductions where the shape of an
+        // accumulator is not known beforehand.
+        if (A.GetSize() == zero.GetSize() &&
+            A.GetIndices() == zero.GetIndices() &&
+            A.GetShape() == zero.GetShape() &&
+            A.GetHostDataVector() == zero.GetHostDataVector()) {
+            return B;
+        }
+        else if (B.GetSize() == zero.GetSize() &&
+                 B.GetIndices() == zero.GetIndices() &&
+                 B.GetShape() == zero.GetShape() &&
+                 B.GetHostDataVector() == zero.GetHostDataVector()) {
+            return A;
+        }
+
         const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
             A.GetIndices(), B.GetIndices());
 
@@ -376,7 +393,6 @@ template <class T = cuComplex> class CudaTensor {
             GetSize(), {0.0, 0.0});
 
         CopyGpuDataToHost(reinterpret_cast<T *>(host_data.data()));
-
         auto t = Tensor<std::complex<scalar_type_t_precision>>(
             ReverseVector(GetIndices()), ReverseVector(GetShape()), host_data);
         return t;
