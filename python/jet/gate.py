@@ -174,7 +174,7 @@ class GateFactory:
             KeyError if there is no entry for the given name in the registry.
 
         Args:
-            name (str): registered name of the desired gate.
+            name (str): Registered name of the desired gate.
             params (float): Parameters to pass to the gate constructor.
             kwargs: Keyword arguments to pass to the gate constructor.
 
@@ -193,9 +193,8 @@ class GateFactory:
         """Registers a set of names with a class type.
 
         Raises:
-            ValueError if the provided class does not inherit from Gate.
-
-            KeyError if a name has already been registered to another class.
+            ValueError: If the provided class does not inherit from Gate.
+            KeyError: If a name is already registered to another class.
         """
 
         def wrapper(subclass: type) -> type:
@@ -215,6 +214,16 @@ class GateFactory:
             return subclass
 
         return wrapper
+
+    @staticmethod
+    def unregister(cls: type) -> None:
+        """Unregisters a class type.
+
+        Args:
+            cls (type): Class type to remove from the registry.
+        """
+        for key in {key for key, val in GateFactory.registry.items() if val == cls}:
+            del GateFactory.registry[key]
 
 
 ####################################################################################################
