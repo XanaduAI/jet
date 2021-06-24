@@ -4,6 +4,8 @@
 #SBATCH --job-name=jet_m10_sliced
 #SBATCH --tasks-per-node=80
 
+cd $SLURM_SUBMIT_DIR
+
 module load intel/2019u4 cmake
 
 export num_runs=10
