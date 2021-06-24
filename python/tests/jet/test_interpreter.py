@@ -288,6 +288,197 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
         jet.run_xir_program(program)
 
 
+@pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            parse_xir_script(
+                """
+                gate H2:
+                    H | [0];
+                    H | [1];
+                end;
+
+                X | [0];
+
+                amplitude(state: 0) | [0];
+                amplitude(state: 1) | [0];
+                """
+            ),
+            [0, 1],
+        ),
+        (
+            parse_xir_script(
+                """
+                gate H2 [0, 1]:
+                    H | [0];
+                    H | [1];
+                end;
+
+                H2 | [0, 1];
+
+                amplitude(state: 0) | [0, 1];
+                amplitude(state: 1) | [0, 1];
+                amplitude(state: 2) | [0, 1];
+                amplitude(state: 3) | [0, 1];
+                """
+            ),
+            [0.5, 0.5, 0.5, 0.5],
+        ),
+        (
+            parse_xir_script(
+                """
+                gate Flip[coin]:
+                    X | [coin];
+                end;
+
+                gate Stay[coin]:
+                    Flip | [coin];
+                    Flip | [coin];
+                end;
+
+                gate FlipStay[0, 1]:
+                    Flip | [0];
+                    Stay | [1];
+                end;
+
+                FlipStay | [0, 1];
+
+                amplitude(state: 0) | [0, 1];
+                amplitude(state: 1) | [0, 1];
+                amplitude(state: 2) | [0, 1];
+                amplitude(state: 3) | [0, 1];
+                """
+            ),
+            [0, 0, 1, 0],
+        ),
+        (
+            parse_xir_script(
+                """
+                gate RY3 (a, b, c) [0, 1, 2]:
+                    RY(a) | [0];
+                    RY(b) | [1];
+                    RY(c) | [2];
+                end;
+
+                gate RX3 (a, b, c) [0, 1, 2]:
+                    RY3(a: b, b: c, c: a) | [0, 1, 2];
+                end;
+
+                RX3(a: 0, b: 3.141592653589793, c: 3.141592653589793) | [0, 1, 2];
+
+                amplitude(state: 0) | [0, 1, 2];
+                amplitude(state: 1) | [0, 1, 2];
+                amplitude(state: 2) | [0, 1, 2];
+                amplitude(state: 3) | [0, 1, 2];
+                amplitude(state: 4) | [0, 1, 2];
+                amplitude(state: 5) | [0, 1, 2];
+                amplitude(state: 6) | [0, 1, 2];
+                amplitude(state: 7) | [0, 1, 2];
+                """
+            ),
+            [0, 0, 0, 0, 0, 0, 1, 0],
+        ),
+    ],
+)
+def test_run_xir_program_with_valid_gate_definitions(program, want_result):
+    """Tests that running an XIR program with gate definitionsgives the correct result."""
+    assert jet.run_xir_program(program) == pytest.approx(want_result)
+
+
+@pytest.mark.parametrize(
+    "program, match",
+    [
+        (
+            parse_xir_script(
+                """
+                gate Circle[0]:
+                    Circle | [0];
+                end;
+
+                Circle | [0];
+                """
+            ),
+            r"Gate 'Circle' has a circular dependency\.",
+        ),
+        (
+            parse_xir_script(
+                """
+                gate Day[0]:
+                    Dawn | [0];
+                end;
+
+                gate Dawn[0]:
+                    Dusk | [0];
+                end;
+
+                gate Dusk[0]:
+                    Dawn | [0];
+                end;
+
+                Day | [0];
+                """
+            ),
+            r"Gate 'Dawn' has a circular dependency\.",
+        ),
+        (
+            parse_xir_script(
+                """
+                gate Incomplete[0]:
+                    Missing | [0];
+                end;
+
+                Incomplete | [0];
+                """
+            ),
+            r"Statement 'Missing \| \[0\]' applies a gate which has not been defined\.",
+        ),
+        (
+            parse_xir_script(
+                """
+                gate Negate [0]:
+                    X | [0];
+                end;
+
+                Negate(0) | [0];
+                """
+            ),
+            r"Statement 'Negate\(0\) \| \[0\]' has the wrong number of parameters\.",
+        ),
+        (
+            parse_xir_script(
+                """
+                gate Spin(theta) [0]:
+                    Rot(theta, theta, theta) | [0];
+                end;
+
+                Spin(phi: pi) | [0];
+                """
+            ),
+            r"Statement 'Spin\(phi: PI\) \| \[0\]' has an invalid set of parameters\.",
+        ),
+        (
+            parse_xir_script(
+                """
+                gate Permute [0, 1]:
+                    SWAP | [0, 1];
+                end;
+
+                Permute | [0];
+                """
+            ),
+            r"Statement 'Permute \| \[0\]' has the wrong number of wires\.",
+        ),
+    ],
+)
+def test_run_xir_program_with_invalid_gate_definitions(program, match):
+    """Tests that a ValueError is raised when an XIR program contains an
+    invalid gate definition.
+    """
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
 def test_run_xir_program_with_unsupported_statement():
     """Tests that a ValueError is raised when an XIR program contains an
     unsupported statement.
