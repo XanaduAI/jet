@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* The Jet interpreter for XIR scripts now handles gate definitions. [(#36)](https://github.com/XanaduAI/jet/pull/36)
+
 * An `XIRProgram` which declares the gates supported by Jet is now bundled with the `jet` Python package. [(#34)](https://github.com/XanaduAI/jet/pull/34)
 
 * The `jet` Python package now includes an interpreter for XIR programs. [(#24)](https://github.com/XanaduAI/jet/pull/24)
