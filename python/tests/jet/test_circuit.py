@@ -62,7 +62,7 @@ class TestCircuit:
 
     def test_append_one_wire_gate(self, circuit):
         """Tests that a gate which transforms one wire can be appended to the circuit."""
-        gate = jet.Hadamard()
+        gate = jet.GateRegistry.create("H")
         circuit.append_gate(gate, wire_ids=[3])
         assert gate.indices == ["3-1", "3-0"]
         assert list(circuit.parts)[-1] == gate
@@ -75,7 +75,7 @@ class TestCircuit:
 
     def test_append_two_wire_gate(self, circuit):
         """Tests that a gate which transforms two wires can be appended to the circuit."""
-        gate = jet.CNOT()
+        gate = jet.GateRegistry.create("CNOT")
         circuit.append_gate(gate, wire_ids=[2, 3])
         assert gate.indices == ["2-1", "3-1", "2-0", "3-0"]
         assert list(circuit.parts)[-1] == gate
@@ -114,7 +114,7 @@ class TestCircuit:
 
     def test_indices(self, circuit):
         """Tests that the correct index labels are derived for a sequence of wires."""
-        gate = jet.Hadamard()
+        gate = jet.GateRegistry.create("H")
         circuit.append_gate(gate, wire_ids=[0])
         assert circuit.indices([0]) == ["0-1"]
         assert circuit.indices([1, 2, 3]) == ["1-0", "2-0", "3-0"]
@@ -137,8 +137,8 @@ class TestCircuit:
         converted into a tensor network.
         """
         circuit = jet.Circuit(num_wires=2)
-        circuit.append_gate(jet.Hadamard(), wire_ids=[0])
-        circuit.append_gate(jet.CNOT(), wire_ids=[0, 1])
+        circuit.append_gate(jet.GateRegistry.create("H"), wire_ids=[0])
+        circuit.append_gate(jet.GateRegistry.create("CNOT"), wire_ids=[0, 1])
 
         tn = circuit.tensor_network()
         tensor = tn.contract()
@@ -161,8 +161,8 @@ class TestCircuit:
         converted into a tensor network.
         """
         circuit = jet.Circuit(num_wires=2)
-        circuit.append_gate(jet.Hadamard(), wire_ids=[0])
-        circuit.append_gate(jet.CNOT(), wire_ids=[0, 1])
+        circuit.append_gate(jet.GateRegistry.create("H"), wire_ids=[0])
+        circuit.append_gate(jet.GateRegistry.create("CNOT"), wire_ids=[0, 1])
         circuit.append_state(state, wire_ids=[0, 1])
         have_amplitude = circuit.tensor_network().contract().scalar
         assert have_amplitude == want_amplitude
