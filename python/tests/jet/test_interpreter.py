@@ -88,7 +88,7 @@ class TestGetXIRLibrary:
 
     def test_real_registry(self):
         """Tests that the correct XIRProgram is returned for the real gate registry."""
-        assert jet.get_xir_program().serialize() == cleandoc(
+        assert jet.get_xir_library().serialize() == cleandoc(
             """
             gate BS, 3, 2;
             gate Beamsplitter, 3, 2;
