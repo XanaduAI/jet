@@ -4,7 +4,7 @@
 #############################
 cmake_minimum_required(VERSION 3.14)
 
-project("Jet TBCC Benchmark"
+project("Jet m=10 CPU Benchmark"
     VERSION 0.1.0
     DESCRIPTION "Jet project CPU benchmarks"
     LANGUAGES CXX
