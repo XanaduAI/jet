@@ -12,12 +12,12 @@ from .gate import GateFactory
 from .state import Qudit
 
 __all__ = [
-    "get_xir_program",
+    "get_xir_library",
     "run_xir_program",
 ]
 
 
-def get_xir_program() -> XIRProgram:
+def get_xir_library() -> XIRProgram:
     """Returns an XIRProgram containing the gate declarations supported by Jet."""
     lines = []
 

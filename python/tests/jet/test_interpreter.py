@@ -13,7 +13,7 @@ def parse_xir_script(script: str) -> xir.XIRProgram:
     return xir.XIRTransformer().transform(tree)
 
 
-class TestGetXIRProgram:
+class TestGetXIRLibrary:
     @pytest.mark.parametrize(
         "registry, want_xir_script",
         [
@@ -83,12 +83,12 @@ class TestGetXIRProgram:
     def test_fake_registry(self, monkeypatch, registry, want_xir_script):
         """Tests that the correct XIRProgram is returned for the fake gate registry."""
         monkeypatch.setattr("jet.GateFactory.registry", registry)
-        have_xir_script = jet.get_xir_program().serialize()
+        have_xir_script = jet.get_xir_library().serialize()
         assert have_xir_script == want_xir_script
 
     def test_real_registry(self):
         """Tests that the correct XIRProgram is returned for the real gate registry."""
-        assert jet.get_xir_program().serialize() == cleandoc(
+        assert jet.get_xir_library().serialize() == cleandoc(
             """
             gate beamsplitter, 3, 2;
             gate bs, 3, 2;
