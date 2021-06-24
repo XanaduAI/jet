@@ -15,6 +15,8 @@ To run the same comparison for the full network with Cotengra, we fix the path (
 For the slicing example, there is no native concurrent execution built into Cotengra for multiple slices, and so we avoid setting up instances to exploit this, instead providing simulations with native behaviour only.
 
 # JET $$m=12$$ single network slice
-Given the $$m=12$$ Sycamore circuit requires significantly more RAM than a consumer workstation, we instead opt to slice 9 nodes of the network, partitioning it into 512 slices. For this example, we showcase the contract of a single slice, and extrapolate the time required for the full network taking account of all slices.
+The examples in `jet_cpu_m12` and the associated SLURM submission scripts for Niagara were used to collect data for the much larger $$m=12$$ circuit. Given that the $$m=12$$ circuit requires significantly more RAM than a consumer workstation, we instead opt to slice 9 nodes of the network, partitioning it into 512 slices. For this example, we showcase the contraction of a single slice (`jet_sliced_single.cpp`), and extrapolate the time required for the full network taking account of all slices.
 
-Next, by running a sample of 10 such slices, we can get an estimation of how much benefit our shared-work model provides over the default contractions.
+Next, by running a sample of 10 such slices, we can get an estimation of how much benefit our shared-work model provides over the default contractions (`jet_sliced_subset.cpp`).
+
+Finally, for brevity, we include an example to contract all 512 slices of the network (`jet_sliced_all.cpp`).
