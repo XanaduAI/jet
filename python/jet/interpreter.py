@@ -31,7 +31,7 @@ def get_xir_library() -> XIRProgram:
     for name, cls in sorted(GateFactory.registry.items()):
         # Instantiating the Gate subclass (with placeholder parameters) is an
         # easy way to access properties such as the number of wires a Gate can
-        # be applied to. The -1 below is a consequence of the fact that the
+        # be applied to. The [1:] below is a consequence of the fact that the
         # first __init__ parameter, ``self``, is not explicitly passed.
         params = list(signature(cls.__init__).parameters)[1:]
         gate = cls(*[None for _ in params])
