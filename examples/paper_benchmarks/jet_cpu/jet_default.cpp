@@ -18,11 +18,13 @@ int main(int argc, char **argv)
     using namespace std::chrono;
 
     std::string file_name = "";
-    if (argc > 1) {
+    size_t num_threads = 1;
+    if (argc > 2) {
         file_name = argv[1];
+        num_threads = std::atoi(argv[2]);
     }
     else {
-        std::cerr << "Please specify a JSON file to contract" << std::endl;
+        std::cerr << "Please specify a JSON file to contract and number of taskflow threads" << std::endl;
         exit(1);
     }
     TensorNetworkFile<Tensor<c_fp32>> tensor_file;
@@ -45,7 +47,7 @@ int main(int argc, char **argv)
         tensor_file.path.value(); // std::optional requires value()
 
     // Create contractor and add TN and path data
-    TaskBasedCpuContractor<Tensor<c_fp32>> tbcc;
+    TaskBasedCpuContractor<Tensor<c_fp32>> tbcc(num_threads);
     tbcc.AddContractionTasks(tn, path);
 
     // Time the contraction operation
