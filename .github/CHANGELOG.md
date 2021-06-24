@@ -42,6 +42,8 @@
 
 ### Breaking Changes
 
+* The Jet interpreter for XIR scripts is now case-sensitive with respect to gate names. [(#36)](https://github.com/XanaduAI/jet/pull/36)
+
 * Python bindings for `complex<float>` and `complex<double>` specializations are now suffixed with `C64` and `C128`, respectively. [(#15)](https://github.com/XanaduAI/jet/pull/15)
 
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)

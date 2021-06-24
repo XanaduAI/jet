@@ -24,56 +24,56 @@ class TestGetXIRLibrary:
             ),
             pytest.param(
                 {
-                    "x": jet.PauliX,
-                    "y": jet.PauliY,
-                    "z": jet.PauliZ,
+                    "X": jet.PauliX,
+                    "Y": jet.PauliY,
+                    "Z": jet.PauliZ,
                 },
                 cleandoc(
                     """
-                    gate x, 0, 1;
-                    gate y, 0, 1;
-                    gate z, 0, 1;
+                    gate X, 0, 1;
+                    gate Y, 0, 1;
+                    gate Z, 0, 1;
                     """
                 ),
                 id="Ordering",
             ),
             pytest.param(
                 {
-                    "u1": jet.U1,
-                    "u2": jet.U2,
-                    "u3": jet.U3,
+                    "U1": jet.U1,
+                    "U2": jet.U2,
+                    "U3": jet.U3,
                 },
                 cleandoc(
                     """
-                    gate u1, 1, 1;
-                    gate u2, 2, 1;
-                    gate u3, 3, 1;
+                    gate U1, 1, 1;
+                    gate U2, 2, 1;
+                    gate U3, 3, 1;
                     """
                 ),
                 id="Parameters",
             ),
             pytest.param(
                 {
-                    "swap": jet.SWAP,
-                    "cswap": jet.CSWAP,
+                    "SWAP": jet.SWAP,
+                    "CSWAP": jet.CSWAP,
                 },
                 cleandoc(
                     """
-                    gate cswap, 0, 3;
-                    gate swap, 0, 2;
+                    gate CSWAP, 0, 3;
+                    gate SWAP, 0, 2;
                     """
                 ),
                 id="Wires",
             ),
             pytest.param(
                 {
-                    "h": jet.Hadamard,
-                    "hadamard": jet.Hadamard,
+                    "H": jet.Hadamard,
+                    "Hadamard": jet.Hadamard,
                 },
                 cleandoc(
                     """
-                    gate h, 0, 1;
-                    gate hadamard, 0, 1;
+                    gate H, 0, 1;
+                    gate Hadamard, 0, 1;
                     """
                 ),
                 id="Duplicate",
@@ -90,6 +90,45 @@ class TestGetXIRLibrary:
         """Tests that the correct XIRProgram is returned for the real gate registry."""
         assert jet.get_xir_library().serialize() == cleandoc(
             """
+            gate BS, 3, 2;
+            gate Beamsplitter, 3, 2;
+            gate CNOT, 0, 2;
+            gate CPhaseShift, 1, 2;
+            gate CRX, 1, 2;
+            gate CRY, 1, 2;
+            gate CRZ, 1, 2;
+            gate CRot, 3, 2;
+            gate CSWAP, 0, 3;
+            gate CX, 0, 2;
+            gate CY, 0, 2;
+            gate CZ, 0, 2;
+            gate D, 3, 1;
+            gate Displacement, 3, 1;
+            gate H, 0, 1;
+            gate Hadamard, 0, 1;
+            gate ISWAP, 0, 2;
+            gate NOT, 0, 1;
+            gate PauliX, 0, 1;
+            gate PauliY, 0, 1;
+            gate PauliZ, 0, 1;
+            gate PhaseShift, 1, 1;
+            gate RX, 1, 1;
+            gate RY, 1, 1;
+            gate RZ, 1, 1;
+            gate Rot, 3, 1;
+            gate S, 0, 1;
+            gate SWAP, 0, 2;
+            gate SX, 0, 1;
+            gate Squeezing, 3, 1;
+            gate T, 0, 1;
+            gate Toffoli, 0, 3;
+            gate TwoModeSqueezing, 3, 2;
+            gate U1, 1, 1;
+            gate U2, 2, 1;
+            gate U3, 3, 1;
+            gate X, 0, 1;
+            gate Y, 0, 1;
+            gate Z, 0, 1;
             gate beamsplitter, 3, 2;
             gate bs, 3, 2;
             gate cnot, 0, 2;
