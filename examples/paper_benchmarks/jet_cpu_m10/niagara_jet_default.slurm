@@ -2,7 +2,7 @@
 #SBATCH --nodes=1
 #SBATCH --time=24:00:00
 #SBATCH --job-name=jet_m10_full
-#SBATCH --tasks-per-node=80
+#SBATCH --ntasks-per-node=80
 
 cd $SLURM_SUBMIT_DIR
 
