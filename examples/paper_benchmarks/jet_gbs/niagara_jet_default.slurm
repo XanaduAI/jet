@@ -37,5 +37,5 @@ do
     dat_line=$(echo $i | sed "s/omp//" | sed "s/pthread//" | sed "s/.out//" | awk '{split($0,a,"_"); print a[2]","a[3]};' | tr -s '\n' ',');
     dat_line+=$(cat $i | grep "t=[0-9]" | tr '\n' ',' | sed "s/t\=//g" | sed "s/s//g" | sed 's/.$//');
     dat_line+=$(echo "");
-    echo $dat_line >> jet_sliced_data.csv
+    echo $dat_line >> jet_full_data.csv
 done
