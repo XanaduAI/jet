@@ -33,6 +33,7 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
 
         const size_t num_indices = old_indices.size();
         const size_t total_dim = data_.size();
+        size_t remaining_data = total_dim;
 
         if (num_indices == 0)
             JET_ABORT("Number of indices cannot be zero.");
@@ -119,14 +120,15 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
                 if (complete)
                     break;
             }
-
             // Copy data for this block, taking into account offset of
             // small_map...
-            effective_max = std::min(blocksize_, total_dim);
-            for (size_t p = 0; p < effective_max; ++p)
+            effective_max = std::min(blocksize_, remaining_data);
+            for (size_t p = 0; p < effective_max; ++p){
                 data[small_map_old_to_new_position[p]] = scratch[offset + p];
+            }
 
             offset += blocksize_;
+            remaining_data -= blocksize_;
         }
     }
 
