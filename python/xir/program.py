@@ -305,9 +305,10 @@ class XIRProgram:
         if len(self._include) != 0:
             res.append("")
 
-        res.extend([f"{k}: {v}" for k, v in self.options.items()])
-        if len(self.options) != 0:
-            res.append("")
+        if len(self.options) > 0:
+            res.append("options:")
+            res.extend([f"    {k}: {v};" for k, v in self.options.items()])
+            res.append("end;\n")
 
         res.extend([f"gate {dec};" for dec in self._declarations["gate"]])
         res.extend([f"func {dec};" for dec in self._declarations["func"]])

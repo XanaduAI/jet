@@ -61,6 +61,11 @@ class XIRTransformer(Transformer):
         # assert all stmts are handled
         assert all(a == None for a in args)
 
+    def script_options(self, args):
+        """Script level options."""
+        for a in args:
+            self._program._options[a[0]] = a[1]
+
     ###############
     # basic types
     ###############
@@ -149,10 +154,7 @@ class XIRTransformer(Transformer):
     def statement(self, args):
         """Any statement that is part of the circuit."""
         if args[0] is not None:
-            if isinstance(args[0], tuple):
-                self._program._options[args[0][0]] = args[0][1]
-            else:
-                self._program._statements.append(args[0])
+            self._program._statements.append(args[0])
 
     def gatestmt(self, args):
         """Gate statements that are defined directly in the circuit or inside

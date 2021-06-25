@@ -47,7 +47,7 @@ class TestParser:
     )
     def test_options(self, key, val):
         """Test script-level options"""
-        irprog = parse_script(f"{key}: {val}")
+        irprog = parse_script(f"options:\n    {key}: {val};\nend;")
 
         assert key in irprog.options
         assert irprog.options[key] == val
@@ -63,8 +63,7 @@ class TestParser:
     def test_options_lists(self, key, val):
         """Test script-level options"""
         val_str = "[" + ", ".join(str(v) for v in val) + "]"
-        print(val_str)
-        irprog = parse_script(f"{key}: {val_str}")
+        irprog = parse_script(f"options:\n    {key}: {val_str};\nend;")
 
         assert key in irprog.options
         assert irprog.options[key] == val
