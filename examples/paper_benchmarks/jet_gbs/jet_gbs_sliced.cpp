@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
     auto path = tensor_file.path.value().GetPath();
 
     // Comment on why these indices required
-    std::vector<std::string> possible_sliced_indices = {
-        "p7", "s7", "h4", "m1", "m2", "I2", "V4", "z2", "t4", "C1"};
+    std::vector<std::string> possible_sliced_indices =
+        {"m", "w0", "I", "a0", "g0", "G", "Y", "y0", "j", "q0"};
 
     // since these are qubits, each sliced index correspond so two slices
     size_t slice_size = 2;
@@ -91,5 +91,5 @@ int main(int argc, char *argv[])
 
     std::cout << "t=" << duration << "s" << std::endl;
     std::cout << "result="
-              << contractor.GetReductionResult()[0] << std::endl;
+              << contractor.GetReductionResult() << std::endl;
 }
