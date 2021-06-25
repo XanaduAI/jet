@@ -50,6 +50,8 @@
 
 ### Bug Fixes
 
+* The Jet and XIR Python packages can now be installed from a source distribution. [(#38)](https://github.com/XanaduAI/jet/pull/38)
+
 * The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
 * The documentation build no longer emits any Doxygen warnings. [(#25)](https://github.com/XanaduAI/jet/pull/25)
