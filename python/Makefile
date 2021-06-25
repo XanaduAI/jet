@@ -10,7 +10,7 @@ TARGETS
 
   setup [python=<path>]       Set up virtualenv using the Python interpreter at <path>, defaults to $(python)
 
-  build                       Create source distribution and wheel
+  dist                        Build wheel and source distributions
 
   format [check=1]            Apply formatters; use with 'check=1' to check instead of modify
 
@@ -41,29 +41,29 @@ else
 endif
 
 
-.PHONY: build
-build: $(.VENV_DIR)/requirements.txt.touch
-	/bin/sh -c '. $(.VENV_BIN)/activate && python3 -m build'
+.PHONY: dist
+dist: $(.VENV_DIR)/requirements.txt.touch
+	/bin/sh -c '. $(.VENV_BIN)/activate && cd .. && python setup.py -q sdist bdist_wheel'
 	@# Delete the .egg-info artifact to prevent pip from assuming the package was installed.
 	@# See https://github.com/pypa/pip/issues/6558 for more details.
 	rm -rf quantum_jet.egg-info
 
 
 .PHONY: test
-test: build
-	$(.VENV_BIN)/pip install $(wildcard dist/*.whl) --upgrade
+test: dist
+	$(.VENV_BIN)/pip install -q $(wildcard ../dist/*.whl) --upgrade
 	@# The -I flag ensures the installed `jet` package is imported instead of the local one.
 	$(.VENV_BIN)/python -I -m pytest ./tests $(args)
 
 
 .PHONY: clean
 clean:
-	rm -rf $(.VENV_DIR) build dist
+	rm -rf $(.VENV_DIR) quantum_jet.egg-info
+	rm -rf ../.pytest_cache ../dist ../build/bdist.* ../build/lib.* ../build/temp.*
 
 
 $(.VENV_DIR)/requirements.txt.touch: $(.VENV_DIR)/touch requirements.txt
-	$(.VENV_DIR)/bin/pip install wheel
-	$(.VENV_DIR)/bin/pip install -r requirements.txt
+	$(.VENV_DIR)/bin/pip install -q -r requirements.txt
 	@touch $@
 
 
