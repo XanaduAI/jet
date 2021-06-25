@@ -98,6 +98,6 @@ int main(int argc, char *argv[])
     auto duration = duration_cast<std::chrono::duration<float>>(t2 - t1).count();
 
     std::cout << "t=" << duration << "s" << std::endl;
-    auto res = contractor.GetResults()[0].GetHostDataVector();
+    auto res = contractor.GetReductionResult().GetHostDataVector();
     std::cout << "result=" << res[0] << "" << std::endl;
 }
