@@ -38,11 +38,11 @@ int main(int argc, char *argv[])
     TensorNetworkFile<Tensor> tensor_file;
     try {
         std::ifstream tn_data(file_name);
-        std::string m10_str{std::istreambuf_iterator<char>(tn_data),
+        std::string m12_str{std::istreambuf_iterator<char>(tn_data),
                             std::istreambuf_iterator<char>()};
         // Load data into TensorNetwork and PathInfo objects
         Jet::TensorNetworkSerializer<Tensor> serializer;
-        tensor_file = serializer(m10_str);
+        tensor_file = serializer(m12_str);
     }
     catch (...) {
         std::cerr << "Please specify a valid JSON file to contract"
