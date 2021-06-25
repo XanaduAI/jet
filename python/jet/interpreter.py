@@ -1,15 +1,40 @@
 from copy import deepcopy
+from inspect import signature
 from typing import List, Union
 
 import numpy as np
 
-from xir import XIRProgram
+from xir import XIRProgram, XIRTransformer, xir_parser
 
 from .circuit import Circuit
 from .gate import GateFactory
 from .state import Qudit
 
-__all__ = ["run_xir_program"]
+__all__ = [
+    "get_xir_library",
+    "run_xir_program",
+]
+
+
+def get_xir_library() -> XIRProgram:
+    """Returns an XIRProgram containing the gate declarations supported by Jet."""
+    lines = []
+
+    for key, cls in sorted(GateFactory.registry.items()):
+        # Instantiating the Gate subclass (with placeholder parameters) is an
+        # easy way to access properties such as the number of wires a Gate can
+        # be applied to. The -1 below is a consequence of the fact that the
+        # first __init__ parameter, ``self``, is not explicitly passed.
+        num_params = len(signature(cls.__init__).parameters) - 1
+        gate = GateFactory.create(key, *[None for _ in range(num_params)])
+
+        line = f"gate {key}, {num_params}, {gate.num_wires};"
+        lines.append(line)
+
+    script = "\n".join(lines)
+
+    # TODO: Replace the following line with a call to xir.parse_script() when #30 is merged.
+    return XIRTransformer().transform(xir_parser.parse(script))
 
 
 def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
