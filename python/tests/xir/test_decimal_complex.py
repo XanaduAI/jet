@@ -173,7 +173,8 @@ class TestDecimalComplex:
         with pytest.raises(TypeError, match=match):
             term >= c
 
-    @pytest.mark.parametrize("t, match",
+    @pytest.mark.parametrize(
+        "t, match",
         [
             (set, r"object is not iterable"),
             (list, r"object is not iterable"),
@@ -186,7 +187,7 @@ class TestDecimalComplex:
             (bytearray, r"cannot convert 'DecimalComplex' object to bytearray"),
             (int, r"argument must be a string, a bytes-like object or a number"),
             (memoryview, r"a bytes-like object is required"),
-        ]
+        ],
     )
     def test_invalid_typecasts(self, t, match):
         """Test casting a DecimalComplex to unsupported types"""
