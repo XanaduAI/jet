@@ -91,5 +91,5 @@ int main(int argc, char *argv[])
 
     std::cout << "t=" << duration << "s" << std::endl;
     std::cout << "result="
-              << contractor.GetReductionResult()[0] << std::endl;
+              << contractor.GetReductionResult() << std::endl;
 }
