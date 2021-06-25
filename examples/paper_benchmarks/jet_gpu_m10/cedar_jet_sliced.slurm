@@ -4,16 +4,16 @@
 #SBATCH --exclusive
 #SBATCH --ntasks-per-node=32
 #SBATCH --mem=125G
-#SBATCH --time=1:00:00
+#SBATCH --time=0:30:00
 
 ## It is essential to have CuTensor >= v1.3.0 available 
 ## on the system you wish to run this job. Setting the library at a custom modulefile 
 ## location allows this to be accessed as needed.
 
-module use <Path to CuTensor module>
+module use /home/mlxd/project/custom_modules
 module load intel cmake cuda/11.1.1 cutensor/1.3.1
 
-cd /home/mlxd/scratch/Paper/jet_cuda_shared
+cd $SLURM_SUBMIT_DIR
 
 export num_runs=10
 export max_slices=4
@@ -24,14 +24,14 @@ export OMP_DYNAMIC=false
 export OMP_SCHEDULE=static 
 
 # Warm-up to cache library loads; seems needed
-OMP_NUM_THREADS=1 ./jet_cuda_sliced ./m10_slowdown.json 1 > /dev/null
+OMP_NUM_THREADS=1 ./jet_cuda_sliced ../data_files/m10.json 1 > /dev/null
 
-for sl in `seq 1 {max_slices}`;do
+for sl in `seq 1 ${max_slices}`;do
 for p in 1 2 4 8 16; do
 for th in 1; do
 for i in $(seq 1 $num_runs); do
     echo "### RUN=${i} ###" >> jet_cuda_sliced_omp${th}_pthread${p}_slice${sl}.out;
-    OMP_NUM_THREADS=${th} ./jet_cuda_sliced ./m10_slowdown.json ${p} ${sl} >> jet_cuda_full_omp${th}_pthread${p}_slice{sl}.out
+    OMP_NUM_THREADS=${th} ./jet_cuda_sliced ../data_files/m10.json ${p} ${sl} >> jet_cuda_full_omp${th}_pthread${p}_slice{sl}.out
 done
 done
 done
