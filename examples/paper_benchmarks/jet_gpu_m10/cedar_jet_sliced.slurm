@@ -13,7 +13,7 @@
 module use <Path to CuTensor module>
 module load intel cmake cuda/11.1.1 cutensor/1.3.1
 
-cd /home/mlxd/scratch/Paper/jet_cuda_shared
+cd $SLURM_SUBMIT_DIR
 
 export num_runs=10
 export max_slices=4
