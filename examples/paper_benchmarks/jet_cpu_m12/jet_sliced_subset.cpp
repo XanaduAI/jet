@@ -102,5 +102,5 @@ int main(int argc, char *argv[])
         duration_cast<std::chrono::duration<float>>(t2 - t1).count();
 
     std::cout << "t=" << duration << "s" << std::endl;
-    std::cout << "result=" << contractor.GetReductionResult()[0] << std::endl;
+    std::cout << "result=" << contractor.GetReductionResult() << std::endl;
 }

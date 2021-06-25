@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
     std::cout << "t=" << duration << "s" << std::endl;
     auto res = tbc.GetResults()[0].GetHostDataVector();
-    std::cout << "result=" << res[0] << "" << std::endl;
+    std::cout << "result=" << res << "" << std::endl;
 
     return 0;
 }
