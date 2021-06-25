@@ -134,12 +134,6 @@ class DecimalComplex(Complex):
     def __le__(self, _: Union[Decimal, Complex]):
         self._not_implemented("<=")
 
-    def __int__(self) -> int:
-        raise TypeError("Cannot convert DecimalComplex to int")
-
-    def __float__(self) -> float:
-        raise TypeError("Cannot convert DecimalComplex to float")
-
     def __bool__(self) -> bool:
         return self.real != 0 or self.imag != 0
 

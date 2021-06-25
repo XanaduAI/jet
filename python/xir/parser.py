@@ -255,7 +255,11 @@ class XIRTransformer(Transformer):
 
     def div(self, args):
         if all(isinstance(a, (int, Decimal, DecimalComplex)) for a in args):
-            return Decimal(args[0]) / args[1]
+            # if numerator and denominator are ints, then cast numerator to
+            # Decimal so that no floats are being returned
+            if all(isinstance(a, int) for a in args):
+                return Decimal(args[0]) / args[1]
+            return args[0] / args[1]
         return " / ".join([str(i) for i in args])
 
     def neg(self, args):

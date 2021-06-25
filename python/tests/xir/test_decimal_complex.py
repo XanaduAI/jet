@@ -24,8 +24,7 @@ class TestDecimalComplex:
     def test_addition(self, lhs, rhs, expected):
         """Test the addition operator"""
         result = lhs + rhs
-        assert result.real == expected.real
-        assert result.imag == expected.imag
+        assert result == expected
 
     @pytest.mark.parametrize(
         "lhs, rhs, expected",
@@ -41,8 +40,7 @@ class TestDecimalComplex:
     def test_subtraction(self, lhs, rhs, expected):
         """Test the subtraction operator"""
         result = lhs - rhs
-        assert result.real == expected.real
-        assert result.imag == expected.imag
+        assert result == expected
 
     @pytest.mark.parametrize(
         "lhs, rhs, expected",
@@ -62,8 +60,7 @@ class TestDecimalComplex:
     def test_multiplication(self, lhs, rhs, expected):
         """Test the multiplication operator"""
         result = lhs * rhs
-        assert result.real == expected.real
-        assert result.imag == expected.imag
+        assert result == expected
 
     @pytest.mark.parametrize(
         "lhs, rhs, expected",
@@ -110,8 +107,7 @@ class TestDecimalComplex:
     def test_negate(self, c, expected):
         """Test negating a DecimalComplex object"""
         result = -c
-        assert result.real == expected.real
-        assert result.imag == expected.imag
+        assert result == expected
 
     @pytest.mark.parametrize(
         "c, po, expected",
@@ -177,21 +173,27 @@ class TestDecimalComplex:
         with pytest.raises(TypeError, match=match):
             term >= c
 
-    def test_cast_to_int(self):
-        """Test casting a DecimalComplex object to int"""
+    @pytest.mark.parametrize("t, match",
+        [
+            (set, r"object is not iterable"),
+            (list, r"object is not iterable"),
+            (dict, r"object is not iterable"),
+            (tuple, r"object is not iterable"),
+            (frozenset, r"object is not iterable"),
+            (float, r"argument must be a string or a number"),
+            (range, r"object cannot be interpreted as an integer"),
+            (bytes, r"cannot convert 'DecimalComplex' object to bytes"),
+            (bytearray, r"cannot convert 'DecimalComplex' object to bytearray"),
+            (int, r"argument must be a string, a bytes-like object or a number"),
+            (memoryview, r"a bytes-like object is required"),
+        ]
+    )
+    def test_invalid_typecasts(self, t, match):
+        """Test casting a DecimalComplex to unsupported types"""
         c = DecimalComplex("2", "3")
 
-        match = r"Cannot convert DecimalComplex to int"
         with pytest.raises(TypeError, match=match):
-            int(c)
-
-    def test_cast_to_float(self):
-        """Test casting a DecimalComplex object to float"""
-        c = DecimalComplex("2", "3")
-
-        match = r"Cannot convert DecimalComplex to float"
-        with pytest.raises(TypeError, match=match):
-            float(c)
+            t(c)
 
     @pytest.mark.parametrize(
         "c, expected",
