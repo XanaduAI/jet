@@ -107,10 +107,7 @@ class DecimalComplex(Complex):
         return not self.__eq__(c)
 
     def __str__(self) -> str:
-        if self.imag >= 0:
-            return f"{self.real}+{self.imag}j"
-        else:
-            return f"{self.real}{self.imag}j"
+        return f"{self.real}{self.imag:+}j"
 
     def __repr__(self):
         return f"DecimalComplex('{self.__str__()}')"

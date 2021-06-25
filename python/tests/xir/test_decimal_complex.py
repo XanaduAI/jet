@@ -236,7 +236,7 @@ class TestDecimalComplex:
         """Test the ``_convert_type`` method with invalid arguments"""
         match = r"Must be of type numbers.Complex."
         with pytest.raises(TypeError, match=match):
-            _ = convert_input(lambda _, c: c)(None, n)
+            convert_input(lambda _, c: c)(None, n)
 
     @pytest.mark.parametrize("re, im", [("1", "2"), ("0.2", "0.4")])
     def test_real_and_imag(self, re, im):
