@@ -24,14 +24,12 @@ __all__ = [
     "Beamsplitter",
     # Qubit gates
     "Hadamard",
-    "NOT",
     "PauliX",
     "PauliY",
     "PauliZ",
     "S",
     "T",
     "SX",
-    "CNOT",
     "CX",
     "CY",
     "CZ",
@@ -171,21 +169,20 @@ class GateFactory:
         """Constructs a gate by name.
 
         Raises:
-            KeyError if there is no entry for the given name in the registry.
+            KeyError: If there is no entry for the given name in the registry.
 
         Args:
-            name (str): registered name of the desired gate.
+            name (str): Registered name of the desired gate.
             params (float): Parameters to pass to the gate constructor.
             kwargs: Keyword arguments to pass to the gate constructor.
 
         Returns:
             The constructed gate.
         """
-        key = name.lower()
-        if key not in GateFactory.registry:
-            raise KeyError(f"The key '{key}' does not exist in the gate registry.")
+        if name not in GateFactory.registry:
+            raise KeyError(f"The name '{name}' does not exist in the gate registry.")
 
-        subclass = GateFactory.registry[key]
+        subclass = GateFactory.registry[name]
         return subclass(*params, **kwargs)
 
     @staticmethod
@@ -193,28 +190,35 @@ class GateFactory:
         """Registers a set of names with a class type.
 
         Raises:
-            ValueError if the provided class does not inherit from Gate.
-
-            KeyError if a name has already been registered to another class.
+            ValueError: If the provided class does not inherit from Gate.
+            KeyError: If a name is already registered to another class.
         """
 
         def wrapper(subclass: type) -> type:
             if not issubclass(subclass, Gate):
-                raise ValueError(f"The type '{subclass.__name__}' is not a subclass of Gate")
+                raise ValueError(f"The type '{subclass.__name__}' is not a subclass of Gate.")
 
             # Let the caller specify duplicate keys if they wish.
-            keys = set(name.lower() for name in names)
-
-            conflicts = keys & set(GateFactory.registry)
+            conflicts = set(names) & set(GateFactory.registry)
             if conflicts:
-                raise KeyError(f"The keys {conflicts} already exist in the gate registry.")
+                raise KeyError(f"The names {conflicts} already exist in the gate registry.")
 
-            for key in keys:
-                GateFactory.registry[key] = subclass
+            for name in set(names):
+                GateFactory.registry[name] = subclass
 
             return subclass
 
         return wrapper
+
+    @staticmethod
+    def unregister(cls: type) -> None:
+        """Unregisters a class type.
+
+        Args:
+            cls (type): Class type to remove from the registry.
+        """
+        for key in {key for key, val in GateFactory.registry.items() if val == cls}:
+            del GateFactory.registry[key]
 
 
 ####################################################################################################
@@ -222,7 +226,7 @@ class GateFactory:
 ####################################################################################################
 
 
-@GateFactory.register(names=["Displacement", "D"])
+@GateFactory.register(names=["Displacement", "displacement", "D", "d"])
 class Displacement(Gate):
     def __init__(self, r: float, phi: float, cutoff: int):
         """Constructs a displacement gate.  See `thewalrus.displacement
@@ -236,12 +240,12 @@ class Displacement(Gate):
         """
         super().__init__(name="Displacement", num_wires=1, params=[r, phi, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return displacement(*self.params)
 
 
-@GateFactory.register(names=["Squeezing"])
+@GateFactory.register(names=["Squeezing", "squeezing"])
 class Squeezing(Gate):
     def __init__(self, r: float, theta: float, cutoff: int):
         """Constructs a squeezing gate.  See `thewalrus.squeezing
@@ -255,12 +259,12 @@ class Squeezing(Gate):
         """
         super().__init__(name="Squeezing", num_wires=1, params=[r, theta, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return squeezing(*self.params)
 
 
-@GateFactory.register(names=["TwoModeSqueezing"])
+@GateFactory.register(names=["TwoModeSqueezing", "twomodesqueezing"])
 class TwoModeSqueezing(Gate):
     def __init__(self, r: float, theta: float, cutoff: int):
         """Constructs a two-mode squeezing gate.  See `thewalrus.two_mode_squeezing
@@ -274,12 +278,19 @@ class TwoModeSqueezing(Gate):
         """
         super().__init__(name="TwoModeSqueezing", num_wires=2, params=[r, theta, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return two_mode_squeezing(*self.params)
 
 
-@GateFactory.register(names=["Beamsplitter", "BS"])
+@GateFactory.register(
+    names=[
+        "Beamsplitter",
+        "beamsplitter",
+        "BS",
+        "bs",
+    ]
+)
 class Beamsplitter(Gate):
     def __init__(self, theta: float, phi: float, cutoff: int):
         """Constructs a beamsplitter gate.  See `thewalrus.beamsplitter
@@ -294,7 +305,7 @@ class Beamsplitter(Gate):
         """
         super().__init__(name="Beamsplitter", num_wires=2, params=[theta, phi, cutoff])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         return beamsplitter(*self.params)
 
@@ -304,92 +315,92 @@ class Beamsplitter(Gate):
 ####################################################################################################
 
 
-@GateFactory.register(names=["Hadamard", "H"])
+@GateFactory.register(names=["Hadamard", "hadamard", "H", "h"])
 class Hadamard(Gate):
     def __init__(self):
         """Constructs a Hadamard gate."""
         super().__init__(name="Hadamard", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         """Hadamard matrix"""
         mat = [[INV_SQRT2, INV_SQRT2], [INV_SQRT2, -INV_SQRT2]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["PauliX", "X", "NOT"])
+@GateFactory.register(names=["PauliX", "paulix", "X", "x", "NOT", "not"])
 class PauliX(Gate):
     def __init__(self):
         """Constructs a Pauli-X gate."""
         super().__init__(name="PauliX", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[0, 1], [1, 0]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["PauliY", "Y"])
+@GateFactory.register(names=["PauliY", "pauliy", "Y", "y"])
 class PauliY(Gate):
     def __init__(self):
         """Constructs a Pauli-Y gate."""
         super().__init__(name="PauliY", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[0, -1j], [1j, 0]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["PauliZ", "Z"])
+@GateFactory.register(names=["PauliZ", "pauliz", "Z", "z"])
 class PauliZ(Gate):
     def __init__(self):
         """Constructs a Pauli-Z gate."""
         super().__init__(name="PauliZ", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0], [0, -1]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["S"])
+@GateFactory.register(names=["S", "s"])
 class S(Gate):
     def __init__(self):
         """Constructs a single-qubit phase gate."""
         super().__init__(name="S", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0], [0, 1j]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["T"])
+@GateFactory.register(names=["T", "t"])
 class T(Gate):
     def __init__(self):
         """Constructs a single-qubit T gate."""
         super().__init__(name="T", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0], [0, exp(0.25j * np.pi)]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["SX"])
+@GateFactory.register(names=["SX", "sx"])
 class SX(Gate):
     def __init__(self):
         """Constructs a single-qubit Square-Root X gate."""
         super().__init__(name="SX", num_wires=1)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["PhaseShift"])
+@GateFactory.register(names=["PhaseShift", "phaseshift"])
 class PhaseShift(Gate):
     def __init__(self, phi: float):
         """Constructs a single-qubit local phase shift gate.
@@ -399,14 +410,14 @@ class PhaseShift(Gate):
         """
         super().__init__(name="PhaseShift", num_wires=1, params=[phi])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi = self.params[0]
         mat = [[1, 0], [0, exp(1j * phi)]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["CPhaseShift"])
+@GateFactory.register(names=["CPhaseShift", "cphaseshift"])
 class CPhaseShift(Gate):
     def __init__(self, phi: float):
         """Constructs a controlled phase shift gate.
@@ -416,80 +427,80 @@ class CPhaseShift(Gate):
         """
         super().__init__(name="CPhaseShift", num_wires=2, params=[phi])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi = self.params[0]
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, exp(1j * phi)]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["CX", "CNOT"])
+@GateFactory.register(names=["CX", "cx", "CNOT", "cnot"])
 class CX(Gate):
     def __init__(self):
         """Constructs a controlled-X gate."""
         super().__init__(name="CX", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["CY"])
+@GateFactory.register(names=["CY", "cy"])
 class CY(Gate):
     def __init__(self):
         """Constructs a controlled-Y gate."""
         super().__init__(name="CY", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j], [0, 0, 1j, 0]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["CZ"])
+@GateFactory.register(names=["CZ", "cz"])
 class CZ(Gate):
     def __init__(self):
         """Constructs a controlled-Z gate."""
         super().__init__(name="CZ", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["SWAP"])
+@GateFactory.register(names=["SWAP", "swap"])
 class SWAP(Gate):
     def __init__(self):
         """Constructs a SWAP gate."""
         super().__init__(name="SWAP", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["ISWAP"])
+@GateFactory.register(names=["ISWAP", "iswap"])
 class ISWAP(Gate):
     def __init__(self):
         """Constructs an ISWAP gate."""
         super().__init__(name="ISWAP", num_wires=2)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["CSWAP"])
+@GateFactory.register(names=["CSWAP", "cswap"])
 class CSWAP(Gate):
     def __init__(self):
         """Constructs a CSWAP gate."""
         super().__init__(name="CSWAP", num_wires=3)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [
             [1, 0, 0, 0, 0, 0, 0, 0],
@@ -504,13 +515,13 @@ class CSWAP(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["Toffoli"])
+@GateFactory.register(names=["Toffoli", "toffoli"])
 class Toffoli(Gate):
     def __init__(self):
         """Constructs a Toffoli gate."""
         super().__init__(name="Toffoli", num_wires=3)
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         mat = [
             [1, 0, 0, 0, 0, 0, 0, 0],
@@ -525,7 +536,7 @@ class Toffoli(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["RX"])
+@GateFactory.register(names=["RX", "rx"])
 class RX(Gate):
     def __init__(self, theta: float):
         """Constructs a single-qubit X rotation gate.
@@ -535,7 +546,7 @@ class RX(Gate):
         """
         super().__init__(name="RX", num_wires=1, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         c = cos(theta / 2)
@@ -545,7 +556,7 @@ class RX(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["RY"])
+@GateFactory.register(names=["RY", "ry"])
 class RY(Gate):
     def __init__(self, theta: float):
         """Constructs a single-qubit Y rotation gate.
@@ -555,7 +566,7 @@ class RY(Gate):
         """
         super().__init__(name="RY", num_wires=1, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
 
@@ -566,7 +577,7 @@ class RY(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["RZ"])
+@GateFactory.register(names=["RZ", "rz"])
 class RZ(Gate):
     def __init__(self, theta: float):
         """Constructs a single-qubit Z rotation gate.
@@ -576,7 +587,7 @@ class RZ(Gate):
         """
         super().__init__(name="RZ", num_wires=1, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         p = exp(-0.5j * theta)
@@ -585,7 +596,7 @@ class RZ(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["Rot"])
+@GateFactory.register(names=["Rot", "rot"])
 class Rot(Gate):
     def __init__(self, phi: float, theta: float, omega: float):
         """Constructs an arbitrary single-qubit rotation gate with three Euler
@@ -607,7 +618,7 @@ class Rot(Gate):
         """
         super().__init__(name="Rot", num_wires=1, params=[phi, theta, omega])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
         c = cos(theta / 2)
@@ -620,7 +631,7 @@ class Rot(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["CRX"])
+@GateFactory.register(names=["CRX", "crx"])
 class CRX(Gate):
     def __init__(self, theta: float):
         """Constructs a controlled-RX gate.
@@ -630,7 +641,7 @@ class CRX(Gate):
         """
         super().__init__(name="CRX", num_wires=2, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         c = cos(theta / 2)
@@ -640,7 +651,7 @@ class CRX(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["CRY"])
+@GateFactory.register(names=["CRY", "cry"])
 class CRY(Gate):
     def __init__(self, theta: float):
         """Constructs a controlled-RY gate.
@@ -650,7 +661,7 @@ class CRY(Gate):
         """
         super().__init__(name="CRY", num_wires=2, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         c = cos(theta / 2)
@@ -660,7 +671,7 @@ class CRY(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["CRZ"])
+@GateFactory.register(names=["CRZ", "crz"])
 class CRZ(Gate):
     def __init__(self, theta: float):
         """Constructs a controlled-RZ gate.
@@ -670,7 +681,7 @@ class CRZ(Gate):
         """
         super().__init__(name="CRZ", num_wires=2, params=[theta])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta = self.params[0]
         mat = [
@@ -682,7 +693,7 @@ class CRZ(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["CRot"])
+@GateFactory.register(names=["CRot", "crot"])
 class CRot(Gate):
     def __init__(self, phi: float, theta: float, omega: float):
         """Constructs a controlled-rotation gate.
@@ -694,7 +705,7 @@ class CRot(Gate):
         """
         super().__init__(name="CRot", num_wires=2, params=[phi, theta, omega])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi, theta, omega = self.params
         c = cos(theta / 2)
@@ -709,7 +720,7 @@ class CRot(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["U1"])
+@GateFactory.register(names=["U1", "u1"])
 class U1(Gate):
     def __init__(self, phi: float):
         """Constructs a U1 gate.
@@ -719,14 +730,14 @@ class U1(Gate):
         """
         super().__init__(name="U1", num_wires=1, params=[phi])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi = self.params[0]
         mat = [[1, 0], [0, exp(1j * phi)]]
         return np.array(mat)
 
 
-@GateFactory.register(names=["U2"])
+@GateFactory.register(names=["U2", "u2"])
 class U2(Gate):
     def __init__(self, phi: float, lam: float):
         """Constructs a U2 gate.
@@ -737,7 +748,7 @@ class U2(Gate):
         """
         super().__init__(name="U2", num_wires=1, params=[phi, lam])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         phi, lam = self.params
         mat = [
@@ -747,7 +758,7 @@ class U2(Gate):
         return np.array(mat)
 
 
-@GateFactory.register(names=["U3"])
+@GateFactory.register(names=["U3", "u3"])
 class U3(Gate):
     def __init__(self, theta: float, phi: float, lam: float):
         """Constructs a U3 gate.
@@ -759,7 +770,7 @@ class U3(Gate):
         """
         super().__init__(name="U3", num_wires=1, params=[theta, phi, lam])
 
-    @lru_cache
+    @lru_cache()
     def _data(self) -> np.ndarray:
         theta, phi, lam = self.params
         c = cos(theta / 2)
@@ -770,8 +781,3 @@ class U3(Gate):
             [s * exp(1j * phi), c * exp(1j * (phi + lam))],
         ]
         return np.array(mat)
-
-
-# Some gates have different names depending on their context.
-NOT = PauliX
-CNOT = CX

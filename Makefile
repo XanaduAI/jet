@@ -68,6 +68,7 @@ clean:
 
 $(.VENV_DIR):
 	python3 -m venv $@
+	$@/bin/pip install wheel
 	$@/bin/pip install -r docs/requirements.txt
 
 

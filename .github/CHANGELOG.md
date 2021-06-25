@@ -2,7 +2,13 @@
 
 ### New features since last release
 
-* The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`.
+* Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. (#29)](https://github.com/XanaduAI/jet/pull/24)
+
+* The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`. (#29)](https://github.com/XanaduAI/jet/pull/24)
+
+* An `XIRProgram` which declares the gates supported by Jet is now bundled with the `jet` Python package. [(#34)](https://github.com/XanaduAI/jet/pull/34)
+
+* The `jet` Python package now includes an interpreter for XIR programs. [(#24)](https://github.com/XanaduAI/jet/pull/24)
 
 * Gates may now be instantiated by name using the `GateFactory` Python class. [(#23)](https://github.com/XanaduAI/jet/pull/23)
 
@@ -40,11 +46,21 @@
 
 ### Breaking Changes
 
+* The Jet interpreter for XIR scripts is now case-sensitive with respect to gate names. [(#36)](https://github.com/XanaduAI/jet/pull/36)
+
 * Python bindings for `complex<float>` and `complex<double>` specializations are now suffixed with `C64` and `C128`, respectively. [(#15)](https://github.com/XanaduAI/jet/pull/15)
 
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
+
+* An issue with the `CudaTensor` indices was fixed when converting between the CPU `Tensor` class. (#29)](https://github.com/XanaduAI/jet/pull/24)
+
+* The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
+
+* The documentation build no longer emits any Doxygen warnings. [(#25)](https://github.com/XanaduAI/jet/pull/25)
+
+* Running `make build` in the `python` directory now correctly uses the virtual environment. [(#31)](https://github.com/XanaduAI/jet/pull/31)
 
 * The output of `TensorNetwork::Contract()` and `TaskBasedCpuContractor::Contract()` now agree with external packages. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
@@ -55,6 +71,8 @@
 * `PathInfo` now correctly names intermediary tensors in a sliced tensor network [(#22)](https://github.com/XanaduAI/jet/pull/22).
 
 ### Documentation
+
+* The "Using Jet" section of the Sphinx documentation website now compiles with the latest Jet headers. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
 * The license comment headers at the top of the IR source files have been removed. [(#14)](https://github.com/XanaduAI/jet/pull/14)
 
