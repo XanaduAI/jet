@@ -16,9 +16,9 @@ export OMP_DYNAMIC=false
 export OMP_SCHEDULE=static 
 
 # JET: sliced network simulations (2, 4, 6 slices)
-for sl in 2 ; do
-    for p in 16; do
-        for th in 2 ; do
+for sl in 2 4 6; do
+    for p in 1 2 4 8 16; do
+        for th in 1 2 4 8 16 32 ; do
             for i in $(seq 1 $num_runs); do
                 echo "### RUN=${i} ###" >> jet_shared_omp${th}_pthread${p}_slice${sl}.out;
                 OMP_NUM_THREADS=${th} ./jet_sliced ../data_files/m10.json ${p} ${sl} >> jet_shared_omp${th}_pthread${p}_slice${sl}.out
