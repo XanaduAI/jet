@@ -44,18 +44,15 @@ template <class T = cuComplex> class CudaTensor {
 
         // The zero tensor is used in reductions where the shape of an
         // accumulator is not known beforehand.
-        if (A.GetSize() == zero.GetSize() &&
-            A.GetIndices() == zero.GetIndices() &&
-            A.GetShape() == zero.GetShape() &&
-            A.GetHostDataVector() == zero.GetHostDataVector()) {
-            return B;
+        CudaTensor<U> *ret_val = nullptr;
+        if (A == zero) {
+            ret_val = const_cast<CudaTensor<U> *>(&B);
         }
-        else if (B.GetSize() == zero.GetSize() &&
-                 B.GetIndices() == zero.GetIndices() &&
-                 B.GetShape() == zero.GetShape() &&
-                 B.GetHostDataVector() == zero.GetHostDataVector()) {
-            return A;
+        else if (B == zero) {
+            ret_val = const_cast<CudaTensor<U> *>(&A);
         }
+        if (ret_val != nullptr)
+            return *ret_val;
 
         const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
             A.GetIndices(), B.GetIndices());
@@ -711,6 +708,13 @@ template <class T = cuComplex> class CudaTensor {
     std::vector<size_t> shape_;
     std::unordered_map<std::string, size_t> index_to_dimension_;
     std::unordered_map<std::string, size_t> index_to_axes_;
+
+    bool operator==(const CudaTensor<T> &other) const noexcept
+    {
+        return shape_ == other.GetShape() && indices_ == other.GetIndices() &&
+               index_to_dimension_ == other.GetIndexToDimension() &&
+               GetHostDataVector() == other.GetHostDataVector();
+    }
 };
 
 } // namespace Jet
