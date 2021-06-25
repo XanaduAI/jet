@@ -54,7 +54,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
-          check_name: Test Report (C++)
+          check_name: Test Report (C++) on Ubuntu
           files: build/test/results/report.xml
 
   test-macos:
