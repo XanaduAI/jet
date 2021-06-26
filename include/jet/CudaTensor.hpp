@@ -458,7 +458,7 @@ template <class T = cuComplex> class CudaTensor {
         size_t work_size;
         void *work;
 
-        ~CudaContractionPlan() { cudaFree(work); }
+        ~CudaContractionPlan() { JET_CUDA_IS_SUCCESS(cudaFree(work)); }
     };
 
     template <class U = T>
