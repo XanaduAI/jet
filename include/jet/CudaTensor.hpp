@@ -246,8 +246,12 @@ template <class T = cuComplex> class CudaTensor {
                 b_tensor.GetIndexToDimension().at(right_indices[i]);
 
         CudaTensor<U> c_tensor(c_indices, c_shape);
-        auto plan = GetCudaContractionPlan<T>(a_tensor, b_tensor, c_tensor);
-        ContractTensorsWithoutAllocation<T>(a_tensor, b_tensor, c_tensor, plan);
+
+        CudaContractionPlan cplan;
+
+        GetCudaContractionPlan<T>(cplan, a_tensor, b_tensor, c_tensor);
+        ContractTensorsWithoutAllocation<T>(a_tensor, b_tensor, c_tensor,
+                                            cplan);
         return c_tensor;
     }
 
@@ -294,8 +298,10 @@ template <class T = cuComplex> class CudaTensor {
     CudaTensor(const CudaTensor &other) : data_{nullptr}
     {
         InitIndicesAndShape(other.GetIndices(), other.GetShape());
-        cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
-                   cudaMemcpyDeviceToDevice);
+
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, other.GetData(),
+                                       sizeof(T) * other.GetSize(),
+                                       cudaMemcpyDeviceToDevice));
     }
 
     template <class CPUData>
@@ -327,8 +333,9 @@ template <class T = cuComplex> class CudaTensor {
         if (this != &other) // not a self-assignment
         {
             InitIndicesAndShape(other.GetIndices(), other.GetShape());
-            cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
-                       cudaMemcpyDeviceToDevice);
+            JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, other.GetData(),
+                                           sizeof(T) * other.GetSize(),
+                                           cudaMemcpyDeviceToDevice));
         }
         return *this;
     }
@@ -342,41 +349,35 @@ template <class T = cuComplex> class CudaTensor {
 
     inline void CopyHostDataToGpu(T *host_tensor)
     {
-        cudaError_t retcode = cudaMemcpy(
-            data_, host_tensor, sizeof(T) * GetSize(), cudaMemcpyHostToDevice);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(
+            data_, host_tensor, sizeof(T) * GetSize(), cudaMemcpyHostToDevice));
     }
 
     inline void CopyGpuDataToHost(T *host_tensor) const
     {
-        cudaError_t retcode = cudaMemcpy(
-            host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost);
-
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(
+            host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost));
     }
 
     inline void CopyGpuDataToGpu(T *host_tensor)
     {
-        cudaError_t retcode =
-            cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
-                       cudaMemcpyDeviceToDevice);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(host_tensor, data_,
+                                       sizeof(T) * GetSize(),
+                                       cudaMemcpyDeviceToDevice));
     }
 
     inline void AsyncCopyHostDataToGpu(T *host_tensor, cudaStream_t stream = 0)
     {
-        cudaError_t retcode =
-            cudaMemcpyAsync(data_, host_tensor, sizeof(T) * GetSize(),
-                            cudaMemcpyHostToDevice, stream);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(data_, host_tensor,
+                                            sizeof(T) * GetSize(),
+                                            cudaMemcpyHostToDevice, stream));
     }
 
     inline void AsyncCopyGpuDataToHost(T *host_tensor, cudaStream_t stream = 0)
     {
-        cudaError_t retcode =
-            cudaMemcpyAsync(host_tensor, data_, sizeof(T) * GetSize(),
-                            cudaMemcpyDeviceToHost, stream);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(host_tensor, data_,
+                                            sizeof(T) * GetSize(),
+                                            cudaMemcpyDeviceToHost, stream));
     }
 
     const std::unordered_map<std::string, size_t> &GetIndexToDimension() const
@@ -404,11 +405,12 @@ template <class T = cuComplex> class CudaTensor {
     void FillRandom(size_t seed)
     {
         static curandGenerator_t rng;
-        curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT);
-        curandSetPseudoRandomGeneratorSeed(rng, seed);
-        curandGenerateUniform(
+        JET_CURAND_IS_SUCCESS(
+            curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
+        JET_CURAND_IS_SUCCESS(curandSetPseudoRandomGeneratorSeed(rng, seed));
+        JET_CURAND_IS_SUCCESS(curandGenerateUniform(
             rng, reinterpret_cast<scalar_type_t_precision *>(data_),
-            2 * GetSize());
+            2 * GetSize()));
     }
 
     /**
@@ -418,11 +420,13 @@ template <class T = cuComplex> class CudaTensor {
     void FillRandom()
     {
         static curandGenerator_t rng;
-        curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT);
-        curandSetPseudoRandomGeneratorSeed(rng, std::random_device{}());
-        curandGenerateUniform(
+        JET_CURAND_IS_SUCCESS(
+            curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
+        JET_CURAND_IS_SUCCESS(
+            curandSetPseudoRandomGeneratorSeed(rng, std::random_device{}()));
+        JET_CURAND_IS_SUCCESS(curandGenerateUniform(
             rng, reinterpret_cast<scalar_type_t_precision *>(data_),
-            2 * GetSize());
+            2 * GetSize()));
     }
 
     /**
@@ -453,13 +457,15 @@ template <class T = cuComplex> class CudaTensor {
         cutensorContractionPlan_t plan;
         size_t work_size;
         void *work;
+
+        ~CudaContractionPlan() { cudaFree(work); }
     };
 
     template <class U = T>
-    static CudaContractionPlan
-    GetCudaContractionPlan(const CudaTensor<U> &a_tensor,
-                           const CudaTensor<U> &b_tensor,
-                           const CudaTensor<U> &c_tensor)
+    static void GetCudaContractionPlan(CudaContractionPlan &cplan,
+                                       const CudaTensor<U> &a_tensor,
+                                       const CudaTensor<U> &b_tensor,
+                                       const CudaTensor<U> &c_tensor)
     {
         using namespace Jet::Utilities;
 
@@ -530,7 +536,7 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         cutensorHandle_t handle;
-        cutensorInit(&handle);
+        JET_CUTENSOR_IS_SUCCESS(cutensorInit(&handle));
 
         const std::vector<int64_t> a_strides =
             CudaTensorHelpers::GetStrides(a_tensor.GetShape());
@@ -598,28 +604,26 @@ template <class T = cuComplex> class CudaTensor {
 
         void *work = nullptr;
         if (work_size > 0) {
-            if (cudaSuccess != cudaMalloc(&work, work_size)) {
+            JET_CUDA_IS_SUCCESS(cudaMalloc(&work, work_size));
+/*            if (cudaSuccess != cudaMalloc(&work, work_size)) {
                 work = nullptr;
                 work_size = 0;
             }
-        }
+*/        }
 
-        /**************************
-         * Create Contraction Plan
-         **************************/
+/**************************
+ * Create Contraction Plan
+ **************************/
 
-        cutensorContractionPlan_t plan;
-        cutensor_err = cutensorInitContractionPlan(&handle, &plan, &descriptor,
-                                                   &find, work_size);
-        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+cutensorContractionPlan_t plan;
+cutensor_err =
+    cutensorInitContractionPlan(&handle, &plan, &descriptor, &find, work_size);
+JET_CUTENSOR_IS_SUCCESS(cutensor_err);
 
-        CudaContractionPlan cplan;
-        cplan.plan = plan;
-        cplan.work = work;
-        cplan.handle = handle;
-        cplan.work_size = work_size;
-
-        return cplan;
+cplan.plan = plan;
+cplan.work = work;
+cplan.handle = handle;
+cplan.work_size = work_size;
     }
 
     template <class U = T>
