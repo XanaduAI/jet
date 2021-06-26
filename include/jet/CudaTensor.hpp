@@ -67,8 +67,6 @@ template <class T = cuComplex> class CudaTensor {
         cutensorHandle_t handle;
         cutensorInit(&handle);
 
-        const U one = {1.0, 0.0};
-
         cutensorTensorDescriptor_t b_descriptor, c_descriptor;
         cutensorStatus_t cutensor_err;
         cudaDataType_t data_type;
@@ -650,15 +648,17 @@ template <class T = cuComplex> class CudaTensor {
     static CudaTensor<U> Reshape(const CudaTensor<U> &old_tens,
                                  const std::vector<size_t> &new_shape)
     {
-        using namespace Jet::Utilities;
-        Tensor<std::complex<decltype(std::declval<U>().x)>> host_tensor(
-            old_tens);
 
-        auto host_tensor_reshaped =
-            host_tensor.Reshape(ReverseVector(new_shape));
-        auto cudatensor_reshaped = CudaTensor<U>(host_tensor_reshaped);
+        using namespace Utilities;
 
-        return cudatensor_reshaped;
+        JET_ABORT_IF_NOT(old_tens.GetSize() ==
+                             Jet::Utilities::ShapeToSize(new_shape),
+                         "Size is inconsistent between tensors.");
+        CudaTensor<U> new_tensor(new_shape);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(new_tensor.data_, old_tens.data_,
+                                       sizeof(U) * old_tens.GetSize(),
+                                       cudaMemcpyDeviceToDevice));
+        return new_tensor;
     }
 
     CudaTensor<T> Reshape(const std::vector<size_t> &new_shape)
@@ -677,7 +677,161 @@ template <class T = cuComplex> class CudaTensor {
             host_tensor.SliceIndex(index_str, index_value);
         return CudaTensor<U>(host_tensor_sliced);
     }
+/*
+    template <typename U = T>
+    static CudaTensor<U> SliceIndex(const CudaTensor<U> &tens,
+                                    const std::string &index_str,
+                                    size_t index_value)
+    {// Note the index_value may need to be reversed from array position
+    // The chunking of indices may also need to be done from front rather than back as next
 
+        ///////////////////////////////////////////////////////////////////////
+        // 0. Perform up-front util allocations and manipulations
+        ///////////////////////////////////////////////////////////////////////
+
+        const std::vector<std::string>& old_indices = tens.GetIndices();
+        std::vector<std::string> new_indices = tens.GetIndices();
+
+        std::vector<size_t> output_shape(tens.GetShape());
+
+        if (new_indices.back() != index_str){
+            auto it = std::find(new_indices.begin(), new_indices.end()-1, index_str);
+            const size_t offset = std::distance(new_indices.begin(), it);
+
+            std::swap(*it, new_indices.back());
+            std::swap(output_shape[offset], output_shape.back());
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // 1. Allocate permuted tensor memory
+        ///////////////////////////////////////////////////////////////////////
+
+        CudaTensor<U> permuted_tensor(new_indices, output_shape);
+
+        ///////////////////////////////////////////////////////////////////////
+        // 2. Initialise CuTensor runtime & setup necessary options
+        ///////////////////////////////////////////////////////////////////////
+
+        cutensorHandle_t handle;
+        cudaDataType_t data_type;
+
+        if constexpr (std::is_same<U, cuDoubleComplex>::value ||
+                      std::is_same<U, double2>::value) {
+            data_type = CUDA_C_64F;
+        }
+        else {
+            data_type = CUDA_C_32F;
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // 3. Build mode & dimensions array for Input
+        ///////////////////////////////////////////////////////////////////////
+        
+        std::unordered_map<std::string, int> index_to_mode_map;
+        std::unordered_map<size_t, int64_t> mode_to_dimension_map;
+
+        for (size_t i = 0; i < old_indices.size(); i++) {
+            if (!index_to_mode_map.count(old_indices[i])) {
+                index_to_mode_map[old_indices[i]] = i;
+                mode_to_dimension_map[i] = static_cast<int64_t>(
+                    tens.GetIndexToDimension().at(old_indices[i]));
+            }
+        }
+
+        std::vector<int32_t> input_modes(old_indices.size());
+        std::vector<int64_t> input_dimensions(old_indices.size());
+
+        for (size_t i = 0; i < old_indices.size(); i++) {
+            input_modes[i] = index_to_mode_map[old_indices[i]];
+        }
+
+        for (size_t idx = 0; idx < input_modes.size(); idx++) {
+            input_dimensions[idx] = mode_to_dimension_map[input_modes[idx]];
+        }
+
+        index_to_mode_map.clear();
+        mode_to_dimension_map.clear();
+
+        ///////////////////////////////////////////////////////////////////////
+        // 4. Build Descriptor for input
+        ///////////////////////////////////////////////////////////////////////
+
+        cutensorTensorDescriptor_t input_descriptor;
+
+        const std::vector<int64_t> input_strides =
+            CudaTensorHelpers::GetStrides(tens.GetShape());
+
+        JET_CUTENSOR_IS_SUCCESS(cutensorInitTensorDescriptor(
+            &handle, &input_descriptor, input_modes.size(), input_dimensions.data(),
+            input_strides.data(), data_type, CUTENSOR_OP_IDENTITY));
+
+        ///////////////////////////////////////////////////////////////////////
+        // 5. Build mode array for output
+        ///////////////////////////////////////////////////////////////////////
+
+        for (size_t i = 0; i < new_indices.size(); i++) {
+            if (!index_to_mode_map.count(new_indices[i])) {
+                index_to_mode_map[new_indices[i]] = i;
+                mode_to_dimension_map[i] = static_cast<int64_t>(
+                    permuted_tensor.GetIndexToDimension().at(new_indices[i]));
+            }
+        }
+
+        std::vector<int32_t> output_modes(new_indices.size());
+        std::vector<int64_t> output_dimensions(new_indices.size());
+
+        for (size_t i = 0; i < new_indices.size(); i++) {
+            output_modes[i] = index_to_mode_map[new_indices[i]];
+        }
+
+        for (size_t idx = 0; idx < output_modes.size(); idx++) {
+            output_dimensions[idx] = mode_to_dimension_map[output_modes[idx]];
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // 6. Build descriptor for output
+        ///////////////////////////////////////////////////////////////////////
+
+        cutensorTensorDescriptor_t output_descriptor;
+
+        const std::vector<int64_t> output_strides =
+            CudaTensorHelpers::GetStrides(output_shape);
+
+        JET_CUTENSOR_IS_SUCCESS(cutensorInitTensorDescriptor(
+            &handle, &output_descriptor, output_modes.size(), output_dimensions.data(),
+            output_strides.data(), data_type, CUTENSOR_OP_IDENTITY));
+
+        ///////////////////////////////////////////////////////////////////////
+        // 7. Permute tensor indices
+        ///////////////////////////////////////////////////////////////////////
+
+        cutensorPermutation(&handle, &one, tens.data_, &input_descriptor, input_modes.data(), 
+            permuted_tensor.data_, &output_descriptor, output_modes.data(), data_type, nullptr
+        );
+
+        ///////////////////////////////////////////////////////////////////////
+        // 8. Return tensor slice
+        ///////////////////////////////////////////////////////////////////////
+
+        CudaTensor<U> sliced_tensor(
+            {
+                permuted_tensor.GetIndices().begin(), 
+                permuted_tensor.GetIndices().end()-1
+            }, 
+            {
+                permuted_tensor.GetShape().begin(), 
+                permuted_tensor.GetShape().end()-1
+            }
+        );
+
+        const size_t ptr_offset = Jet::Utilities::ShapeToSize(std::vector<size_t>{permuted_tensor.GetShape().begin(), permuted_tensor.GetShape().end()-1});
+        JET_CUDA_IS_SUCCESS(
+            cudaMemcpy(sliced_tensor.data_ + (ptr_offset*index_value), permuted_tensor.data_, sizeof(U) * ptr_offset, cudaMemcpyDeviceToDevice)
+        );
+
+        return sliced_tensor;
+    }
+*/
     CudaTensor<T> SliceIndex(const std::string &index_str, size_t index_value)
     {
         return SliceIndex<T>(*this, index_str, index_value);
@@ -701,6 +855,9 @@ template <class T = cuComplex> class CudaTensor {
     }
 
   private:
+
+    static constexpr T one = {1.0, 0.0};
+
     T *data_;
 
     std::vector<std::string> indices_;
