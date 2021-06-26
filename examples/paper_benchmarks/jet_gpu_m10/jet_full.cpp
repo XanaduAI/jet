@@ -47,7 +47,10 @@ int main(int argc, char** argv)
     // Create contractor and add TN and path data
     TaskBasedContractor<CudaTensor<c_fp32>> tbc(num_threads);
     tbc.AddContractionTasks(tn, path);
-
+    
+    // GPUs have limited memory, so free unneeded tensors
+    tbc.AddDeletionTasks();
+    
     // Time the contraction operation
     auto t1 = high_resolution_clock::now();
     tbc.Contract().wait(); // Contract() non-blocking so requires wait()
