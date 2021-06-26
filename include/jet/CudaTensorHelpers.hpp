@@ -15,6 +15,8 @@
 namespace Jet {
 namespace CudaTensorHelpers {
 
+#ifndef CUDATENSOR_UNSAFE
+
 /**
  * @brief Macro that throws Exception from CUDA failure error codes.
  *
@@ -39,6 +41,21 @@ namespace CudaTensorHelpers {
  */
 #define JET_CURAND_IS_SUCCESS(err)                                             \
     JET_ABORT_IF_NOT(err == CURAND_STATUS_SUCCESS, GetCuRandErrorString(err))
+
+#else
+#define JET_CUDA_IS_SUCCESS(err)                                               \
+    {                                                                          \
+        static_cast<void>(err);                                                \
+    }
+#define JET_CUTENSOR_IS_SUCCESS(err)                                           \
+    {                                                                          \
+        static_cast<void>(err);                                                \
+    }
+#define JET_CURAND_IS_SUCCESS(err)                                             \
+    {                                                                          \
+        static_cast<void>(err);                                                \
+    }
+#endif
 
 static const std::string GetCuRandErrorString(const curandStatus_t &err)
 {
