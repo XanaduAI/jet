@@ -602,28 +602,23 @@ template <class T = cuComplex> class CudaTensor {
             &work_size);
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
 
-        void *work = nullptr;
+        /**************************
+         * Create Contraction Plan
+         **************************/
+
+        cutensorContractionPlan_t plan;
+        cutensor_err = cutensorInitContractionPlan(&handle, &plan, &descriptor,
+                                                   &find, work_size);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        cplan.plan = plan;
+
         if (work_size > 0) {
-            JET_CUDA_IS_SUCCESS(cudaMalloc(&work, work_size));
-/*            if (cudaSuccess != cudaMalloc(&work, work_size)) {
-                work = nullptr;
-                work_size = 0;
-            }
-*/        }
+            JET_CUDA_IS_SUCCESS(cudaMalloc(&cplan.work, work_size));
+        }
 
-/**************************
- * Create Contraction Plan
- **************************/
-
-cutensorContractionPlan_t plan;
-cutensor_err =
-    cutensorInitContractionPlan(&handle, &plan, &descriptor, &find, work_size);
-JET_CUTENSOR_IS_SUCCESS(cutensor_err);
-
-cplan.plan = plan;
-cplan.work = work;
-cplan.handle = handle;
-cplan.work_size = work_size;
+        cplan.handle = handle;
+        cplan.work_size = work_size;
     }
 
     template <class U = T>
