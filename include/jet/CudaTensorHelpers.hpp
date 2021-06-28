@@ -40,7 +40,7 @@ namespace CudaTensorHelpers {
  * @param err CuRand function error-code.
  */
 #define JET_CURAND_IS_SUCCESS(err)                                             \
-    JET_ABORT_IF_NOT(err == CURAND_STATUS_SUCCESS, GetCuRandErrorString(err))
+    JET_ABORT_IF_NOT(err == CURAND_STATUS_SUCCESS, GetCuRandErrorString(err).c_str())
 
 #else
 #define JET_CUDA_IS_SUCCESS(err)                                               \
