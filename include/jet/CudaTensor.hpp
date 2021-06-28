@@ -117,12 +117,12 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         std::vector<int64_t> b_dimensions(b_modes.size());
-        for (size_t idx = 0; idx < b_modes.size(); idx++) {
-            b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
+        for (size_t i = 0; i < b_modes.size(); i++) {
+            b_dimensions[i] = mode_to_dimension_map[b_modes[i]];
         }
         std::vector<int64_t> c_dimensions(c_modes.size());
-        for (size_t idx = 0; idx < c_modes.size(); idx++) {
-            c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
+        for (size_t i = 0; i < c_modes.size(); i++) {
+            c_dimensions[i] = mode_to_dimension_map[c_modes[i]];
         }
 
         cutensor_err = cutensorInitTensorDescriptor(
@@ -518,18 +518,18 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         std::vector<int64_t> c_dimensions(c_modes.size());
-        for (size_t idx = 0; idx < c_modes.size(); idx++) {
-            c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
+        for (size_t i = 0; i < c_modes.size(); i++) {
+            c_dimensions[i] = mode_to_dimension_map[c_modes[i]];
         }
 
         std::vector<int64_t> a_dimensions(a_modes.size());
-        for (size_t idx = 0; idx < a_modes.size(); idx++) {
-            a_dimensions[idx] = mode_to_dimension_map[a_modes[idx]];
+        for (size_t i = 0; i < a_modes.size(); i++) {
+            a_dimensions[i] = mode_to_dimension_map[a_modes[i]];
         }
 
         std::vector<int64_t> b_dimensions(b_modes.size());
-        for (size_t idx = 0; idx < b_modes.size(); idx++) {
-            b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
+        for (size_t i = 0; i < b_modes.size(); i++) {
+            b_dimensions[i] = mode_to_dimension_map[b_modes[i]];
         }
 
         cutensorHandle_t handle;
