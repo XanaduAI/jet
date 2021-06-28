@@ -420,7 +420,6 @@ TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
 TEST_CASE("CudaTensor::Reshape", "[CudaTensor]")
 {
     using namespace Catch::Matchers;
-    using namespace Jet::Utilities;
 
     SECTION("Equal data size")
     {
