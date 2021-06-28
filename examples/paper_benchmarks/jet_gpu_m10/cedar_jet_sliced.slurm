@@ -16,7 +16,7 @@ module load intel cmake cuda/11.1.1 cutensor/1.3.1
 cd $SLURM_SUBMIT_DIR
 
 export num_runs=10
-export max_slices=4
+export max_slices=8
 
 export OMP_PROC_BIND=false 
 export OMP_PLACES=cores 
@@ -27,14 +27,14 @@ export OMP_SCHEDULE=static
 OMP_NUM_THREADS=1 ./jet_cuda_sliced ../data_files/m10.json 1 > /dev/null
 
 for sl in `seq 1 ${max_slices}`;do
-for p in 1 2 4 8 16; do
-for th in 1; do
-for i in $(seq 1 $num_runs); do
-    echo "### RUN=${i} ###" >> jet_cuda_sliced_omp${th}_pthread${p}_slice${sl}.out;
-    OMP_NUM_THREADS=${th} ./jet_cuda_sliced ../data_files/m10.json ${p} ${sl} >> jet_cuda_full_omp${th}_pthread${p}_slice{sl}.out
-done
-done
-done
+    for p in 1 2 4 8 16; do
+        for th in 1; do
+            for i in $(seq 1 $num_runs); do
+                echo "### RUN=${i} ###" >> jet_cuda_sliced_omp${th}_pthread${p}_slice${sl}.out;
+                OMP_NUM_THREADS=${th} ./jet_cuda_sliced ../data_files/m10.json ${p} ${sl} >> jet_cuda_full_omp${th}_pthread${p}_slice{sl}.out
+            done
+        done
+    done
 done
 
 

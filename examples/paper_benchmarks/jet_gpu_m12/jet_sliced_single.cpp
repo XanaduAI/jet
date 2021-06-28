@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
         }
     }
     std::cout << "shared_tasks=" << shared << std::endl;
-    contractor.AddDeletionTasks();
 
+    contractor.AddDeletionTasks();
     contractor.AddReductionTask();
 
     auto t1 = high_resolution_clock::now();

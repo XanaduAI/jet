@@ -26,12 +26,12 @@ export OMP_SCHEDULE=static
 OMP_NUM_THREADS=1 ./jet_cuda_full ../data_files/m10.json 1 > /dev/null
 
 for p in 1 2 4 8 16; do
-for th in 1; do
-for i in $(seq 1 $num_runs); do
-    echo "### RUN=${i} ###" >> jet_cuda_full_omp${th}_pthread${p}.out;
-    OMP_NUM_THREADS=${th} ./jet_cuda_full ../data_files/m10.json ${p} >> jet_cuda_full_omp${th}_pthread${p}.out
-done
-done
+    for th in 1; do
+        for i in $(seq 1 $num_runs); do
+            echo "### RUN=${i} ###" >> jet_cuda_full_omp${th}_pthread${p}.out;
+            OMP_NUM_THREADS=${th} ./jet_cuda_full ../data_files/m10.json ${p} >> jet_cuda_full_omp${th}_pthread${p}.out
+        done
+    done
 done
 
 # Format data as CSV
