@@ -44,15 +44,12 @@ template <class T = cuComplex> class CudaTensor {
 
         // The zero tensor is used in reductions where the shape of an
         // accumulator is not known beforehand.
-        CudaTensor<U> *ret_val = nullptr;
         if (A == zero) {
-            ret_val = const_cast<CudaTensor<U> *>(&B);
+            return B;
         }
         else if (B == zero) {
-            ret_val = const_cast<CudaTensor<U> *>(&A);
+            return A;
         }
-        if (ret_val != nullptr)
-            return *ret_val;
 
         const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
             A.GetIndices(), B.GetIndices());
