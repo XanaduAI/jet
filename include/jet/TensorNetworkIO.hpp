@@ -8,10 +8,10 @@
 
 #include "external/nlohmann/json.hpp"
 
-#include "PathInfo.hpp"
 #ifdef CUTENSOR
 #include "CudaTensor.hpp"
 #endif
+#include "PathInfo.hpp"
 #include "Tensor.hpp"
 #include "TensorNetwork.hpp"
 
