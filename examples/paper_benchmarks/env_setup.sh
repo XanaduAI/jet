@@ -5,30 +5,21 @@
 # 0. Setup python env
 python -m venv py_benchenv
 source ./py_benchenv/bin/activate
-python -m pip install \
-    numpy \
-    scipy \
-    networkx \
-    numexpr \
-    opt_einsum \
-    kahypar \
-    cma \
-    jax \
-    jaxlib \
-    tqdm \
-    quimb \
-    chocolate \
-    baytune \
-    diskcache \
-    scikit-learn \
-    igraph \
-    jgraph \
-    autoray \
-    distribution \
-    pandas
+PIP_PKGS=(numpy scipy networkx numexpr opt_einsum kahypar cma jax jaxlib tqdm quimb baytune diskcache scikit-learn igraph jgraph autoray pandas strawberryfields thewalrus)
+for pkg in ${PIP_PKGS[@]};
+do
+    python -m pip install ${pkg}
+done
+
+mkdir -p ext_packages && cd ext_packages
+git clone https://github.com/AIworx-Labs/chocolate
+python -m pip install -e ./chocolate/
 
 # 1. Cotengra
-python -m pip install git+https://github.com/jcmgray/cotengra#egg=cotengra
+git clone https://github.com/jcmgray/cotengra
+export CTG_ROOT=$PWD/cotengra
+python -m pip install -e ${CTG_ROOT}
+export NUMBA_NUM_THREADS=6
 
 # 2. ACQDP
 git clone https://github.com/alibaba/acqdp
