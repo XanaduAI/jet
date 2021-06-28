@@ -139,7 +139,7 @@ Version 2.0.
    Overview <api/library_root>
    Jet <api/namespace_Jet>
    Jet::PathInfo <api/classJet_1_1PathInfo>
-   Jet::TaskBasedCpuContractor <api/classJet_1_1TaskBasedCpuContractor>
+   Jet::TaskBasedContractor <api/classJet_1_1TaskBasedContractor>
    Jet::Tensor <api/classJet_1_1Tensor>
    Jet::TensorNetwork <api/classJet_1_1TensorNetwork>
    Jet::TensorNetworkSerializer <api/classJet_1_1TensorNetworkSerializer>
