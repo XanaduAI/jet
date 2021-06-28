@@ -138,11 +138,15 @@ template <class TensorType> class TensorNetworkSerializer {
 
     /**
      * @brief Load tensor network file from JSON string.
-     *
+     * 
      * Raises exception if string is invalid JSON, or if it does not
      * describe a valid tensor network.
-     *
-     * @return TensorNetworkFile containing contents of js_str
+     * 
+     * The loader assumes data is available in row-major format, but also allows it to be loaded onto a column-major backend (e.g. such as for the CudaTensor class).
+     * 
+     * @param js_str String of JSON data.
+     * @param col_major Option to load the data for use by a column-major backend contractor.
+     * @return TensorNetworkFile<TensorType> 
      */
     TensorNetworkFile<TensorType> operator()(std::string js_str,
                                              bool col_major = false)
@@ -223,7 +227,7 @@ template <class TensorType> class TensorNetworkSerializer {
             js_tensor.push_back(tensor.GetShape());
             js_tensor.push_back(TensorDataToJSON_(tensor.GetData()));
         }
-        else { // CudaTensor column-major branch
+        else { // column-major branch
             std::vector<std::string> rev_idx{tensor.GetIndices().rbegin(),
                                              tensor.GetIndices().rend()};
             std::vector<size_t> rev_shape{tensor.GetShape().rbegin(),
