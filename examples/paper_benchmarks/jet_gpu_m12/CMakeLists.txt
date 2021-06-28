@@ -19,7 +19,7 @@ Include(FetchContent)
 FetchContent_Declare(
     Jet
     GIT_REPOSITORY  git@github.com:XanaduAI/jet.git
-    GIT_TAG         tbc_cuda
+    GIT_TAG         main
 )
 FetchContent_MakeAvailable(Jet)
 
