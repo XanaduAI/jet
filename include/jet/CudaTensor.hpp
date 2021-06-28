@@ -92,8 +92,8 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < c_indices.size(); i++) {
             if (!index_to_mode_map.count(c_indices[i])) {
                 index_to_mode_map[c_indices[i]] = i;
-                mode_to_dimension_map[i] = static_cast<int64_t>(
-                    C.GetIndexToDimension().at(c_indices[i]));
+                mode_to_dimension_map.emplace(i, static_cast<int64_t>(
+                    C.GetIndexToDimension().at(c_indices[i])));
             }
         }
 
@@ -101,8 +101,8 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < b_indices.size(); i++) {
             if (!index_to_mode_map.count(b_indices[i])) {
                 index_to_mode_map[b_indices[i]] = stride + i;
-                mode_to_dimension_map[stride + i] = static_cast<int64_t>(
-                    B.GetIndexToDimension().at(b_indices[i]));
+                mode_to_dimension_map.emplace(stride + i, static_cast<int64_t>(
+                    B.GetIndexToDimension().at(b_indices[i])));
             }
         }
 
@@ -489,8 +489,8 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < a_indices.size(); i++) {
             if (!index_to_mode_map.count(a_indices[i])) {
                 index_to_mode_map[a_indices[i]] = i;
-                mode_to_dimension_map[i] = static_cast<int64_t>(
-                    a_tensor.GetIndexToDimension().at(a_indices[i]));
+                mode_to_dimension_map.emplace(i, static_cast<int64_t>(
+                    a_tensor.GetIndexToDimension().at(a_indices[i])));
             }
         }
 
@@ -498,8 +498,8 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < b_indices.size(); i++) {
             if (!index_to_mode_map.count(b_indices[i])) {
                 index_to_mode_map[b_indices[i]] = stride + i;
-                mode_to_dimension_map[stride + i] = static_cast<int64_t>(
-                    b_tensor.GetIndexToDimension().at(b_indices[i]));
+                mode_to_dimension_map.emplace(stride + i, static_cast<int64_t>(
+                    b_tensor.GetIndexToDimension().at(b_indices[i])));
             }
         }
 
