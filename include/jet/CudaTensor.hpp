@@ -64,7 +64,7 @@ template <class T = cuComplex> class CudaTensor {
         cutensorHandle_t handle;
         cutensorInit(&handle);
 
-        const U one = {1.0, 0.0};
+        static const U one = {1.0, 0.0};
 
         cutensorTensorDescriptor_t b_descriptor, c_descriptor;
         cutensorStatus_t cutensor_err;
