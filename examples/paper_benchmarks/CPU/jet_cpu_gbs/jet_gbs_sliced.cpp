@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     // Comment on why these indices required
     std::vector<std::string> possible_sliced_indices =
-        {"m", "w0", "I", "a0", "g0", "G", "Y", "y0", "j", "q0"};
+        {"w0", "m", "I", "a0", "g0", "G", "Y", "j", "y0", "q0"};
 
     // since these are qubits, each sliced index correspond so two slices
     size_t slice_size = 2;
