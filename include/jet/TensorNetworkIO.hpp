@@ -148,9 +148,9 @@ template <class TensorType> class TensorNetworkSerializer {
      *
      * @param js_str String of JSON data.
      * @param col_major Option to load the data for use by a column-major
-     * backend contractor.
+     *                  backend contractor.
      * @return Tensor network file containing the tensor network and optional
-     * contraction path represented by the given JSON data.
+     *         contraction path represented by the given JSON data.
      */
     TensorNetworkFile<TensorType> operator()(std::string js_str,
                                              bool col_major = false)
