@@ -20,8 +20,6 @@ int main(int argc, char *argv[])
     size_t indices_to_slice = 9;
     std::string file_name = "";
 
-    size_t num_slices_to_contract = 10;
-
     if (argc > 3) {
         file_name = argv[1];
         num_threads = std::atoi(argv[2]);
@@ -69,6 +67,8 @@ int main(int argc, char *argv[])
     std::cout << "number_of_slices = " << number_of_slices << std::endl;
 
     std::vector<TensorNetwork<Tensor>> slices(number_of_slices);
+
+    size_t num_slices_to_contract = 3;
 
     for (size_t i = 0; i < num_slices_to_contract; i++) {
         slices[i] = tn;

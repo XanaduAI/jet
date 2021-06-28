@@ -29,3 +29,6 @@ FetchContent_MakeAvailable(Jet)
 
 add_executable(jet_cuda_m12_single jet_sliced_single.cpp)
 target_link_libraries(jet_cuda_m12_single Jet)
+
+add_executable(jet_cuda_m12_subset jet_sliced_subset.cpp)
+target_link_libraries(jet_cuda_m12_subset Jet)
