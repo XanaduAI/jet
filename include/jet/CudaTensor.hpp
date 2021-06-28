@@ -156,8 +156,8 @@ template <class T = cuComplex> class CudaTensor {
                              const std::vector<size_t> &shape)
     {
         Clear_();
-        shape_ = (shape);
-        indices_ = (indices);
+        shape_ = shape;
+        indices_ = indices;
 
         for (size_t i = 0; i < shape_.size(); ++i) {
             index_to_dimension_[indices_[i]] = shape_[i];
