@@ -90,8 +90,9 @@ template <class T = cuComplex> class CudaTensor {
         std::unordered_map<size_t, int64_t> mode_to_dimension_map;
 
         for (size_t i = 0; i < c_indices.size(); i++) {
-            if (!index_to_mode_map.count(c_indices[i])) {
-                index_to_mode_map[c_indices[i]] = i;
+            auto it = index_to_mode_map.find(c_indices[i]);
+            if (it == index_to_mode_map.end()) {
+                it->second = i;
                 mode_to_dimension_map.emplace(
                     i, static_cast<int64_t>(
                            C.GetIndexToDimension().at(c_indices[i])));
