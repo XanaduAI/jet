@@ -70,8 +70,8 @@ template <class T = cuComplex> class CudaTensor {
         cutensorStatus_t cutensor_err;
         cudaDataType_t data_type;
 
-        if constexpr (std::is_same<U, cuDoubleComplex>::value ||
-                      std::is_same<U, double2>::value) {
+        if constexpr (std::is_same_v<U, cuDoubleComplex> ||
+                      std::is_same_v<U, double2>) {
             data_type = CUDA_C_64F;
         }
         else {
@@ -469,8 +469,8 @@ template <class T = cuComplex> class CudaTensor {
         cudaDataType_t data_type;
         cutensorComputeType_t compute_type;
 
-        if constexpr (std::is_same<U, cuDoubleComplex>::value ||
-                      std::is_same<U, double2>::value) {
+        if constexpr (std::is_same_v<U, cuDoubleComplex> ||
+                      std::is_same_v<U, double2>) {
             data_type = CUDA_C_64F;
             compute_type = CUTENSOR_COMPUTE_64F;
         }
