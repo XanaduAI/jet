@@ -3,8 +3,8 @@ from typing import Union
 import numpy as np
 
 from .bindings import (
-    TaskBasedCpuContractorC64,
-    TaskBasedCpuContractorC128,
+    TaskBasedContractorC64,
+    TaskBasedContractorC128,
     TensorC64,
     TensorC128,
     TensorNetworkC64,
@@ -16,12 +16,12 @@ from .bindings import (
 )
 
 __all__ = [
-    "TaskBasedCpuContractorType",
+    "TaskBasedContractorType",
     "TensorType",
     "TensorNetworkType",
     "TensorNetworkFileType",
     "TensorNetworkSerializerType",
-    "TaskBasedCpuContractor",
+    "TaskBasedContractor",
     "Tensor",
     "TensorNetwork",
     "TensorNetworkFile",
@@ -29,30 +29,30 @@ __all__ = [
 ]
 
 # Type aliases to avoid enumerating class specializations.
-TaskBasedCpuContractorType = Union[TaskBasedCpuContractorC64, TaskBasedCpuContractorC128]
+TaskBasedContractorType = Union[TaskBasedContractorC64, TaskBasedContractorC128]
 TensorType = Union[TensorC64, TensorC128]
 TensorNetworkType = Union[TensorNetworkC64, TensorNetworkC128]
 TensorNetworkFileType = Union[TensorNetworkFileC64, TensorNetworkFileC128]
 TensorNetworkSerializerType = Union[TensorNetworkSerializerC64, TensorNetworkSerializerC128]
 
 
-def TaskBasedCpuContractor(*args, **kwargs) -> TaskBasedCpuContractorType:
-    """Constructs a task-based CPU contractor (TBCC) with the specified data
+def TaskBasedContractor(*args, **kwargs) -> TaskBasedContractorType:
+    """Constructs a task-based contractor (TBC) with the specified data
     type. If a ``dtype`` keyword argument is not provided, a
-    ``TaskBasedCpuContractorC128`` instance will be returned.
+    ``TaskBasedContractorC128`` instance will be returned.
 
     Args:
-        *args: Positional arguments to pass to the TBCC constructor.
-        **kwargs: Keyword arguments to pass to the TBCC constructor.
+        *args: Positional arguments to pass to the TBC constructor.
+        **kwargs: Keyword arguments to pass to the TBC constructor.
 
     Returns:
-        Task-based CPU contractor instance.
+        Task-based contractor instance.
     """
     dtype = kwargs.pop("dtype", np.complex128)
     if np.dtype(dtype) == np.complex64:
-        return TaskBasedCpuContractorC64(*args, **kwargs)
+        return TaskBasedContractorC64(*args, **kwargs)
     elif np.dtype(dtype) == np.complex128:
-        return TaskBasedCpuContractorC128(*args, **kwargs)
+        return TaskBasedContractorC128(*args, **kwargs)
     else:
         raise TypeError(f"Data type '{dtype}' is not supported.")
 
