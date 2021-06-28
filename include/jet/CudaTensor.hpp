@@ -644,18 +644,18 @@ template <class T = cuComplex> class CudaTensor {
     }
 
     template <typename U = T>
-    static CudaTensor<U> Reshape(const CudaTensor<U> &old_tens,
+    static CudaTensor<U> Reshape(const CudaTensor<U> &old_tensor,
                                  const std::vector<size_t> &new_shape)
     {
-        using namespace Jet::Utilities;
-        Tensor<std::complex<scalar_type_t_precision>> host_tensor(
-            old_tens);
+        JET_ABORT_IF_NOT(old_tensor.GetSize() ==
+                             Jet::Utilities::ShapeToSize(new_shape),
+                         "Size is inconsistent between tensors.");
 
-        auto host_tensor_reshaped =
-            host_tensor.Reshape(ReverseVector(new_shape));
-        auto cudatensor_reshaped = CudaTensor<U>(host_tensor_reshaped);
-
-        return cudatensor_reshaped;
+        CudaTensor<U> reshaped_tensor(new_shape);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(reshaped_tensor.data_, old_tensor.data_,
+                                       sizeof(U) * old_tensor.GetSize(),
+                                       cudaMemcpyDeviceToDevice));
+        return reshaped_tensor;
     }
 
     CudaTensor<T> Reshape(const std::vector<size_t> &new_shape)
