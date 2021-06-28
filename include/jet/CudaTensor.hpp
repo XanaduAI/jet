@@ -648,7 +648,7 @@ template <class T = cuComplex> class CudaTensor {
                                  const std::vector<size_t> &new_shape)
     {
         using namespace Jet::Utilities;
-        Tensor<std::complex<decltype(std::declval<U>().x)>> host_tensor(
+        Tensor<std::complex<scalar_type_t_precision>> host_tensor(
             old_tens);
 
         auto host_tensor_reshaped =
@@ -668,7 +668,7 @@ template <class T = cuComplex> class CudaTensor {
                                     const std::string &index_str,
                                     size_t index_value)
     {
-        using HostU = Tensor<std::complex<decltype(std::declval<U>().x)>>;
+        using HostU = Tensor<std::complex<scalar_type_t_precision>>;
         HostU host_tensor = static_cast<HostU>(tens);
         auto host_tensor_sliced =
             host_tensor.SliceIndex(index_str, index_value);
