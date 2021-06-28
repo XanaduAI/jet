@@ -97,15 +97,6 @@ template <class T = cuComplex> class CudaTensor {
             }
         }
 
-        size_t stride = c_indices.size();
-        for (size_t i = 0; i < b_indices.size(); i++) {
-            if (!index_to_mode_map.count(b_indices[i])) {
-                index_to_mode_map[b_indices[i]] = stride + i;
-                mode_to_dimension_map.emplace(stride + i, static_cast<int64_t>(
-                    B.GetIndexToDimension().at(b_indices[i])));
-            }
-        }
-
         std::vector<int32_t> b_modes(b_indices.size());
         std::vector<int32_t> c_modes(c_indices.size());
 
