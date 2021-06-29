@@ -63,8 +63,7 @@ class XIRTransformer(Transformer):
 
     def script_options(self, args):
         """Script level options."""
-        for a in args:
-            self._program._options[a[0]] = a[1]
+        self._program._options = {k: v for k, v in args}
 
     ###############
     # basic types
