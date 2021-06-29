@@ -47,7 +47,7 @@ int main(int argc, char **argv)
         tensor_file.path.value(); // std::optional requires value()
 
     // Create contractor and add TN and path data
-    TaskBasedCpuContractor<Tensor<c_fp32>> tbcc(num_threads);
+    TaskBasedContractor<Tensor<c_fp32>> tbcc(num_threads);
     tbcc.AddContractionTasks(tn, path);
 
     // Time the contraction operation

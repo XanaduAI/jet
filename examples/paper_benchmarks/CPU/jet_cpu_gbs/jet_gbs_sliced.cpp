@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         slices[i].SliceIndices(sliced_indices, i);
     }
 
-    TaskBasedCpuContractor<Tensor> contractor(num_threads);
+    TaskBasedContractor<Tensor> contractor(num_threads);
     
     for (size_t i = 0; i < number_of_slices; i++) {
         PathInfo pinfo(slices[i], path);

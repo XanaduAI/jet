@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
     size_t shared = 0;
 
-    TaskBasedCpuContractor<Tensor> contractor(num_threads);
+    TaskBasedContractor<Tensor> contractor(num_threads);
     for (size_t i = 0; i < 1; i++) {
         PathInfo pinfo(slices[i], path);
         auto t_shared = contractor.AddContractionTasks(slices[i], pinfo);
