@@ -42,11 +42,17 @@ class Circuit:
             num_wires (int): number of wires in the circuit.
             dim (int): dimension of each wire.
         """
+        self._dim = dim
         self._wires = [Wire(i) for i in range(num_wires)]
         self._parts = [Qudit(dim=dim) for _ in range(num_wires)]
 
         for (wire, part) in zip(self._wires, self._parts):
             part.indices = [wire.index]
+
+    @property
+    def dimension(self) -> int:
+        """Returns the dimension of this circuit."""
+        return self._dim
 
     @property
     def parts(self) -> Iterator[Union[Gate, State]]:

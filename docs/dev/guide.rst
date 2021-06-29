@@ -56,34 +56,37 @@ Let us create a file called `ex1.cpp` as:
 
 .. code-block:: cpp
 
+    #include <array>
     #include <complex>
     #include <iostream>
-    #include "Jet.hpp"
+
+    #include <Jet.hpp>
 
     int main(){
-        using namespace Jet;
+        using Tensor = Jet::Tensor<std::complex<float>>;
 
-        Tensor<std::complex<float>> t0({"i", "j", "k"}, {2, 2, 2});
-        Tensor<std::complex<float>> t1({"j", "k", "l"}, {2 ,2, 2});
+        std::array<Tensor, 3> tensors;
+        tensors[0] = Tensor({"i", "j", "k"}, {2, 2, 2});
+        tensors[1] = Tensor({"j", "k", "l"}, {2, 2, 2});
 
-        t0.FillRandom();
-        t1.FillRandom();
+        tensors[0].FillRandom();
+        tensors[1].FillRandom();
+        tensors[2] = Tensor::ContractTensors(tensors[0], tensors[1]);
         
-        Tensor t2 = ContractTensors(t0, t1);
+        for (const auto &datum : tensors[2].GetData()) {
+            std::cout << datum << std::endl;
+        }
 
-        for (auto &d : t2.GetData())
-            std::cout << d << std::endl;
-
-        std::cout << "You have successfully used Jet version " << Version() << std::endl;
+        std::cout << "You have successfully used Jet version " << Jet::Version() << std::endl;
 
         return 0;
     }
 
-To compile this example, and verify Jet works on your machine, you can build with the following command (assuming GCC):
+To compile this example and verify that Jet works on your machine, you can build with the following command (assuming GCC):
 
 .. code-block:: bash
 
-    g++ --std=c++17 -O3 -I$JET -I$TASKFLOW -lopenblas ./ex1.cpp -o ex1
+    g++ --std=c++17 -O3 -I$JET -I$TASKFLOW ./ex1.cpp -lopenblas
 
 Running the example should produce output similar to:
 
@@ -94,7 +97,7 @@ Running the example should produce output similar to:
     (1.53207,0)
     (0.414398,0)
     (0.721263,0)
-    You have successfully used Jet version 0.1.0
+    You have successfully used Jet version 0.2.0
 
 Congratulations, you have successfully run your first Jet program!
 

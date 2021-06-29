@@ -43,7 +43,7 @@ endif
 
 .PHONY: build
 build: $(.VENV_DIR)/requirements.txt.touch
-	$(.VENV_BIN)/python -m build
+	/bin/sh -c '. $(.VENV_BIN)/activate && python3 -m build'
 	@# Delete the .egg-info artifact to prevent pip from assuming the package was installed.
 	@# See https://github.com/pypa/pip/issues/6558 for more details.
 	rm -rf quantum_jet.egg-info
@@ -62,6 +62,7 @@ clean:
 
 
 $(.VENV_DIR)/requirements.txt.touch: $(.VENV_DIR)/touch requirements.txt
+	$(.VENV_DIR)/bin/pip install wheel
 	$(.VENV_DIR)/bin/pip install -r requirements.txt
 	@touch $@
 

@@ -81,7 +81,7 @@ exhale_args = {
         "../include/Jet.hpp "
         "../include/jet/Abort.hpp "
         "../include/jet/PathInfo.hpp "
-        "../include/jet/TaskBasedCpuContractor.hpp "
+        "../include/jet/TaskBasedContractor.hpp "
         "../include/jet/Tensor.hpp "
         "../include/jet/TensorNetwork.hpp "
         "../include/jet/TensorNetworkIO.hpp "
@@ -129,7 +129,7 @@ author = "Xanadu Inc."
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = "0.1.0"
+release = "0.2.0"
 
 # The short X.Y version.
 version = re.match(r"^(\d+\.\d+)", release).expand(r"\1")

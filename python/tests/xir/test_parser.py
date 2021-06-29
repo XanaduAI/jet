@@ -1,17 +1,11 @@
 """Unit tests for the parser"""
 
-import textwrap
+import math
+from decimal import Decimal
 
 import pytest
 
-from xir import XIRTransformer, xir_parser
-from xir.program import XIRProgram
-
-
-def parse_script(circuit: str) -> XIRProgram:
-    """Parse and transform a circuit XIR script and return an XIRProgram"""
-    tree = xir_parser.parse(circuit)
-    return XIRTransformer().transform(tree)
+from xir import DecimalComplex, parse_script
 
 
 class TestParser:
@@ -67,3 +61,33 @@ class TestParser:
 
         assert key in irprog.options
         assert irprog.options[key] == val
+
+    @pytest.mark.parametrize("use_floats", [True, False])
+    @pytest.mark.parametrize("param", [3, 4.2, 2j])
+    def test_use_floats(self, use_floats, param):
+        """Test the ``use_floats`` kwarg to return float and complex types"""
+        if use_floats:
+            t = type(param)
+        else:
+            if isinstance(param, complex):
+                t = DecimalComplex
+            elif isinstance(param, float):
+                t = Decimal
+            elif isinstance(param, int):
+                t = int
+
+        circuit = f"a_gate({param}) | [0, 1];"
+        irprog = parse_script(circuit, use_floats=use_floats)
+
+        assert isinstance(irprog.statements[0].params[0], t)
+
+    @pytest.mark.parametrize("eval_pi", [True, False])
+    @pytest.mark.parametrize("param, expected", [("pi", math.pi), ("pi / 2", math.pi / 2)])
+    def test_eval_pi(self, eval_pi, param, expected):
+        """Test the ``eval_pi`` kwarg to evaluate mathematical expressions containing pi"""
+        circuit = f"a_gate({param}) | [0, 1];"
+        irprog = parse_script(circuit, eval_pi=eval_pi)
+        if eval_pi:
+            assert irprog.statements[0].params[0] == expected
+        else:
+            assert irprog.statements[0].params[0] == param.upper()

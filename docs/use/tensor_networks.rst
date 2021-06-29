@@ -91,6 +91,8 @@ The :math:`\vert 0 \rangle` qubits are relatively simple to create:
 
 .. code-block:: cpp
 
+    using Tensor = Jet::Tensor<std::complex<float>>;
+
     // The control qubit is defined as a 1-D vector with 2 elements.
     Tensor q0({"i"}, {2}, {1, 0});
 
@@ -101,9 +103,8 @@ The Hadamard gate :math:`H` can also be constructed in the usual way:
 
 .. code-block:: cpp
 
-    constexpr float inv_sqrt_2 = 1 / std::sqrt(2);
-    Tensor H({"i", "k"}, {2, 2}, {inv_sqrt_2,  inv_sqrt_2,
-                                  inv_sqrt_2, -inv_sqrt_2});
+    const float inv_sqrt_2 = 1 / std::sqrt(2);
+    Tensor H({"i", "k"}, {2, 2}, {inv_sqrt_2, inv_sqrt_2, inv_sqrt_2, -inv_sqrt_2});
 
 The controlled NOT gate :math:`CNOT` is slightly trickier.  From the diagram,
 :math:`CNOT \in \mathbb{C}^{2 \times 2 \times 2 \times 2}`.  To derive this
@@ -128,18 +129,20 @@ The :math:`CNOT` gate is then given by
 
 .. code-block:: cpp
 
-    Tensor CNOT({"m", "n", "j", "k"}, {2, 2, 2, 2});
-    CNOT.SetValue({0, 0, 0, 0}, 1);
-    CNOT.SetValue({0, 1, 1, 0}, 1);
-    CNOT.SetValue({1, 1, 0, 1}, 1);
-    CNOT.SetValue({1, 0, 1, 1}, 1);
+    Tensor CNOT({"k", "j", "m", "n"}, {2, 2, 2, 2});
+    CNOT.SetValue({0, 0, 0, 0}, 1); // |00> -> |00>
+    CNOT.SetValue({0, 1, 0, 1}, 1); // |01> -> |01>
+    CNOT.SetValue({1, 0, 1, 1}, 1); // |10> -> |11>
+    CNOT.SetValue({1, 1, 1, 0}, 1); // |11> -> |10>
 
 Now, creating the tensor network is easy with the ``TensorNetwork`` class:
 
 .. code-block:: cpp
 
-    TensorNetwork<Tensor<std::complex<float>>> tn;
-    // The second argument can be used to associated a tensor with a set of tags.
+    using TensorNetwork = Jet::TensorNetwork<Tensor>;
+    TensorNetwork tn;
+
+    // The second argument can be used to associate a tensor with a set of tags.
     tn.AddTensor(q0, {});
     tn.AddTensor(q1, {});
     tn.AddTensor(H, {});
@@ -170,56 +173,55 @@ Putting it all together,
     #include <complex>
     #include <iostream>
 
-    #include "Jet.hpp"
+    #include <Jet.hpp>
 
-    int main() {
-        using namespace Jet;
+    int main()
+    {
+        using Tensor = Jet::Tensor<std::complex<float>>;
+        using TensorNetwork = Jet::TensorNetwork<Tensor>;
 
         Tensor q0({"i"}, {2}, {1, 0});
         Tensor q1({"j"}, {2}, {1, 0});
 
-        constexpr float inv_sqrt_2 = 1 / std::sqrt(2);
-        Tensor H({"i", "k"}, {2, 2}, {inv_sqrt_2,  inv_sqrt_2,
-                                      inv_sqrt_2, -inv_sqrt_2});
+        const float inv_sqrt_2 = 1 / std::sqrt(2);
+        Tensor H({"i", "k"}, {2, 2}, {inv_sqrt_2, inv_sqrt_2, inv_sqrt_2, -inv_sqrt_2});
 
-        Tensor CNOT({"m", "n", "j", "k"}, {2, 2, 2, 2});
+        Tensor CNOT({"k", "j", "m", "n"}, {2, 2, 2, 2});
         CNOT.SetValue({0, 0, 0, 0}, 1);
         CNOT.SetValue({0, 1, 0, 1}, 1);
         CNOT.SetValue({1, 0, 1, 1}, 1);
         CNOT.SetValue({1, 1, 1, 0}, 1);
 
-        TensorNetwork<Tensor<std::complex<float>>> tn;
+        TensorNetwork tn;
         tn.AddTensor(q0, {});
         tn.AddTensor(q1, {});
         tn.AddTensor(H, {});
         tn.AddTensor(CNOT, {});
 
-        // Returns the node with the greatest ID in the tensor network.
         Tensor result = tn.Contract();
-
-        std::cout << "|00> = " << result.GetValue({0, 0}) << std::endl;
-        std::cout << "|01> = " << result.GetValue({0, 1}) << std::endl;
-        std::cout << "|10> = " << result.GetValue({1, 0}) << std::endl;
-        std::cout << "|11> = " << result.GetValue({1, 1}) << std::endl;
+        std::cout << "Amplitude |00> = " << result.GetValue({0, 0}) << std::endl;
+        std::cout << "Amplitude |01> = " << result.GetValue({0, 1}) << std::endl;
+        std::cout << "Amplitude |10> = " << result.GetValue({1, 0}) << std::endl;
+        std::cout << "Amplitude |11> = " << result.GetValue({1, 1}) << std::endl;
 
         return 0;
-    };
+    }
 
 The output of the program is
 
 .. code-block:: text
 
-    |00> = (0.707107,0)
-    |01> = (0,0)
-    |10> = (0,0)
-    |11> = (0.707107,0)
+    Amplitude |00> = (0.707107,0)
+    Amplitude |01> = (0,0)
+    Amplitude |10> = (0,0)
+    Amplitude |11> = (0.707107,0)
 
 Task-based contraction
 ----------------------
 
 While ``TensorNetwork::Contract()`` is simple to use, it is unlikely to exhibit
 optimal performance for large tensor networks.  One alternative to the vanilla
-tensor network contractor is the ``TaskBasedCpuContractor`` class which models a
+tensor network contractor is the ``TaskBasedContractor`` class which models a
 tensor network contraction as a parallel task scheduling problem where each task
 encapsulates a local tensor contraction.  Such a formulation enables
 intermediate tensors which do not depend on each another to be contracted
@@ -241,7 +243,7 @@ top row (the other :math:`\vert 0 \rangle` and :math:`H`); however, the
 contraction representing the final output of the circuit may only be performed
 once nodes :math:`A_k` and :math:`B_{m,n,k}` have been computed.
 
-Despite its underlying complexity, the interface to ``TaskBasedCpuContractor``
+Despite its underlying complexity, the interface to ``TaskBasedContractor``
 is relatively straightforward.  After constructing the ``TensorNetwork`` in the
 previous section, the contraction path is specified using a ``PathInfo`` object:
 
@@ -249,28 +251,28 @@ previous section, the contraction path is specified using a ``PathInfo`` object:
 
     PathInfo path_info(tn, {{0, 2}, {1, 3}, {4, 5}});
 
-The contraction tasks can then be added to a new ``TaskBasedCpuContractor``
+The contraction tasks can then be added to a new ``TaskBasedContractor``
 instance:
 
 .. code-block:: cpp
 
-    TaskBasedCpuContractor<Tensor<std::complex<float>>> tbcc;
-    tbcc.AddContractionTasks(tn, path_info);
+    TaskBasedContractor<Tensor<std::complex<float>>> tbc;
+    tbc.AddContractionTasks(tn, path_info);
 
-Finally, ``TaskBasedCpuContractor::Contract()`` launches the contraction and
+Finally, ``TaskBasedContractor::Contract()`` launches the contraction and
 returns a future that becomes available when the contraction is complete:
 
 .. code-block:: cpp
 
     // Start the tensor network contraction and wait for it to finish.
-    auto future = tbcc.Contract();
+    auto future = tbc.Contract();
     future.wait();
 
     // Each call to AddContractionTasks() generates a new result.
-    const auto results = tbcc.GetResults();
+    const auto results = tbc.GetResults();
     const auto result = results[0];
 
 .. note::
 
-    Currently, ``TaskBasedCpuContractor`` expects the final contraction of a
+    Currently, ``TaskBasedContractor`` expects the final contraction of a
     tensor network to be a scalar.  This may change in a future release of Jet.
