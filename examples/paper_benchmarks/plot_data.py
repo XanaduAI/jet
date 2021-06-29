@@ -1,20 +1,17 @@
-import matplotlib.pyplot as plt
+import argparse
+from io import StringIO
+import os.path
 
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+# Use LaTeX fonts for figures
 plt.rcParams.update({
     "text.usetex": True,
     "font.family": "serif",
     "font.serif": ["Palatino"],
 })
-
-import pandas as pd
-from io import StringIO
-import seaborn as sns
-import os.path
-
-import numpy as np
-import scipy as sp
-
-import argparse
 
 def create_tavg_df_omp_pth_t10(csv_data: str):
     """
@@ -92,9 +89,9 @@ def load_dat_to_str(filename):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("name", help="Output name for figures")
-    parser.add_argument("csv", help="Data file to load")
-    parser.add_argument("sliced", help="Indicate whether data is sliced", choices=["y", "n"])
+    parser.add_argument("--name", help="Output name for figures", required=True)
+    parser.add_argument("--csv", help="Data file to load", required=True)
+    parser.add_argument("--sliced", help="Indicate whether data is sliced", choices=["y", "n"], required=True)
     args = parser.parse_args()
 
     data = load_dat_to_str(args.csv)

@@ -5,7 +5,7 @@
 # 0. Setup python env
 python -m venv py_benchenv
 source ./py_benchenv/bin/activate
-PIP_PKGS=(numpy scipy networkx numexpr opt_einsum kahypar cma jax jaxlib tqdm quimb baytune diskcache scikit-learn igraph jgraph autoray pandas strawberryfields thewalrus)
+PIP_PKGS=(numpy scipy networkx numexpr opt_einsum kahypar cma jax jaxlib tqdm quimb baytune diskcache scikit-learn igraph jgraph autoray pandas seaborn strawberryfields thewalrus)
 for pkg in ${PIP_PKGS[@]};
 do
     python -m pip install ${pkg}
