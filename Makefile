@@ -61,7 +61,7 @@ docs: $(.VENV_DIR)
 
 .PHONY: clean
 clean:
-	rm -rf ./docs/_build ./docs/api ./docs/doxyoutput
+	rm -rf ./docs/_build ./docs/api ./docs/code/api ./docs/doxyoutput
 	rm -rf $(.TEST_BUILD_DIR)
 	rm -rf $(.VENV_DIR)
 
