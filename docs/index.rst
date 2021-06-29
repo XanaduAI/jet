@@ -130,10 +130,9 @@ Version 2.0.
    dev/research
    dev/releases
 
-   
 .. toctree::
    :maxdepth: 2
-   :caption: API
+   :caption: C++ API
    :hidden:
 
    Overview <api/library_root>
@@ -144,3 +143,15 @@ Version 2.0.
    Jet::TensorNetwork <api/classJet_1_1TensorNetwork>
    Jet::TensorNetworkSerializer <api/classJet_1_1TensorNetworkSerializer>
    Jet::Utilities <api/namespace_Jet__Utilities>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Python API
+   :hidden:
+
+   code/jet
+   code/jet_circuit
+   code/jet_factory
+   code/jet_gate
+   code/jet_interpreter
+   code/jet_state
