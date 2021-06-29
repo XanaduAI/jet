@@ -32,7 +32,7 @@ t_samples=""
 for i in $(seq 0 $(($num_runs-1))); do t_samples+="t${i},"; done
 
 echo "OMP,PTHREAD,${t_samples}" | sed 's/.$//' >> jet_gbs_0amp_full_data.csv
-for i in $(ls -trah | grep jet_omp[1-9]); 
+for i in $(ls -trah | grep jet_gbs0_omp[1-9]); 
 do 
     dat_line=$(echo $i | sed "s/omp//" | sed "s/pthread//" | sed "s/.out//" | awk '{split($0,a,"_"); print a[3]","a[4]};' | tr -s '\n' ',');
     dat_line+=$(cat $i | grep "t=[0-9]" | tr '\n' ',' | sed "s/t\=//g" | sed "s/s//g" | sed 's/.$//');
