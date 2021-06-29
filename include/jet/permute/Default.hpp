@@ -123,7 +123,7 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
             // Copy data for this block, taking into account offset of
             // small_map...
             effective_max = std::min(blocksize_, remaining_data);
-            for (size_t p = 0; p < effective_max; ++p){
+            for (size_t p = 0; p < effective_max; ++p) {
                 data[small_map_old_to_new_position[p]] = scratch[offset + p];
             }
 
