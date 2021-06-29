@@ -8,6 +8,9 @@
 
 #include "external/nlohmann/json.hpp"
 
+#ifdef CUTENSOR
+#include "CudaTensor.hpp"
+#endif
 #include "PathInfo.hpp"
 #include "Tensor.hpp"
 #include "TensorNetwork.hpp"
@@ -88,7 +91,7 @@ class TensorFileException : public Exception {
  *
  * @tparam Tensor Type of the tensor in the tensor network.
  */
-template <class Tensor> class TensorNetworkSerializer {
+template <class TensorType> class TensorNetworkSerializer {
   public:
     /**
      * @brief Constructs a new `%TensorNetworkSerializer`.
@@ -96,7 +99,7 @@ template <class Tensor> class TensorNetworkSerializer {
      * @param indent Indent level to use when serializing to json. Default value
      *               will use the most compact representation.
      */
-    TensorNetworkSerializer<Tensor>(int indent = -1)
+    TensorNetworkSerializer<TensorType>(int indent = -1)
         : indent(indent), js(json::object())
     {
     }
@@ -106,7 +109,7 @@ template <class Tensor> class TensorNetworkSerializer {
      *
      * @return JSON string representing tensor network and path
      */
-    std::string operator()(const TensorNetwork<Tensor> &tn,
+    std::string operator()(const TensorNetwork<TensorType> &tn,
                            const PathInfo &path)
     {
         js["path"] = path.GetPath();
@@ -119,7 +122,7 @@ template <class Tensor> class TensorNetworkSerializer {
      *
      * @return JSON string representing tensor network.
      */
-    std::string operator()(const TensorNetwork<Tensor> &tn)
+    std::string operator()(const TensorNetwork<TensorType> &tn)
     {
         js["tensors"] = json::array();
 
@@ -139,20 +142,38 @@ template <class Tensor> class TensorNetworkSerializer {
      * Raises exception if string is invalid JSON, or if it does not
      * describe a valid tensor network.
      *
-     * @return TensorNetworkFile containing contents of js_str
+     * The loader assumes data is available in row-major format, but also allows
+     * it to be loaded onto a column-major backend (e.g. such as for the
+     * CudaTensor class).
+     *
+     * @param js_str String of JSON data.
+     * @param col_major Option to load the data for use by a column-major
+     *                  backend contractor.
+     * @return Tensor network file containing the tensor network and optional
+     *         contraction path represented by the given JSON data.
      */
-    TensorNetworkFile<Tensor> operator()(std::string js_str)
+    TensorNetworkFile<TensorType> operator()(std::string js_str,
+                                             bool col_major = false)
     {
-        TensorNetworkFile<Tensor> tf;
+        TensorNetworkFile<TensorType> tf;
         LoadAndValidateJSON_(js_str);
 
         size_t i = 0;
         for (auto &js_tensor : js["tensors"]) {
-            auto data = TensorDataFromJSON_<typename Tensor::scalar_type_t>(
+            auto data = TensorDataFromJSON_<typename TensorType::scalar_type_t>(
                 js_tensor[3], i);
 
-            tf.tensors.AddTensor(Tensor(js_tensor[1], js_tensor[2], data),
-                                 js_tensor[0]);
+            if (col_major) {
+                std::vector<std::string> rev_idx(js_tensor[1].rbegin(),
+                                                 js_tensor[1].rend());
+                std::vector<size_t> rev_shape(js_tensor[2].rbegin(),
+                                              js_tensor[2].rend());
+                tf.tensors.AddTensor(TensorType(rev_idx, rev_shape, data),
+                                     js_tensor[0]);
+            }
+            else
+                tf.tensors.AddTensor(
+                    TensorType(js_tensor[1], js_tensor[2], data), js_tensor[0]);
             i++;
         }
 
@@ -196,15 +217,29 @@ template <class Tensor> class TensorNetworkSerializer {
     /**
      * @brief Convert Tensor to json array format.
      */
-    static json TensorToJSON_(const Tensor &tensor,
+    static json TensorToJSON_(const TensorType &tensor,
                               const std::vector<std::string> &tags)
     {
         auto js_tensor = json::array();
 
         js_tensor.push_back(tags);
-        js_tensor.push_back(tensor.GetIndices());
-        js_tensor.push_back(tensor.GetShape());
-        js_tensor.push_back(TensorDataToJSON_(tensor.GetData()));
+        if constexpr (std::is_same_v<TensorType,
+                                     Jet::Tensor<std::complex<float>>> ||
+                      std::is_same_v<TensorType,
+                                     Jet::Tensor<std::complex<double>>>) {
+            js_tensor.push_back(tensor.GetIndices());
+            js_tensor.push_back(tensor.GetShape());
+            js_tensor.push_back(TensorDataToJSON_(tensor.GetData()));
+        }
+        else { // column-major branch
+            std::vector<std::string> rev_idx{tensor.GetIndices().rbegin(),
+                                             tensor.GetIndices().rend()};
+            std::vector<size_t> rev_shape{tensor.GetShape().rbegin(),
+                                          tensor.GetShape().rend()};
+            js_tensor.push_back(rev_idx);
+            js_tensor.push_back(rev_shape);
+            js_tensor.push_back(TensorDataToJSON_(tensor.GetHostDataVector()));
+        }
 
         return js_tensor;
     }
