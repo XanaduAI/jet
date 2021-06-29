@@ -6,6 +6,7 @@ m2r2
 nbsphinx
 repoze.lru>=0.7
 scipy>=1.2.1
+sphinx-automodapi
 sphinx-copybutton
 sphinx==3.5.4
 sphinxcontrib-bibtex
