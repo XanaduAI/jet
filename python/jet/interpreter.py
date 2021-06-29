@@ -18,7 +18,7 @@ __all__ = [
 
 
 def get_xir_library() -> XIRProgram:
-    """Returns an XIRProgram containing the gate declarations supported by Jet."""
+    """Returns an ``XIRProgram`` containing the gate declarations supported by Jet."""
     lines = []
 
     for key, cls in sorted(GateFactory.registry.items()):
