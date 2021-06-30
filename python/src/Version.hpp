@@ -17,6 +17,6 @@ void AddBindingsForVersion(py::module_ &m)
         Returns the current Jet version.
 
         Returns:
-            String representation of the current Jet version.
+            str: The Jet version.
     )");
 }

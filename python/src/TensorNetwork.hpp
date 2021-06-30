@@ -62,7 +62,7 @@ template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
 
             .def_property_readonly("index_to_edge_map",
                                    &TensorNetwork::GetIndexToEdgeMap,
-                                   "A map of indices to edges.")
+                                   "Mapping from indices to edges.")
 
             .def_property_readonly(
                 "tag_to_node_id_map",
@@ -75,7 +75,7 @@ template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
 
                     return map;
                 },
-                "Map which associates tags with node IDs.")
+                "Mapping from tags to node IDs.")
 
             .def_property_readonly("path", &TensorNetwork::GetPath, R"(
                 Path by which this tensor network was contracted.
