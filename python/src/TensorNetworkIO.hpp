@@ -67,11 +67,12 @@ template <class T> void AddBindingsForTensorNetworkSerializer(py::module_ &m)
     const std::string class_name = "TensorNetworkSerializer" + Type<T>::suffix;
 
     py::class_<TensorNetworkSerializer>(m, class_name.c_str(), R"(
-        This class is a functor for serializing and deserializing a tensor
-        network (and, optionally, a path) to/from a JSON document.
+        TensorNetworkSerializer represents a functor for serializing (and
+        deserializing) a tensor network and contraction path to (and from)
+        a JSON document.
 
-        If called with a tensor network (and, optionally, a path), the tensor
-        network serializer will return a JSON string representing the given
+        If called with a tensor network (and optionally a contraction path), the
+        tensor network serializer will return a JSON string representing the given
         arguments.
 
         If called with a string, the tensor network serializer will parse the
@@ -79,32 +80,36 @@ template <class T> void AddBindingsForTensorNetworkSerializer(py::module_ &m)
         object must contain a "tensors" key containing an array of tensors. It
         may optionally contain a "path" key describing a contraction path.
 
-        Each element of the "tensors" array is an array with four elements
+        Each element of the ``"tensors"`` array is an array with four elements
         containing the tags, ordered indices, shape, and values of each
-        tensor, respectively.  Each value is an array of size two, representing
-        the real and imaginary components of a complex number.  For example,
+        tensor, respectively. Each value is an array of size two, representing
+        the real and imaginary components of a complex number. For example,
 
-        ```
-        [
-            ["A", "hermitian"],
-            ["a", "b"],
-            [2, 2],
-            [[1.0, 0.0], [0.0, 1.0], [0.0, -1.0], [1.0, 0.0]]
-        ]
-        ```
+        .. code-block:: json
+
+            [
+                ["A", "hermitian"],
+                ["a", "b"],
+                [2, 2],
+                [[1.0, 0.0], [0.0, 1.0], [0.0, -1.0], [1.0, 0.0]]
+            ]
 
         corresponds to the 2x2 matrix
 
-        ```
-        [[1, i], [-i, 1]]
-        ```
+        .. code-block:: python
+
+            [[1, i], [-i, 1]]
 
         where "a" is the row index and "b" is the column index.
 
-        The "path" value is a list of integer pairs such as `[i, j]` where `i`
-        and `j` are the indexes of two tensors in the `"tensors"` array (or the
-        index of an intermediate tensor). 
-    )")
+        The "path" value is a list of integer pairs such as ``[i, j]`` where
+        ``i`` and ``j`` are the indexes of two tensors in the ``"tensors"``
+        array (or the index of an intermediate tensor).
+
+        Args:
+            indent (int): Indentation level to use when serializing to JSON.
+                The default value (-1) uses the most compact representation.
+        )")
 
         // Static properties
         // ---------------------------------------------------------------------
@@ -116,13 +121,7 @@ template <class T> void AddBindingsForTensorNetworkSerializer(py::module_ &m)
         // Constructors
         // ---------------------------------------------------------------------
 
-        .def(py::init<int>(), py::arg("indent") = -1, R"(
-            Constructs a tensor network serializer with an indentation level.
-
-            Args:
-                indent: indentation level to use when serializing to JSON.  The
-                        default value (-1) uses the most compact representation.
-        )")
+        .def(py::init<int>(), py::arg("indent") = -1)
 
         // Special methods
         // ---------------------------------------------------------------------
@@ -138,12 +137,11 @@ template <class T> void AddBindingsForTensorNetworkSerializer(py::module_ &m)
             Dumps the given tensor network to a JSON string.
 
             Args:
-                tn: tensor network to serialize.
+                tn (TensorNetwork): Tensor network to serialize.
 
             Returns:
-                Serialized tensor network file representing the given tensor
-                network.
-        )")
+                str: Serialized tensor network file representing the given tensor network.
+            )")
 
         .def(
             "__call__",
@@ -155,13 +153,13 @@ template <class T> void AddBindingsForTensorNetworkSerializer(py::module_ &m)
             Dumps the given tensor network and path to a JSON string.
 
             Args:
-                tn: tensor network to serialize.
-                path: contraction path to serialize.
+                tn (TensorNetwork): Tensor network to serialize.
+                path (PathInfo): Contraction path to serialize.
 
             Returns:
-                Serialized tensor network file representing the given tensor
+                str: Serialized tensor network file representing the given tensor
                 network and contraction path.
-        )")
+            )")
 
         .def(
             "__call__",
@@ -173,12 +171,12 @@ template <class T> void AddBindingsForTensorNetworkSerializer(py::module_ &m)
             Loads a tensor network file from a JSON string.
 
             Args:
-                str: tensor network file serialized as a JSON string.
+                str (str): JSON string representing a serialized tensor network file.
 
             Returns:
-                Deserialized tensor network file representing a tensor network
-                (and contraction path, if specified).
-        )");
+                TensorNetworkFile: Deserialized tensor network file representing a
+                tensor network (and contraction path, if specified).
+            )");
 }
 
 } // namespace
