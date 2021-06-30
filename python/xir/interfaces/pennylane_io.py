@@ -48,7 +48,7 @@ def to_xir(circuit, *args, **kwargs) -> XIRProgram:
         ob_name = "op_" + str(i + 1)
         xir.add_operator(ob_name, [], ob.wires, operator_stmts)
 
-        output_stmt = Statement(ob.return_type.name.lower(), {"operator": ob_name}, tuple(op.wires))
+        output_stmt = Statement(ob.return_type.name.lower(), {"operator": ob_name}, tuple(ob.wires))
         xir.statements.append(output_stmt)
 
     return xir
