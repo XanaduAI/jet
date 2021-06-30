@@ -13,15 +13,11 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
 {
     c.def(py::init<const Jet::TensorNetwork<Jet::Tensor<T>> &,
                    const Jet::PathInfo::Path &>(),
-          py::arg("tn"), py::arg("path") = Jet::PathInfo::Path(), R"(
-            Constructs a populated PathInfo for the given path
-            through a tensor network
-
-            Args:
-                tn: Tensor network
-                path: Pairs of integers representing a contraction path through
-                      the tensor network
-            )");
+          py::arg("tn"), py::arg("path") = Jet::PathInfo::Path(),
+          R"(
+          Constructs a populated PathInfo for the given path through a tensor
+          network.
+          )");
 
     if constexpr (sizeof...(Ts) > 0) {
         bind_constructors<Ts...>(c);
@@ -37,8 +33,9 @@ void bind_constructors(py::class_<Jet::PathInfo> &c)
 template <class... Ts> void AddBindingsForPathInfo(py::module_ &m)
 {
     py::class_<Jet::PathStepInfo>(m, "PathStepInfo", R"(
-        PathStepInfo represents the contraction metadata associated
-        with a node in a TensorNetwork)")
+        PathStepInfo represents the contraction metadata associated with a node
+        in a ``TensorNetwork``.
+        )")
 
         // Constants
         // ----------------------------------------------------------------
@@ -58,40 +55,57 @@ template <class... Ts> void AddBindingsForPathInfo(py::module_ &m)
                       &Jet::PathStepInfo::contracted_indices);
 
     auto cls =
-        py::class_<Jet::PathInfo>(
-            m, "PathInfo",
-            "PathInfo represents a contraction path in a tensor network.")
+        py::class_<Jet::PathInfo>(m, "PathInfo",
+                                  R"(
+            PathInfo represents a contraction path in a tensor network.
+            
+            Args:
+                tn (TensorNetwork): Tensor network associated with the
+                    contraction path.
+                path (List[Tuple[int, int]]): Pairs of integers representing a
+                    contraction path through the tensor network.
+            )")
 
             // Constructors
             //-----------------------------------------------------------------
 
-            .def(py::init<>(), R"(Constructs an empty path)")
+            .def(py::init<>(), "Constructs an empty path")
 
             // Properties
             // ----------------------------------------------------------------
+
             .def_property_readonly("index_to_size_map",
-                                   &Jet::PathInfo::GetIndexSizes, R"(
-            A map of indices to their dimension)")
+                                   &Jet::PathInfo::GetIndexSizes,
+                                   "Mapping from indices to their dimension.")
 
             .def_property_readonly("num_leaves", &Jet::PathInfo::GetNumLeaves,
-                                   R"(
-            Number of leaf steps in this path)")
+                                   "Number of leaf steps in this path")
 
-            .def_property_readonly("path", &Jet::PathInfo::GetPath, R"(
-            The contraction path)")
+            .def_property_readonly(
+                "path", &Jet::PathInfo::GetPath,
+                "List of node ID pairs representing the contraction path.")
 
-            .def_property_readonly("steps", &Jet::PathInfo::GetSteps, R"(
-            The steps of this path)")
+            .def_property_readonly("steps", &Jet::PathInfo::GetSteps,
+                                   "Steps of this path.")
 
             // Other
             // -----------------------------------------------------------------
+
             .def("total_flops", &Jet::PathInfo::GetTotalFlops, R"(
             Computes the total number of floating-point operations needed
-            to contract the tensor network along this path)")
+            to contract the tensor network along this path
+
+            Returns:
+                float: Total number of floating-point operations.
+            )")
 
             .def("total_memory", &Jet::PathInfo::GetTotalMemory, R"(
             Computes the total memory required to contract the tensor
-            network along this path.)");
+            network along this path.
+
+            Returns:
+                float: Total number of elements in the contracted tensors.
+            )");
 
     // Add constructor bindings for each Tensor data type.
     bind_constructors<Ts...>(cls);
