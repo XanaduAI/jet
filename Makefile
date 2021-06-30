@@ -58,7 +58,7 @@ test: $(.TEST_BUILD_DIR)
 
 .PHONY: dist
 dist:
-	cd dist && $(MAKE) dist
+	cd python && $(MAKE) dist
 
 
 .PHONY: docs
@@ -70,13 +70,12 @@ docs: $(.VENV_DIR) dist
 .PHONY: clean
 clean:
 	rm -rf ./docs/_build ./docs/api ./docs/code/api ./docs/doxyoutput
-	rm -rf $(.TEST_BUILD_DIR)
-	rm -rf $(.VENV_DIR)
+	rm -rf $(.TEST_BUILD_DIR) $(.VENV_DIR) ./dist
 
 
 $(.VENV_DIR):
 	python3 -m venv $@
-	$@/bin/pip install wheel
+	$@/bin/pip install -q wheel
 	$@/bin/pip install -q -r docs/requirements.txt
 
 
