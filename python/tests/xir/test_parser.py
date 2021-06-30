@@ -22,10 +22,46 @@ class TestParser:
         ],
     )
     def test_output_with_array(self, array, res):
+        """Test outputs with arrays as parameter values"""
         circuit = f"an_output_statement(array: {array}) | [0, 1];"
         irprog = parse_script(circuit)
 
         assert irprog.statements[0].params["array"] == res
+
+    @pytest.mark.parametrize(
+        "key, val, expected",
+        [
+            ("cutoff", "5", 5),
+            ("anything", "4.2", 4.2),
+            ("a_number", "3 + 2.1", 5.1),
+            ("a_number_with_pi", "pi / 2", math.pi / 2),
+            ("a_string", "hello", "hello"),
+            ("True", "False", "False"),
+            ("true", "false", False),
+        ],
+    )
+    def test_options(self, key, val, expected):
+        """Test script-level options"""
+        irprog = parse_script(f"options:\n    {key}: {val};\nend;", use_floats=True, eval_pi=True)
+
+        assert key in irprog.options
+        assert irprog.options[key] == expected
+
+    @pytest.mark.parametrize(
+        "key, val",
+        [
+            ("key", ["compound", "value"]),
+            ("True", [1, 2, "False"]),
+            ("key", [1, [2, [3, 4]]]),
+        ],
+    )
+    def test_options_lists(self, key, val):
+        """Test script-level options"""
+        val_str = "[" + ", ".join(str(v) for v in val) + "]"
+        irprog = parse_script(f"options:\n    {key}: {val_str};\nend;")
+
+        assert key in irprog.options
+        assert irprog.options[key] == val
 
     @pytest.mark.parametrize("use_floats", [True, False])
     @pytest.mark.parametrize("param", [3, 4.2, 2j])

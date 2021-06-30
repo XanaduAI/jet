@@ -4,9 +4,10 @@ include: "use" name ";"
 
 // the main circuit
 circuit: statement+
-statement: gatestmt | gate_def | operator_def
+statement: gatestmt | gate_def | operator_def | script_options
 gatestmt: name (params | options_dict) "|" wires ";"
 opstmt: expr "," obs_group";"
+script_options: _OPTIONS ":" (option ";")+ _END ";"
 
 gate_def: _GATE name params wires? ":" gatestmt+ _END ";"
 operator_def: _OP name params wires? ":" opstmt+ _END ";"
@@ -52,6 +53,7 @@ range: INT ".." INT
 // reserved keywords
 PI: "pi"
 
+_OPTIONS: "options"
 _GATE: "gate"
 _FUNC: "func"
 _OP: "operator"

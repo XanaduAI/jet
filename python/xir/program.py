@@ -1,7 +1,7 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Dict, List, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Sequence, Set, Tuple, Union
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
@@ -202,9 +202,11 @@ class XIRProgram:
 
     Args:
         version (str): Version number of the program. Must follow SemVer style (MAJOR.MINOR.PATCH).
+        use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
+            and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(self, version: str = "0.1.0"):
+    def __init__(self, version: str = "0.1.0", use_floats: bool = True):
         if not isinstance(version, str):
             raise TypeError(f"Invalid version number input. Must be a string.")
 
@@ -214,8 +216,10 @@ class XIRProgram:
                 f"Invalid version number {version} input. Must be SemVer style (MAJOR.MINOR.PATCH)."
             )
         self._version = version
+        self._use_floats = use_floats
 
         self._include = []
+        self._options = dict()
         self._statements = []
 
         self._declarations = {"gate": [], "func": [], "output": [], "operator": []}
@@ -239,6 +243,10 @@ class XIRProgram:
         return self._version
 
     @property
+    def use_floats(self) -> bool:
+        return self._use_floats
+
+    @property
     def wires(self) -> Set[int]:
         """Get the wires of an XIR program"""
         wires = []
@@ -255,6 +263,17 @@ class XIRProgram:
             list[str]: included libraries/files
         """
         return self._include
+
+    @property
+    def options(self) -> Dict[str, Any]:
+        """Script-level options declared in the program
+
+        Returns:
+            Dict: declared scipt-level options
+        """
+        if self.use_floats:
+            return get_floats(self._options)
+        return self._options
 
     @property
     def statements(self) -> List[Statement]:
@@ -358,6 +377,11 @@ class XIRProgram:
         res.extend([f"use {use};" for use in self._include])
         if len(self._include) != 0:
             res.append("")
+
+        if len(self.options) > 0:
+            res.append("options:")
+            res.extend([f"    {k}: {v};" for k, v in self.options.items()])
+            res.append("end;\n")
 
         res.extend([f"gate {dec};" for dec in self._declarations["gate"]])
         res.extend([f"func {dec};" for dec in self._declarations["func"]])
