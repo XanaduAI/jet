@@ -58,6 +58,7 @@ test: $(.TEST_BUILD_DIR)
 docs: $(.VENV_DIR)
 	@# The installed `jet` Python package is used to generate the API documentation.
 	cd python && $(MAKE) dist && cd ..
+	$(.VENV_DIR)/bin/pip install wheel
 	$(.VENV_DIR)/bin/pip install -q $(wildcard dist/*.whl) --upgrade
 	. $(.VENV_DIR)/bin/activate; cd docs && $(MAKE) html
 
