@@ -17,37 +17,12 @@ import inspect
 import os
 import re
 import sys
-from unittest.mock import MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath("../python"))
 sys.path.append(os.path.abspath("_ext"))
-
-# -------------------------------------------------------------------------
-
-# Adapted from: https://github.com/PennyLaneAI/pennylane/blob/master/doc/conf.py.
-for name in (
-    "lark",
-    "strawberryfields",
-    "thewalrus",
-    "thewalrus.fock_gradients",
-):
-
-    class Mock(MagicMock):
-        __all__ = []
-        __name__ = name
-        __dir__ = []
-        __dict__ = {}
-        __repr__ = lambda _: name
-
-        @classmethod
-        def __getattr__(cls, _):
-            return MagicMock()
-
-    sys.modules[name] = Mock()
-
 
 # -- General configuration ------------------------------------------------
 
