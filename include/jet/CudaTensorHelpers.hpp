@@ -40,7 +40,8 @@ namespace CudaTensorHelpers {
  * @param err CuRand function error-code.
  */
 #define JET_CURAND_IS_SUCCESS(err)                                             \
-    JET_ABORT_IF_NOT(err == CURAND_STATUS_SUCCESS, GetCuRandErrorString(err))
+    JET_ABORT_IF_NOT(err == CURAND_STATUS_SUCCESS,                             \
+                     GetCuRandErrorString(err).c_str())
 
 #else
 #define JET_CUDA_IS_SUCCESS(err)                                               \
@@ -59,27 +60,52 @@ namespace CudaTensorHelpers {
 
 static const std::string GetCuRandErrorString(const curandStatus_t &err)
 {
-    static const std::unordered_map<curandStatus_t, std::string> error_map(
-        {{CURAND_STATUS_SUCCESS, "No errors"},
-         {CURAND_STATUS_VERSION_MISMATCH,
-          "Header file and linked library version do not match"},
-         {CURAND_STATUS_NOT_INITIALIZED, "Generator not initialized"},
-         {CURAND_STATUS_ALLOCATION_FAILED, "Memory allocation failed"},
-         {CURAND_STATUS_TYPE_ERROR, "Generator is wrong type"},
-         {CURAND_STATUS_OUT_OF_RANGE, "Argument out of range"},
-         {CURAND_STATUS_LENGTH_NOT_MULTIPLE,
-          "Length requested is not a multple of dimension"},
-         {CURAND_STATUS_DOUBLE_PRECISION_REQUIRED,
-          "GPU does not have double precision required by MRG32k3a"},
-         {CURAND_STATUS_LAUNCH_FAILURE, "Kernel launch failure"},
-         {CURAND_STATUS_PREEXISTING_FAILURE,
-          "Preexisting failure on library entry"},
-         {CURAND_STATUS_INITIALIZATION_FAILED, "Initialization of CUDA failed"},
-         {CURAND_STATUS_ARCH_MISMATCH,
-          "Architecture mismatch, GPU does not support requested "
-          "featurecurandStatus_t"},
-         {CURAND_STATUS_INTERNAL_ERROR, "Internal library error"}});
-    return error_map.at(err);
+    std::string result;
+    switch (err) {
+    case CURAND_STATUS_SUCCESS:
+        result = "No errors";
+        break;
+    case CURAND_STATUS_VERSION_MISMATCH:
+        result = "Header file and linked library version do not match";
+        break;
+    case CURAND_STATUS_NOT_INITIALIZED:
+        result = "Generator not initialized";
+        break;
+    case CURAND_STATUS_ALLOCATION_FAILED:
+        result = "Memory allocation failed";
+        break;
+    case CURAND_STATUS_TYPE_ERROR:
+        result = "Generator is wrong type";
+        break;
+    case CURAND_STATUS_OUT_OF_RANGE:
+        result = "Argument out of range";
+        break;
+    case CURAND_STATUS_LENGTH_NOT_MULTIPLE:
+        result = "Length requested is not a multple of dimension";
+        break;
+    case CURAND_STATUS_DOUBLE_PRECISION_REQUIRED:
+        result = "GPU does not have double precision required by MRG32k3a";
+        break;
+    case CURAND_STATUS_LAUNCH_FAILURE:
+        result = "Kernel launch failure";
+        break;
+    case CURAND_STATUS_PREEXISTING_FAILURE:
+        result = "Preexisting failure on library entry";
+        break;
+    case CURAND_STATUS_INITIALIZATION_FAILED:
+        result = "Initialization of CUDA failed";
+        break;
+    case CURAND_STATUS_ARCH_MISMATCH:
+        result = "Architecture mismatch, GPU does not support requested "
+                 "feature curandStatus_t";
+        break;
+    case CURAND_STATUS_INTERNAL_ERROR:
+        result = "Internal library error";
+        break;
+    default:
+        result = "Status not found";
+    }
+    return result;
 }
 
 /**

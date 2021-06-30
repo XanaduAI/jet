@@ -420,7 +420,6 @@ TEST_CASE("CudaTensor::RenameIndex", "[CudaTensor]")
 TEST_CASE("CudaTensor::Reshape", "[CudaTensor]")
 {
     using namespace Catch::Matchers;
-    using namespace Jet::Utilities;
 
     SECTION("Equal data size")
     {
@@ -430,7 +429,7 @@ TEST_CASE("CudaTensor::Reshape", "[CudaTensor]")
                                     {4, 0}, {5, 0}, {6, 0}};
 
         CudaTensor tensor(t_indices, t_shape, t_data);
-        CudaTensor tensor_r({"?b", "?a"}, {3, 2}, t_data);
+        CudaTensor tensor_r({"?a", "?b"}, {3, 2}, t_data);
         CHECK(tensor_r.GetShape() == tensor.Reshape({3, 2}).GetShape());
         CHECK(tensor_r.GetIndices() == tensor.Reshape({3, 2}).GetIndices());
     }
@@ -442,7 +441,7 @@ TEST_CASE("CudaTensor::Reshape", "[CudaTensor]")
                                     {4, 0}, {5, 0}, {6, 0}};
 
         CudaTensor tensor(t_indices, t_shape, t_data);
-        CudaTensor tensor_r({"?b", "?a"}, {3, 2}, t_data);
+        CudaTensor tensor_r({"?a", "?b"}, {3, 2}, t_data);
         CHECK_THROWS_WITH(CudaTensor<>::Reshape(tensor, {3, 3}),
                           Contains("Size is inconsistent between tensors."));
         CHECK(tensor_r.GetSize() != Jet::Utilities::ShapeToSize({3, 3}));

@@ -3,7 +3,7 @@
 #include <Jet.hpp>
 
 #include "PathInfo.hpp"
-#include "TaskBasedCpuContractor.hpp"
+#include "TaskBasedContractor.hpp"
 #include "Tensor.hpp"
 #include "TensorNetwork.hpp"
 #include "TensorNetworkIO.hpp"

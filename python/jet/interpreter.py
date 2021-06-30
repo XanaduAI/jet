@@ -5,7 +5,6 @@ from typing import List, Union
 import numpy as np
 
 from xir import XIRProgram, XIRTransformer, xir_parser
-from xir.interfaces import find_number_of_modes
 
 from .circuit import Circuit
 from .gate import GateFactory
@@ -52,7 +51,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     """
     result: List[Union[np.number, np.ndarray]] = []
 
-    num_wires = find_number_of_modes(program)
+    num_wires = len(program.wires)
     # TODO: Extract the Fock cutoff dimension from the XIR script.
     circuit = Circuit(num_wires=num_wires, dim=2)
 

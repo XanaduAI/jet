@@ -18,7 +18,7 @@ namespace Jet {
 
 /**
  * @brief TaskBasedContractor is a tensor network contractor that contracts
- *        tensors concurrently on using a task-based scheduler.
+ *        tensors concurrently using a task-based scheduler.
  *
  * @tparam Tensor Type of the tensors to be contracted. The only requirement
  *                for this type is that the following member functions exist:

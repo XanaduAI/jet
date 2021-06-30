@@ -78,9 +78,8 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
         // Other
         // ---------------------------------------------------------------------
 
-        .def("add_contraction_tasks",
-             &TaskBasedContractor::AddContractionTasks, py::arg("tn"),
-             py::arg("path_info"), R"(
+        .def("add_contraction_tasks", &TaskBasedContractor::AddContractionTasks,
+             py::arg("tn"), py::arg("path_info"), R"(
             Adds contraction tasks for a tensor network.
 
             Args:
@@ -110,8 +109,8 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
         )")
 
         .def(
-            "contract",
-            [](TaskBasedContractor &tbc) { tbc.Contract().wait(); }, R"(
+            "contract", [](TaskBasedContractor &tbc) { tbc.Contract().wait(); },
+            R"(
             Executes the tasks in this task-based contractor.
 
             Warning:
