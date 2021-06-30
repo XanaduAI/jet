@@ -13,7 +13,9 @@ TARGETS
 
   uninstall [prefix=<path>]   Remove Jet headers from <path>/include, defaults to $(.DEFAULT_PREFIX)
 
-  test                        Build and run C++ tests (requires Cmake)
+  test                        Build and run C++ tests (requires CMake)
+
+  dist                        Build the Python source and wheel distributions
 
   docs                        Build docs (requires Doxygen, Pandoc and pip)
 
@@ -54,11 +56,13 @@ test: $(.TEST_BUILD_DIR)
 	$(.TEST_BUILD_DIR)/test/runner
 
 
+.PHONY: dist
+dist:
+	cd dist && $(MAKE) dist
+
+
 .PHONY: docs
-docs: $(.VENV_DIR)
-	@# The installed `jet` Python package is used to generate the API documentation.
-	cd python && $(MAKE) dist && cd ..
-	$(.VENV_DIR)/bin/pip install wheel
+docs: $(.VENV_DIR) dist
 	$(.VENV_DIR)/bin/pip install -q $(wildcard dist/*.whl) --upgrade
 	. $(.VENV_DIR)/bin/activate; cd docs && $(MAKE) html
 
@@ -72,6 +76,7 @@ clean:
 
 $(.VENV_DIR):
 	python3 -m venv $@
+	$@/bin/pip install wheel
 	$@/bin/pip install -q -r docs/requirements.txt
 
 
