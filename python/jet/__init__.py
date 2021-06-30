@@ -5,7 +5,6 @@ quantum gates, states, and circuits.
 
 # The existence of a Python binding is proof of its intention to be exposed.
 from .bindings import *
-from .bindings import version
 
 # The rest of the modules control their exports using `__all__`.
 from .circuit import *
