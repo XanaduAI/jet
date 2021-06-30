@@ -29,22 +29,23 @@ class TestParser:
         assert irprog.statements[0].params["array"] == res
 
     @pytest.mark.parametrize(
-        "key, val",
+        "key, val, expected",
         [
-            ("cutoff", 5),
-            # ("anything", 4.2),
-            ("a_string", "hello"),
-            ("True", "False"),
-            # ("", "value"),
-            # ("key", "")
+            ("cutoff", "5", 5),
+            ("anything", "4.2", 4.2),
+            ("a_number", "3 + 2.1", 5.1),
+            ("a_number_with_pi", "pi / 2", math.pi / 2),
+            ("a_string", "hello", "hello"),
+            ("True", "False", "False"),
+            ("true", "false", False),
         ],
     )
-    def test_options(self, key, val):
+    def test_options(self, key, val, expected):
         """Test script-level options"""
-        irprog = parse_script(f"options:\n    {key}: {val};\nend;")
+        irprog = parse_script(f"options:\n    {key}: {val};\nend;", use_floats=True, eval_pi=True)
 
         assert key in irprog.options
-        assert irprog.options[key] == val
+        assert irprog.options[key] == expected
 
     @pytest.mark.parametrize(
         "key, val",

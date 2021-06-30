@@ -202,9 +202,11 @@ class XIRProgram:
 
     Args:
         version (str): Version number of the program. Must follow SemVer style (MAJOR.MINOR.PATCH).
+        use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
+            and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(self, version: str = "0.1.0"):
+    def __init__(self, version: str = "0.1.0", use_floats: bool = True):
         if not isinstance(version, str):
             raise TypeError(f"Invalid version number input. Must be a string.")
 
@@ -214,6 +216,7 @@ class XIRProgram:
                 f"Invalid version number {version} input. Must be SemVer style (MAJOR.MINOR.PATCH)."
             )
         self._version = version
+        self._use_floats = use_floats
 
         self._include = []
         self._options = dict()
@@ -240,6 +243,10 @@ class XIRProgram:
         return self._version
 
     @property
+    def use_floats(self) -> bool:
+        return self._use_floats
+
+    @property
     def wires(self) -> Set[int]:
         """Get the wires of an XIR program"""
         wires = []
@@ -264,6 +271,8 @@ class XIRProgram:
         Returns:
             Dict: declared scipt-level options
         """
+        if self.use_floats:
+            return get_floats(self._options)
         return self._options
 
     @property
