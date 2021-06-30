@@ -74,7 +74,7 @@
 
 ### Documentation
 
-* The Sphinx documentation website now includes API documentation for the `jet` Python package. [(#40)](https://github.com/XanaduAI/jet/pull/40)
+* The Sphinx documentation now includes API documentation for the `jet` Python package. [(#40)](https://github.com/XanaduAI/jet/pull/40)
 
 * The "Using Jet" section of the Sphinx documentation website now compiles with the latest Jet headers. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 

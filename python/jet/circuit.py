@@ -111,7 +111,7 @@ class Circuit:
         """Applies a gate along the specified wires.
 
         Args:
-            gate (~.Gate): gate to be applied.
+            gate (.Gate): gate to be applied.
             wire_ids (Sequence[int]): IDs of the wires the gate is applied to.
         """
         input_indices = self.indices(wire_ids)
@@ -129,7 +129,7 @@ class Circuit:
         """Terminates the specified wires with a quantum state.
 
         Args:
-            state (~.State): state to be used for termination.
+            state (.State): state to be used for termination.
             wire_ids (Sequence[int]): IDs of the wires the state terminates.
         """
         for i in wire_ids:
