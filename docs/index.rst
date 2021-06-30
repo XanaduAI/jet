@@ -32,7 +32,7 @@ Jet Documentation
         </p>
         <div class="row mt-3">
             <div class="col-lg-4 mb-2 adlign-items-stretch">
-                <a href="tensors.html">
+                <a href="use/tensors.html">
                     <div class="card rounded-lg" style="height:100%;">
                         <div class="d-flex">
                             <div>
@@ -48,7 +48,7 @@ Jet Documentation
                 </a>
             </div>
             <div class="col-lg-4 mb-2 align-items-stretch">
-                <a href="installing.html">
+                <a href="dev/guide.html">
                 <div class="card rounded-lg" style="height:100%;">
                     <div class="d-flex">
                         <div>
