@@ -22,11 +22,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - uses: josh146/sphinx-action@master
-        with:
-          docs-folder: "docs/"
-          pre-build-command: "apt install -y doxygen && pip3 install -r requirements.txt"
-          build-command: "make html"
+      - name: Install system dependencies
+        run: sudo apt install -y libopenblas-dev python3.8-dev doxygen graphviz
+
+      - name: Install Python dependencies
+        run: |
+          cd python
+          make dist
+          pip3 install ../dist/*.whl
+          pip3 install -r docs/requirements.txt
+
+      - name: Generate documentation
+        run: make docs
 
       - name: Upload HTML
         uses: actions/upload-artifact@v2
