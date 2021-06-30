@@ -32,7 +32,7 @@ Jet Documentation
         </p>
         <div class="row mt-3">
             <div class="col-lg-4 mb-2 adlign-items-stretch">
-                <a href="use/tensors.html">
+                <a href="use/introduction.html">
                     <div class="card rounded-lg" style="height:100%;">
                         <div class="d-flex">
                             <div>
