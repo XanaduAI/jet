@@ -22,15 +22,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: sudo apt install -y libopenblas-dev python3.8-dev doxygen graphviz
-
-      - name: Install Python dependencies
-        run: |
-          cd python
-          make dist
-          pip3 install ../dist/*.whl
-          pip3 install -r docs/requirements.txt
 
       - name: Generate documentation
         run: make docs

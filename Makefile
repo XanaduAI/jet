@@ -56,7 +56,10 @@ test: $(.TEST_BUILD_DIR)
 
 .PHONY: docs
 docs: $(.VENV_DIR)
-	. $(.VENV_DIR)/bin/activate; cd ./docs && $(MAKE) html
+	@# The installed `jet` Python package is used to generate the API documentation.
+	cd python && $(MAKE) dist && cd ..
+	$(.VENV_DIR)/bin/pip install -q $(wildcard dist/*.whl) --upgrade
+	. $(.VENV_DIR)/bin/activate; cd docs && $(MAKE) html
 
 
 .PHONY: clean
