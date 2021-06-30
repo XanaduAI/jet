@@ -150,6 +150,7 @@ Version 2.0.
    :hidden:
 
    code/jet
+   code/jet_bindings
    code/jet_circuit
    code/jet_factory
    code/jet_gate
