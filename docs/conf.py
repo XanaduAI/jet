@@ -81,7 +81,7 @@ exhale_args = {
         "../include/Jet.hpp "
         "../include/jet/Abort.hpp "
         "../include/jet/PathInfo.hpp "
-        "../include/jet/TaskBasedCpuContractor.hpp "
+        "../include/jet/TaskBasedContractor.hpp "
         "../include/jet/Tensor.hpp "
         "../include/jet/TensorNetwork.hpp "
         "../include/jet/TensorNetworkIO.hpp "

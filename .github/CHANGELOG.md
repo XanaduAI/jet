@@ -2,6 +2,10 @@
 
 ### New features since last release
 
+* Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
+
+* The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`. (#29)](https://github.com/XanaduAI/jet/pull/29)
+
 * An `XIRProgram` which declares the gates supported by Jet is now bundled with the `jet` Python package. [(#34)](https://github.com/XanaduAI/jet/pull/34)
 
 * The `jet` Python package now includes an interpreter for XIR programs. [(#24)](https://github.com/XanaduAI/jet/pull/24)
@@ -51,6 +55,8 @@
 ### Bug Fixes
 
 * The Jet and XIR Python packages can now be installed from a source distribution. [(#38)](https://github.com/XanaduAI/jet/pull/38)
+
+* An issue with the `CudaTensor` indices was fixed when converting between the CPU `Tensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 

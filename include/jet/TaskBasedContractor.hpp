@@ -17,8 +17,8 @@
 namespace Jet {
 
 /**
- * @brief TaskBasedCpuContractor is a tensor network contractor that contracts
- *        tensors concurrently on the CPU using a task-based scheduler.
+ * @brief TaskBasedContractor is a tensor network contractor that contracts
+ *        tensors concurrently using a task-based scheduler.
  *
  * @tparam Tensor Type of the tensors to be contracted. The only requirement
  *                for this type is that the following member functions exist:
@@ -27,14 +27,14 @@ namespace Jet {
  *     static Tensor ContractTensors(const Tensor&, const Tensor&);
  *                \endcode
  */
-template <typename Tensor> class TaskBasedCpuContractor {
+template <class TensorType> class TaskBasedContractor {
   public:
     /// Type of the name-to-task map.
     using NameToTaskMap = std::unordered_map<std::string, tf::Task>;
 
     /// Type of the name-to-tensor map.
     using NameToTensorMap =
-        std::unordered_map<std::string, std::unique_ptr<Tensor>>;
+        std::unordered_map<std::string, std::unique_ptr<TensorType>>;
 
     /// Type of the name-to-parents map.
     using NameToParentsMap =
@@ -44,16 +44,16 @@ template <typename Tensor> class TaskBasedCpuContractor {
     using TaskFlow = tf::Taskflow;
 
     /**
-     * @brief Constructs a new `%TaskBasedCpuContractor` object.
+     * @brief Constructs a new `%TaskBasedContractor` object.
      */
-    TaskBasedCpuContractor(
+    TaskBasedContractor(
         size_t num_threads = std::thread::hardware_concurrency())
         : executor_{num_threads}, memory_(0), flops_(0), reduced_(false)
     {
     }
 
     /**
-     * @brief Returns the name-to-task map of this `%TaskBasedCpuContractor`.
+     * @brief Returns the name-to-task map of this `%TaskBasedContractor`.
      *
      * @return Map which associates names to tasks.
      */
@@ -63,7 +63,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     }
 
     /**
-     * @brief Returns the name-to-tensor map of this `%TaskBasedCpuContractor`.
+     * @brief Returns the name-to-tensor map of this `%TaskBasedContractor`.
      *
      * @return Map which associates names to tensors.
      */
@@ -73,7 +73,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     }
 
     /**
-     * @brief Returns the name-to-parents map of this `%TaskBasedCpuContractor`.
+     * @brief Returns the name-to-parents map of this `%TaskBasedContractor`.
      *
      * @return Map which associates names to a vector of parent node IDs.
      */
@@ -94,7 +94,10 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Vector of tensors.
      */
-    const std::vector<Tensor> &GetResults() const noexcept { return results_; }
+    const std::vector<TensorType> &GetResults() const noexcept
+    {
+        return results_;
+    }
 
     /**
      * @brief Returns the reduction of the final tensor results.
@@ -107,13 +110,13 @@ template <typename Tensor> class TaskBasedCpuContractor {
      *
      * @return Tensor at the end of the reduction task.
      */
-    const Tensor &GetReductionResult() const noexcept
+    const TensorType &GetReductionResult() const noexcept
     {
         return reduction_result_;
     }
 
     /**
-     * @brief Returns the taskflow of this `%TaskBasedCpuContractor`.
+     * @brief Returns the taskflow of this `%TaskBasedContractor`.
      *
      * @return Taskflow instance representing the task dependency graph.
      */
@@ -145,7 +148,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @return Number of contraction tasks that are shared with previous calls
      *         to this function.
      */
-    size_t AddContractionTasks(const TensorNetwork<Tensor> &tn,
+    size_t AddContractionTasks(const TensorNetwork<TensorType> &tn,
                                const PathInfo &path_info) noexcept
     {
         const auto &path = path_info.GetPath();
@@ -190,13 +193,13 @@ template <typename Tensor> class TaskBasedCpuContractor {
             if (step_1_id < num_leaves) {
                 const auto &tensor = nodes[step_1_id].tensor;
                 name_to_tensor_map_.try_emplace(
-                    name_1, std::make_unique<Tensor>(tensor));
+                    name_1, std::make_unique<TensorType>(tensor));
             }
 
             if (step_2_id < num_leaves) {
                 const auto &tensor = nodes[step_2_id].tensor;
                 name_to_tensor_map_.try_emplace(
-                    name_2, std::make_unique<Tensor>(tensor));
+                    name_2, std::make_unique<TensorType>(tensor));
             }
 
             name_to_tensor_map_.try_emplace(name_3, nullptr);
@@ -237,7 +240,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
      * @brief Adds a reduction task to sum the result tensors.
      *
      * @warning Only one reduction task should be added per
-     *          `%TaskBasedCpuContractor` instance.
+     *          `%TaskBasedContractor` instance.
      *
      * @return Number of created reduction tasks.
      */
@@ -249,7 +252,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
         }
         reduced_ = true;
 
-        auto reduce_func = [](const Tensor &a, const Tensor &b) {
+        auto reduce_func = [](const TensorType &a, const TensorType &b) {
             return a.AddTensor(b);
         };
 
@@ -301,7 +304,7 @@ template <typename Tensor> class TaskBasedCpuContractor {
     }
 
     /**
-     * @brief Executes the tasks in this `%TaskBasedCpuContractor`.
+     * @brief Executes the tasks in this `%TaskBasedContractor`.
      *
      * @return Future that becomes available once all the tasks have finished.
      */
@@ -329,10 +332,10 @@ template <typename Tensor> class TaskBasedCpuContractor {
     std::vector<tf::Task> result_tasks_;
 
     /// Result of each call to AddContractionTasks().
-    std::vector<Tensor> results_;
+    std::vector<TensorType> results_;
 
     /// Sum over the `results_` elements.
-    Tensor reduction_result_;
+    TensorType reduction_result_;
 
     /// Memory required to store the intermediate tensors of a contraction.
     double memory_;
@@ -370,9 +373,9 @@ template <typename Tensor> class TaskBasedCpuContractor {
                              const std::string &name_3) noexcept
     {
         const auto runner = [this, name_1, name_2, name_3]() {
-            name_to_tensor_map_[name_3] = std::make_unique<Tensor>(
-                Tensor::ContractTensors(*name_to_tensor_map_.at(name_1),
-                                        *name_to_tensor_map_.at(name_2)));
+            name_to_tensor_map_[name_3] = std::make_unique<TensorType>(
+                TensorType::ContractTensors(*name_to_tensor_map_.at(name_1),
+                                            *name_to_tensor_map_.at(name_2)));
         };
 
         const auto task_3 = taskflow_.emplace(runner).name(name_3);
@@ -413,10 +416,10 @@ template <typename Tensor> class TaskBasedCpuContractor {
 };
 
 /**
- * @brief Streams a `TaskBasedCpuContractor` to an output stream.
+ * @brief Streams a `TaskBasedContractor` to an output stream.
  *
  * Currently, this function just dumps the task dependency graph of the given
- * `%TaskBasedCpuContractor` instance in a DOT format to the specified output
+ * `%TaskBasedContractor` instance in a DOT format to the specified output
  * stream.
  *
  * @see See <a
@@ -425,14 +428,14 @@ template <typename Tensor> class TaskBasedCpuContractor {
  *
  * @tparam Tensor Type of the tensors to be contracted.
  * @param out Output stream to be modified.
- * @param tbcc Task-based CPU contractor with the taskflow to be inserted.
+ * @param tbc Task-based contractor with the taskflow to be inserted.
  * @return Reference to the given output stream.
  */
-template <class Tensor>
+template <class TensorType>
 inline std::ostream &operator<<(std::ostream &out,
-                                const TaskBasedCpuContractor<Tensor> &tbcc)
+                                const TaskBasedContractor<TensorType> &tbc)
 {
-    const auto &taskflow = tbcc.GetTaskflow();
+    const auto &taskflow = tbc.GetTaskflow();
     taskflow.dump(out);
     return out;
 }
