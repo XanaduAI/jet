@@ -657,7 +657,7 @@ template <class T = cuComplex> class CudaTensor {
     {
         return Reshape<T>(*this, new_shape);
     }
-
+/*
     template <typename U = T>
     static CudaTensor<U> SliceIndex(const CudaTensor<U> &tens,
                                     const std::string &index_str,
@@ -668,18 +668,18 @@ template <class T = cuComplex> class CudaTensor {
         auto host_tensor_sliced =
             host_tensor.SliceIndex(index_str, index_value);
         return CudaTensor<U>(host_tensor_sliced);
-    }
-/*
+    }*/
+
     template <typename U = T>
     static CudaTensor<U> SliceIndex(const CudaTensor<U> &tens,
                                     const std::string &index_str,
                                     size_t index_value)
     {// Note the index_value may need to be reversed from array position
-    // The chunking of indices may also need to be done from front rather than back as next
 
         ///////////////////////////////////////////////////////////////////////
         // 0. Perform up-front util allocations and manipulations
         ///////////////////////////////////////////////////////////////////////
+        static const U one = {1.0, 0.0};
 
         const std::vector<std::string>& old_indices = tens.GetIndices();
         std::vector<std::string> new_indices = tens.GetIndices();
@@ -706,6 +706,7 @@ template <class T = cuComplex> class CudaTensor {
 
         cutensorHandle_t handle;
         cudaDataType_t data_type;
+        JET_CUTENSOR_IS_SUCCESS(cutensorInit(&handle));
 
         if constexpr (std::is_same<U, cuDoubleComplex>::value ||
                       std::is_same<U, double2>::value) {
@@ -741,8 +742,8 @@ template <class T = cuComplex> class CudaTensor {
             input_dimensions[idx] = mode_to_dimension_map[input_modes[idx]];
         }
 
-        index_to_mode_map.clear();
-        mode_to_dimension_map.clear();
+        //index_to_mode_map.clear();
+        //mode_to_dimension_map.clear();
 
         ///////////////////////////////////////////////////////////////////////
         // 4. Build Descriptor for input
@@ -797,9 +798,10 @@ template <class T = cuComplex> class CudaTensor {
         // 7. Permute tensor indices
         ///////////////////////////////////////////////////////////////////////
 
+        JET_CUTENSOR_IS_SUCCESS(
         cutensorPermutation(&handle, &one, tens.data_, &input_descriptor, input_modes.data(), 
             permuted_tensor.data_, &output_descriptor, output_modes.data(), data_type, nullptr
-        );
+        ));
 
         ///////////////////////////////////////////////////////////////////////
         // 8. Return tensor slice
@@ -818,12 +820,12 @@ template <class T = cuComplex> class CudaTensor {
 
         const size_t ptr_offset = Jet::Utilities::ShapeToSize(std::vector<size_t>{permuted_tensor.GetShape().begin(), permuted_tensor.GetShape().end()-1});
         JET_CUDA_IS_SUCCESS(
-            cudaMemcpy(sliced_tensor.data_ + (ptr_offset*index_value), permuted_tensor.data_, sizeof(U) * ptr_offset, cudaMemcpyDeviceToDevice)
+            cudaMemcpy(sliced_tensor.data_, permuted_tensor.data_ + (ptr_offset*index_value), sizeof(U) * ptr_offset, cudaMemcpyDeviceToDevice)
         );
 
         return sliced_tensor;
     }
-*/
+
     CudaTensor<T> SliceIndex(const std::string &index_str, size_t index_value)
     {
         return SliceIndex<T>(*this, index_str, index_value);
