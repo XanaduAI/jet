@@ -82,6 +82,10 @@ class XIRTransformer(Transformer):
         # assert all stmts are handled
         assert all(a == None for a in args)
 
+    def script_options(self, args):
+        """Script level options."""
+        self._program._options = {k: v for k, v in args}
+
     ###############
     # basic types
     ###############

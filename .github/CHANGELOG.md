@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* CudaTensor now supports `Transpose` calls. [(#42)](https://github.com/XanaduAI/jet/pull/42)
+
 * Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. [(#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`. [(#29)](https://github.com/XanaduAI/jet/pull/29)
@@ -34,6 +36,8 @@
 
 ### Improvements
 
+* CudaTensor `SliceIndices` calls now avoid intermediate CPU transfer operations. [(#42)](https://github.com/XanaduAI/jet/pull/42)
+
 * Tensor transposes are now significantly faster when all the dimensions are powers of two. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
 * Use camel case for type aliases. [(#17)](https://github.com/XanaduAI/jet/pull/17)
@@ -53,6 +57,10 @@
 * Indices are now specified in row-major order. [(#10)](https://github.com/XanaduAI/jet/pull/10)
 
 ### Bug Fixes
+
+* The Jet and XIR Python packages can now be installed from a source distribution. [(#38)](https://github.com/XanaduAI/jet/pull/38)
+
+* An issue with the `CudaTensor` indices was fixed when converting between the CPU `Tensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
