@@ -40,6 +40,7 @@ extensions = [
     "m2r2",
     "nbsphinx",
     "sphinx_copybutton",
+    "sphinx_tabs.tabs",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
