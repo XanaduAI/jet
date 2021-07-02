@@ -17,7 +17,23 @@ __all__ = [
 
 
 def get_xir_library() -> XIRProgram:
-    """Returns an XIRProgram containing the gate declarations supported by Jet."""
+    """Returns an ``XIRProgram`` containing the gate declarations supported by Jet.
+
+    Returns:
+        xir.program.XIRProgram: Declarations of the gates supported by Jet.
+
+    **Example**
+
+    Simply call the function directly:
+
+    .. code-block:: python
+
+        import jet
+
+        program = jet.get_xir_library()
+
+        assert program.gates
+    """
     lines = []
 
     for key, cls in sorted(GateFactory.registry.items()):
@@ -44,10 +60,46 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
         ValueError: If the given program contains an unsupported or invalid statement.
 
     Args:
-        program (XIRProgram): XIR script to execute.
+        program (xir.program.XIRProgram): XIR script to execute.
 
     Returns:
-        List of NumPy values representing the output of the XIR program.
+        List[Union[np.number, np.ndarray]]: List of NumPy values representing the
+        output of the XIR program.
+
+    **Example**
+
+    Consider the following XIR script which generates a Bell state and then
+    measures the amplitude of each basis state:
+
+    .. code-block:: haskell
+
+        use xstd;
+
+        H | [0];
+        CNOT | [0, 1];
+
+        amplitude(state: 0) | [0, 1];
+        amplitude(state: 1) | [0, 1];
+        amplitude(state: 2) | [0, 1];
+        amplitude(state: 3) | [0, 1];
+
+    If the contents of this script are stored in a string called ``xir_script``,
+    then each amplitude of the Bell state can be displayed using Jet as follows:
+
+    .. code-block:: python
+
+        import jet
+        import xir
+
+        # Parse the XIR script into an XIR program.
+        xir_program = xir.parse_script(xir_script)
+
+        # Run the XIR program using Jet and wait for the results.
+        result = jet.run_xir_program(xir_program)
+
+        # Display the returned amplitudes.
+        for i, amp in enumerate(result):
+            print(f"Amplitude |{i:02b}> = {amp}")
     """
     result: List[Union[np.number, np.ndarray]] = []
 

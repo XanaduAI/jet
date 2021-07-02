@@ -13,7 +13,9 @@ TARGETS
 
   uninstall [prefix=<path>]   Remove Jet headers from <path>/include, defaults to $(.DEFAULT_PREFIX)
 
-  test                        Build and run C++ tests (requires Cmake)
+  test                        Build and run C++ tests (requires CMake)
+
+  dist                        Build the Python source and wheel distributions
 
   docs                        Build docs (requires Doxygen, Pandoc and pip)
 
@@ -54,20 +56,26 @@ test: $(.TEST_BUILD_DIR)
 	$(.TEST_BUILD_DIR)/test/runner
 
 
+.PHONY: dist
+dist:
+	cd python && $(MAKE) dist
+
+
 .PHONY: docs
-docs: $(.VENV_DIR)
-	. $(.VENV_DIR)/bin/activate; cd ./docs && $(MAKE) html
+docs: $(.VENV_DIR) dist
+	$(.VENV_DIR)/bin/pip install -q $(wildcard dist/*.whl) --upgrade
+	. $(.VENV_DIR)/bin/activate; cd docs && $(MAKE) html SPHINXOPTS="-W --keep-going"
 
 
 .PHONY: clean
 clean:
-	rm -rf ./docs/_build ./docs/api ./docs/doxyoutput
-	rm -rf $(.TEST_BUILD_DIR)
-	rm -rf $(.VENV_DIR)
+	rm -rf ./docs/_build ./docs/api ./docs/code/api ./docs/doxyoutput
+	rm -rf $(.TEST_BUILD_DIR) $(.VENV_DIR) ./dist
 
 
 $(.VENV_DIR):
 	python3 -m venv $@
+	$@/bin/pip install -q wheel
 	$@/bin/pip install -q -r docs/requirements.txt
 
 
