@@ -64,7 +64,7 @@ dist:
 .PHONY: docs
 docs: $(.VENV_DIR) dist
 	$(.VENV_DIR)/bin/pip install -q $(wildcard dist/*.whl) --upgrade
-	. $(.VENV_DIR)/bin/activate; cd docs && $(MAKE) html
+	. $(.VENV_DIR)/bin/activate; cd docs && $(MAKE) html SPHINXOPTS="-W --keep-going"
 
 
 .PHONY: clean
