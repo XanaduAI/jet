@@ -5,7 +5,6 @@ from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
 import numpy as np
 
 from xir import Statement, XIRProgram, XIRTransformer, xir_parser
-from xir.interfaces import find_number_of_modes
 
 from .circuit import Circuit
 from .gate import GateFactory
