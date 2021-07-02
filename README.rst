@@ -122,8 +122,6 @@ interface and a C++ compiler with C++17 support is required.  Simply run
     make dist
     pip install dist/*.whl
 
-to install the package.
-
 To verify that Jet is installed, you can run the ``hellojet.py`` program below
 
 .. code-block:: python
@@ -142,7 +140,7 @@ To verify that Jet is installed, you can run the ``hellojet.py`` program below
 
     print("You have successfully used Jet version", jet.version())
 
-and
+The output of this program should resemble
 
 .. code-block:: text
 
