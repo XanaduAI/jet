@@ -26,7 +26,7 @@ jobs:
         with:
           docs-folder: docs/
           pre-build-command: apt install -y libopenblas-dev python3.8-dev doxygen graphviz
-          build-command: cd .. && make docs
+          build-command: make -C .. docs
 
       - name: Upload HTML
         uses: actions/upload-artifact@v2
