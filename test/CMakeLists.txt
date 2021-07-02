@@ -23,7 +23,7 @@ include(Catch)
 target_sources(runner PRIVATE Test_Abort.cpp
                               Test_PathInfo.cpp
                               Test_Permuter.cpp
-                              Test_TaskBasedCpuContractor.cpp
+                              Test_TaskBasedContractor.cpp
                               Test_Tensor.cpp
                               Test_TensorNetwork.cpp
                               Test_TensorNetworkIO.cpp

@@ -57,19 +57,20 @@ INV_SQRT2 = 1 / sqrt(2)
 
 
 class Gate(ABC):
+    """Gate represents a quantum gate.
+
+    Args:
+        name (str): Name of the gate.
+        num_wires (int): Number of wires the gate is applied to.
+        params (list or None): Parameters of the gate.
+    """
+
     def __init__(
         self,
         name: str,
         num_wires: int,
         params: Optional[List[float]] = None,
     ):
-        """Constructs a quantum gate.
-
-        Args:
-            name (str): Name of the gate.
-            num_wires (int): Number of wires the gate is applied to.
-            params (list or None): Parameters of the gate.
-        """
         self.name = name
 
         self._indices = None
@@ -228,16 +229,17 @@ class GateFactory:
 
 @GateFactory.register(names=["Displacement", "displacement", "D", "d"])
 class Displacement(Gate):
-    def __init__(self, r: float, phi: float, cutoff: int):
-        """Constructs a displacement gate.  See `thewalrus.displacement
-        <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.displacement.html>`__
-        for more details.
+    """Displacement represents a displacement gate. See `thewalrus.displacement
+    <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.displacement.html>`__
+    for more details.
 
-        Args:
-            r (float): Displacement magnitude.
-            phi (float): Displacement angle.
-            cutoff (int): Fock ladder cutoff.
-        """
+    Args:
+        r (float): Displacement magnitude.
+        phi (float): Displacement angle.
+        cutoff (int): Fock ladder cutoff.
+    """
+
+    def __init__(self, r: float, phi: float, cutoff: int):
         super().__init__(name="Displacement", num_wires=1, params=[r, phi, cutoff])
 
     @lru_cache()
@@ -247,16 +249,17 @@ class Displacement(Gate):
 
 @GateFactory.register(names=["Squeezing", "squeezing"])
 class Squeezing(Gate):
-    def __init__(self, r: float, theta: float, cutoff: int):
-        """Constructs a squeezing gate.  See `thewalrus.squeezing
-        <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.squeezing.html>`__
-        for more details.
+    """Squeezing represents a squeezing gate. See `thewalrus.squeezing
+    <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.squeezing.html>`__
+    for more details.
 
-        Args:
-            r (float): Squeezing magnitude.
-            theta (float): Squeezing angle.
-            cutoff (int): Fock ladder cutoff.
-        """
+    Args:
+        r (float): Squeezing magnitude.
+        theta (float): Squeezing angle.
+        cutoff (int): Fock ladder cutoff.
+    """
+
+    def __init__(self, r: float, theta: float, cutoff: int):
         super().__init__(name="Squeezing", num_wires=1, params=[r, theta, cutoff])
 
     @lru_cache()
@@ -266,16 +269,17 @@ class Squeezing(Gate):
 
 @GateFactory.register(names=["TwoModeSqueezing", "twomodesqueezing"])
 class TwoModeSqueezing(Gate):
-    def __init__(self, r: float, theta: float, cutoff: int):
-        """Constructs a two-mode squeezing gate.  See `thewalrus.two_mode_squeezing
-        <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.two_mode_squeezing.html>`__
-        for more details.
+    """TwoModeSqueezing represents a two-mode squeezing gate. See `thewalrus.two_mode_squeezing
+    <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.two_mode_squeezing.html>`__
+    for more details.
 
-        Args:
-            r (float): Squeezing magnitude.
-            theta (float): Squeezing angle.
-            cutoff (int): Fock ladder cutoff.
-        """
+    Args:
+        r (float): Squeezing magnitude.
+        theta (float): Squeezing angle.
+        cutoff (int): Fock ladder cutoff.
+    """
+
+    def __init__(self, r: float, theta: float, cutoff: int):
         super().__init__(name="TwoModeSqueezing", num_wires=2, params=[r, theta, cutoff])
 
     @lru_cache()
@@ -292,17 +296,18 @@ class TwoModeSqueezing(Gate):
     ]
 )
 class Beamsplitter(Gate):
-    def __init__(self, theta: float, phi: float, cutoff: int):
-        """Constructs a beamsplitter gate.  See `thewalrus.beamsplitter
-        <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.beamsplitter.html>`__
-        for more details.
+    """Beamsplitter represents a beamsplitter gate. See `thewalrus.beamsplitter
+    <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.beamsplitter.html>`__
+    for more details.
 
-        Args:
-            theta (float): Transmissivity angle of the beamsplitter. The
-                           transmissivity is :math:`t=\\cos(\\theta)`.
-            phi (float): Reflection phase of the beamsplitter.
-            cutoff (int): Fock ladder cutoff.
-        """
+    Args:
+        theta (float): Transmissivity angle of the beamsplitter. The transmissivity is
+                       :math:`t=\\cos(\\theta)`.
+        phi (float): Reflection phase of the beamsplitter.
+        cutoff (int): Fock ladder cutoff.
+    """
+
+    def __init__(self, theta: float, phi: float, cutoff: int):
         super().__init__(name="Beamsplitter", num_wires=2, params=[theta, phi, cutoff])
 
     @lru_cache()
@@ -317,21 +322,22 @@ class Beamsplitter(Gate):
 
 @GateFactory.register(names=["Hadamard", "hadamard", "H", "h"])
 class Hadamard(Gate):
+    """Hadamard represents a Hadamard gate."""
+
     def __init__(self):
-        """Constructs a Hadamard gate."""
         super().__init__(name="Hadamard", num_wires=1)
 
     @lru_cache()
     def _data(self) -> np.ndarray:
-        """Hadamard matrix"""
         mat = [[INV_SQRT2, INV_SQRT2], [INV_SQRT2, -INV_SQRT2]]
         return np.array(mat)
 
 
 @GateFactory.register(names=["PauliX", "paulix", "X", "x", "NOT", "not"])
 class PauliX(Gate):
+    """PauliX represents a Pauli-X gate."""
+
     def __init__(self):
-        """Constructs a Pauli-X gate."""
         super().__init__(name="PauliX", num_wires=1)
 
     @lru_cache()
@@ -342,8 +348,9 @@ class PauliX(Gate):
 
 @GateFactory.register(names=["PauliY", "pauliy", "Y", "y"])
 class PauliY(Gate):
+    """PauliY represents a Pauli-Y gate."""
+
     def __init__(self):
-        """Constructs a Pauli-Y gate."""
         super().__init__(name="PauliY", num_wires=1)
 
     @lru_cache()
@@ -354,8 +361,9 @@ class PauliY(Gate):
 
 @GateFactory.register(names=["PauliZ", "pauliz", "Z", "z"])
 class PauliZ(Gate):
+    """PauliZ represents a Pauli-Z gate."""
+
     def __init__(self):
-        """Constructs a Pauli-Z gate."""
         super().__init__(name="PauliZ", num_wires=1)
 
     @lru_cache()
@@ -366,8 +374,9 @@ class PauliZ(Gate):
 
 @GateFactory.register(names=["S", "s"])
 class S(Gate):
+    """S represents a single-qubit phase gate."""
+
     def __init__(self):
-        """Constructs a single-qubit phase gate."""
         super().__init__(name="S", num_wires=1)
 
     @lru_cache()
@@ -378,8 +387,9 @@ class S(Gate):
 
 @GateFactory.register(names=["T", "t"])
 class T(Gate):
+    """T represents a single-qubit T gate."""
+
     def __init__(self):
-        """Constructs a single-qubit T gate."""
         super().__init__(name="T", num_wires=1)
 
     @lru_cache()
@@ -390,8 +400,9 @@ class T(Gate):
 
 @GateFactory.register(names=["SX", "sx"])
 class SX(Gate):
+    """SX represents a single-qubit Square-Root X gate."""
+
     def __init__(self):
-        """Constructs a single-qubit Square-Root X gate."""
         super().__init__(name="SX", num_wires=1)
 
     @lru_cache()
@@ -402,12 +413,13 @@ class SX(Gate):
 
 @GateFactory.register(names=["PhaseShift", "phaseshift"])
 class PhaseShift(Gate):
-    def __init__(self, phi: float):
-        """Constructs a single-qubit local phase shift gate.
+    """PhaseShift represents a single-qubit local phase shift gate.
 
-        Args:
-            phi (float): Phase shift angle.
-        """
+    Args:
+        phi (float): Phase shift angle.
+    """
+
+    def __init__(self, phi: float):
         super().__init__(name="PhaseShift", num_wires=1, params=[phi])
 
     @lru_cache()
@@ -419,12 +431,13 @@ class PhaseShift(Gate):
 
 @GateFactory.register(names=["CPhaseShift", "cphaseshift"])
 class CPhaseShift(Gate):
-    def __init__(self, phi: float):
-        """Constructs a controlled phase shift gate.
+    """CPhaseShift represents a controlled phase shift gate.
 
-        Args:
-            phi (float): Phase shift angle.
-        """
+    Args:
+        phi (float): Phase shift angle.
+    """
+
+    def __init__(self, phi: float):
         super().__init__(name="CPhaseShift", num_wires=2, params=[phi])
 
     @lru_cache()
@@ -436,8 +449,9 @@ class CPhaseShift(Gate):
 
 @GateFactory.register(names=["CX", "cx", "CNOT", "cnot"])
 class CX(Gate):
+    """CX represents a controlled-X gate."""
+
     def __init__(self):
-        """Constructs a controlled-X gate."""
         super().__init__(name="CX", num_wires=2)
 
     @lru_cache()
@@ -448,8 +462,9 @@ class CX(Gate):
 
 @GateFactory.register(names=["CY", "cy"])
 class CY(Gate):
+    """CY represents a controlled-Y gate."""
+
     def __init__(self):
-        """Constructs a controlled-Y gate."""
         super().__init__(name="CY", num_wires=2)
 
     @lru_cache()
@@ -460,8 +475,9 @@ class CY(Gate):
 
 @GateFactory.register(names=["CZ", "cz"])
 class CZ(Gate):
+    """CZ represents a controlled-Z gate."""
+
     def __init__(self):
-        """Constructs a controlled-Z gate."""
         super().__init__(name="CZ", num_wires=2)
 
     @lru_cache()
@@ -472,8 +488,9 @@ class CZ(Gate):
 
 @GateFactory.register(names=["SWAP", "swap"])
 class SWAP(Gate):
+    """SWAP represents a SWAP gate."""
+
     def __init__(self):
-        """Constructs a SWAP gate."""
         super().__init__(name="SWAP", num_wires=2)
 
     @lru_cache()
@@ -484,8 +501,9 @@ class SWAP(Gate):
 
 @GateFactory.register(names=["ISWAP", "iswap"])
 class ISWAP(Gate):
+    """ISWAP represents a ISWAP gate."""
+
     def __init__(self):
-        """Constructs an ISWAP gate."""
         super().__init__(name="ISWAP", num_wires=2)
 
     @lru_cache()
@@ -496,8 +514,9 @@ class ISWAP(Gate):
 
 @GateFactory.register(names=["CSWAP", "cswap"])
 class CSWAP(Gate):
+    """CSWAP represents a CSWAP gate."""
+
     def __init__(self):
-        """Constructs a CSWAP gate."""
         super().__init__(name="CSWAP", num_wires=3)
 
     @lru_cache()
@@ -517,8 +536,9 @@ class CSWAP(Gate):
 
 @GateFactory.register(names=["Toffoli", "toffoli"])
 class Toffoli(Gate):
+    """Toffoli represents a Toffoli gate."""
+
     def __init__(self):
-        """Constructs a Toffoli gate."""
         super().__init__(name="Toffoli", num_wires=3)
 
     @lru_cache()
@@ -538,12 +558,13 @@ class Toffoli(Gate):
 
 @GateFactory.register(names=["RX", "rx"])
 class RX(Gate):
-    def __init__(self, theta: float):
-        """Constructs a single-qubit X rotation gate.
+    """RX represents a single-qubit X rotation gate.
 
-        Args:
-            theta (float): Rotation angle around the X-axis.
-        """
+    Args:
+        theta (float): Rotation angle around the X-axis.
+    """
+
+    def __init__(self, theta: float):
         super().__init__(name="RX", num_wires=1, params=[theta])
 
     @lru_cache()
@@ -558,12 +579,13 @@ class RX(Gate):
 
 @GateFactory.register(names=["RY", "ry"])
 class RY(Gate):
-    def __init__(self, theta: float):
-        """Constructs a single-qubit Y rotation gate.
+    """RY represents a single-qubit Y rotation gate.
 
-        Args:
-            theta (float): Rotation angle around the Y-axis.
-        """
+    Args:
+        theta (float): Rotation angle around the Y-axis.
+    """
+
+    def __init__(self, theta: float):
         super().__init__(name="RY", num_wires=1, params=[theta])
 
     @lru_cache()
@@ -579,12 +601,13 @@ class RY(Gate):
 
 @GateFactory.register(names=["RZ", "rz"])
 class RZ(Gate):
-    def __init__(self, theta: float):
-        """Constructs a single-qubit Z rotation gate.
+    """RZ represents a single-qubit Z rotation gate.
 
-        Args:
-            theta (float): Rotation angle around the Z-axis.
-        """
+    Args:
+        theta (float): Rotation angle around the Z-axis.
+    """
+
+    def __init__(self, theta: float):
         super().__init__(name="RZ", num_wires=1, params=[theta])
 
     @lru_cache()
@@ -598,24 +621,25 @@ class RZ(Gate):
 
 @GateFactory.register(names=["Rot", "rot"])
 class Rot(Gate):
+    """Rot represents an arbitrary single-qubit rotation gate with three Euler
+    angles. Each Pauli rotation gate can be recovered by fixing two of the three
+    parameters:
+
+    >>> assert RX(theta).tensor() == Rot(pi/2, -pi/2, theta).tensor()
+    >>> assert RY(theta).tensor() == Rot(0, 0, theta).tensor()
+    >>> assert RZ(theta).tensor() == Rot(theta, 0, 0).tensor()
+
+    See `qml.Rot
+    <https://pennylane.readthedocs.io/en/stable/code/api/pennylane.Rot.html>`__
+    for more details.
+
+    Args:
+        phi (float): First rotation angle.
+        theta (float): Second rotation angle.
+        omega (float): Third rotation angle.
+    """
+
     def __init__(self, phi: float, theta: float, omega: float):
-        """Constructs an arbitrary single-qubit rotation gate with three Euler
-        angles. Each Pauli rotation gate can be recovered by fixing two of the
-        three parameters:
-
-        >>> assert RX(theta).tensor() == Rot(pi/2, -pi/2, theta).tensor()
-        >>> assert RY(theta).tensor() == Rot(0, 0, theta).tensor()
-        >>> assert RZ(theta).tensor() == Rot(theta, 0, 0).tensor()
-
-        See `qml.Rot
-        <https://pennylane.readthedocs.io/en/stable/code/api/pennylane.Rot.html>`__
-        for more details.
-
-        Args:
-            phi (float): First rotation angle.
-            theta (float): Second rotation angle.
-            omega (float): Third rotation angle.
-        """
         super().__init__(name="Rot", num_wires=1, params=[phi, theta, omega])
 
     @lru_cache()
@@ -633,12 +657,13 @@ class Rot(Gate):
 
 @GateFactory.register(names=["CRX", "crx"])
 class CRX(Gate):
-    def __init__(self, theta: float):
-        """Constructs a controlled-RX gate.
+    """CRX represents a controlled-RX gate.
 
-        Args:
-            theta (float): Rotation angle around the X-axis.
-        """
+    Args:
+        theta (float): Rotation angle around the X-axis.
+    """
+
+    def __init__(self, theta: float):
         super().__init__(name="CRX", num_wires=2, params=[theta])
 
     @lru_cache()
@@ -653,12 +678,13 @@ class CRX(Gate):
 
 @GateFactory.register(names=["CRY", "cry"])
 class CRY(Gate):
-    def __init__(self, theta: float):
-        """Constructs a controlled-RY gate.
+    """CRY represents a controlled-RY gate.
 
-        Args:
-            theta (float): Rotation angle around the Y-axis.
-        """
+    Args:
+        theta (float): Rotation angle around the Y-axis.
+    """
+
+    def __init__(self, theta: float):
         super().__init__(name="CRY", num_wires=2, params=[theta])
 
     @lru_cache()
@@ -673,12 +699,13 @@ class CRY(Gate):
 
 @GateFactory.register(names=["CRZ", "crz"])
 class CRZ(Gate):
-    def __init__(self, theta: float):
-        """Constructs a controlled-RZ gate.
+    """CRZ represents a controlled-RZ gate.
 
-        Args:
-            theta (float): Rotation angle around the Z-axis.
-        """
+    Args:
+        theta (float): Rotation angle around the Z-axis.
+    """
+
+    def __init__(self, theta: float):
         super().__init__(name="CRZ", num_wires=2, params=[theta])
 
     @lru_cache()
@@ -695,14 +722,15 @@ class CRZ(Gate):
 
 @GateFactory.register(names=["CRot", "crot"])
 class CRot(Gate):
-    def __init__(self, phi: float, theta: float, omega: float):
-        """Constructs a controlled-rotation gate.
+    """CRot represents a controlled-rotation gate.
 
-        Args:
-            phi (float): First rotation angle.
-            theta (float): Second rotation angle.
-            omega (float): Third rotation angle.
-        """
+    Args:
+        phi (float): First rotation angle.
+        theta (float): Second rotation angle.
+        omega (float): Third rotation angle.
+    """
+
+    def __init__(self, phi: float, theta: float, omega: float):
         super().__init__(name="CRot", num_wires=2, params=[phi, theta, omega])
 
     @lru_cache()
@@ -722,12 +750,13 @@ class CRot(Gate):
 
 @GateFactory.register(names=["U1", "u1"])
 class U1(Gate):
-    def __init__(self, phi: float):
-        """Constructs a U1 gate.
+    """U1 represents a U1 gate.
 
-        Args:
-            phi (float): Rotation angle.
-        """
+    Args:
+        phi (float): Rotation angle.
+    """
+
+    def __init__(self, phi: float):
         super().__init__(name="U1", num_wires=1, params=[phi])
 
     @lru_cache()
@@ -739,13 +768,14 @@ class U1(Gate):
 
 @GateFactory.register(names=["U2", "u2"])
 class U2(Gate):
-    def __init__(self, phi: float, lam: float):
-        """Constructs a U2 gate.
+    """U2 represents a U2 gate.
 
-        Args:
-            phi (float): First rotation angle.
-            lam (float): Second rotation angle.
-        """
+    Args:
+        phi (float): First rotation angle.
+        lam (float): Second rotation angle.
+    """
+
+    def __init__(self, phi: float, lam: float):
         super().__init__(name="U2", num_wires=1, params=[phi, lam])
 
     @lru_cache()
@@ -760,14 +790,15 @@ class U2(Gate):
 
 @GateFactory.register(names=["U3", "u3"])
 class U3(Gate):
-    def __init__(self, theta: float, phi: float, lam: float):
-        """Constructs a U3 gate.
+    """U3 represents a U3 gate.
 
-        Args:
-            theta (float): First rotation angle.
-            phi (float): Second rotation angle.
-            lam (float): Third rotation angle.
-        """
+    Args:
+        theta (float): First rotation angle.
+        phi (float): Second rotation angle.
+        lam (float): Third rotation angle.
+    """
+
+    def __init__(self, theta: float, phi: float, lam: float):
         super().__init__(name="U3", num_wires=1, params=[theta, phi, lam])
 
     @lru_cache()

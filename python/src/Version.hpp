@@ -14,9 +14,9 @@ void AddBindingsForVersion(py::module_ &m)
     m.attr("__version__") = Jet::Version();
 
     m.def("version", Jet::Version, R"(
-        Returns the current Jet version.
+Returns the current Jet version.
 
-        Returns:
-            String representation of the current Jet version.
+Returns:
+    str: The Jet version.
     )");
 }

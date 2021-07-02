@@ -4,9 +4,10 @@ include: "use" name ";"
 
 // the main circuit
 circuit: statement+
-statement: gatestmt | gate_def | operator_def
+statement: gatestmt | gate_def | operator_def | script_options
 gatestmt: name (params | options_dict) "|" wires ";"
 opstmt: expr "," obs_group";"
+script_options: _OPTIONS ":" (option ";")+ _END ";"
 
 gate_def: _GATE name params wires? ":" gatestmt+ _END ";"
 operator_def: _OP name params wires? ":" opstmt+ _END ";"
@@ -22,11 +23,11 @@ wires : "[" (uint | range | name) ("," (uint | range | name))* "]"
 params: ["(" val ("," val)* ")"]  // always optional (easier to parse)
 array : "[" (val ("," val)*)? "]"
 
-// value-types
 ?val  : bool | expr | array
 float : SIGNED_FLOAT
 int   : SIGNED_INT
 uint  : INT
+imag : (float | int) "j"
 
 name: CNAME
 bool: TRUE_ | FALSE_
@@ -42,6 +43,7 @@ range: INT ".." INT
 
 ?atom: int
      | float
+     | imag
      | name -> var
      | "-" (name | "(" expr ")" | name "(" expr ")") -> neg
      | "(" expr ")"
@@ -51,6 +53,7 @@ range: INT ".." INT
 // reserved keywords
 PI: "pi"
 
+_OPTIONS: "options"
 _GATE: "gate"
 _FUNC: "func"
 _OP: "operator"
