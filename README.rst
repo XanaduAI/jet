@@ -43,10 +43,13 @@ browse the full `API documentation
 Installation
 ============
 
-Jet requires `Taskflow <https://github.com/taskflow/taskflow>`_, a BLAS library
-with a CBLAS interface, and a C++ compiler with C++17 support.  To use Jet, add
-``#include <Jet.hpp>`` to the top of your header file and link your program with
-the CBLAS library.
+C++
+^^^
+
+The Jet C++ library requires `Taskflow <https://github.com/taskflow/taskflow>`_,
+a BLAS library with a CBLAS interface, and a C++ compiler with C++17 support.
+To use Jet, add ``#include <Jet.hpp>`` to the top of your header file and link
+your program with the CBLAS library.
 
 For example, assuming that the Taskflow headers can be found in your ``g++``
 include path and OpenBLAS is installed on your system, you can compile the
@@ -63,15 +66,15 @@ include path and OpenBLAS is installed on your system, you can compile the
     int main(){
         using Tensor = Jet::Tensor<std::complex<float>>;
 
-        std::array<Tensor, 3> tensors;
-        tensors[0] = Tensor({"i", "j", "k"}, {2, 2, 2});
-        tensors[1] = Tensor({"j", "k", "l"}, {2, 2, 2});
+        Tensor lhs({"i", "j", "k"}, {2, 2, 2});
+        Tensor rhs({"j", "k", "l"}, {2, 2, 2});
 
-        tensors[0].FillRandom();
-        tensors[1].FillRandom();
-        tensors[2] = Tensor::ContractTensors(tensors[0], tensors[1]);
-        
-        for (const auto &datum : tensors[2].GetData()) {
+        lhs.FillRandom();
+        rhs.FillRandom();
+
+        Tensor res = Tensor::ContractTensors(lhs, rhs);
+
+        for (const auto &datum : res.GetData()) {
             std::cout << datum << std::endl;
         }
 
@@ -92,14 +95,63 @@ The output of this program should resemble
 .. code-block:: text
 
     $ ./hellojet
-    (0.804981,0)
-    (1.53207,0)
-    (0.414398,0)
-    (0.721263,0)
+    (-0.936549,0.0678852)
+    (-0.0786964,-0.771624)
+    (2.98721,-0.657124)
+    (-1.90032,1.58051)
     You have successfully used Jet version 0.2.0
 
 For more detailed instructions, see the `development guide
 <https://quantum-jet.readthedocs.io/en/stable/dev/guide.html>`_.
+
+Python
+^^^^^^
+
+The Jet Python package requires Python version 3.7 and above. Installation of Jet,
+as well as all dependencies, can be done using pip:
+
+.. code-block:: bash
+
+    pip install quantum-jet
+
+To build the Jet Python distribution locally, a BLAS library with a CBLAS
+interface and a C++ compiler with C++17 support is required.  Simply run
+
+.. code-block:: bash
+
+    make dist
+    pip install dist/*.whl
+
+to install the package.
+
+To verify that Jet is installed, you can run the ``hellojet.py`` program below
+
+.. code-block:: python
+
+    import jet
+
+    lhs = jet.Tensor(["i", "j", "k"], [2, 2, 2])
+    rhs = jet.Tensor(["j", "k", "l"], [2, 2, 2])
+
+    lhs.fill_random()
+    rhs.fill_random()
+    res = jet.contract_tensors(lhs, rhs)
+
+    for datum in res.data:
+        print(f"{datum:.5f}")
+
+    print("You have successfully used Jet version", jet.version())
+
+and
+
+.. code-block:: text
+
+    $ python hellojet.py
+    1.96289+0.25257j
+    -0.16588-1.44652j
+    -1.43005+0.49516j
+    1.66881-1.67099j
+    You have successfully used Jet version 0.2.0
 
 Contributing to Jet
 ===================
