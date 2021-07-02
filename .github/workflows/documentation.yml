@@ -24,9 +24,9 @@ jobs:
 
       - uses: josh146/sphinx-action@master
         with:
-          docs-folder: "docs/"
-          pre-build-command: "apt install -y libopenblas-dev python3.8-dev doxygen graphviz"
-          build-command: "cd .. && make docs"
+          docs-folder: docs/
+          pre-build-command: apt install -y libopenblas-dev python3.8-dev doxygen graphviz
+          build-command: cd .. && SPHINXOPTS="-W --keep-going -n" make docs
 
       - name: Upload HTML
         uses: actions/upload-artifact@v2
