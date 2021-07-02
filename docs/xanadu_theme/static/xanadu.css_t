@@ -2268,6 +2268,29 @@ a.copybtn {
   opacity: 0.5;
   padding: 0;
 }
+
+/* Code tabs
+-------------------------------------------------- */
+
+div.sphinx-tabs > .code-tab,
+div.sphinx-tabs > div.closeable > button.code-tab[aria-selected="true"] {
+  background-color: #f7f7f7; /*tomorrow*/
+}
+
+div.sphinx-tabs > .code-tab,
+div.sphinx-tabs > div.closeable {
+  border-color: #ddd;
+}
+
+div.sphinx-tabs > div.closeable > button.code-tab {
+  border-color: #ddd #ddd #f7f7f7; /*tomorrow*/
+  color: {{ theme_navigation_button }};
+}
+
+div.sphinx-tabs > div.closeable > button.code-tab:focus {
+  outline: none;
+}
+
 /* Syntax highlighting
 -------------------------------------------------- */
 
