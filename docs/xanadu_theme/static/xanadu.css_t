@@ -2268,6 +2268,22 @@ a.copybtn {
   opacity: 0.5;
   padding: 0;
 }
+
+/* Overloaded Python functions
+-------------------------------------------------- */
+dl.py > dd > ol {
+  border-top: 1px solid #ccc;
+  list-style: none;
+  margin-top: 25px;
+  padding-left: 0;
+  padding-top: 25px;
+}
+
+dl.py > dd > ol > li > p {
+  font-style: italic;
+  font-weight: bold;
+}
+
 /* Syntax highlighting
 -------------------------------------------------- */
 
