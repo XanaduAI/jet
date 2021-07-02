@@ -100,7 +100,7 @@ Here, we can showcase the various constructors offered by the ``Tensor`` class, 
 
     .. code-tab:: py
 
-        # Create a tensor with single datum of ``0 + 0j``.
+        # Create a tensor with single datum of ``0j``.
         M0 = jet.Tensor()
 
         # Create a 3x2 tensor with automatically-labeled indices and zero-initialized data.
