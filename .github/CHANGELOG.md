@@ -34,6 +34,8 @@
 
 ### Improvements
 
+* The "Using Jet" section of the Sphinx documentation now has Python code snippets. [(#41)](https://github.com/XanaduAI/jet/pull/41)
+
 * Tensor transposes are now significantly faster when all the dimensions are powers of two. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
 * Use camel case for type aliases. [(#17)](https://github.com/XanaduAI/jet/pull/17)
