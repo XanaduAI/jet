@@ -22,11 +22,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: sudo apt install -y libopenblas-dev python3.8-dev doxygen graphviz
-
-      - name: Build documentation
-        run: make docs
+      - uses: josh146/sphinx-action@master
+        with:
+          docs-folder: "docs/"
+          pre-build-command: "apt install -y libopenblas-dev python3.8-dev doxygen graphviz"
+          build-command: "cd .. && make docs"
 
       - name: Upload HTML
         uses: actions/upload-artifact@v2
