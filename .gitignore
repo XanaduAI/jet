@@ -51,4 +51,5 @@ docs/__pycache__/*
 docs/_build/*
 docs/_ext/__pycache__/*
 docs/api/*
+docs/code/api/*
 docs/doxyoutput/*

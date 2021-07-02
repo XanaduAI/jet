@@ -32,7 +32,7 @@ Jet Documentation
         </p>
         <div class="row mt-3">
             <div class="col-lg-4 mb-2 adlign-items-stretch">
-                <a href="tensors.html">
+                <a href="use/introduction.html">
                     <div class="card rounded-lg" style="height:100%;">
                         <div class="d-flex">
                             <div>
@@ -48,7 +48,7 @@ Jet Documentation
                 </a>
             </div>
             <div class="col-lg-4 mb-2 align-items-stretch">
-                <a href="installing.html">
+                <a href="dev/guide.html">
                 <div class="card rounded-lg" style="height:100%;">
                     <div class="d-flex">
                         <div>
@@ -130,17 +130,29 @@ Version 2.0.
    dev/research
    dev/releases
 
-   
 .. toctree::
    :maxdepth: 2
-   :caption: API
+   :caption: C++ API
    :hidden:
 
    Overview <api/library_root>
    Jet <api/namespace_Jet>
    Jet::PathInfo <api/classJet_1_1PathInfo>
-   Jet::TaskBasedCpuContractor <api/classJet_1_1TaskBasedCpuContractor>
+   Jet::TaskBasedContractor <api/classJet_1_1TaskBasedContractor>
    Jet::Tensor <api/classJet_1_1Tensor>
    Jet::TensorNetwork <api/classJet_1_1TensorNetwork>
    Jet::TensorNetworkSerializer <api/classJet_1_1TensorNetworkSerializer>
    Jet::Utilities <api/namespace_Jet__Utilities>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Python API
+   :hidden:
+
+   code/jet
+   code/jet_bindings
+   code/jet_circuit
+   code/jet_factory
+   code/jet_gate
+   code/jet_interpreter
+   code/jet_state

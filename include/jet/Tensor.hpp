@@ -374,9 +374,12 @@ template <class T = std::complex<float>> class Tensor {
      * The order of the indices follows that of the first argument (i.e., `A`).
      *
      * Example: Given a 2x3 tensor A(i,j) and a 2x3 tensor B(i,j), the addition
-     * of A and B is a 2x3 tensor C(i,j): \code{.cpp} Tensor A({"i", "j"}, {2,
-     * 3}, {0, 1, 2, 3, 4, 5}); Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
-     *     Tensor C = AddTensors(A, B);  // {5, 6, 7, 9, 10, 11}
+     * of A and B is a 2x3 tensor C(i,j):
+     *
+     * \code{.cpp}
+     *    Tensor A({"i", "j"}, {2, 3}, {0, 1, 2, 3, 4, 5});
+     *    Tensor B({"i", "j}, {2, 3}, {5, 5, 5, 6, 6, 6});
+     *    Tensor C = AddTensors(A, B);  // {5, 6, 7, 9, 10, 11}
      * \endcode
      *
      * @warning The program is aborted if the index sets of the given `%Tensor`
@@ -446,30 +449,29 @@ template <class T = std::complex<float>> class Tensor {
      * @brief Slices a `%Tensor` object index.
      *
      * The result is a `%Tensor` object whose given indices and data are a
-    subset of
-     * the provided tensor object, sliced along the given index argument.
+     * subset of the provided tensor object, sliced along the given index
+     * argument.
      *
      * Example: Consider a 2x3 tensor `A(i,j)`. The following example slices
-    along
-     * each index with the resulting slices selected as required:
+     * along each index with the resulting slices selected as required:
      * \code{.cpp}
      *     Tensor A({"i", "j"}, {2, 3});
      *     A.FillRandom();
      *
      *     SliceIndex(A, "i", 0);  // [1x3] tensor, slice 0
      *     SliceIndex(A, "i", 1);  // [1x3] tensor, slice 1
-
-    *     SliceIndex(A, "j", 0);  // [2x1] tensor, slice 0
-    *     SliceIndex(A, "j", 1);  // [2x1] tensor, slice 1
-    *     SliceIndex(A, "j", 2);  // [2x1] tensor, slice 2
-    * \endcode
-    *
-    * @tparam U `%Tensor` data type.
-    * @param tensor `%Tensor` object to slice.
-    * @param index `%Tensor` index label on which to slice.
-    * @param value Value to slice the `%Tensor` index on.
-    * @return Slice of the `%Tensor` object.
-    */
+     *
+     *     SliceIndex(A, "j", 0);  // [2x1] tensor, slice 0
+     *     SliceIndex(A, "j", 1);  // [2x1] tensor, slice 1
+     *     SliceIndex(A, "j", 2);  // [2x1] tensor, slice 2
+     * \endcode
+     *
+     * @tparam U `%Tensor` data type.
+     * @param tensor `%Tensor` object to slice.
+     * @param index `%Tensor` index label on which to slice.
+     * @param value Value to slice the `%Tensor` index on.
+     * @return Slice of the `%Tensor` object.
+     */
     template <class U = T>
     static Tensor<U> SliceIndex(const Tensor<U> &tensor,
                                 const std::string &index, size_t value)

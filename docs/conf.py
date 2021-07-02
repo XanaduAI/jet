@@ -21,14 +21,13 @@ import sys
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath(".."))
-sys.path.insert(0, os.path.abspath("_ext"))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(".")), "docs"))
+sys.path.append(os.path.abspath("../python"))
+sys.path.append(os.path.abspath("_ext"))
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "1.5"
+needs_sphinx = "3.0.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -39,22 +38,24 @@ extensions = [
     "exhale",
     "m2r2",
     "nbsphinx",
+    "sphinx_automodapi.automodapi",
     "sphinx_copybutton",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.coverage",
+    "sphinx.ext.inheritance_diagram",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.bibtex"
 ]
 
 bibtex_bibfiles = []
 
+automodapi_toctreedirnm = "code/api"
+automodsumm_inherited_members = True
 autosummary_generate = True
 autosummary_imported_members = False
 
-exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 nbsphinx_execute = "never"
 nbsphinx_epilog = """
 .. note:: :download:`Click here <../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
@@ -81,7 +82,7 @@ exhale_args = {
         "../include/Jet.hpp "
         "../include/jet/Abort.hpp "
         "../include/jet/PathInfo.hpp "
-        "../include/jet/TaskBasedCpuContractor.hpp "
+        "../include/jet/TaskBasedContractor.hpp "
         "../include/jet/Tensor.hpp "
         "../include/jet/TensorNetwork.hpp "
         "../include/jet/TensorNetworkIO.hpp "
@@ -90,7 +91,7 @@ exhale_args = {
     ),
     "afterTitleDescription": inspect.cleandoc(
         """
-        Jet is provided as a C++ header-only library, :download:`Jet.hpp <../../include/Jet.hpp>`, which can be included at the top of your source file:
+        The Jet C++ API is provided as a header-only library, :download:`Jet.hpp <../../include/Jet.hpp>`, which can be included at the top of your source file:
 
         .. code-block:: cpp
 
@@ -100,12 +101,14 @@ exhale_args = {
 }
 
 # Tell sphinx what the primary language being documented is.
-primary_domain = "cpp"
+primary_domain = "py"
 
 # Tell sphinx what the pygments highlight language should be.
 highlight_language = "cpp"
 
-mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
+mathjax_path = (
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
+)
 nbsphinx_requirejs_path = ""
 
 # Add any paths that contain templates here, relative to this directory.
@@ -324,7 +327,9 @@ html_theme_options = {
 }
 
 edit_on_github_project = "XanaduAI/jet"
-edit_on_github_branch = "master/docs"
+edit_on_github_branch = "main/docs"
+
+inheritance_node_attrs = dict(color="lightskyblue1", fillcolor="lightskyblue1", style="filled")
 
 
 def setup(app):

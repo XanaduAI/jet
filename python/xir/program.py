@@ -1,11 +1,34 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Union, List, Dict, Set, Tuple, Sequence
+from typing import Any, Dict, List, Sequence, Set, Tuple, Union
 
+from .decimal_complex import DecimalComplex
 from .utils import strip
 
 """This module contains the XIRProgram class and classes for the Xanadu IR"""
+
+
+def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
+    """Converts `decimal.Decimal` and `DecimalComplex` objects to ``float`` and
+    ``complex`` respectively"""
+    params_with_floats = params.copy()
+
+    if isinstance(params, List):
+        for i, p in enumerate(params_with_floats):
+            if isinstance(p, DecimalComplex):
+                params_with_floats[i] = complex(p)
+            elif isinstance(p, Decimal):
+                params_with_floats[i] = float(p)
+
+    elif isinstance(params, Dict):
+        for k, v in params_with_floats.items():
+            if isinstance(v, DecimalComplex):
+                params_with_floats[k] = complex(v)
+            elif isinstance(v, Decimal):
+                params_with_floats[k] = float(v)
+
+    return params_with_floats
 
 
 class Statement:
@@ -18,12 +41,16 @@ class Statement:
         name (str): name of the statement
         params (list, Dict): parameters for the statement (can be empty)
         wires (tuple): the wires on which the statement is applied
+        use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
+            and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(self, name: str, params: Union[List, Dict], wires: Tuple):
-        self.name = name
-        self.params = params
-        self.wires = wires
+    def __init__(self, name: str, params: Union[List, Dict], wires: Tuple, use_floats: bool = True):
+        self._name = name
+        self._params = params
+        self._wires = wires
+
+        self._use_floats = use_floats
 
     def __str__(self):
         if isinstance(self.params, dict):
@@ -38,6 +65,24 @@ class Statement:
             return f"{self.name} | [{wires}]"
         return f"{self.name}({params_str}) | [{wires}]"
 
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def params(self) -> Union[List, Dict]:
+        if self.use_floats:
+            return get_floats(self._params)
+        return self._params
+
+    @property
+    def wires(self) -> Tuple:
+        return self._wires
+
+    @property
+    def use_floats(self) -> bool:
+        return self._use_floats
+
 
 class OperatorStmt:
     """Operator statements to be used in operator definitions
@@ -47,9 +92,11 @@ class OperatorStmt:
         terms (list): list of operators and the wire(s) they are applied to
     """
 
-    def __init__(self, pref: Union[Decimal, int, str], terms: List):
-        self.pref = pref
-        self.terms = terms
+    def __init__(self, pref: Union[Decimal, int, str], terms: List, use_floats: bool = True):
+        self._pref = pref
+        self._terms = terms
+
+        self._use_floats = use_floats
 
     def __str__(self):
         terms = [f"{t[0]}[{t[1]}]" for t in self.terms]
@@ -57,6 +104,20 @@ class OperatorStmt:
         pref = str(self.pref)
 
         return f"{pref}, {terms_as_string}"
+
+    @property
+    def pref(self) -> Union[Decimal, float, int, str]:
+        if isinstance(self._pref, Decimal) and self.use_floats:
+            return float(self._pref)
+        return self._pref
+
+    @property
+    def terms(self) -> List:
+        return self._terms
+
+    @property
+    def use_floats(self) -> bool:
+        return self._use_floats
 
 
 class Declaration:
@@ -141,9 +202,11 @@ class XIRProgram:
 
     Args:
         version (str): Version number of the program. Must follow SemVer style (MAJOR.MINOR.PATCH).
+        use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
+            and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(self, version: str = "0.1.0"):
+    def __init__(self, version: str = "0.1.0", use_floats: bool = True):
         if not isinstance(version, str):
             raise TypeError(f"Invalid version number input. Must be a string.")
 
@@ -153,8 +216,10 @@ class XIRProgram:
                 f"Invalid version number {version} input. Must be SemVer style (MAJOR.MINOR.PATCH)."
             )
         self._version = version
+        self._use_floats = use_floats
 
         self._include = []
+        self._options = dict()
         self._statements = []
 
         self._declarations = {"gate": [], "func": [], "output": [], "operator": []}
@@ -178,6 +243,19 @@ class XIRProgram:
         return self._version
 
     @property
+    def use_floats(self) -> bool:
+        return self._use_floats
+
+    @property
+    def wires(self) -> Set[int]:
+        """Get the wires of an XIR program"""
+        wires = []
+        for stmt in self.statements:
+            wires.extend(stmt.wires)
+
+        return set(wires)
+
+    @property
     def include(self) -> List[str]:
         """Included XIR libraries/files used in the program
 
@@ -185,6 +263,17 @@ class XIRProgram:
             list[str]: included libraries/files
         """
         return self._include
+
+    @property
+    def options(self) -> Dict[str, Any]:
+        """Script-level options declared in the program
+
+        Returns:
+            Dict: declared scipt-level options
+        """
+        if self.use_floats:
+            return get_floats(self._options)
+        return self._options
 
     @property
     def statements(self) -> List[Statement]:
@@ -243,9 +332,7 @@ class XIRProgram:
         """
         return self._called_ops
 
-    def add_gate(
-        self, name: str, params: List[str], wires: Tuple, statements: List[Statement]
-    ):
+    def add_gate(self, name: str, params: List[str], wires: Tuple, statements: List[Statement]):
         """Adds a gate to the program
 
         Args:
@@ -255,9 +342,7 @@ class XIRProgram:
             statements (list[Statement]): statements that the gate applies
         """
         if name in self._gates:
-            warnings.warn(
-                "Gate already defined. Replacing old definition with new definiton."
-            )
+            warnings.warn("Gate already defined. Replacing old definition with new definiton.")
         self._gates[name] = {"params": params, "wires": wires, "statements": statements}
 
     def add_operator(
@@ -272,9 +357,7 @@ class XIRProgram:
             statements (list[OperatorStmt]): statements that the operator applies
         """
         if name in self._operators:
-            warnings.warn(
-                "Operator already defined. Replacing old definition with new definiton."
-            )
+            warnings.warn("Operator already defined. Replacing old definition with new definiton.")
         self._operators[name] = {
             "params": params,
             "wires": wires,
@@ -294,6 +377,11 @@ class XIRProgram:
         res.extend([f"use {use};" for use in self._include])
         if len(self._include) != 0:
             res.append("")
+
+        if len(self.options) > 0:
+            res.append("options:")
+            res.extend([f"    {k}: {v};" for k, v in self.options.items()])
+            res.append("end;\n")
 
         res.extend([f"gate {dec};" for dec in self._declarations["gate"]])
         res.extend([f"func {dec};" for dec in self._declarations["func"]])

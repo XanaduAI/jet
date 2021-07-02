@@ -26,11 +26,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create virtual environment
-        run: |
-          cd python
-          make setup
-
       - name: Run tests
         run: |
           cd python
@@ -65,11 +60,6 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Create virtual environment
-        run: |
-          cd python
-          make setup
 
       - name: Run tests
         run: |

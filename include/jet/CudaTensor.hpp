@@ -35,17 +35,124 @@ template <class T = cuComplex> class CudaTensor {
     using scalar_type_t = T;
     using scalar_type_t_precision = decltype(std::declval<T>().x);
 
-    void SetIndicesShapeAndMemory(const std::vector<std::string> &indices,
-                                  const std::vector<size_t> &shape)
+    template <class U = T>
+    static CudaTensor<U> AddTensors(const CudaTensor<U> &A,
+                                    const CudaTensor<U> &B)
+    {
+
+        static const CudaTensor<U> zero;
+
+        // The zero tensor is used in reductions where the shape of an
+        // accumulator is not known beforehand.
+        if (A == zero) {
+            return B;
+        }
+        else if (B == zero) {
+            return A;
+        }
+
+        const auto disjoint_indices = Jet::Utilities::VectorDisjunctiveUnion(
+            A.GetIndices(), B.GetIndices());
+
+        JET_ABORT_IF_NOT(
+            disjoint_indices.empty(),
+            "Tensor addition with disjoint indices is not supported.");
+
+        CudaTensor<U> C(A);
+
+        // Align the underlying data vectors of `A` and `B`.
+        cutensorHandle_t handle;
+        cutensorInit(&handle);
+
+        static const U one = {1.0, 0.0};
+
+        cutensorTensorDescriptor_t b_descriptor, c_descriptor;
+        cutensorStatus_t cutensor_err;
+        cudaDataType_t data_type;
+
+        if constexpr (std::is_same_v<U, cuDoubleComplex> ||
+                      std::is_same_v<U, double2>) {
+            data_type = CUDA_C_64F;
+        }
+        else {
+            data_type = CUDA_C_32F;
+        }
+
+        const auto &b_indices = B.GetIndices();
+        const auto &c_indices = C.GetIndices();
+
+        const std::vector<int64_t> b_strides =
+            CudaTensorHelpers::GetStrides(B.GetShape());
+        const std::vector<int64_t> c_strides =
+            CudaTensorHelpers::GetStrides(C.GetShape());
+
+        std::unordered_map<std::string, int> index_to_mode_map;
+        std::unordered_map<size_t, int64_t> mode_to_dimension_map;
+
+        for (size_t i = 0; i < c_indices.size(); i++) {
+
+            if (index_to_mode_map.insert({c_indices[i], i}).second) {
+                mode_to_dimension_map.emplace(
+                    i, static_cast<int64_t>(
+                           C.GetIndexToDimension().at(c_indices[i])));
+            }
+        }
+
+        std::vector<int32_t> b_modes(b_indices.size());
+        std::vector<int32_t> c_modes(c_indices.size());
+
+        for (size_t i = 0; i < b_indices.size(); i++) {
+            b_modes[i] = index_to_mode_map[b_indices[i]];
+        }
+        for (size_t i = 0; i < c_indices.size(); i++) {
+            c_modes[i] = index_to_mode_map[c_indices[i]];
+        }
+
+        std::vector<int64_t> b_dimensions(b_modes.size());
+        for (size_t i = 0; i < b_modes.size(); i++) {
+            b_dimensions[i] = mode_to_dimension_map[b_modes[i]];
+        }
+        std::vector<int64_t> c_dimensions(c_modes.size());
+        for (size_t i = 0; i < c_modes.size(); i++) {
+            c_dimensions[i] = mode_to_dimension_map[c_modes[i]];
+        }
+
+        cutensor_err = cutensorInitTensorDescriptor(
+            &handle, &b_descriptor, b_modes.size(), b_dimensions.data(),
+            b_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        cutensor_err = cutensorInitTensorDescriptor(
+            &handle, &c_descriptor, c_modes.size(), c_dimensions.data(),
+            c_strides.data(), data_type, CUTENSOR_OP_IDENTITY);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        cutensor_err = cutensorElementwiseBinary(
+            &handle, &one, B.GetData(), &b_descriptor, b_modes.data(), &one,
+            C.GetData(), &c_descriptor, c_modes.data(), C.GetData(),
+            &c_descriptor, c_modes.data(), CUTENSOR_OP_ADD, data_type, nullptr);
+        JET_CUTENSOR_IS_SUCCESS(cutensor_err);
+
+        return C;
+    }
+
+    CudaTensor<T> AddTensor(const CudaTensor<T> &other) const
+    {
+        return AddTensors<T>(*this, other);
+    }
+
+    void InitIndicesAndShape(const std::vector<std::string> &indices,
+                             const std::vector<size_t> &shape)
     {
         Clear_();
         shape_ = shape;
         indices_ = indices;
 
         for (size_t i = 0; i < shape_.size(); ++i) {
-            index_to_dimension_[indices[i]] = shape[i];
-            index_to_axes_[indices[i]] = i;
+            index_to_dimension_[indices_[i]] = shape_[i];
+            index_to_axes_[indices_[i]] = i;
         }
+
         JET_CUDA_IS_SUCCESS(
             cudaMalloc(reinterpret_cast<void **>(&data_),
                        Jet::Utilities::ShapeToSize(shape_) * sizeof(T)));
@@ -64,7 +171,7 @@ template <class T = cuComplex> class CudaTensor {
                const std::vector<size_t> &shape)
         : data_{nullptr}
     {
-        SetIndicesShapeAndMemory(indices, shape);
+        InitIndicesAndShape(indices, shape);
     }
 
     CudaTensor(const std::vector<std::string> &indices,
@@ -92,7 +199,7 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < indices.size(); i++) {
             indices[i] = std::string("?") + GenerateStringIndex(i);
         }
-        SetIndicesShapeAndMemory(indices, shape);
+        InitIndicesAndShape(indices, shape);
     }
 
     ~CudaTensor() { JET_CUDA_IS_SUCCESS(cudaFree(data_)); }
@@ -128,8 +235,12 @@ template <class T = cuComplex> class CudaTensor {
                 b_tensor.GetIndexToDimension().at(right_indices[i]);
 
         CudaTensor<U> c_tensor(c_indices, c_shape);
-        auto plan = GetCudaContractionPlan<T>(a_tensor, b_tensor, c_tensor);
-        ContractTensorsWithoutAllocation<T>(a_tensor, b_tensor, c_tensor, plan);
+
+        CudaContractionPlan cplan;
+
+        GetCudaContractionPlan<T>(cplan, a_tensor, b_tensor, c_tensor);
+        ContractTensorsWithoutAllocation<T>(a_tensor, b_tensor, c_tensor,
+                                            cplan);
         return c_tensor;
     }
 
@@ -175,9 +286,11 @@ template <class T = cuComplex> class CudaTensor {
 
     CudaTensor(const CudaTensor &other) : data_{nullptr}
     {
-        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
-        cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
-                   cudaMemcpyDeviceToDevice);
+        InitIndicesAndShape(other.GetIndices(), other.GetShape());
+
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, other.GetData(),
+                                       sizeof(T) * other.GetSize(),
+                                       cudaMemcpyDeviceToDevice));
     }
 
     template <class CPUData>
@@ -186,7 +299,8 @@ template <class T = cuComplex> class CudaTensor {
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
-        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        InitIndicesAndShape(ReverseVector(other.GetIndices()),
+                            ReverseVector(other.GetShape()));
         CopyHostDataToGpu(const_cast<T *>(
             reinterpret_cast<const T *>(other.GetData().data())));
     }
@@ -196,7 +310,8 @@ template <class T = cuComplex> class CudaTensor {
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
-        SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
+        InitIndicesAndShape(ReverseVector(other.GetIndices()),
+                            ReverseVector(other.GetShape()));
         CopyHostDataToGpu(const_cast<T *>(
             reinterpret_cast<const T *>(other.GetData().data())));
         return *this;
@@ -206,9 +321,10 @@ template <class T = cuComplex> class CudaTensor {
     {
         if (this != &other) // not a self-assignment
         {
-            SetIndicesShapeAndMemory(other.GetIndices(), other.GetShape());
-            cudaMemcpy(data_, other.GetData(), sizeof(T) * other.GetSize(),
-                       cudaMemcpyDeviceToDevice);
+            InitIndicesAndShape(other.GetIndices(), other.GetShape());
+            JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, other.GetData(),
+                                           sizeof(T) * other.GetSize(),
+                                           cudaMemcpyDeviceToDevice));
         }
         return *this;
     }
@@ -222,41 +338,35 @@ template <class T = cuComplex> class CudaTensor {
 
     inline void CopyHostDataToGpu(T *host_tensor)
     {
-        cudaError_t retcode = cudaMemcpy(
-            data_, host_tensor, sizeof(T) * GetSize(), cudaMemcpyHostToDevice);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(
+            data_, host_tensor, sizeof(T) * GetSize(), cudaMemcpyHostToDevice));
     }
 
     inline void CopyGpuDataToHost(T *host_tensor) const
     {
-        cudaError_t retcode = cudaMemcpy(
-            host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost);
-
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(
+            host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost));
     }
 
     inline void CopyGpuDataToGpu(T *host_tensor)
     {
-        cudaError_t retcode =
-            cudaMemcpy(host_tensor, data_, sizeof(T) * GetSize(),
-                       cudaMemcpyDeviceToDevice);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(host_tensor, data_,
+                                       sizeof(T) * GetSize(),
+                                       cudaMemcpyDeviceToDevice));
     }
 
     inline void AsyncCopyHostDataToGpu(T *host_tensor, cudaStream_t stream = 0)
     {
-        cudaError_t retcode =
-            cudaMemcpyAsync(data_, host_tensor, sizeof(T) * GetSize(),
-                            cudaMemcpyHostToDevice, stream);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(data_, host_tensor,
+                                            sizeof(T) * GetSize(),
+                                            cudaMemcpyHostToDevice, stream));
     }
 
     inline void AsyncCopyGpuDataToHost(T *host_tensor, cudaStream_t stream = 0)
     {
-        cudaError_t retcode =
-            cudaMemcpyAsync(host_tensor, data_, sizeof(T) * GetSize(),
-                            cudaMemcpyDeviceToHost, stream);
-        JET_CUDA_IS_SUCCESS(retcode);
+        JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(host_tensor, data_,
+                                            sizeof(T) * GetSize(),
+                                            cudaMemcpyDeviceToHost, stream));
     }
 
     const std::unordered_map<std::string, size_t> &GetIndexToDimension() const
@@ -270,17 +380,8 @@ template <class T = cuComplex> class CudaTensor {
             GetSize(), {0.0, 0.0});
 
         CopyGpuDataToHost(reinterpret_cast<T *>(host_data.data()));
-
-        std::vector<std::complex<scalar_type_t_precision>> host_data_reshape =
-            host_data;
-
-        for (size_t idx = 0; idx < host_data_reshape.size(); idx++) {
-            auto col_idx = CudaTensorHelpers::RowMajToColMaj(idx, GetShape());
-            host_data_reshape[idx] = host_data[col_idx];
-        }
-
         auto t = Tensor<std::complex<scalar_type_t_precision>>(
-            GetIndices(), GetShape(), host_data_reshape);
+            ReverseVector(GetIndices()), ReverseVector(GetShape()), host_data);
         return t;
     }
 
@@ -293,11 +394,12 @@ template <class T = cuComplex> class CudaTensor {
     void FillRandom(size_t seed)
     {
         static curandGenerator_t rng;
-        curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT);
-        curandSetPseudoRandomGeneratorSeed(rng, seed);
-        curandGenerateUniform(
+        JET_CURAND_IS_SUCCESS(
+            curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
+        JET_CURAND_IS_SUCCESS(curandSetPseudoRandomGeneratorSeed(rng, seed));
+        JET_CURAND_IS_SUCCESS(curandGenerateUniform(
             rng, reinterpret_cast<scalar_type_t_precision *>(data_),
-            2 * GetSize());
+            2 * GetSize()));
     }
 
     /**
@@ -307,11 +409,13 @@ template <class T = cuComplex> class CudaTensor {
     void FillRandom()
     {
         static curandGenerator_t rng;
-        curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT);
-        curandSetPseudoRandomGeneratorSeed(rng, std::random_device{}());
-        curandGenerateUniform(
+        JET_CURAND_IS_SUCCESS(
+            curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
+        JET_CURAND_IS_SUCCESS(
+            curandSetPseudoRandomGeneratorSeed(rng, std::random_device{}()));
+        JET_CURAND_IS_SUCCESS(curandGenerateUniform(
             rng, reinterpret_cast<scalar_type_t_precision *>(data_),
-            2 * GetSize());
+            2 * GetSize()));
     }
 
     /**
@@ -342,21 +446,23 @@ template <class T = cuComplex> class CudaTensor {
         cutensorContractionPlan_t plan;
         size_t work_size;
         void *work;
+
+        ~CudaContractionPlan() { JET_CUDA_IS_SUCCESS(cudaFree(work)); }
     };
 
     template <class U = T>
-    static CudaContractionPlan
-    GetCudaContractionPlan(const CudaTensor<U> &a_tensor,
-                           const CudaTensor<U> &b_tensor,
-                           const CudaTensor<U> &c_tensor)
+    static void GetCudaContractionPlan(CudaContractionPlan &cplan,
+                                       const CudaTensor<U> &a_tensor,
+                                       const CudaTensor<U> &b_tensor,
+                                       const CudaTensor<U> &c_tensor)
     {
         using namespace Jet::Utilities;
 
         cudaDataType_t data_type;
         cutensorComputeType_t compute_type;
 
-        if constexpr (std::is_same<U, cuDoubleComplex>::value ||
-                      std::is_same<U, double2>::value) {
+        if constexpr (std::is_same_v<U, cuDoubleComplex> ||
+                      std::is_same_v<U, double2>) {
             data_type = CUDA_C_64F;
             compute_type = CUTENSOR_COMPUTE_64F;
         }
@@ -375,8 +481,9 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < a_indices.size(); i++) {
             if (!index_to_mode_map.count(a_indices[i])) {
                 index_to_mode_map[a_indices[i]] = i;
-                mode_to_dimension_map[i] = static_cast<int64_t>(
-                    a_tensor.GetIndexToDimension().at(a_indices[i]));
+                mode_to_dimension_map.emplace(
+                    i, static_cast<int64_t>(
+                           a_tensor.GetIndexToDimension().at(a_indices[i])));
             }
         }
 
@@ -384,8 +491,10 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < b_indices.size(); i++) {
             if (!index_to_mode_map.count(b_indices[i])) {
                 index_to_mode_map[b_indices[i]] = stride + i;
-                mode_to_dimension_map[stride + i] = static_cast<int64_t>(
-                    b_tensor.GetIndexToDimension().at(b_indices[i]));
+                mode_to_dimension_map.emplace(
+                    stride + i,
+                    static_cast<int64_t>(
+                        b_tensor.GetIndexToDimension().at(b_indices[i])));
             }
         }
 
@@ -404,34 +513,22 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         std::vector<int64_t> c_dimensions(c_modes.size());
-        for (size_t idx = 0; idx < c_modes.size(); idx++) {
-            c_dimensions[idx] = mode_to_dimension_map[c_modes[idx]];
+        for (size_t i = 0; i < c_modes.size(); i++) {
+            c_dimensions[i] = mode_to_dimension_map[c_modes[i]];
         }
 
         std::vector<int64_t> a_dimensions(a_modes.size());
-        for (size_t idx = 0; idx < a_modes.size(); idx++) {
-            a_dimensions[idx] = mode_to_dimension_map[a_modes[idx]];
+        for (size_t i = 0; i < a_modes.size(); i++) {
+            a_dimensions[i] = mode_to_dimension_map[a_modes[i]];
         }
 
         std::vector<int64_t> b_dimensions(b_modes.size());
-        for (size_t idx = 0; idx < b_modes.size(); idx++) {
-            b_dimensions[idx] = mode_to_dimension_map[b_modes[idx]];
+        for (size_t i = 0; i < b_modes.size(); i++) {
+            b_dimensions[i] = mode_to_dimension_map[b_modes[i]];
         }
 
-        size_t a_elements = 1;
-        for (auto mode : a_modes)
-            a_elements *= mode_to_dimension_map[mode];
-
-        size_t b_elements = 1;
-        for (auto mode : b_modes)
-            b_elements *= mode_to_dimension_map[mode];
-
-        size_t c_elements = 1;
-        for (auto mode : c_modes)
-            c_elements *= mode_to_dimension_map[mode];
-
         cutensorHandle_t handle;
-        cutensorInit(&handle);
+        JET_CUTENSOR_IS_SUCCESS(cutensorInit(&handle));
 
         const std::vector<int64_t> a_strides =
             CudaTensorHelpers::GetStrides(a_tensor.GetShape());
@@ -497,14 +594,6 @@ template <class T = cuComplex> class CudaTensor {
             &work_size);
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
 
-        void *work = nullptr;
-        if (work_size > 0) {
-            if (cudaSuccess != cudaMalloc(&work, work_size)) {
-                work = nullptr;
-                work_size = 0;
-            }
-        }
-
         /**************************
          * Create Contraction Plan
          **************************/
@@ -514,13 +603,14 @@ template <class T = cuComplex> class CudaTensor {
                                                    &find, work_size);
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
 
-        CudaContractionPlan cplan;
         cplan.plan = plan;
-        cplan.work = work;
+
+        if (work_size > 0) {
+            JET_CUDA_IS_SUCCESS(cudaMalloc(&cplan.work, work_size));
+        }
+
         cplan.handle = handle;
         cplan.work_size = work_size;
-
-        return cplan;
     }
 
     template <class U = T>
@@ -549,15 +639,18 @@ template <class T = cuComplex> class CudaTensor {
     }
 
     template <typename U = T>
-    static CudaTensor<U> Reshape(const CudaTensor<U> &old_tens,
+    static CudaTensor<U> Reshape(const CudaTensor<U> &old_tensor,
                                  const std::vector<size_t> &new_shape)
     {
-        // Avoid unused warning
-        static_cast<void>(old_tens);
-        static_cast<void>(new_shape);
-        JET_ABORT("Reshape is not supported in this class yet");
-        // dummy return
-        return CudaTensor<U>();
+        JET_ABORT_IF_NOT(old_tensor.GetSize() ==
+                             Jet::Utilities::ShapeToSize(new_shape),
+                         "Size is inconsistent between tensors.");
+
+        CudaTensor<U> reshaped_tensor(new_shape);
+        JET_CUDA_IS_SUCCESS(cudaMemcpy(reshaped_tensor.data_, old_tensor.data_,
+                                       sizeof(U) * old_tensor.GetSize(),
+                                       cudaMemcpyDeviceToDevice));
+        return reshaped_tensor;
     }
 
     CudaTensor<T> Reshape(const std::vector<size_t> &new_shape)
@@ -570,13 +663,11 @@ template <class T = cuComplex> class CudaTensor {
                                     const std::string &index_str,
                                     size_t index_value)
     {
-        // Avoid unused warning
-        static_cast<void>(tens);
-        static_cast<void>(index_str);
-        static_cast<void>(index_value);
-        JET_ABORT("SliceIndex is not supported in this class yet");
-        // dummy return
-        return CudaTensor<U>();
+        using HostU = Tensor<std::complex<scalar_type_t_precision>>;
+        HostU host_tensor = static_cast<HostU>(tens);
+        auto host_tensor_sliced =
+            host_tensor.SliceIndex(index_str, index_value);
+        return CudaTensor<U>(host_tensor_sliced);
     }
 
     CudaTensor<T> SliceIndex(const std::string &index_str, size_t index_value)
@@ -608,6 +699,13 @@ template <class T = cuComplex> class CudaTensor {
     std::vector<size_t> shape_;
     std::unordered_map<std::string, size_t> index_to_dimension_;
     std::unordered_map<std::string, size_t> index_to_axes_;
+
+    bool operator==(const CudaTensor<T> &other) const noexcept
+    {
+        return shape_ == other.GetShape() && indices_ == other.GetIndices() &&
+               index_to_dimension_ == other.GetIndexToDimension() &&
+               GetHostDataVector() == other.GetHostDataVector();
+    }
 };
 
 } // namespace Jet
