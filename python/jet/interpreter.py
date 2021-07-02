@@ -71,7 +71,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     Consider the following XIR script which generates a Bell state and then
     measures the amplitude of each basis state:
 
-    .. code-block:: text
+    .. code-block:: haskell
 
         use xstd;
 
