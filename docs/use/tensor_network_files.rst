@@ -30,9 +30,9 @@ valid tensor network.
 Example
 -------
 
-The following C++ and Python programs demonstrate creating a tensor network and
-dumping it to a JSON string. First, create a simple network of three tensors
-with a contraction path and initialize the serializer:
+The following C++ and Python programs demonstrate creating a tensor network,
+dumping it to a JSON string, and then reading the JSON string to populate a
+``TensorNetworkFile`` data structure.
 
 .. tabs::
 
@@ -61,7 +61,11 @@ with a contraction path and initialize the serializer:
 
             Jet::TensorNetworkSerializer<Tensor> serializer;
 
-            // ...
+            // Serialization
+            std::string tnf_str = serializer(tn, path);
+
+            // Deserialization
+            Jet::TensorNetworkFile<Tensor> tnf_obj = serializer(tnf_str);
 
             return 0;
         }
@@ -83,30 +87,33 @@ with a contraction path and initialize the serializer:
 
         serializer = jet.TensorNetworkSerializer();
 
-        # ...
+        # Serialization
+        tnf_str = serializer(tn, path);
+
+        # Deserialization
+        tnf_obj = serializer(tnf_str)
 
 
 Serialization
 -------------
-To serialize, call the serializer with a tensor network (and an optional path):
+To serialize a tensor network (and, optionally, a contraction path), call the
+serializer with a tensor network (and the contraction path):
 
 .. tabs::
 
     .. code-tab:: c++
 
-        // ... (1)
-
-        std::string tn_json = serializer(tn, path);
-        std::cout << tn_json << std::endl;
+        // Serialization
+        std::string tnf_str = serializer(tn, path);
+        std::cout << tnf_str << std::endl;
 
     .. code-tab:: py
 
-        // ... (1)
+        # Serialization
+        tnf_str = serializer(tn, path);
+        print(tnf_str)
 
-        tn_json = serializer(tn, path);
-        print(tn_json)
-
-The (formatted) output of this program will be:
+The (formatted) output of this program is
 
 .. code-block:: json
 
@@ -122,27 +129,24 @@ The (formatted) output of this program will be:
 
 Deserialization
 ---------------
-To deserialize a tensor network, call the serializer with a string:
+To deserialize a tensor network (and, optionally, a contraction path), call the
+serializer with a string:
 
 .. tabs::
 
     .. code-tab:: c++
 
-        // ... (2)
-
-        Jet::TensorNetworkFile<Tensor> tensor_file = serializer(tn_json);
-
-        Jet::TensorNetwork<Tensor> tn_copy = tensor_file.tensors;
-        Jet::PathInfo path_copy = tensor_file.path.value(); // Uses std::optional.
+        // Deserialization
+        Jet::TensorNetworkFile<Tensor> tnf_obj = serializer(tn_json);
+        Jet::TensorNetwork<Tensor> tn = tnf_obj.tensors;
+        Jet::PathInfo path = tnf_obj.path.value(); // Uses std::optional.
 
     .. code-tab:: py
 
-        // ... (2)
-
-        tensor_file = serializer(tn_json)
-
-        tn_copy = tensor_file.tensors
-        path_copy = tensor_file.path
+        # Deserialization
+        tnf_obj = serializer(tn_json)
+        tn = tnf_obj.tensors
+        path = tnf_obj.path
 
 
 JSON Schema
