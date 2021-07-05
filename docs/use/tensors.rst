@@ -83,7 +83,7 @@ Here, we can showcase the various constructors offered by the ``Tensor`` class, 
 
     .. code-tab:: c++
 
-        // Create a tensor with single datum of ``complex<float>{0.0, 0.0}``.
+        // Create a tensor with single datum of complex<float>{0.0, 0.0}.
         Tensor M0;
 
         // Create a 3x2 tensor with automatically-labeled indices and zero-initialized data.
@@ -100,7 +100,7 @@ Here, we can showcase the various constructors offered by the ``Tensor`` class, 
 
     .. code-tab:: py
 
-        # Create a tensor with single datum of ``0j``.
+        # Create a tensor with single datum of 0j.
         M0 = jet.Tensor()
 
         # Create a 3x2 tensor with automatically-labeled indices and zero-initialized data.
