@@ -16,7 +16,7 @@ Tensors
 
 .. note::
 
-    Refer to the `installation instructions <installing.html>`_ for help with building the examples.
+    Refer to the `installation instructions <../dev/guide.html>`_ for help with building the examples.
 
 |br|
 
