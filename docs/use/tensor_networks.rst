@@ -411,6 +411,6 @@ returns a future that becomes available when the contraction is complete:
         # Start the tensor network contraction and wait for it to finish.
         tbc.contract();
 
-        # Each call to ``add_contraction_tasks()`` generates a new result.
+        # Each call to add_contraction_tasks() generates a new result.
         results = tbc.results
         result = results[0]
