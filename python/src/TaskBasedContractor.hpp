@@ -25,8 +25,8 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
     const std::string class_name = "TaskBasedContractor" + Type<T>::suffix;
 
     py::class_<TaskBasedContractor>(m, class_name.c_str(), R"(
-        This class is a tensor network contractor that contracts tensors
-        concurrently using a task-based scheduler.
+TaskBasedContractor represents a tensor network contractor that contracts
+tensors concurrently using a task-based scheduler.
     )")
 
         // Static properties
@@ -54,11 +54,11 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
                 }
                 return name_to_tensor_map;
             },
-            "Dictionary which maps names to tensors.")
+            "Mapping from names to tensors.")
 
         .def_property_readonly(
             "name_to_parents_map", &TaskBasedContractor::GetNameToParentsMap,
-            "Dictionary which maps names to lists of parent node IDs.")
+            "Mapping from names to lists of parent node IDs.")
 
         .def_property_readonly("results", &TaskBasedContractor::GetResults,
                                "List of tensor results.")
@@ -68,8 +68,8 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
                                "Tensor at the end of the reduction task.")
 
         .def_property_readonly("flops", &TaskBasedContractor::GetFlops, R"(
-            Number of floating-point additions and multiplications required
-            to implement the contraction tasks.
+Number of floating-point additions and multiplications required to implement the
+contraction tasks.
         )")
 
         .def_property_readonly("memory", &TaskBasedContractor::GetMemory,
@@ -80,40 +80,38 @@ template <class T> void AddBindingsForTaskBasedContractor(py::module_ &m)
 
         .def("add_contraction_tasks", &TaskBasedContractor::AddContractionTasks,
              py::arg("tn"), py::arg("path_info"), R"(
-            Adds contraction tasks for a tensor network.
+Adds contraction tasks for a tensor network.
 
-            Args:
-                tn: tensor network to be contracted.
-                path_info: contraction path through the tensor network.
+Args:
+    tn (TensorNetwork): Tensor network to be contracted.
+    path_info (.PathInfo): Contraction path through the tensor network.
 
-            Returns:
-                Number of contraction tasks shared with previous calls to this
-                method.
+Returns:
+    int: Number of contraction tasks shared with previous calls to this method.
         )")
 
-        .def("add_reduction_task", &TaskBasedContractor::AddReductionTask,
-             R"(
-            Adds a reduction task to sum the result tensors.
+        .def("add_reduction_task", &TaskBasedContractor::AddReductionTask, R"(
+Adds a reduction task to sum the result tensors.
 
-            Returns:
-                Number of created reduction tasks.
+Returns:
+    int: Number of created reduction tasks.
         )")
 
-        .def("add_deletion_tasks", &TaskBasedContractor::AddDeletionTasks,
-             R"(
-            Adds deletion tasks for intermediate tensors, deallocating each one
-            when it is no longer needed.
+        .def("add_deletion_tasks", &TaskBasedContractor::AddDeletionTasks, R"(
+Adds deletion tasks for intermediate tensors, deallocating each one when it is
+no longer needed.
 
-            Returns:
-                Number of created deletion tasks.
+Returns:
+    int: Number of created deletion tasks.
         )")
 
         .def(
             "contract", [](TaskBasedContractor &tbc) { tbc.Contract().wait(); },
             R"(
-            Executes the tasks in this task-based contractor.
+Executes the tasks in this task-based contractor.
 
-            Warning:
-                This is a blocking call.
+.. warning::
+
+    This is a blocking call.
         )");
 }

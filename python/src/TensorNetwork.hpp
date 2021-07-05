@@ -32,8 +32,8 @@ template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
     const std::string class_name_edge = "TensorNetworkEdge" + Type<T>::suffix;
 
     auto cls =
-        py::class_<TensorNetwork>(m, class_name.c_str(), R"(
-        TensorNetwork represents a tensor network)")
+        py::class_<TensorNetwork>(m, class_name.c_str(),
+                                  "TensorNetwork represents a tensor network.")
 
             // Static properties
             // -----------------------------------------------------------------
@@ -45,8 +45,7 @@ template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
             // Constructors
             // -----------------------------------------------------------------
 
-            .def(py::init<>(), R"(
-            Constructs an empty tensor network)")
+            .def(py::init<>(), "Constructs an empty tensor network.")
 
             // Magic methods
             // -----------------------------------------------------------------
@@ -62,8 +61,8 @@ template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
             // -----------------------------------------------------------------
 
             .def_property_readonly("index_to_edge_map",
-                                   &TensorNetwork::GetIndexToEdgeMap, R"(
-                A map of indices to edges.)")
+                                   &TensorNetwork::GetIndexToEdgeMap,
+                                   "Mapping from indices to edges.")
 
             .def_property_readonly(
                 "tag_to_node_id_map",
@@ -76,52 +75,59 @@ template <class T> void AddBindingsForTensorNetwork(py::module_ &m)
 
                     return map;
                 },
-                R"(Returns a list of node ids for Tensors associated with the given tag)")
+                "Mapping from tags to node IDs.")
 
             .def_property_readonly("path", &TensorNetwork::GetPath, R"(
-                The path by which this tensor network was contracted.
-                Is empty if Contract() has not been called.)")
+Path by which this tensor network was contracted. Is empty if ``Contract()`` has
+not been called.
+                )")
 
-            .def_property_readonly("nodes", &TensorNetwork::GetNodes, R"(
-                A list of the nodes in this tensor network.)")
+            .def_property_readonly("nodes", &TensorNetwork::GetNodes,
+                                   "List of nodes in this tensor network.")
 
             .def_property_readonly("num_tensors", &TensorNetwork::NumTensors,
-                                   R"(
-                The number of tensors in this tensor network)")
+                                   "Number of tensors in this tensor network.")
 
-            .def_property_readonly("num_indices", &TensorNetwork::NumIndices,
-                                   R"(
-                The number of unique indices in this tensor network)")
+            .def_property_readonly(
+                "num_indices", &TensorNetwork::NumIndices,
+                "Number of unique indices in this tensor network.")
 
             // Other
             // -----------------------------------------------------------------
 
             .def("add_tensor", &TensorNetwork::AddTensor, py::arg("tensor"),
                  py::arg("tags") = std::vector<std::string>(), R"(
-                Adds a tensor to a tensor network.
-                
-                Args:
-                    tensor: Tensor to add
-                    tags: List of string tags to associate to tensor
+Adds a tensor to a tensor network.
 
-                Returns:
-                    Node ID assigned to tensor)")
+Args:
+    tensor (Tensor): Tensor to add.
+    tags (List[str]): List of tags to associate with the tensor.
+
+Returns:
+    int: Node ID assigned to the tensor.
+                )")
 
             .def("slice_indices", &TensorNetwork::SliceIndices, R"(
-                Slices a set of indices. 
-                
-                The value taken along each axis is derived from the provided
-                linear index.
+Slices a set of indices. The value taken along each axis is derived from the
+provided linear index.
 
-                Args:
-                    indices: list of string indices to be sliced
-                    value: Raveled index value representing the element
-                    to take along each of the indices.
+Args:
+    indices (List[str]): List of string indices to be sliced.
+    value (int): Raveled index value representing the element to take along each
+        of the indices.
                 )")
 
             .def("contract", &TensorNetwork::Contract,
                  py::arg("path") = std::vector<std::pair<size_t, size_t>>(), R"(
-                Contracts a tensor network along an optionally-provided path)");
+Contracts a tensor network along an optionally-provided path.
+
+Args:
+    path (Optional[Tuple[str, str]]): Optional contraction path specified as a
+        list of node ID pairs.
+
+Returns:
+    Tensor: Tensor associated with the result of the final contraction.
+                )");
 
     py::class_<Node>(cls, class_name_node.c_str())
         .def_readonly("id", &Node::id)

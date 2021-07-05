@@ -78,6 +78,8 @@
 
 ### Documentation
 
+* The Sphinx documentation now includes API documentation for the `jet` Python package. [(#40)](https://github.com/XanaduAI/jet/pull/40)
+
 * The "Using Jet" section of the Sphinx documentation website now compiles with the latest Jet headers. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
 * The license comment headers at the top of the IR source files have been removed. [(#14)](https://github.com/XanaduAI/jet/pull/14)
