@@ -18,13 +18,16 @@ __all__ = [
 class Wire:
     """Wire represents a collection of tensor indices that are directly or
     transitively associated with a qudit of a quantum circuit.
+
+    Args:
+        id_ (int): Position of the wire in the circuit.
+        depth (int): Number of gates applied to this wire.
+        closed (bool): Whether this wire has been terminated with a state.
+
     """
 
-    # Position of the wire in the circuit.
     id_: int
-    # Number of gates applied to this wire.
     depth: int = 0
-    # Whether this wire has been terminated with a state.
     closed: bool = False
 
     @property
@@ -34,14 +37,15 @@ class Wire:
 
 
 class Circuit:
-    def __init__(self, num_wires: int, dim: int = 2):
-        """Constructs a quantum circuit. Each wire is initialized with a qudit
-        of the specified dimension in the vacuum state.
+    """Circuit represents a quantum circuit composed of wires, each of which
+    is intitialized with a qudit of the specified dimension in the vacuum state.
 
-        Args:
-            num_wires (int): number of wires in the circuit.
-            dim (int): dimension of each wire.
-        """
+    Args:
+        num_wires (int): number of wires in the circuit.
+        dim (int): dimension of each wire.
+    """
+
+    def __init__(self, num_wires: int, dim: int = 2):
         self._dim = dim
         self._wires = [Wire(i) for i in range(num_wires)]
         self._parts = [Qudit(dim=dim) for _ in range(num_wires)]
@@ -107,7 +111,7 @@ class Circuit:
         """Applies a gate along the specified wires.
 
         Args:
-            gate (Gate): gate to be applied.
+            gate (jet.Gate): gate to be applied.
             wire_ids (Sequence[int]): IDs of the wires the gate is applied to.
         """
         input_indices = self.indices(wire_ids)
@@ -125,7 +129,7 @@ class Circuit:
         """Terminates the specified wires with a quantum state.
 
         Args:
-            state (State): state to be used for termination.
+            state (jet.State): state to be used for termination.
             wire_ids (Sequence[int]): IDs of the wires the state terminates.
         """
         for i in wire_ids:

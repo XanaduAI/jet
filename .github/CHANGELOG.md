@@ -54,7 +54,9 @@
 
 ### Bug Fixes
 
-* An issue with the `CudaTensor` indices was fixed when converting between the CPU `Tensor` class. (#29)](https://github.com/XanaduAI/jet/pull/24)
+* The Jet and XIR Python packages can now be installed from a source distribution. [(#38)](https://github.com/XanaduAI/jet/pull/38)
+
+* An issue with the `CudaTensor` indices was fixed when converting between the CPU `Tensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
@@ -71,6 +73,8 @@
 * `PathInfo` now correctly names intermediary tensors in a sliced tensor network [(#22)](https://github.com/XanaduAI/jet/pull/22).
 
 ### Documentation
+
+* The Sphinx documentation now includes API documentation for the `jet` Python package. [(#40)](https://github.com/XanaduAI/jet/pull/40)
 
 * The "Using Jet" section of the Sphinx documentation website now compiles with the latest Jet headers. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 

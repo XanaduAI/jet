@@ -15,13 +15,14 @@ __all__ = [
 
 
 class State(ABC):
-    def __init__(self, name: str, num_wires: int):
-        """Constructs a quantum state.
+    """State represents a quantum state.
 
-        Args:
-            name (str): name of the state.
-            num_wires (str): number of wires the state is connected to.
-        """
+    Args:
+        name (str): name of the state.
+        num_wires (str): number of wires the state is connected to.
+    """
+
+    def __init__(self, name: str, num_wires: int):
         self.name = name
 
         self._indices = None
@@ -110,13 +111,14 @@ class State(ABC):
 
 
 class Qudit(State):
-    def __init__(self, dim: int, data: Optional[np.ndarray] = None):
-        """Constructs a qudit state.
+    """Qudit represents a qudit state.
 
-        Args:
-            dim (int): dimension of the qudit.
-            data (np.ndarray or None): optional state vector.
-        """
+    Args:
+        dim (int): dimension of the qudit.
+        data (np.ndarray or None): optional state vector.
+    """
+
+    def __init__(self, dim: int, data: Optional[np.ndarray] = None):
         name = "Qubit" if dim == 2 else f"Qudit(d={dim})"
         super().__init__(name=name, num_wires=1)
 
@@ -130,14 +132,15 @@ class Qudit(State):
 
 
 class QuditRegister(State):
-    def __init__(self, dim: int, size: int, data: Optional[np.ndarray] = None):
-        """Constructs a qudit register state.
+    """QuditRegister represents a qudit register state.
 
-        Args:
-            dim (int): dimension of the qudits.
-            size (int): number of qudits.
-            data (np.ndarray or None): optional state vector.
-        """
+    Args:
+        dim (int): dimension of the qudits.
+        size (int): number of qudits.
+        data (np.ndarray or None): optional state vector.
+    """
+
+    def __init__(self, dim: int, size: int, data: Optional[np.ndarray] = None):
         name = f"Qubit[{size}]" if dim == 2 else f"Qudit(d={dim})[{size}]"
         super().__init__(name=name, num_wires=size)
 

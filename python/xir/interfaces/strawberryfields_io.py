@@ -1,16 +1,9 @@
 from decimal import Decimal
+
 import strawberryfields as sf
 from strawberryfields import ops
-from xir.program import XIRProgram, Statement, GateDeclaration, OutputDeclaration
 
-
-def find_number_of_modes(xir):
-    """Helper function to find the number of modes in an XIR program"""
-    wires = set()
-    for stmt in xir.statements:
-        wires.update(stmt.wires)
-
-    return len(wires)
+from xir.program import GateDeclaration, OutputDeclaration, Statement, XIRProgram
 
 
 def to_program(xir, **kwargs):
@@ -28,7 +21,7 @@ def to_program(xir, **kwargs):
     Returns:
         Program: corresponding Strawberry Fields program
     """
-    num_of_modes = find_number_of_modes(xir)
+    num_of_modes = len(xir.wires)
     name = kwargs.get("name", "xir")
     if num_of_modes == 0:
         raise ValueError(
@@ -88,8 +81,8 @@ def to_xir(prog, **kwargs):
 
     Kwargs:
         add_decl (bool): Whether gate and output declarations should be added to
-            the IR program. Default is False.
-        version (str): Version number for the program. Default is 0.1.0.
+            the IR program. Default is ``False``.
+        version (str): Version number for the program. Default is ``0.1.0``.
 
     Returns:
         XIRProgram

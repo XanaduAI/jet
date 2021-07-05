@@ -172,7 +172,7 @@ class TestStrawberryFieldsToXIR:
         assert irprog.statements[0].wires == (0,)
 
         assert irprog.statements[1].name == "Sgate"
-        assert irprog.statements[1].params == [Decimal("0.3"), 0.0]
+        assert irprog.statements[1].params == [0.3, 0.0]
         assert irprog.statements[1].wires == (1,)
 
         if add_decl:
