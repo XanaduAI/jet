@@ -29,7 +29,21 @@ jobs:
       - name: Run tests
         run: |
           cd python
-          make test
+          make test args="-o junit_family=xunit2 --junitxml=report.xml"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ubuntu-test-report
+          path: python/report.xml
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          check_name: Test Report (Python) on Ubuntu
+          files: python/report.xml
 
   test-macos:
     name: Build (Python) on MacOS
@@ -50,4 +64,11 @@ jobs:
       - name: Run tests
         run: |
           cd python
-          make test
+          make test args="-o junit_family=xunit2 --junitxml=report.xml"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: macos-test-report
+          path: python/report.xml

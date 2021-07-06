@@ -96,10 +96,3 @@ jobs:
         with:
           name: macos-test-report
           path: build/test/results/report.xml
-
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
-        if: always()
-        with:
-          check_name: Test Report (C++) on MacOS
-          files: build/test/results/report.xml

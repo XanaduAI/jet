@@ -36,6 +36,8 @@
 
 ### Improvements
 
+* A Python (Ubuntu) test report is now generated alongside the C++ (Ubuntu) test report. [(#39)](https://github.com/XanaduAI/jet/pull/39)
+
 * Tensor transposes are now significantly faster when all the dimensions are powers of two. [(#12)](https://github.com/XanaduAI/jet/pull/12)
 
 * Use camel case for type aliases. [(#17)](https://github.com/XanaduAI/jet/pull/17)
@@ -75,6 +77,8 @@
 * `PathInfo` now correctly names intermediary tensors in a sliced tensor network [(#22)](https://github.com/XanaduAI/jet/pull/22).
 
 ### Documentation
+
+* The "Using Jet" section of the Sphinx documentation now has Python code snippets. [(#43)](https://github.com/XanaduAI/jet/pull/43)
 
 * The Sphinx documentation now includes API documentation for the `jet` Python package. [(#40)](https://github.com/XanaduAI/jet/pull/40)
 

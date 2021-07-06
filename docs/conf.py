@@ -40,6 +40,7 @@ extensions = [
     "nbsphinx",
     "sphinx_automodapi.automodapi",
     "sphinx_copybutton",
+    "sphinx_tabs.tabs",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.inheritance_diagram",
