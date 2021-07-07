@@ -676,7 +676,8 @@ template <class T = cuComplex> class CudaTensor {
         if (tensor.GetIndices() == new_indices)
             return tensor;
 
-        JET_ABORT_IF(tensor.GetIndices().empty(), "Number of indices cannot be zero.");
+        JET_ABORT_IF(tensor.GetIndices().empty(),
+                     "Number of indices cannot be zero.");
 
         std::vector<size_t> output_shape(tensor.GetShape().size());
         for (size_t i = 0; i < new_indices.size(); i++)
@@ -742,7 +743,8 @@ template <class T = cuComplex> class CudaTensor {
             if (index_to_mode_map.insert({new_indices[i], i}).second) {
                 mode_to_dimension_map.emplace(
                     i, static_cast<int64_t>(
-                           permuted_tensor.GetIndexToDimension().at(new_indices[i])));
+                           permuted_tensor.GetIndexToDimension().at(
+                               new_indices[i])));
             }
         }
 
@@ -844,7 +846,7 @@ template <class T = cuComplex> class CudaTensor {
             std::swap(*it, new_indices.back());
             std::swap(output_shape[offset], output_shape.back());
         }
-        
+
         CudaTensor<U> permuted_tensor = Transpose(tens, new_indices);
 
         CudaTensor<U> sliced_tensor({permuted_tensor.GetIndices().begin(),
@@ -852,7 +854,8 @@ template <class T = cuComplex> class CudaTensor {
                                     {permuted_tensor.GetShape().begin(),
                                      permuted_tensor.GetShape().end() - 1});
 
-        const size_t ptr_offset = Jet::Utilities::ShapeToSize(sliced_tensor.GetShape());
+        const size_t ptr_offset =
+            Jet::Utilities::ShapeToSize(sliced_tensor.GetShape());
 
         JET_CUDA_IS_SUCCESS(
             cudaMemcpy(sliced_tensor.data_,
