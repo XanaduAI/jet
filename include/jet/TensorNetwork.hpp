@@ -252,6 +252,10 @@ template <class Tensor> class TensorNetwork {
                 tensor_indices.erase(tensor_indices.begin() + offset);
 
                 tensor = Tensor::SliceIndex(tensor, sliced_index, sliced_value);
+
+                if (tensor.GetIndices() != tensor_indices)
+                    tensor = tensor.Transpose(tensor_indices);
+
                 if (!tensor_indices.empty()) {
                     tensor = Tensor::Reshape(tensor, tensor_shape);
                 }

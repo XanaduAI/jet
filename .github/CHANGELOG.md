@@ -2,9 +2,11 @@
 
 ### New features since last release
 
-* Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
+* CudaTensor now supports `Transpose` calls. [(#42)](https://github.com/XanaduAI/jet/pull/42)
 
-* The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`. (#29)](https://github.com/XanaduAI/jet/pull/29)
+* Full and sliced contractions can now be run with `TaskBasedContractor` on the GPU using the `CudaTensor` class. [(#29)](https://github.com/XanaduAI/jet/pull/29)
+
+* The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`. [(#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * An `XIRProgram` which declares the gates supported by Jet is now bundled with the `jet` Python package. [(#34)](https://github.com/XanaduAI/jet/pull/34)
 
@@ -33,6 +35,8 @@
 * Running CMake with `-DBUILD_PYTHON=ON` now generates Python bindings within a `jet` package. [(#1)](https://github.com/XanaduAI/jet/pull/1)
 
 ### Improvements
+
+* CudaTensor `SliceIndex` calls now avoid intermediate CPU transfer operations. [(#42)](https://github.com/XanaduAI/jet/pull/42)
 
 * A Python (Ubuntu) test report is now generated alongside the C++ (Ubuntu) test report. [(#39)](https://github.com/XanaduAI/jet/pull/39)
 
