@@ -232,7 +232,6 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
     """Tests that running an XIR program with amplitude statements gives the correct result."""
     assert jet.run_xir_program(program) == pytest.approx(want_result)
 
-
 @pytest.mark.parametrize(
     "program, match",
     [
@@ -261,6 +260,80 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
     with pytest.raises(ValueError, match=match):
         jet.run_xir_program(program)
 
+@pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            parse_xir_script(
+                """
+                probability | [0];
+                """
+            ),
+            [1, 0],
+        ),
+        (
+            parse_xir_script(
+                """
+                X | [0];
+
+                probability | [0];
+                """
+            ),
+            [0, 1],
+        ),
+        (
+            parse_xir_script(
+                """
+                X | [1];
+
+                probability | [0, 1];
+                """
+            ),
+            [0, 1, 0, 0],
+        ),
+        (
+            parse_xir_script(
+                """
+                H | [0];
+                CNOT | [0, 1];
+
+                probability | [0, 1];
+                """
+            ),
+            [0.5, 0, 0, 0.5],
+        ),
+        (
+            parse_xir_script(
+                """
+                H | [0];
+                Y | [0];
+
+                probability | [0];
+                """
+            ),
+            [0.5, 0.5],
+        ),
+    ],
+)
+def test_run_xir_program_with_probability_statement(program, want_result):
+    """Tests that running an XIR program with a probability statement gives the correct result."""
+    assert jet.run_xir_program(program) == [pytest.approx(want_result)]
+
+@pytest.mark.parametrize(
+    "program, match",
+    [
+        (
+            parse_xir_script("CNOT | [0, 1]; probability | [0];"),
+            r"Statement 'probability \| \[0\]' must be applied to \[0 \.\. 1\]\.",
+        ),
+    ],
+)
+def test_run_xir_program_with_invalid_probability_statement(program, match):
+    """Tests that a ValueError is raised when an XIR program contains an
+    invalid probability statement.
+    """
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
 
 def test_run_xir_program_with_unsupported_statement():
     """Tests that a ValueError is raised when an XIR program contains an
