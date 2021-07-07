@@ -223,6 +223,9 @@ if (ENABLE_CUTENSOR)
     target_include_directories(Jet INTERFACE ${CUDA_TOOLKIT_ROOT_DIR}/include)
     target_link_libraries(Jet INTERFACE ${CUTENSOR_LIB} ${CURAND_LIB} ${CUDA_LIBRARIES})
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUTENSOR>)
+    if(DISABLE_CUDA_SAFETY)
+        target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDATENSOR_UNSAFE>)
+    endif()
 endif()
 
 ##########################
