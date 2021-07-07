@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* The Jet interpreter for XIR programs now supports state vector outputs via `probability` statements.
+
 * CudaTensor now supports `Transpose` calls. [(#42)](https://github.com/XanaduAI/jet/pull/42)
 
 * Full and sliced contractions can now be run with `TaskBasedContractor` on the GPU using the `CudaTensor` class. [(#29)](https://github.com/XanaduAI/jet/pull/29)
