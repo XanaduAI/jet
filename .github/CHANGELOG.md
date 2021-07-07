@@ -4,7 +4,7 @@
 
 * CudaTensor now supports `Transpose` calls. [(#42)](https://github.com/XanaduAI/jet/pull/42)
 
-* Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. [(#29)](https://github.com/XanaduAI/jet/pull/29)
+* Full and sliced contractions can now be run with `TaskBasedContractor` on the GPU using the `CudaTensor` class. [(#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * The `TaskBasedCpuContractor` class has been renamed to `TaskBasedContractor`. [(#29)](https://github.com/XanaduAI/jet/pull/29)
 
