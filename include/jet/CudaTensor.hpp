@@ -714,10 +714,10 @@ template <class T = cuComplex> class CudaTensor {
         std::unordered_map<size_t, int64_t> mode_to_dimension_map;
 
         for (size_t i = 0; i < old_indices.size(); i++) {
-            if (!index_to_mode_map.count(old_indices[i])) {
-                index_to_mode_map[old_indices[i]] = i;
-                mode_to_dimension_map[i] = static_cast<int64_t>(
-                    tensor.GetIndexToDimension().at(old_indices[i]));
+            if (index_to_mode_map.insert({old_indices[i], i}).second) {
+                mode_to_dimension_map.emplace(
+                    i, static_cast<int64_t>(
+                           tensor.GetIndexToDimension().at(old_indices[i])));
             }
         }
 
@@ -733,7 +733,7 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         // 4. Build Descriptor for input
-
+        
         cutensorTensorDescriptor_t input_descriptor;
 
         const std::vector<int64_t> input_strides =
