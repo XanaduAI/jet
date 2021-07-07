@@ -747,10 +747,10 @@ template <class T = cuComplex> class CudaTensor {
         // 5. Build mode array for output
 
         for (size_t i = 0; i < new_indices.size(); i++) {
-            if (!index_to_mode_map.count(new_indices[i])) {
-                index_to_mode_map[new_indices[i]] = i;
-                mode_to_dimension_map[i] = static_cast<int64_t>(
-                    permuted_tensor.GetIndexToDimension().at(new_indices[i]));
+            if (index_to_mode_map.insert({new_indices[i], i}).second) {
+                mode_to_dimension_map.emplace(
+                    i, static_cast<int64_t>(
+                           permuted_tensor.GetIndexToDimension().at(new_indices[i])));
             }
         }
 
