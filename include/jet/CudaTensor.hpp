@@ -679,8 +679,7 @@ template <class T = cuComplex> class CudaTensor {
         if (tensor.GetIndices() == new_indices)
             return tensor;
 
-        if (tensor.GetIndices().size() == 0)
-            JET_ABORT("Number of indices cannot be zero.");
+        JET_ABORT_IF(tensor.GetIndices().empty(), "Number of indices cannot be zero.");
 
         std::vector<size_t> output_shape(tensor.GetShape().size());
         for (size_t i = 0; i < new_indices.size(); i++)
