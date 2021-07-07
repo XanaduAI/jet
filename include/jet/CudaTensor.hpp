@@ -844,12 +844,6 @@ template <class T = cuComplex> class CudaTensor {
                                     size_t index_value)
     {
 
-        ///////////////////////////////////////////////////////////////////////
-        // 0. Perform up-front util allocations and manipulations
-        ///////////////////////////////////////////////////////////////////////
-        // static const U one = {1.0, 0.0};
-
-        // const std::vector<std::string>& old_indices = tens.GetIndices();
         std::vector<std::string> new_indices = tens.GetIndices();
         std::vector<std::string> old_indices = tens.GetIndices();
 
@@ -863,11 +857,7 @@ template <class T = cuComplex> class CudaTensor {
             std::swap(*it, new_indices.back());
             std::swap(output_shape[offset], output_shape.back());
         }
-
-        ///////////////////////////////////////////////////////////////////////
-        // 1. Allocate permuted tensor memory
-        ///////////////////////////////////////////////////////////////////////
-
+        
         CudaTensor<U> permuted_tensor = Transpose(tens, new_indices);
 
         CudaTensor<U> sliced_tensor({permuted_tensor.GetIndices().begin(),
@@ -875,9 +865,7 @@ template <class T = cuComplex> class CudaTensor {
                                     {permuted_tensor.GetShape().begin(),
                                      permuted_tensor.GetShape().end() - 1});
 
-        const size_t ptr_offset = Jet::Utilities::ShapeToSize(
-            std::vector<size_t>{permuted_tensor.GetShape().begin(),
-                                permuted_tensor.GetShape().end() - 1});
+        const size_t ptr_offset = Jet::Utilities::ShapeToSize(sliced_tensor.GetShape());
 
         JET_CUDA_IS_SUCCESS(
             cudaMemcpy(sliced_tensor.data_,
