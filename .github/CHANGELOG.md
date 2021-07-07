@@ -36,7 +36,7 @@
 
 ### Improvements
 
-* CudaTensor `SliceIndices` calls now avoid intermediate CPU transfer operations. [(#42)](https://github.com/XanaduAI/jet/pull/42)
+* CudaTensor `SliceIndex` calls now avoid intermediate CPU transfer operations. [(#42)](https://github.com/XanaduAI/jet/pull/42)
 
 * A Python (Ubuntu) test report is now generated alongside the C++ (Ubuntu) test report. [(#39)](https://github.com/XanaduAI/jet/pull/39)
 
