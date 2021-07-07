@@ -658,9 +658,6 @@ template <class T = cuComplex> class CudaTensor {
         return Reshape<T>(*this, new_shape);
     }
 
-    //**************************************************************************//
-    //**************************************************************************//
-
     /**
      * @brief Transposes the indices of a `%CudaTensor` object to a new
      * ordering.
@@ -691,11 +688,9 @@ template <class T = cuComplex> class CudaTensor {
         const std::vector<std::string> &old_indices = tensor.GetIndices();
 
         // 1. Allocate permuted tensor memory
-
         CudaTensor<U> permuted_tensor(new_indices, output_shape);
 
         // 2. Initialise CuTensor runtime & setup necessary options
-
         cutensorHandle_t handle;
         cudaDataType_t data_type;
         JET_CUTENSOR_IS_SUCCESS(cutensorInit(&handle));
@@ -709,7 +704,6 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         // 3. Build mode & dimensions array for Input
-
         std::unordered_map<std::string, int> index_to_mode_map;
         std::unordered_map<size_t, int64_t> mode_to_dimension_map;
 
@@ -733,7 +727,6 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         // 4. Build Descriptor for input
-        
         cutensorTensorDescriptor_t input_descriptor;
 
         const std::vector<int64_t> input_strides =
@@ -745,7 +738,6 @@ template <class T = cuComplex> class CudaTensor {
             CUTENSOR_OP_IDENTITY));
 
         // 5. Build mode array for output
-
         for (size_t i = 0; i < new_indices.size(); i++) {
             if (index_to_mode_map.insert({new_indices[i], i}).second) {
                 mode_to_dimension_map.emplace(
@@ -766,7 +758,6 @@ template <class T = cuComplex> class CudaTensor {
         }
 
         // 6. Build descriptor for output
-
         cutensorTensorDescriptor_t output_descriptor;
 
         const std::vector<int64_t> output_strides =
@@ -778,7 +769,6 @@ template <class T = cuComplex> class CudaTensor {
             CUTENSOR_OP_IDENTITY));
 
         // 7. Permute tensor indices
-
         JET_CUTENSOR_IS_SUCCESS(cutensorPermutation(
             &handle, &one, tensor.data_, &input_descriptor, input_modes.data(),
             permuted_tensor.data_, &output_descriptor, output_modes.data(),
@@ -834,9 +824,6 @@ template <class T = cuComplex> class CudaTensor {
     {
         return Transpose<T>(*this, new_indices);
     }
-
-    //**************************************************************************//
-    //**************************************************************************//
 
     template <typename U = T>
     static CudaTensor<U> SliceIndex(const CudaTensor<U> &tens,
