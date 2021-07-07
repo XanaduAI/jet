@@ -685,22 +685,16 @@ template <class T = cuComplex> class CudaTensor {
         for (size_t i = 0; i < new_indices.size(); i++)
             output_shape[i] = tensor.GetIndexToDimension().at(new_indices[i]);
 
-        ///////////////////////////////////////////////////////////////////////
-        // 0. Perform up-front util allocations and manipulations
-        ///////////////////////////////////////////////////////////////////////
+        // 0. Perform up-front util allocations
         static const U one = {1.0, 0.0};
 
         const std::vector<std::string> &old_indices = tensor.GetIndices();
 
-        ///////////////////////////////////////////////////////////////////////
         // 1. Allocate permuted tensor memory
-        ///////////////////////////////////////////////////////////////////////
 
         CudaTensor<U> permuted_tensor(new_indices, output_shape);
 
-        ///////////////////////////////////////////////////////////////////////
         // 2. Initialise CuTensor runtime & setup necessary options
-        ///////////////////////////////////////////////////////////////////////
 
         cutensorHandle_t handle;
         cudaDataType_t data_type;
@@ -714,9 +708,7 @@ template <class T = cuComplex> class CudaTensor {
             data_type = CUDA_C_32F;
         }
 
-        ///////////////////////////////////////////////////////////////////////
         // 3. Build mode & dimensions array for Input
-        ///////////////////////////////////////////////////////////////////////
 
         std::unordered_map<std::string, int> index_to_mode_map;
         std::unordered_map<size_t, int64_t> mode_to_dimension_map;
@@ -740,12 +732,7 @@ template <class T = cuComplex> class CudaTensor {
             input_dimensions[idx] = mode_to_dimension_map[input_modes[idx]];
         }
 
-        // index_to_mode_map.clear();
-        // mode_to_dimension_map.clear();
-
-        ///////////////////////////////////////////////////////////////////////
         // 4. Build Descriptor for input
-        ///////////////////////////////////////////////////////////////////////
 
         cutensorTensorDescriptor_t input_descriptor;
 
@@ -757,9 +744,7 @@ template <class T = cuComplex> class CudaTensor {
             input_dimensions.data(), input_strides.data(), data_type,
             CUTENSOR_OP_IDENTITY));
 
-        ///////////////////////////////////////////////////////////////////////
         // 5. Build mode array for output
-        ///////////////////////////////////////////////////////////////////////
 
         for (size_t i = 0; i < new_indices.size(); i++) {
             if (!index_to_mode_map.count(new_indices[i])) {
@@ -780,9 +765,7 @@ template <class T = cuComplex> class CudaTensor {
             output_dimensions[idx] = mode_to_dimension_map[output_modes[idx]];
         }
 
-        ///////////////////////////////////////////////////////////////////////
         // 6. Build descriptor for output
-        ///////////////////////////////////////////////////////////////////////
 
         cutensorTensorDescriptor_t output_descriptor;
 
@@ -794,9 +777,7 @@ template <class T = cuComplex> class CudaTensor {
             output_dimensions.data(), output_strides.data(), data_type,
             CUTENSOR_OP_IDENTITY));
 
-        ///////////////////////////////////////////////////////////////////////
         // 7. Permute tensor indices
-        ///////////////////////////////////////////////////////////////////////
 
         JET_CUTENSOR_IS_SUCCESS(cutensorPermutation(
             &handle, &one, tensor.data_, &input_descriptor, input_modes.data(),
