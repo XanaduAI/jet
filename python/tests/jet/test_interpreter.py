@@ -219,8 +219,8 @@ def test_run_xir_program_with_no_output_statements(program):
                 """
                 X | [0];
 
-                amplitude(state: 0) | [0];
-                amplitude(state: 1) | [0];
+                amplitude(state: [0]) | [0];
+                amplitude(state: [1]) | [0];
                 """
             ),
             [0, 1],
@@ -231,10 +231,10 @@ def test_run_xir_program_with_no_output_statements(program):
                 H | [0];
                 CNOT | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [1 / sqrt(2), 0, 0, 1 / sqrt(2)],
@@ -244,10 +244,10 @@ def test_run_xir_program_with_no_output_statements(program):
                 """
                 TwoModeSqueezing(3, 1, 2) | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [0.0993279274194332, 0, 0, 0.053401711152745175 + 0.08316823745907517j],
@@ -260,6 +260,66 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
 
 
 @pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            parse_xir_script(
+                """
+                probability | [0];
+                """
+            ),
+            [1, 0],
+        ),
+        (
+            parse_xir_script(
+                """
+                X | [0];
+
+                probability | [0];
+                """
+            ),
+            [0, 1],
+        ),
+        (
+            parse_xir_script(
+                """
+                X | [1];
+
+                probability | [0, 1];
+                """
+            ),
+            [0, 1, 0, 0],
+        ),
+        (
+            parse_xir_script(
+                """
+                H | [0];
+                CNOT | [0, 1];
+
+                probability | [0, 1];
+                """
+            ),
+            [0.5, 0, 0, 0.5],
+        ),
+        (
+            parse_xir_script(
+                """
+                H | [0];
+                Y | [0];
+
+                probability | [0];
+                """
+            ),
+            [0.5, 0.5],
+        ),
+    ],
+)
+def test_run_xir_program_with_probability_statement(program, want_result):
+    """Tests that running an XIR program with a probability statement gives the correct result."""
+    assert jet.run_xir_program(program) == [pytest.approx(want_result)]
+
+
+@pytest.mark.parametrize(
     "program, match",
     [
         (
@@ -267,16 +327,19 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
             r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
         ),
         (
-            parse_xir_script("X | [0]; amplitude(state: 2) | [0];"),
-            r"Statement 'amplitude\(state: 2\) \| \[0\]' has a 'state' parameter which is too large\.",
+            parse_xir_script("X | [0]; amplitude(state: [0, 0]) | [0];"),
+            (
+                r"Statement 'amplitude\(state: \[0, 0\]\) \| \[0\]' must specify "
+                r"a 'state' parameter that matches the number of applied wires\."
+            ),
         ),
         (
-            parse_xir_script("CNOT | [0, 1]; amplitude(state: 0) | [0];"),
-            r"Statement 'amplitude\(state: 0\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
+            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0]) | [0];"),
+            r"Statement 'amplitude\(state: \[0\]\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
         ),
         (
-            parse_xir_script("CNOT | [0, 1]; amplitude(state: 0) | [1, 0];"),
-            r"Statement 'amplitude\(state: 0\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
+            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0, 0]) | [1, 0];"),
+            r"Statement 'amplitude\(state: \[0, 0\]\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
         ),
     ],
 )
@@ -301,8 +364,8 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 X | [0];
 
-                amplitude(state: 0) | [0];
-                amplitude(state: 1) | [0];
+                amplitude(state: [0]) | [0];
+                amplitude(state: [1]) | [0];
                 """
             ),
             [0, 1],
@@ -317,10 +380,10 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 H2 | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [0.5, 0.5, 0.5, 0.5],
@@ -344,10 +407,10 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 FlipStay | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [0, 0, 1, 0],
@@ -367,14 +430,14 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 RX3(a: 0, b: 3.141592653589793, c: 3.141592653589793) | [0, 1, 2];
 
-                amplitude(state: 0) | [0, 1, 2];
-                amplitude(state: 1) | [0, 1, 2];
-                amplitude(state: 2) | [0, 1, 2];
-                amplitude(state: 3) | [0, 1, 2];
-                amplitude(state: 4) | [0, 1, 2];
-                amplitude(state: 5) | [0, 1, 2];
-                amplitude(state: 6) | [0, 1, 2];
-                amplitude(state: 7) | [0, 1, 2];
+                amplitude(state: [0, 0, 0]) | [0, 1, 2];
+                amplitude(state: [0, 0, 1]) | [0, 1, 2];
+                amplitude(state: [0, 1, 0]) | [0, 1, 2];
+                amplitude(state: [0, 1, 1]) | [0, 1, 2];
+                amplitude(state: [1, 0, 0]) | [0, 1, 2];
+                amplitude(state: [1, 0, 1]) | [0, 1, 2];
+                amplitude(state: [1, 1, 0]) | [0, 1, 2];
+                amplitude(state: [1, 1, 1]) | [0, 1, 2];
                 """
             ),
             [0, 0, 0, 0, 0, 0, 1, 0],

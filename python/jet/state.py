@@ -20,10 +20,12 @@ class State(ABC):
     Args:
         name (str): name of the state.
         num_wires (str): number of wires the state is connected to.
+        adjoint (bool): Whether to take the adjoint of this state.
     """
 
-    def __init__(self, name: str, num_wires: int):
+    def __init__(self, name: str, num_wires: int, adjoint: bool = False):
         self.name = name
+        self.adjoint = adjoint
 
         self._indices = None
         self._num_wires = num_wires
@@ -88,14 +90,13 @@ class State(ABC):
         """Returns the vector representation of this state."""
         pass
 
-    def tensor(self, dtype: type = np.complex128, adjoint: bool = False) -> TensorType:
+    def tensor(self, dtype: type = np.complex128) -> TensorType:
         """Returns the tensor representation of this state.
 
         Args:
             dtype (type): data type of the tensor.
-            adjoint (bool): whether to take the adjoint of the tensor.
         """
-        if adjoint:
+        if self.adjoint:
             data = np.conj(self._data())
         else:
             data = self._data()

@@ -63,15 +63,14 @@ class Gate(ABC):
         name (str): Name of the gate.
         num_wires (int): Number of wires the gate is applied to.
         params (list or None): Parameters of the gate.
+        adjoint (bool): Whether to take the adjoint of this gate.
     """
 
     def __init__(
-        self,
-        name: str,
-        num_wires: int,
-        params: Optional[List[float]] = None,
+        self, name: str, num_wires: int, params: Optional[List[float]] = None, adjoint: bool = False
     ):
         self.name = name
+        self.adjoint = adjoint
 
         self._indices = None
         self._num_wires = num_wires
@@ -134,14 +133,13 @@ class Gate(ABC):
         """Returns the matrix representation of this gate."""
         pass
 
-    def tensor(self, dtype: type = np.complex128, adjoint: bool = False) -> TensorType:
+    def tensor(self, dtype: type = np.complex128) -> TensorType:
         """Returns the tensor representation of this gate.
 
         Args:
             dtype (type): Data type of the tensor.
-            adjoint (bool): Whether to take the adjoint of the tensor.
         """
-        if adjoint:
+        if self.adjoint:
             data = np.linalg.inv(self._data()).flatten()
         else:
             data = self._data().flatten()

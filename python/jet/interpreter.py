@@ -6,7 +6,9 @@ import numpy as np
 
 from xir import Statement, XIRProgram, XIRTransformer, xir_parser
 
+from .bindings import PathInfo
 from .circuit import Circuit
+from .factory import TaskBasedContractor
 from .gate import GateFactory
 from .state import Qudit
 
@@ -91,10 +93,10 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
         H | [0];
         CNOT | [0, 1];
 
-        amplitude(state: 0) | [0, 1];
-        amplitude(state: 1) | [0, 1];
-        amplitude(state: 2) | [0, 1];
-        amplitude(state: 3) | [0, 1];
+        amplitude(state: [0, 0]) | [0, 1];
+        amplitude(state: [0, 1]) | [0, 1];
+        amplitude(state: [1, 0]) | [0, 1];
+        amplitude(state: [1, 1]) | [0, 1];
 
     If the contents of this script are stored in a string called ``xir_script``,
     then each amplitude of the Bell state can be displayed using Jet as follows:
@@ -126,20 +128,29 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             gate = GateFactory.create(stmt.name, **stmt.params)
             circuit.append_gate(gate, wire_ids=stmt.wires)
 
-        elif stmt.name == "amplitude" or stmt.name == "Amplitude":
+        elif stmt.name in ("amplitude", "Amplitude"):
             if "state" not in stmt.params:
                 raise ValueError(f"Statement '{stmt}' is missing a 'state' parameter.")
 
-            # TODO: Use a list representation of the "state" key.
-            state = list(map(int, bin(stmt.params["state"])[2:].zfill(num_wires)))
+            state = stmt.params["state"]
 
-            if len(state) != num_wires:
-                raise ValueError(f"Statement '{stmt}' has a 'state' parameter which is too large.")
+            if len(state) != len(stmt.wires):
+                raise ValueError(
+                    f"Statement '{stmt}' must specify a 'state' parameter that "
+                    f"matches the number of applied wires."
+                )
 
             if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
             output = _compute_amplitude(circuit=circuit, state=state)
+            result.append(output)
+
+        elif stmt.name in ("probability", "Probability"):
+            if stmt.wires != tuple(range(num_wires)):
+                raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
+
+            output = _compute_probability(circuit=circuit)
             result.append(output)
 
         else:
@@ -316,3 +327,37 @@ def _compute_amplitude(
     tn = circuit.tensor_network(dtype=dtype)
     amplitude = tn.contract()
     return dtype(amplitude.scalar)
+
+
+def _compute_probability(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:
+    """Computes the probability distribution at the end of a circuit.
+
+    Args:
+        circuit (Circuit): Circuit to produce the probability distribution for.
+        dtype (type): Data type of the probability computation.
+
+    Returns:
+        NumPy array representing the probability of measuring each basis state.
+    """
+    tn = circuit.tensor_network(dtype=dtype)
+
+    if len(tn.nodes) == 1:
+        # No contractions are necessary with a single tensor.
+        amplitudes = np.array(tn.nodes[0].tensor.data)
+
+    else:
+        # Contract all the tensors (not just the ones with shared indices).
+        # TODO: Use a better contraction path algorithm.
+        path = [(i, i + 1) for i in range(0, 2 * len(tn.nodes) - 3, 2)]
+        path_info = PathInfo(tn=tn, path=path)
+
+        tbc = TaskBasedContractor(dtype=dtype)
+        tbc.add_contraction_tasks(tn=tn, path_info=path_info)
+        tbc.add_deletion_tasks()
+        tbc.contract()
+
+        # Arrange the indices in increasing order of wire ID.
+        state = tbc.results[0].transpose([wire.index for wire in circuit.wires])
+        amplitudes = np.array(state.data).flatten()
+
+    return amplitudes.conj() * amplitudes

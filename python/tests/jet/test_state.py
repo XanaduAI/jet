@@ -37,7 +37,8 @@ class TestState:
 
     def test_tensor_adjoint(self, state):
         """Tests that the correct adjoint tensor is returned for a state."""
-        tensor = state.tensor(adjoint=True)
+        state.adjoint = True
+        tensor = state.tensor()
         assert tensor.indices == ["0"]
         assert tensor.shape == [3]
         assert tensor.data == [-1j, 0, 0]

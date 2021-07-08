@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, Iterator, List, Sequence, Tuple, Union
@@ -9,9 +10,25 @@ from .gate import Gate
 from .state import Qudit, State
 
 __all__ = [
-    "Wire",
     "Circuit",
+    "Operation",
+    "Wire",
 ]
+
+@dataclass(frozen=True)
+class Operation:
+    """Operation represents an event where a state or gate is appended to a ``Circuit``.
+
+    Args:
+        part (Gate or State): Gate or state that was appended to the circuit.
+        wire_ids (Sequence[int]): IDs of the wire(s) the part is connected to.
+    """
+    part: Union[Gate, State]
+    wire_ids: Sequence[int]
+
+    def __eq__(self, other) -> bool:
+        """Reports whether two operations are identical."""
+        return self.part == other.part and self.wire_ids == other.wire_ids
 
 
 @dataclass
@@ -23,9 +40,7 @@ class Wire:
         id_ (int): Position of the wire in the circuit.
         depth (int): Number of gates applied to this wire.
         closed (bool): Whether this wire has been terminated with a state.
-
     """
-
     id_: int
     depth: int = 0
     closed: bool = False
@@ -41,17 +56,25 @@ class Circuit:
     is intitialized with a qudit of the specified dimension in the vacuum state.
 
     Args:
-        num_wires (int): number of wires in the circuit.
-        dim (int): dimension of each wire.
+        num_wires (int): Number of wires in the circuit.
+        dim (int): Dimension of each wire.
     """
 
     def __init__(self, num_wires: int, dim: int = 2):
         self._dim = dim
-        self._wires = [Wire(i) for i in range(num_wires)]
-        self._parts = [Qudit(dim=dim) for _ in range(num_wires)]
 
-        for (wire, part) in zip(self._wires, self._parts):
-            part.indices = [wire.index]
+        self._ops = []
+        self._wires = []
+
+        for i in range(num_wires):
+            wire = Wire(i)
+            self._wires.append(wire)
+
+            state = Qudit(dim=dim)
+            state.indices = [wire.index]
+
+            op = Operation(part=state, wire_ids=[i])
+            self._ops.append(op)
 
     @property
     def dimension(self) -> int:
@@ -59,61 +82,55 @@ class Circuit:
         return self._dim
 
     @property
-    def parts(self) -> Iterator[Union[Gate, State]]:
-        """Returns the gates and states that comprise this circuit.  The first
-        ``self.num_wires`` parts are the qudits that begin each wire; other
-        parts appear in the order they were appended to the circuit.
+    def operations(self) -> Iterator[Operation]:
+        """Returns the gates and states that comprise this circuit alongside the
+        wires they are connected to.  The first ``self.num_wires`` operations
+        describe the qudits that begin each wire; other operations appear in the
+        order they were appended to the circuit.
         """
-        return iter(self._parts)
+        return iter(self._ops)
 
     @property
     def wires(self) -> Iterator[Wire]:
         """Returns the wires of this circuit in increasing order of wire ID."""
         return iter(self._wires)
 
-    def _append_validator(append_fn: Callable) -> Callable:
-        """Decorator which validates the arguments to an append function.
+    def _validate_wire_ids(self, wire_ids: Sequence[int]) -> None:
+        """Reports whether a set of wire IDs are valid.
 
         Args:
-            append_fn (Callable): append function to be validated.
+            wire_ids (Sequence[int]): Wire IDs to validate.
 
-        Returns:
-            Function that validates the passed wire IDs before invoking the
-            decorated append function with the given arguments.
+        Raises:
+            ValueError: If at least one wire ID is invalid.
         """
+        num_wires = len(self._wires)
 
-        @wraps(append_fn)
-        def validator(self, part: Union[Gate, State], wire_ids: Sequence[int]) -> None:
-            if len(wire_ids) != part.num_wires:
-                raise ValueError(
-                    f"Number of wire IDs ({len(wire_ids)}) must match the number of "
-                    f"wires connected to the circuit component ({part.num_wires})."
-                )
+        for wire_id in wire_ids:
+            if not 0 <= wire_id < num_wires:
+                raise ValueError(f"Wire ID {wire_id} falls outside the range [0, {num_wires}).")
 
-            num_wires = len(self._wires)
+            elif wire_ids.count(wire_id) > 1:
+                raise ValueError(f"Wire ID {wire_id} is specified more than once.")
 
-            for wire_id in wire_ids:
-                if not 0 <= wire_id < num_wires:
-                    raise ValueError(f"Wire ID {wire_id} falls outside the range [0, {num_wires}).")
+            elif self._wires[wire_id].closed:
+                raise ValueError(f"Wire {wire_id} is closed.")
 
-                elif wire_ids.count(wire_id) > 1:
-                    raise ValueError(f"Wire ID {wire_id} is specified more than once.")
-
-                elif self._wires[wire_id].closed:
-                    raise ValueError(f"Wire {wire_id} is closed.")
-
-            append_fn(self, part, wire_ids)
-
-        return validator
-
-    @_append_validator
     def append_gate(self, gate: Gate, wire_ids: Sequence[int]) -> None:
         """Applies a gate along the specified wires.
 
         Args:
-            gate (jet.Gate): gate to be applied.
+            gate (jet.Gate): Gate to be applied.
             wire_ids (Sequence[int]): IDs of the wires the gate is applied to.
         """
+        self._validate_wire_ids(wire_ids)
+
+        if len(wire_ids) != gate.num_wires:
+            raise ValueError(
+                f"Number of wire IDs ({len(wire_ids)}) must match the number of "
+                f"wires connected to the gate ({gate.num_wires})."
+            )
+
         input_indices = self.indices(wire_ids)
 
         for i in wire_ids:
@@ -122,9 +139,8 @@ class Circuit:
         output_indices = self.indices(wire_ids)
 
         gate.indices = output_indices + input_indices
-        self._parts.append(gate)
+        self._ops.append(Operation(part=gate, wire_ids=wire_ids))
 
-    @_append_validator
     def append_state(self, state: State, wire_ids: Sequence[int]) -> None:
         """Terminates the specified wires with a quantum state.
 
@@ -132,11 +148,44 @@ class Circuit:
             state (jet.State): state to be used for termination.
             wire_ids (Sequence[int]): IDs of the wires the state terminates.
         """
+        self._validate_wire_ids(wire_ids)
+
+        if len(wire_ids) != state.num_wires:
+            raise ValueError(
+                f"Number of wire IDs ({len(wire_ids)}) must match the number of "
+                f"wires connected to the state ({state.num_wires})."
+            )
+
         for i in wire_ids:
             self._wires[i].closed = True
 
         state.indices = self.indices(wire_ids)
-        self._parts.append(state)
+        self._ops.append(Operation(part=state, wire_ids=wire_ids))
+
+    def observe(self, observable: Iterator[Tuple[Gate, Sequence[int]]]) -> None:
+        """Completes this circuit with the expected value of an observable.
+
+        Args:
+            observable (Iterator[Tuple(jet.Gate, Sequence[int])): Sequence of
+                gate and wire ID pairs representing the observable to be applied.
+
+        Note:
+            No more gates or states can be appended to this circuit after this
+            function is invoked.
+        """
+        beg_index = len(self.wires)
+        end_index = len(self._ops)
+
+        for gate, wire_ids in observable:
+            self.append_gate(gate, wire_ids)
+
+        for gate, wire_ids in reversed(self.ops[beg_index:end_index]):
+            gate = deepcopy(gate)
+            gate.adjoint = True
+            self.append_gate(gate, wire_ids)
+
+        for wire in self.wires:
+            self.append_state(Qudit(dim=self.dimension), wire_ids=[wire.index])
 
     def indices(self, wire_ids: Sequence[int]) -> List[str]:
         """Returns the index labels associated with a sequence of wire IDs.
@@ -156,7 +205,7 @@ class Circuit:
             dtype (type): data type of the tensor network.
         """
         tn = TensorNetwork(dtype=dtype)
-        for part in self._parts:
-            tensor = part.tensor(dtype=dtype)
+        for op in self._ops:
+            tensor = op.part.tensor(dtype=dtype)
             tn.add_tensor(tensor)
         return tn

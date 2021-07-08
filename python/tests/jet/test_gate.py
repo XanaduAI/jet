@@ -47,7 +47,8 @@ class TestGate:
 
     def test_tensor_adjoint(self, gate):
         """Tests that the correct adjoint tensor is returned for a gate."""
-        tensor = gate.tensor(adjoint=True)
+        gate.adjoint = True
+        tensor = gate.tensor()
 
         assert tensor.indices == ["0", "1", "2", "3"]
         assert tensor.shape == [3, 3, 3, 3]
