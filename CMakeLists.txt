@@ -145,7 +145,6 @@ if(ENABLE_CUTENSOR)
 
     find_library(CUTENSOR_LIB
         NAMES   cutensor.so.1.3.0 libcutensor.so.1.3.0
-                cutensor.so.1.3.1 libcutensor.so.1.3.1
         HINTS   /usr/lib
                 /usr/local/cuda
                 /usr/local/lib
@@ -232,7 +231,6 @@ if (ENABLE_CUTENSOR)
     target_include_directories(Jet INTERFACE ${CUDA_TOOLKIT_ROOT_DIR}/include)
     target_link_libraries(Jet INTERFACE ${CUTENSOR_LIB} ${CURAND_LIB} ${CUDA_SHARED_RT})
     target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUTENSOR>)
-
     if(DISABLE_CUDA_SAFETY)
         target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDATENSOR_UNSAFE>)
     endif()
