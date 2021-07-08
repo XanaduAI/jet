@@ -1,3 +1,4 @@
+import random
 import timeit
 
 import jet
@@ -25,9 +26,9 @@ class Unitary(jet.Gate):
 # ------------------------------------------------------------------------------
 
 # Defining the parameters of the circuit
-depth = 3
-n_qubits = 16
-loc = 4
+depth = 4
+n_qubits = 64
+loc = 8
 
 num_gates = 2**depth-1
 
@@ -68,10 +69,51 @@ print(f"Wrote the tensor network to '{filename}'.")
 
 # ------------------------------------------------------------------------------
 
+def sample_contraction_path(tn: jet.TensorNetworkType) -> jet.PathInfo:
+    path = []
+
+    # Construct a graph that associates nodes with its neighbouring in the TN.
+    graph = {}
+    for node in tn.nodes:
+        graph[node.id] = set()
+        for index in node.indices:
+            node_ids = tn.index_to_edge_map[index].node_ids
+            graph[node.id].update(node_ids)
+        graph[node.id].remove(node.id)
+
+    # Iteratively contract a random edge from the graph.
+    while len(graph) > 1:
+        node_id_1 = random.choice(tuple(graph))
+        node_id_2 = random.choice(tuple(graph[node_id_1]))
+        path.append((node_id_1, node_id_2))
+
+        node_id_3 = max(graph) + 1
+
+        for node_ids in graph.values():
+            for node_id in (node_id_1, node_id_2):
+                if node_id in node_ids:
+                    node_ids.remove(node_id)
+                    node_ids.add(node_id_3)
+
+        graph[node_id_3] = graph[node_id_1] ^ graph[node_id_2]
+
+        del graph[node_id_1]
+        del graph[node_id_2]
+
+    return jet.PathInfo(tn=tn, path=path)
+
+path_info = sample_contraction_path(tn)
+
+# ------------------------------------------------------------------------------
+
+tbc = jet.TaskBasedContractor()
+tbc.add_contraction_tasks(tn=tn, path_info=path_info)
+tbc.add_deletion_tasks()
+
 print("Starting to contract tensor network. This can take a while...")
 t0 = timeit.default_timer()
-result = tn.contract()
+tbc.contract()
 t1 = timeit.default_timer()
 
 # Display the contraction result and duration.
-print(f"Got contraction result of size {len(result)} in {t1 - t0:.3f}s.")
+print(f"Got contraction result of size {len(tbc.results[0])} in {t1 - t0:.3f}s.")
