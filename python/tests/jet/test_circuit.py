@@ -118,12 +118,66 @@ class TestCircuit:
             jet.Wire(3, depth=0, closed=False),
         ]
 
+    @pytest.mark.parametrize(
+        ["operations", "observable", "want_result"],
+        [
+            (
+                [
+                    jet.Operation(part=jet.GateFactory.create("Hadamard"), wire_ids=[0]),
+                    jet.Operation(part=jet.GateFactory.create("CNOT"), wire_ids=[0, 1]),
+                ],
+                [],
+                1,
+            ),
+            (
+                [],
+                [
+                    jet.Operation(part=jet.GateFactory.create("Z"), wire_ids=[0]),
+                ],
+                1,
+            ),
+            (
+                [
+                    jet.Operation(part=jet.GateFactory.create("X"), wire_ids=[0]),
+                ],
+                [
+                    jet.Operation(part=jet.GateFactory.create("Z"), wire_ids=[0]),
+                ],
+                -1,
+            ),
+            (
+                [
+                    jet.Operation(part=jet.GateFactory.create("RX", 1), wire_ids=[0]),
+                    jet.Operation(part=jet.GateFactory.create("RY", 2), wire_ids=[1]),
+                    jet.Operation(part=jet.GateFactory.create("CNOT"), wire_ids=[0, 1]),
+                ],
+                [
+                    jet.Operation(part=jet.GateFactory.create("Y"), wire_ids=[0]),
+                    jet.Operation(part=jet.GateFactory.create("X"), wire_ids=[1]),
+                ],
+                -0.8414709848078962,
+            ),
+        ],
+    )
+    def test_take_expected_value(self, circuit, operations, observable, want_result):
+        """Tests that the correct expected value is returned with respect to the observable."""
+        for op in operations:
+            circuit.append_gate(gate=op.part, wire_ids=op.wire_ids)
+
+        circuit.take_expected_value(observable)
+
+        tn = circuit.tensor_network()
+        tensor = tn.contract()
+        have_result = tensor.scalar
+
+        assert have_result == pytest.approx(want_result)
+
     def test_indices(self, circuit):
         """Tests that the correct index labels are derived for a sequence of wires."""
         gate = jet.GateFactory.create("H")
         circuit.append_gate(gate, wire_ids=[0])
-        assert circuit.indices([0]) == ["0-1"]
-        assert circuit.indices([1, 2, 3]) == ["1-0", "2-0", "3-0"]
+        assert list(circuit.indices([0])) == ["0-1"]
+        assert list(circuit.indices([1, 2, 3])) == ["1-0", "2-0", "3-0"]
 
     def test_tensor_network_flip(self):
         """Tests that a quantum circuit which flips a single qubit can be

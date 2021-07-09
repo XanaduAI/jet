@@ -18,14 +18,12 @@ class State(ABC):
     """State represents a quantum state.
 
     Args:
-        name (str): name of the state.
-        num_wires (str): number of wires the state is connected to.
-        adjoint (bool): Whether to take the adjoint of this state.
+        name (str): Name of the state.
+        num_wires (str): Number of wires the state is connected to.
     """
 
-    def __init__(self, name: str, num_wires: int, adjoint: bool = False):
+    def __init__(self, name: str, num_wires: int):
         self.name = name
-        self.adjoint = adjoint
 
         self._indices = None
         self._num_wires = num_wires
@@ -45,11 +43,11 @@ class State(ABC):
         None). See @indices.getter for more information about tensor indices.
 
         Raises:
-            ValueError if the given indices are not a sequence of unique strings
-            or the number of provided indices is invalid.
+            ValueError: If the given indices are not a sequence of unique
+                strings or the number of provided indices is invalid.
 
         Args:
-            indices (Sequence[str] or None): new indices of the state.
+            indices (Sequence[str] or None): New indices of the state.
         """
         # Skip the sequence property checks if `indices` is None.
         if indices is None:
@@ -90,16 +88,13 @@ class State(ABC):
         """Returns the vector representation of this state."""
         pass
 
-    def tensor(self, dtype: type = np.complex128) -> TensorType:
+    def tensor(self, dtype: np.dtype = np.complex128) -> TensorType:
         """Returns the tensor representation of this state.
 
         Args:
-            dtype (type): data type of the tensor.
+            dtype (np.dtype): Data type of the tensor.
         """
-        if self.adjoint:
-            data = np.conj(self._data())
-        else:
-            data = self._data()
+        data = self._data()
 
         indices = self.indices
         if indices is None:
@@ -115,8 +110,8 @@ class Qudit(State):
     """Qudit represents a qudit state.
 
     Args:
-        dim (int): dimension of the qudit.
-        data (np.ndarray or None): optional state vector.
+        dim (int): Dimension of the qudit.
+        data (np.ndarray or None): Optional state vector.
     """
 
     def __init__(self, dim: int, data: Optional[np.ndarray] = None):
@@ -136,9 +131,9 @@ class QuditRegister(State):
     """QuditRegister represents a qudit register state.
 
     Args:
-        dim (int): dimension of the qudits.
-        size (int): number of qudits.
-        data (np.ndarray or None): optional state vector.
+        dim (int): Dimension of the qudits.
+        size (int): Number of qudits.
+        data (np.ndarray or None): Optional state vector.
     """
 
     def __init__(self, dim: int, size: int, data: Optional[np.ndarray] = None):
@@ -158,10 +153,10 @@ def Qubit(data: Optional[np.ndarray] = None) -> Qudit:
     """Constructs a qubit state using an optional state vector.
 
     Args:
-        data (np.ndarray or None): optional state vector.
+        data (np.ndarray or None): Optional state vector.
 
     Returns:
-        Qudit instance constructed using the specified state vector.
+        Qudit: Qudit with the specified state vector.
     """
     return Qudit(dim=2, data=data)
 
@@ -170,10 +165,10 @@ def QubitRegister(size: int, data: Optional[np.ndarray] = None) -> QuditRegister
     """Constructs a qubit register state with the given size and optional state vector.
 
     Args:
-        size (int): number of qubits.
-        data (np.ndarray or None): optional state vector.
+        size (int): Number of qubits.
+        data (np.ndarray or None): Optional state vector.
 
     Returns:
-        QuditRegister instance constructed using the specified state vector.
+        QuditRegister: QuditRegister with the specified state vector.
     """
     return QuditRegister(dim=2, size=size, data=data)
