@@ -260,6 +260,38 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
 
 
 @pytest.mark.parametrize(
+    "program, match",
+    [
+        (
+            parse_xir_script("X | [0]; amplitude | [0];"),
+            r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
+        ),
+        (
+            parse_xir_script("X | [0]; amplitude(state: [0, 0]) | [0];"),
+            (
+                r"Statement 'amplitude\(state: \[0, 0\]\) \| \[0\]' must specify "
+                r"a 'state' parameter that matches the number of applied wires\."
+            ),
+        ),
+        (
+            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0]) | [0];"),
+            r"Statement 'amplitude\(state: \[0\]\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
+        ),
+        (
+            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0, 0]) | [1, 0];"),
+            r"Statement 'amplitude\(state: \[0, 0\]\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
+        ),
+    ],
+)
+def test_run_xir_program_with_invalid_amplitude_statement(program, match):
+    """Tests that a ValueError is raised when an XIR program contains an
+    invalid amplitude statement.
+    """
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
+@pytest.mark.parametrize(
     "program, want_result",
     [
         (
@@ -320,35 +352,39 @@ def test_run_xir_program_with_probability_statement(program, want_result):
 
 
 @pytest.mark.parametrize(
-    "program, match",
+    "program, want_result",
     [
         (
-            parse_xir_script("X | [0]; amplitude | [0];"),
-            r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
-        ),
-        (
-            parse_xir_script("X | [0]; amplitude(state: [0, 0]) | [0];"),
-            (
-                r"Statement 'amplitude\(state: \[0, 0\]\) \| \[0\]' must specify "
-                r"a 'state' parameter that matches the number of applied wires\."
+            parse_xir_script(
+                """
+                operator op:
+                    1, Z[0];
+                end;
+
+                expval(observable: op) | [0];
+                """
             ),
+            1.0,
         ),
         (
-            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0]) | [0];"),
-            r"Statement 'amplitude\(state: \[0\]\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
-        ),
-        (
-            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0, 0]) | [1, 0];"),
-            r"Statement 'amplitude\(state: \[0, 0\]\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
+            parse_xir_script(
+                """
+                operator op:
+                    1, Z[0];
+                end;
+
+                X | [0];
+
+                expval(observable: op) | [0];
+                """
+            ),
+            -1.0,
         ),
     ],
 )
-def test_run_xir_program_with_invalid_amplitude_statement(program, match):
-    """Tests that a ValueError is raised when an XIR program contains an
-    invalid amplitude statement.
-    """
-    with pytest.raises(ValueError, match=match):
-        jet.run_xir_program(program)
+def test_run_xir_program_with_expval_statement(program, want_result):
+    """Tests that running an XIR program with an expval statement gives the correct result."""
+    assert jet.run_xir_program(program) == [pytest.approx(want_result)]
 
 
 @pytest.mark.parametrize(

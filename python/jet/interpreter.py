@@ -7,7 +7,7 @@ import numpy as np
 from xir import Statement, XIRProgram, XIRTransformer, xir_parser
 
 from .bindings import PathInfo
-from .circuit import Circuit
+from .circuit import Circuit, Operation
 from .factory import TaskBasedContractor
 from .gate import GateFactory
 from .state import Qudit
@@ -21,7 +21,8 @@ __all__ = [
 Params = Dict[str, Any]
 Wires = Dict[str, int]
 Stack = Set[str]
-GateSignature = Dict[str, Sequence]
+Signature = Dict[str, Sequence]
+Observable = Dict[str, Sequence]
 StatementGenerator = Callable[[Params, Wires, Stack], Iterator[Statement]]
 
 
@@ -146,6 +147,32 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             output = _compute_amplitude(circuit=circuit, state=state)
             result.append(output)
 
+        elif stmt.name in ("expval", "Expval"):
+            if "observable" not in stmt.params:
+                raise ValueError(f"Statement '{stmt}' is missing an 'observable' parameter.")
+
+            operator = stmt.params["observable"]
+
+            if operator not in program.operators:
+                raise ValueError(f"Statement '{stmt}' must specify a known operator.")
+
+            elif program.operators[operator]["params"]:
+                raise ValueError(f"Statement '{stmt}' must specify an unparameterized operator.")
+
+            observable = []
+
+            for op_stmt in program.operators[operator]["statements"]:
+                if int(op_stmt.pref) != 1:
+                    raise ValueError(f"Statement '{stmt}' must specify a prefactor of 1.")
+
+                for gate_name, wire_id in op_stmt.terms:
+                    gate = GateFactory.create(gate_name)
+                    wire_ids = [wire_id]
+                    observable.append(Operation(part=gate, wire_ids=wire_ids))
+
+            output = _compute_expval(circuit=circuit, observable=observable)
+            result.append(output)
+
         elif stmt.name in ("probability", "Probability"):
             if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
@@ -216,7 +243,7 @@ def _create_statement_generator_for_terminal_gate(name: str) -> StatementGenerat
 def _create_statement_generator_for_composite_gate(
     name: str,
     stmt_generator_map: Dict[str, StatementGenerator],
-    gate_signature_map: Dict[str, GateSignature],
+    gate_signature_map: Dict[str, Signature],
 ) -> StatementGenerator:
     """Creates a statement generator for a composite (user-defined) gate.
 
@@ -250,7 +277,7 @@ def _create_statement_generator_for_composite_gate(
     return generator
 
 
-def _bind_statement_params(gate_signature_map: Dict[str, GateSignature], stmt: Statement) -> Params:
+def _bind_statement_params(gate_signature_map: Dict[str, Signature], stmt: Statement) -> Params:
     """Binds the parameters of a statement to the parameters of its gate.
 
     Args:
@@ -278,7 +305,7 @@ def _bind_statement_params(gate_signature_map: Dict[str, GateSignature], stmt: S
         return {name: have_params[name] for name in want_params}
 
 
-def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: Statement) -> Wires:
+def _bind_statement_wires(gate_signature_map: Dict[str, Signature], stmt: Statement) -> Wires:
     """Binds the wires of a statement to the wires of its gate.
 
     Args:
@@ -312,7 +339,7 @@ def _compute_amplitude(
         dtype (type): Data type of the amplitude.
 
     Returns:
-        NumPy number representing the amplitude of the given state.
+        number: NumPy number representing the amplitude of the given state.
     """
     # Do not modify the original circuit.
     circuit = deepcopy(circuit)
@@ -327,6 +354,31 @@ def _compute_amplitude(
     tn = circuit.tensor_network(dtype=dtype)
     amplitude = tn.contract()
     return dtype(amplitude.scalar)
+
+
+def _compute_expval(
+    circuit: Circuit, observable: Observable, dtype: type = np.complex128
+) -> np.number:
+    """Computes the expected value of a circuit with respect to an observable.
+
+    Args:
+        circuit (Circuit): Circuit to measure the expected value of.
+        observable (Observable): Observable to apply to the circuit.
+        dtype (type): Data type of the probability computation.
+
+    Returns:
+        number: NumPy number representing the expected value.
+    """
+    # Do not modify the original circuit.
+    circuit = deepcopy(circuit)
+
+    # Applying an observable closes the circuit.
+    circuit.expval(observable)
+
+    # TODO: Find a contraction path and use the TBCC.
+    tn = circuit.tensor_network(dtype=dtype)
+    expval = tn.contract()
+    return dtype(expval.scalar)
 
 
 def _compute_probability(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:

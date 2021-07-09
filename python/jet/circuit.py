@@ -1,12 +1,11 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from functools import wraps
-from typing import Callable, Iterator, List, Sequence, Tuple, Union
+from typing import Iterator, List, Sequence, Union
 
 import numpy as np
 
 from .factory import TensorNetwork, TensorNetworkType
-from .gate import Gate
+from .gate import Gate, GateFactory
 from .state import Qudit, State
 
 __all__ = [
@@ -15,14 +14,16 @@ __all__ = [
     "Wire",
 ]
 
+
 @dataclass(frozen=True)
 class Operation:
-    """Operation represents an event where a state or gate is appended to a ``Circuit``.
+    """Operation represents the application of a gate or state to a ``Circuit``.
 
     Args:
-        part (Gate or State): Gate or state that was appended to the circuit.
-        wire_ids (Sequence[int]): IDs of the wire(s) the part is connected to.
+        part (Gate or State): Gate or state appended to the circuit.
+        wire_ids (Sequence[int]): Wires connected to the part.
     """
+
     part: Union[Gate, State]
     wire_ids: Sequence[int]
 
@@ -41,6 +42,7 @@ class Wire:
         depth (int): Number of gates applied to this wire.
         closed (bool): Whether this wire has been terminated with a state.
     """
+
     id_: int
     depth: int = 0
     closed: bool = False
@@ -162,30 +164,32 @@ class Circuit:
         state.indices = self.indices(wire_ids)
         self._ops.append(Operation(part=state, wire_ids=wire_ids))
 
-    def observe(self, observable: Iterator[Tuple[Gate, Sequence[int]]]) -> None:
+    def expval(self, observable: Iterator[Operation]) -> None:
         """Completes this circuit with the expected value of an observable.
 
         Args:
-            observable (Iterator[Tuple(jet.Gate, Sequence[int])): Sequence of
-                gate and wire ID pairs representing the observable to be applied.
+            observable (Iterator[Operation]): Sequence of gate and wire ID pairs
+                representing the observable to be applied.
 
         Note:
-            No more gates or states can be appended to this circuit after this
-            function is invoked.
+            After this function is called, no more gates or states can be
+            appended to the circuit.
         """
-        beg_index = len(self.wires)
+        # Compute the bounds of the slice containing the gates to be inverted.
+        beg_index = len(self._wires)
         end_index = len(self._ops)
 
-        for gate, wire_ids in observable:
-            self.append_gate(gate, wire_ids)
+        for op in observable:
+            self.append_gate(op.part, op.wire_ids)
 
-        for gate, wire_ids in reversed(self.ops[beg_index:end_index]):
-            gate = deepcopy(gate)
+        for op in reversed(self._ops[beg_index:end_index]):
+            gate = deepcopy(op.part)
             gate.adjoint = True
-            self.append_gate(gate, wire_ids)
+            self.append_gate(gate=gate, wire_ids=op.wire_ids)
 
-        for wire in self.wires:
-            self.append_state(Qudit(dim=self.dimension), wire_ids=[wire.index])
+        for i in range(len(self._wires)):
+            state = Qudit(dim=self.dimension)
+            self.append_state(state=state, wire_ids=[i])
 
     def indices(self, wire_ids: Sequence[int]) -> List[str]:
         """Returns the index labels associated with a sequence of wire IDs.
