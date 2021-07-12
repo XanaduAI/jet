@@ -4,7 +4,8 @@ from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
 
 import numpy as np
 
-from xir import Statement, XIRProgram, XIRTransformer, xir_parser
+from xir import Statement, XIRProgram
+from xir import parse_script as parse_xir_script
 
 from .circuit import Circuit
 from .gate import GateFactory
@@ -60,9 +61,7 @@ def get_xir_library() -> XIRProgram:
         lines.append(line)
 
     script = "\n".join(lines)
-
-    # TODO: Replace the following line with a call to xir.parse_script() when #30 is merged.
-    return XIRTransformer().transform(xir_parser.parse(script))
+    return parse_xir_script(script)
 
 
 def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
