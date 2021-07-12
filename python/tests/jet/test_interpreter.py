@@ -296,6 +296,14 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
         (
             xir.parse_script(
                 """
+                probabilities | [0, 1, 2];
+                """
+            ),
+            [1, 0, 0, 0, 0, 0, 0, 0],
+        ),
+        (
+            xir.parse_script(
+                """
                 X | [0];
 
                 probabilities | [0];
