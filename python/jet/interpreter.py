@@ -1,6 +1,7 @@
 from copy import deepcopy
 from inspect import signature
 from typing import List, Union
+import random
 
 import numpy as np
 
@@ -8,7 +9,7 @@ from xir import XIRProgram, XIRTransformer, xir_parser
 
 from .bindings import PathInfo
 from .circuit import Circuit
-from .factory import TaskBasedContractor
+from .factory import TaskBasedContractor, TensorNetworkType
 from .gate import GateFactory
 from .state import Qudit
 
@@ -133,11 +134,11 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             output = _compute_amplitude(circuit=circuit, state=state)
             result.append(output)
 
-        elif name == "probability":
+        elif name in ("Probabilities", "probabilities"):
             if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
-            output = _compute_probability(circuit=circuit)
+            output = _compute_probabilities(circuit=circuit)
             result.append(output)
 
         else:
@@ -157,7 +158,7 @@ def _compute_amplitude(
         dtype (type): Data type of the amplitude.
 
     Returns:
-        NumPy number representing the amplitude of the given state.
+        Number: NumPy number representing the amplitude of the given state.
     """
     # Do not modify the original circuit.
     circuit = deepcopy(circuit)
@@ -168,13 +169,19 @@ def _compute_amplitude(
         qudit = Qudit(dim=circuit.dimension, data=data)
         circuit.append_state(qudit, wire_ids=[i])
 
-    # TODO: Find a contraction path and use the TBCC.
     tn = circuit.tensor_network(dtype=dtype)
+    path_info = _find_contraction_path(tn=tn)
+
+    tbc = TaskBasedContractor(dtype=dtype)
+    tbc.add_contraction_tasks(tn=tn, path_info=path_info)
+    tbc.add_deletion_tasks()
+    tbc.contract()
+
     amplitude = tn.contract()
     return dtype(amplitude.scalar)
 
 
-def _compute_probability(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:
+def _compute_probabilities(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:
     """Computes the probability distribution at the end of a circuit.
 
     Args:
@@ -182,12 +189,12 @@ def _compute_probability(circuit: Circuit, dtype: type = np.complex128) -> np.nd
         dtype (type): Data type of the probability computation.
 
     Returns:
-        NumPy array representing the probability of measuring each basis state.
+        Array: NumPy array representing the probability of measuring each basis state.
     """
     tn = circuit.tensor_network(dtype=dtype)
 
     if len(tn.nodes) == 1:
-        # No contractions are necessary with a single tensor.
+        # No contractions are necessary for a single tensor.
         amplitudes = np.array(tn.nodes[0].tensor.data)
 
     else:
@@ -206,3 +213,72 @@ def _compute_probability(circuit: Circuit, dtype: type = np.complex128) -> np.nd
         amplitudes = np.array(state.data).flatten()
 
     return amplitudes.conj() * amplitudes
+
+
+def _find_contraction_path(tn: TensorNetworkType, samples: int = 100) -> PathInfo:
+    """Finds a contraction path for a connected tensor network. This is done by
+    sampling several random contraction paths and then choosing the one which
+    minimizes the number of FLOPS.
+
+    Args:
+        tn (TensorNetwork): Tensor network to be contracted.
+        samples (int): Number of contraction paths to sample.
+
+    Returns:
+        PathInfo: Contraction path for the given tensor network.
+    """
+    paths = (_sample_contraction_path(tn=tn) for _ in range(samples))
+    return min(paths, key=lambda path: path.total_flops())
+
+
+def _sample_contraction_path(tn: TensorNetworkType) -> PathInfo:
+    """Samples a random contraction path for a connected tensor network.
+
+    Args:
+        tn (TensorNetwork): Tensor network to be contracted.
+
+    Returns:
+        PathInfo: Contraction path for the given tensor network.
+    """
+    path = []
+
+    # Caching the index-to-edge map improves performance significantly.
+    index_to_edge_map = tn.index_to_edge_map
+
+    # Build an adjacency list using the node IDs in the tensor network.
+    neighbours = {node.id: set() for node in tn.nodes}
+    for node in tn.nodes:
+        for index in node.indices:
+            node_ids = index_to_edge_map[index].node_ids
+            neighbours[node.id].update(node_ids)
+
+        # Nodes are not neighbours with themselves.
+        neighbours[node.id].remove(node.id)
+
+    # Contract a random edge in the adjacency list during each iteration.
+    while len(neighbours) > 1:
+        # Choose two nodes (tensors) to contract.
+        node_id_1 = random.choice(tuple(neighbours))
+        node_id_2 = random.choice(tuple(neighbours[node_id_1]))
+        path.append((node_id_1, node_id_2))
+
+        # Derive the neighbours of the contracted node.
+        node_id_3 = max(neighbours) + 1
+        neighbours[node_id_3] = neighbours[node_id_1] | neighbours[node_id_2]
+        neighbours[node_id_3] -= {node_id_1, node_id_2}
+
+        # Replace node_id_1 with node_id_3 and then do the same for node_id_2.
+        for node_id in neighbours[node_id_1]:
+            if node_id != node_id_2:
+                neighbours[node_id].remove(node_id_1)
+                neighbours[node_id].add(node_id_3)
+
+        for node_id in neighbours[node_id_2]:
+            if node_id != node_id_1:
+                neighbours[node_id].remove(node_id_2)
+                neighbours[node_id].add(node_id_3)
+
+        del neighbours[node_id_1]
+        del neighbours[node_id_2]
+
+    return PathInfo(tn=tn, path=path)
