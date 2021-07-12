@@ -1,6 +1,7 @@
 from copy import deepcopy
 from inspect import signature
 from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
+from warnings import warn
 
 import numpy as np
 
@@ -168,6 +169,9 @@ def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
         stmt_generator_map[name] = _create_statement_generator_for_terminal_gate(name=name)
 
     for name in program.gates:
+        if name in stmt_generator_map:
+            warn(f"Gate '{name}' overrides the Jet gate with the same name.")
+
         stmt_generator_map[name] = _create_statement_generator_for_composite_gate(
             name=name, stmt_generator_map=stmt_generator_map, gate_signature_map=gate_signature_map
         )

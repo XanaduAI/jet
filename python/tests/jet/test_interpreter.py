@@ -473,6 +473,16 @@ def test_run_xir_program_with_invalid_gate_definitions(program, match):
         jet.run_xir_program(program)
 
 
+def test_run_xir_program_with_overridden_gate_definition():
+    """Tests that a UserWarning is given when an XIR program contains a
+    duplicate gate definition.
+    """
+    program = xir.parse_script("gate X: NOT | [0]; end;")
+
+    with pytest.warns(UserWarning, match=r"Gate 'X' overrides the Jet gate with the same name\."):
+        jet.run_xir_program(program)
+
+
 def test_run_xir_program_with_unsupported_statement():
     """Tests that a ValueError is raised when an XIR program contains an
     unsupported statement.
