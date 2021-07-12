@@ -278,7 +278,7 @@ def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: St
         stmt (Statement): Statement whose wires are to be bound.
 
     Returns:
-        Params: Map which associates the names of the wires of the gate in the
+        Wires: Map which associates the names of the wires of the gate in the
             statement with the values of the wires in the statement.
     """
     if stmt.name not in gate_signature_map:
