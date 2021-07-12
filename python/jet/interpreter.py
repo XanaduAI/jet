@@ -1,15 +1,17 @@
 from copy import deepcopy
 from inspect import signature
-from typing import List, Union
+from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
 import random
+import warnings
 
 import numpy as np
 
-from xir import XIRProgram, XIRTransformer, xir_parser
+from xir import Statement, XIRProgram
+from xir import parse_script as parse_xir_script
 
 from .bindings import PathInfo
 from .circuit import Circuit
-from .factory import TaskBasedContractor, TensorNetworkType
+from .factory import TaskBasedContractor, TensorNetworkType, TensorType
 from .gate import GateFactory
 from .state import Qudit
 
@@ -17,6 +19,13 @@ __all__ = [
     "get_xir_library",
     "run_xir_program",
 ]
+
+
+Params = Dict[str, Any]
+Wires = Dict[str, int]
+Stack = Set[str]
+GateSignature = Dict[str, Sequence]
+StatementGenerator = Callable[[Params, Wires, Stack], Iterator[Statement]]
 
 
 def get_xir_library() -> XIRProgram:
@@ -39,28 +48,32 @@ def get_xir_library() -> XIRProgram:
     """
     lines = []
 
-    for key, cls in sorted(GateFactory.registry.items()):
+    for name, cls in sorted(GateFactory.registry.items()):
         # Instantiating the Gate subclass (with placeholder parameters) is an
         # easy way to access properties such as the number of wires a Gate can
-        # be applied to. The -1 below is a consequence of the fact that the
+        # be applied to. The [1:] below is a consequence of the fact that the
         # first __init__ parameter, ``self``, is not explicitly passed.
-        num_params = len(signature(cls.__init__).parameters) - 1
-        gate = GateFactory.create(key, *[None for _ in range(num_params)])
+        params = list(signature(cls.__init__).parameters)[1:]
+        gate = cls(*[None for _ in params])
 
-        line = f"gate {key}, {num_params}, {gate.num_wires};"
+        # TODO: Replace gate definitions with gate declarations when parameter
+        #       and wire names are supported in gate declarations.
+        xir_params = "" if not params else "(" + ", ".join(params) + ")"
+        xir_wires = list(range(gate.num_wires))
+
+        line = f"gate {name} {xir_params} {xir_wires}: {name} {xir_params} | {xir_wires}; end;"
         lines.append(line)
 
     script = "\n".join(lines)
-
-    # TODO: Replace the following line with a call to xir.parse_script() when #30 is merged.
-    return XIRTransformer().transform(xir_parser.parse(script))
+    return parse_xir_script(script)
 
 
 def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     """Executes an XIR program.
 
     Raises:
-        ValueError: If the given program contains an unsupported or invalid statement.
+        ValueError: If the given program contains an unsupported gate or output
+            statement or an invalid gate definition.
 
     Args:
         program (xir.program.XIRProgram): XIR script to execute.
@@ -110,15 +123,13 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     # TODO: Extract the Fock cutoff dimension from the XIR script.
     circuit = Circuit(num_wires=num_wires, dim=2)
 
-    for stmt in program.statements:
-        name = stmt.name.lower()
-
-        if name in GateFactory.registry:
+    for stmt in _resolve_xir_program_statements(program):
+        if stmt.name in GateFactory.registry:
             # TODO: Automatically insert the Fock cutoff dimension for CV gates.
-            gate = GateFactory.create(name, *stmt.params)
+            gate = GateFactory.create(stmt.name, **stmt.params)
             circuit.append_gate(gate, wire_ids=stmt.wires)
 
-        elif name == "amplitude":
+        elif stmt.name in ("amplitude", "Amplitude"):
             if "state" not in stmt.params:
                 raise ValueError(f"Statement '{stmt}' is missing a 'state' parameter.")
 
@@ -134,7 +145,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             output = _compute_amplitude(circuit=circuit, state=state)
             result.append(output)
 
-        elif name in ("Probabilities", "probabilities"):
+        elif stmt.name in ("Probabilities", "probabilities"):
             if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
@@ -145,6 +156,151 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             raise ValueError(f"Statement '{stmt}' is not supported.")
 
     return result
+
+
+def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
+    """Resolves the statements in an ``XIRProgram`` such that each yielded
+    gate application ``Statement`` is applied to a registered Jet gate.
+
+    Args:
+        program (XIRProgram): Program with the statements to be resolved.
+
+    Returns:
+        Iterator[Statement]: Resolved statements in the given ``XIRProgram``.
+    """
+    # TODO: Merge the two XIRPrograms (once merging is implemented) and use
+    #       gate declarations when parameter and wire names are supported.
+    gate_signature_map = {**get_xir_library().gates, **program.gates}
+
+    # Create a mapping from gate names to XIR statement generators.
+    stmt_generator_map = {}
+
+    for name in GateFactory.registry:
+        stmt_generator_map[name] = _create_statement_generator_for_terminal_gate(name=name)
+
+    for name in program.gates:
+        if name in stmt_generator_map:
+            warnings.warn(f"Gate '{name}' overrides the Jet gate with the same name.")
+
+        stmt_generator_map[name] = _create_statement_generator_for_composite_gate(
+            name=name, stmt_generator_map=stmt_generator_map, gate_signature_map=gate_signature_map
+        )
+
+    for stmt in program.statements:
+        if stmt.name in stmt_generator_map:
+            params = _bind_statement_params(gate_signature_map, stmt)
+            wires = _bind_statement_wires(gate_signature_map, stmt)
+            yield from stmt_generator_map[stmt.name](params, wires, set())
+
+        else:
+            yield stmt
+
+
+def _create_statement_generator_for_terminal_gate(name: str) -> StatementGenerator:
+    """Returns a statement generator for a terminal (Jet) gate.
+
+    Args:
+        name (str): Name of the terminal gate.
+
+    Returns:
+        StatementGenerator: Function that yields a sequence of ``Statement``
+            objects which implement the given terminal gate.
+    """
+
+    def generator(params: Params, wires: Wires, _: Stack) -> Iterator[Statement]:
+        # The ``Statement`` constructor expects ``wires`` to be a list.
+        wires_tuple = tuple(wires[i] for i in sorted(wires, key=int))
+        yield Statement(name=name, params=params, wires=wires_tuple)
+
+    return generator
+
+
+def _create_statement_generator_for_composite_gate(
+    name: str,
+    stmt_generator_map: Dict[str, StatementGenerator],
+    gate_signature_map: Dict[str, GateSignature],
+) -> StatementGenerator:
+    """Creates a statement generator for a composite (user-defined) gate.
+
+    Args:
+        name (str): Name of the terminal gate.
+        stmt_generator_map (Dict): Map which associates gate names with statement generators.
+        gate_signature_map (Dict): Map which associates gate names with gate signatures.
+
+    Returns:
+        StatementGenerator: Function that yields a sequence of ``Statement``
+            objects which implement the given composite gate.
+    """
+
+    def generator(params: Params, wires: Wires, stack: Stack) -> Iterator[Statement]:
+        if name in stack:
+            raise ValueError(f"Gate '{name}' has a circular dependency.")
+
+        for stmt in gate_signature_map[name]["statements"]:
+            stmt_params = _bind_statement_params(gate_signature_map, stmt=stmt)
+            stmt_wires = _bind_statement_wires(gate_signature_map, stmt=stmt)
+
+            # Replace the value of each (applicable) parameter or wire in the
+            # current statement with the value mapped to the corresponding
+            # parameter in the signature of this composite gate.
+            eval_params = {key: params.get(val, val) for key, val in stmt_params.items()}
+            eval_wires = {key: wires.get(val, val) for key, val in stmt_wires.items()}
+
+            # Insert the name of this composite gate into the stack to detect circular dependencies.
+            yield from stmt_generator_map[stmt.name](eval_params, eval_wires, stack | {name})
+
+    return generator
+
+
+def _bind_statement_params(gate_signature_map: Dict[str, GateSignature], stmt: Statement) -> Params:
+    """Binds the parameters of a statement to the parameters of its gate.
+
+    Args:
+        gate_signature_map (Dict): Map which associates gate names with gate signatures.
+        stmt (Statement): Statement whose parameters are to be bound.
+
+    Returns:
+        Params: Map which associates the names of the parameters of the gate in
+            the statement with the values of the parameters in the statement.
+    """
+    if stmt.name not in gate_signature_map:
+        raise ValueError(f"Statement '{stmt}' applies a gate which has not been defined.")
+
+    have_params = stmt.params
+    want_params = gate_signature_map[stmt.name]["params"]
+
+    if isinstance(have_params, list):
+        if len(have_params) != len(want_params):
+            raise ValueError(f"Statement '{stmt}' has the wrong number of parameters.")
+        return {name: have_params[i] for (i, name) in enumerate(want_params)}
+
+    else:
+        if set(have_params) != set(want_params):
+            raise ValueError(f"Statement '{stmt}' has an invalid set of parameters.")
+        return {name: have_params[name] for name in want_params}
+
+
+def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: Statement) -> Wires:
+    """Binds the wires of a statement to the wires of its gate.
+
+    Args:
+        gate_signature_map (Dict): Map which associates gate names with gate signatures.
+        stmt (Statement): Statement whose wires are to be bound.
+
+    Returns:
+        Wires: Map which associates the names of the wires of the gate in the
+            statement with the values of the wires in the statement.
+    """
+    if stmt.name not in gate_signature_map:
+        raise ValueError(f"Statement '{stmt}' applies a gate which has not been defined.")
+
+    have_wires = stmt.wires
+    want_wires = gate_signature_map[stmt.name]["wires"]
+
+    if len(have_wires) != len(want_wires):
+        raise ValueError(f"Statement '{stmt}' has the wrong number of wires.")
+
+    return {name: have_wires[i] for (i, name) in enumerate(want_wires)}
 
 
 def _compute_amplitude(
@@ -169,16 +325,8 @@ def _compute_amplitude(
         qudit = Qudit(dim=circuit.dimension, data=data)
         circuit.append_state(qudit, wire_ids=[i])
 
-    tn = circuit.tensor_network(dtype=dtype)
-    path_info = _find_contraction_path(tn=tn)
-
-    tbc = TaskBasedContractor(dtype=dtype)
-    tbc.add_contraction_tasks(tn=tn, path_info=path_info)
-    tbc.add_deletion_tasks()
-    tbc.contract()
-
-    amplitude = tn.contract()
-    return dtype(amplitude.scalar)
+    result = _simulate(circuit=circuit, dtype=dtype)
+    return dtype(result.scalar)
 
 
 def _compute_probabilities(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:
@@ -191,34 +339,43 @@ def _compute_probabilities(circuit: Circuit, dtype: type = np.complex128) -> np.
     Returns:
         Array: NumPy array representing the probability of measuring each basis state.
     """
-    tn = circuit.tensor_network(dtype=dtype)
+    result = _simulate(circuit=circuit, dtype=dtype)
 
-    if len(tn.nodes) == 1:
-        # No contractions are necessary for a single tensor.
-        amplitudes = np.array(tn.nodes[0].tensor.data)
+    # Arrange the indices in increasing order of wire ID.
+    state = result.transpose([wire.index for wire in circuit.wires])
 
-    else:
-        # Contract all the tensors (not just the ones with shared indices).
-        # TODO: Use a better contraction path algorithm.
-        path = [(i, i + 1) for i in range(0, 2 * len(tn.nodes) - 3, 2)]
-        path_info = PathInfo(tn=tn, path=path)
-
-        tbc = TaskBasedContractor(dtype=dtype)
-        tbc.add_contraction_tasks(tn=tn, path_info=path_info)
-        tbc.add_deletion_tasks()
-        tbc.contract()
-
-        # Arrange the indices in increasing order of wire ID.
-        state = tbc.results[0].transpose([wire.index for wire in circuit.wires])
-        amplitudes = np.array(state.data).flatten()
-
+    amplitudes = np.array(state.data).flatten()
     return amplitudes.conj() * amplitudes
 
 
+def _simulate(circuit: Circuit, dtype: type = np.complex128) -> TensorType:
+    """Simulates a circuit using the task-based contractor.
+
+    Args:
+        circuit (Circuit): Circuit to simulate.
+        dtype (type): Data type of the tensor network to contract.
+
+    Returns:
+        Tensor: Result of the simulation.
+    """
+    tn = circuit.tensor_network(dtype=dtype)
+    path_info = _find_contraction_path(tn=tn)
+
+    if len(tn.nodes) == 1:
+        # No contractions are necessary for a single tensor.
+        return tn.nodes[0].tensor
+
+    tbc = TaskBasedContractor(dtype=dtype)
+    tbc.add_contraction_tasks(tn=tn, path_info=path_info)
+    tbc.add_deletion_tasks()
+    tbc.contract()
+    return tbc.results[0]
+
+
 def _find_contraction_path(tn: TensorNetworkType, samples: int = 100) -> PathInfo:
-    """Finds a contraction path for a connected tensor network. This is done by
-    sampling several random contraction paths and then choosing the one which
-    minimizes the number of FLOPS.
+    """Finds a contraction path for a tensor network. This is done by sampling
+    several random contraction paths and choosing the one which minimizes the
+    total number of FLOPS.
 
     Args:
         tn (TensorNetwork): Tensor network to be contracted.
@@ -232,13 +389,14 @@ def _find_contraction_path(tn: TensorNetworkType, samples: int = 100) -> PathInf
 
 
 def _sample_contraction_path(tn: TensorNetworkType) -> PathInfo:
-    """Samples a random contraction path for a connected tensor network.
+    """Samples a random contraction path for a tensor network.
 
     Args:
         tn (TensorNetwork): Tensor network to be contracted.
 
     Returns:
-        PathInfo: Contraction path for the given tensor network.
+        PathInfo: Contraction path for the given tensor network. Contractions
+        between nodes that share an index are always preferred.
     """
     path = []
 
@@ -255,17 +413,27 @@ def _sample_contraction_path(tn: TensorNetworkType) -> PathInfo:
         # Nodes are not neighbours with themselves.
         neighbours[node.id].remove(node.id)
 
-    # Contract a random edge in the adjacency list during each iteration.
+    # Track the set of tensors with no neighbours.
+    isolated = list(sorted(node_id for node_id in neighbours if not neighbours[node_id]))
+
+    for node_id in isolated:
+        del neighbours[node_id]
+
+    # Iteratively contract two adjacent tensors while it is possible to do so.
     while len(neighbours) > 1:
-        # Choose two nodes (tensors) to contract.
         node_id_1 = random.choice(tuple(neighbours))
         node_id_2 = random.choice(tuple(neighbours[node_id_1]))
         path.append((node_id_1, node_id_2))
 
         # Derive the neighbours of the contracted node.
-        node_id_3 = max(neighbours) + 1
+        node_id_3 = max(*neighbours, *isolated) + 1
         neighbours[node_id_3] = neighbours[node_id_1] | neighbours[node_id_2]
         neighbours[node_id_3] -= {node_id_1, node_id_2}
+
+        # Decide whether the contracted node is isolated.
+        if not neighbours[node_id_3]:
+            isolated.append(node_id_3)
+            del neighbours[node_id_3]
 
         # Replace node_id_1 with node_id_3 and then do the same for node_id_2.
         for node_id in neighbours[node_id_1]:
@@ -280,5 +448,13 @@ def _sample_contraction_path(tn: TensorNetworkType) -> PathInfo:
 
         del neighbours[node_id_1]
         del neighbours[node_id_2]
+
+    if len(isolated) > 1:
+        # The final iteration of the while loop always yields an isolated node.
+        # The ID of this node is always the largest ID in the tensor network.
+        node_id_1 = isolated[-1]
+        for node_id_2 in isolated[:-1]:
+            path.append((node_id_1, node_id_2))
+            node_id_1 += 1
 
     return PathInfo(tn=tn, path=path)
