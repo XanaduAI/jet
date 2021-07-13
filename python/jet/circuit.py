@@ -1,6 +1,5 @@
-from copy import deepcopy
 from dataclasses import dataclass
-from typing import Iterator, List, Sequence, Union
+from typing import Iterator, Sequence, Union
 
 import numpy as np
 
