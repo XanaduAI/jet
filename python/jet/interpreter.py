@@ -8,9 +8,7 @@ import numpy as np
 from xir import Statement, XIRProgram
 from xir import parse_script as parse_xir_script
 
-from .bindings import PathInfo
 from .circuit import Circuit
-from .factory import TaskBasedContractor
 from .gate import GateFactory
 from .state import Qudit
 
@@ -93,10 +91,10 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
         H | [0];
         CNOT | [0, 1];
 
-        amplitude(state: [0, 0]) | [0, 1];
-        amplitude(state: [0, 1]) | [0, 1];
-        amplitude(state: [1, 0]) | [0, 1];
-        amplitude(state: [1, 1]) | [0, 1];
+        amplitude(state: 0) | [0, 1];
+        amplitude(state: 1) | [0, 1];
+        amplitude(state: 2) | [0, 1];
+        amplitude(state: 3) | [0, 1];
 
     If the contents of this script are stored in a string called ``xir_script``,
     then each amplitude of the Bell state can be displayed using Jet as follows:
