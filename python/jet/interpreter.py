@@ -1,10 +1,12 @@
 from copy import deepcopy
 from inspect import signature
 from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
+from warnings import warn
 
 import numpy as np
 
-from xir import Statement, XIRProgram, XIRTransformer, xir_parser
+from xir import Statement, XIRProgram
+from xir import parse_script as parse_xir_script
 
 from .bindings import PathInfo
 from .circuit import Circuit
@@ -62,9 +64,7 @@ def get_xir_library() -> XIRProgram:
         lines.append(line)
 
     script = "\n".join(lines)
-
-    # TODO: Replace the following line with a call to xir.parse_script() when #30 is merged.
-    return XIRTransformer().transform(xir_parser.parse(script))
+    return parse_xir_script(script)
 
 
 def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
@@ -180,6 +180,9 @@ def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
         stmt_generator_map[name] = _create_statement_generator_for_terminal_gate(name=name)
 
     for name in program.gates:
+        if name in stmt_generator_map:
+            warn(f"Gate '{name}' overrides the Jet gate with the same name.")
+
         stmt_generator_map[name] = _create_statement_generator_for_composite_gate(
             name=name, stmt_generator_map=stmt_generator_map, gate_signature_map=gate_signature_map
         )
@@ -286,7 +289,7 @@ def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: St
         stmt (Statement): Statement whose wires are to be bound.
 
     Returns:
-        Params: Map which associates the names of the wires of the gate in the
+        Wires: Map which associates the names of the wires of the gate in the
             statement with the values of the wires in the statement.
     """
     if stmt.name not in gate_signature_map:

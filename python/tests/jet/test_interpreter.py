@@ -7,12 +7,6 @@ import jet
 import xir
 
 
-def parse_xir_script(script: str) -> xir.XIRProgram:
-    """Parses an XIR script into an XIR program."""
-    tree = xir.xir_parser.parse(script)
-    return xir.XIRTransformer().transform(tree)
-
-
 class TestGetXIRLibrary:
     @pytest.mark.parametrize(
         "registry, want_xir_script",
@@ -201,9 +195,9 @@ class TestGetXIRLibrary:
 @pytest.mark.parametrize(
     "program",
     [
-        parse_xir_script(""),
-        parse_xir_script("use xstd;"),
-        parse_xir_script("use xstd; H | [0];"),
+        xir.parse_script(""),
+        xir.parse_script("use xstd;"),
+        xir.parse_script("use xstd; H | [0];"),
     ],
 )
 def test_run_xir_program_with_no_output_statements(program):
@@ -215,7 +209,7 @@ def test_run_xir_program_with_no_output_statements(program):
     "program, want_result",
     [
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 X | [0];
 
@@ -226,7 +220,7 @@ def test_run_xir_program_with_no_output_statements(program):
             [0, 1],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 H | [0];
                 CNOT | [0, 1];
@@ -240,7 +234,7 @@ def test_run_xir_program_with_no_output_statements(program):
             [1 / sqrt(2), 0, 0, 1 / sqrt(2)],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 TwoModeSqueezing(3, 1, 2) | [0, 1];
 
@@ -263,7 +257,7 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
     "program, want_result",
     [
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 probability | [0];
                 """
@@ -271,7 +265,7 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
             [1, 0],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 X | [0];
 
@@ -281,7 +275,7 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
             [0, 1],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 X | [1];
 
@@ -291,7 +285,7 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
             [0, 1, 0, 0],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 H | [0];
                 CNOT | [0, 1];
@@ -302,7 +296,7 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
             [0.5, 0, 0, 0.5],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 H | [0];
                 Y | [0];
@@ -323,23 +317,20 @@ def test_run_xir_program_with_probability_statement(program, want_result):
     "program, match",
     [
         (
-            parse_xir_script("X | [0]; amplitude | [0];"),
+            xir.parse_script("X | [0]; amplitude | [0];"),
             r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
         ),
         (
-            parse_xir_script("X | [0]; amplitude(state: [0, 0]) | [0];"),
-            (
-                r"Statement 'amplitude\(state: \[0, 0\]\) \| \[0\]' must specify "
-                r"a 'state' parameter that matches the number of applied wires\."
-            ),
+            xir.parse_script("X | [0]; amplitude(state: 2) | [0];"),
+            r"Statement 'amplitude\(state: 2\) \| \[0\]' has a 'state' parameter which is too large\.",
         ),
         (
-            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0]) | [0];"),
-            r"Statement 'amplitude\(state: \[0\]\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
+            xir.parse_script("CNOT | [0, 1]; amplitude(state: 0) | [0];"),
+            r"Statement 'amplitude\(state: 0\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
         ),
         (
-            parse_xir_script("CNOT | [0, 1]; amplitude(state: [0, 0]) | [1, 0];"),
-            r"Statement 'amplitude\(state: \[0, 0\]\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
+            xir.parse_script("CNOT | [0, 1]; amplitude(state: 0) | [1, 0];"),
+            r"Statement 'amplitude\(state: 0\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
         ),
     ],
 )
@@ -355,7 +346,7 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
     "program, want_result",
     [
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate H2:
                     H | [0];
@@ -364,14 +355,14 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 X | [0];
 
-                amplitude(state: [0]) | [0];
-                amplitude(state: [1]) | [0];
+                amplitude(state: 0) | [0];
+                amplitude(state: 1) | [0];
                 """
             ),
             [0, 1],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate H2 [0, 1]:
                     H | [0];
@@ -380,16 +371,16 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 H2 | [0, 1];
 
-                amplitude(state: [0, 0]) | [0, 1];
-                amplitude(state: [0, 1]) | [0, 1];
-                amplitude(state: [1, 0]) | [0, 1];
-                amplitude(state: [1, 1]) | [0, 1];
+                amplitude(state: 0) | [0, 1];
+                amplitude(state: 1) | [0, 1];
+                amplitude(state: 2) | [0, 1];
+                amplitude(state: 3) | [0, 1];
                 """
             ),
             [0.5, 0.5, 0.5, 0.5],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate Flip[coin]:
                     X | [coin];
@@ -407,16 +398,16 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 FlipStay | [0, 1];
 
-                amplitude(state: [0, 0]) | [0, 1];
-                amplitude(state: [0, 1]) | [0, 1];
-                amplitude(state: [1, 0]) | [0, 1];
-                amplitude(state: [1, 1]) | [0, 1];
+                amplitude(state: 0) | [0, 1];
+                amplitude(state: 1) | [0, 1];
+                amplitude(state: 2) | [0, 1];
+                amplitude(state: 3) | [0, 1];
                 """
             ),
             [0, 0, 1, 0],
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate RY3 (a, b, c) [0, 1, 2]:
                     RY(a) | [0];
@@ -430,14 +421,14 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
 
                 RX3(a: 0, b: 3.141592653589793, c: 3.141592653589793) | [0, 1, 2];
 
-                amplitude(state: [0, 0, 0]) | [0, 1, 2];
-                amplitude(state: [0, 0, 1]) | [0, 1, 2];
-                amplitude(state: [0, 1, 0]) | [0, 1, 2];
-                amplitude(state: [0, 1, 1]) | [0, 1, 2];
-                amplitude(state: [1, 0, 0]) | [0, 1, 2];
-                amplitude(state: [1, 0, 1]) | [0, 1, 2];
-                amplitude(state: [1, 1, 0]) | [0, 1, 2];
-                amplitude(state: [1, 1, 1]) | [0, 1, 2];
+                amplitude(state: 0) | [0, 1, 2];
+                amplitude(state: 1) | [0, 1, 2];
+                amplitude(state: 2) | [0, 1, 2];
+                amplitude(state: 3) | [0, 1, 2];
+                amplitude(state: 4) | [0, 1, 2];
+                amplitude(state: 5) | [0, 1, 2];
+                amplitude(state: 6) | [0, 1, 2];
+                amplitude(state: 7) | [0, 1, 2];
                 """
             ),
             [0, 0, 0, 0, 0, 0, 1, 0],
@@ -453,7 +444,7 @@ def test_run_xir_program_with_valid_gate_definitions(program, want_result):
     "program, match",
     [
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate Circle[0]:
                     Circle | [0];
@@ -465,7 +456,7 @@ def test_run_xir_program_with_valid_gate_definitions(program, want_result):
             r"Gate 'Circle' has a circular dependency\.",
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate Day[0]:
                     Dawn | [0];
@@ -485,7 +476,7 @@ def test_run_xir_program_with_valid_gate_definitions(program, want_result):
             r"Gate 'Dawn' has a circular dependency\.",
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate Incomplete[0]:
                     Missing | [0];
@@ -497,7 +488,7 @@ def test_run_xir_program_with_valid_gate_definitions(program, want_result):
             r"Statement 'Missing \| \[0\]' applies a gate which has not been defined\.",
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate Negate [0]:
                     X | [0];
@@ -509,7 +500,7 @@ def test_run_xir_program_with_valid_gate_definitions(program, want_result):
             r"Statement 'Negate\(0\) \| \[0\]' has the wrong number of parameters\.",
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate Spin(theta) [0]:
                     Rot(theta, theta, theta) | [0];
@@ -521,7 +512,7 @@ def test_run_xir_program_with_valid_gate_definitions(program, want_result):
             r"Statement 'Spin\(phi: PI\) \| \[0\]' has an invalid set of parameters\.",
         ),
         (
-            parse_xir_script(
+            xir.parse_script(
                 """
                 gate Permute [0, 1]:
                     SWAP | [0, 1];
@@ -542,11 +533,21 @@ def test_run_xir_program_with_invalid_gate_definitions(program, match):
         jet.run_xir_program(program)
 
 
+def test_run_xir_program_with_overridden_gate_definition():
+    """Tests that a UserWarning is given when an XIR program contains a
+    duplicate gate definition.
+    """
+    program = xir.parse_script("gate X: NOT | [0]; end;")
+
+    with pytest.warns(UserWarning, match=r"Gate 'X' overrides the Jet gate with the same name\."):
+        jet.run_xir_program(program)
+
+
 def test_run_xir_program_with_unsupported_statement():
     """Tests that a ValueError is raised when an XIR program contains an
     unsupported statement.
     """
-    program = parse_xir_script("use xstd; halt | [0];")
+    program = xir.parse_script("use xstd; halt | [0];")
 
     with pytest.raises(ValueError, match=r"Statement 'halt \| \[0\]' is not supported\."):
         jet.run_xir_program(program)
