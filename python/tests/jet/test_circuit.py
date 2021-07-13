@@ -121,22 +121,24 @@ class TestCircuit:
     @pytest.mark.parametrize(
         ["operations", "observable", "want_result"],
         [
-            (
+            pytest.param(
                 [
-                    jet.Operation(part=jet.GateFactory.create("Hadamard"), wire_ids=[0]),
+                    jet.Operation(part=jet.GateFactory.create("H"), wire_ids=[0]),
                     jet.Operation(part=jet.GateFactory.create("CNOT"), wire_ids=[0, 1]),
                 ],
                 [],
                 1,
+                id="Operations",
             ),
-            (
+            pytest.param(
                 [],
                 [
                     jet.Operation(part=jet.GateFactory.create("Z"), wire_ids=[0]),
                 ],
                 1,
+                id="Observables",
             ),
-            (
+            pytest.param(
                 [
                     jet.Operation(part=jet.GateFactory.create("X"), wire_ids=[0]),
                 ],
@@ -144,8 +146,9 @@ class TestCircuit:
                     jet.Operation(part=jet.GateFactory.create("Z"), wire_ids=[0]),
                 ],
                 -1,
+                id="Operations and Observables (Easy)",
             ),
-            (
+            pytest.param(
                 [
                     jet.Operation(part=jet.GateFactory.create("RX", 1), wire_ids=[0]),
                     jet.Operation(part=jet.GateFactory.create("RY", 2), wire_ids=[1]),
@@ -156,6 +159,7 @@ class TestCircuit:
                     jet.Operation(part=jet.GateFactory.create("X"), wire_ids=[1]),
                 ],
                 -0.8414709848078962,
+                id="Operations and Observables (Hard)",
             ),
         ],
     )
