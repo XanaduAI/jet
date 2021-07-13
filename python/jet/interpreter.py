@@ -118,7 +118,8 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
 
     num_wires = len(program.wires)
     # TODO: Extract the Fock cutoff dimension from the XIR script.
-    circuit = Circuit(num_wires=num_wires, dim=2)
+    dimension = program.options.get("dimension", 2)
+    circuit = Circuit(num_wires=num_wires, dim=dimension)
 
     for stmt in _resolve_xir_program_statements(program):
         if stmt.name in GateFactory.registry:
