@@ -143,11 +143,11 @@ class Circuit:
 
         Args:
             observable (Iterator[Operation]): Sequence of gate and wire ID pairs
-                representing the observable to be applied.
+                representing the observable.
 
         Note:
-            After this function is called, no more gates or states can be
-            appended to the circuit.
+            This function finalizes the circuit; no more gates or states can be
+            appended after this function is called.
         """
         # Compute the bounds of the slice containing the gates to be inverted.
         beg_index = len(self._wires)
@@ -156,11 +156,13 @@ class Circuit:
         for op in observable:
             self.append_gate(gate=op.part, wire_ids=op.wire_ids)
 
+        # The adjoints are appended in reverse order for index continuity.
         for op in reversed(self._ops[beg_index:end_index]):
             gate = Adjoint(gate=op.part)
             self.append_gate(gate=gate, wire_ids=op.wire_ids)
 
         for op in reversed(self._ops[:beg_index]):
+            # No adjoint is required: the initial qudits have real amplitudes.
             state = Qudit(dim=self.dimension)
             self.append_state(state=state, wire_ids=op.wire_ids)
 
