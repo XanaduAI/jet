@@ -2,11 +2,9 @@ from abc import ABC, abstractmethod
 from cmath import exp
 from functools import lru_cache
 from math import cos, sin, sqrt
-from types import MethodType
 from typing import Callable, Dict, List, Optional, Sequence
 
 import numpy as np
-
 from thewalrus.fock_gradients import (
     beamsplitter,
     displacement,
@@ -66,7 +64,7 @@ class Gate(ABC):
     Args:
         name (str): Name of the gate.
         num_wires (int): Number of wires the gate is applied to.
-        params (list or None): Parameters of the gate.
+        params (List[float] or None): Parameters of the gate.
     """
 
     def __init__(self, name: str, num_wires: int, params: Optional[List[float]] = None):
@@ -91,7 +89,7 @@ class Gate(ABC):
         @indices.getter for more information about tensor indices.
 
         Raises:
-            ValueError: if the given indices are not a sequence of unique strings
+            ValueError: If the given indices are not a sequence of unique strings
                 or the number of provided indices is invalid.
 
         Args:
@@ -173,7 +171,7 @@ class GateFactory:
             kwargs: Keyword arguments to pass to the gate constructor.
 
         Returns:
-            The constructed gate.
+            Gate: The constructed gate.
         """
         if name not in GateFactory.registry:
             raise KeyError(f"The name '{name}' does not exist in the gate registry.")
@@ -228,7 +226,7 @@ class GateFactory:
 
 
 class Adjoint(Gate):
-    """Adjoint is a decorator which computes the adjoint of an existing ``Gate``.
+    """Adjoint is a decorator which computes the conjugate transpose of an existing ``Gate``.
 
     Args:
         gate (Gate): Gate to take the adjoint of.
