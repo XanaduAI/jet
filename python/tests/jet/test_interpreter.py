@@ -213,8 +213,8 @@ def test_run_xir_program_with_no_output_statements(program):
                 """
                 X | [0];
 
-                amplitude(state: [0]) | [0];
-                amplitude(state: [1]) | [0];
+                amplitude(state: 0) | [0];
+                amplitude(state: 1) | [0];
                 """
             ),
             [0, 1],
@@ -225,10 +225,10 @@ def test_run_xir_program_with_no_output_statements(program):
                 H | [0];
                 CNOT | [0, 1];
 
-                amplitude(state: [0, 0]) | [0, 1];
-                amplitude(state: [0, 1]) | [0, 1];
-                amplitude(state: [1, 0]) | [0, 1];
-                amplitude(state: [1, 1]) | [0, 1];
+                amplitude(state: 0) | [0, 1];
+                amplitude(state: 1) | [0, 1];
+                amplitude(state: 2) | [0, 1];
+                amplitude(state: 3) | [0, 1];
                 """
             ),
             [1 / sqrt(2), 0, 0, 1 / sqrt(2)],
@@ -238,10 +238,10 @@ def test_run_xir_program_with_no_output_statements(program):
                 """
                 TwoModeSqueezing(3, 1, 2) | [0, 1];
 
-                amplitude(state: [0, 0]) | [0, 1];
-                amplitude(state: [0, 1]) | [0, 1];
-                amplitude(state: [1, 0]) | [0, 1];
-                amplitude(state: [1, 1]) | [0, 1];
+                amplitude(state: 0) | [0, 1];
+                amplitude(state: 1) | [0, 1];
+                amplitude(state: 2) | [0, 1];
+                amplitude(state: 3) | [0, 1];
                 """
             ),
             [0.0993279274194332, 0, 0, 0.053401711152745175 + 0.08316823745907517j],
@@ -251,66 +251,6 @@ def test_run_xir_program_with_no_output_statements(program):
 def test_run_xir_program_with_amplitude_statements(program, want_result):
     """Tests that running an XIR program with amplitude statements gives the correct result."""
     assert jet.run_xir_program(program) == pytest.approx(want_result)
-
-
-@pytest.mark.parametrize(
-    "program, want_result",
-    [
-        (
-            xir.parse_script(
-                """
-                probability | [0];
-                """
-            ),
-            [1, 0],
-        ),
-        (
-            xir.parse_script(
-                """
-                X | [0];
-
-                probability | [0];
-                """
-            ),
-            [0, 1],
-        ),
-        (
-            xir.parse_script(
-                """
-                X | [1];
-
-                probability | [0, 1];
-                """
-            ),
-            [0, 1, 0, 0],
-        ),
-        (
-            xir.parse_script(
-                """
-                H | [0];
-                CNOT | [0, 1];
-
-                probability | [0, 1];
-                """
-            ),
-            [0.5, 0, 0, 0.5],
-        ),
-        (
-            xir.parse_script(
-                """
-                H | [0];
-                Y | [0];
-
-                probability | [0];
-                """
-            ),
-            [0.5, 0.5],
-        ),
-    ],
-)
-def test_run_xir_program_with_probability_statement(program, want_result):
-    """Tests that running an XIR program with a probability statement gives the correct result."""
-    assert jet.run_xir_program(program) == [pytest.approx(want_result)]
 
 
 @pytest.mark.parametrize(

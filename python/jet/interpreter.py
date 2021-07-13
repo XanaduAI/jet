@@ -132,25 +132,16 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             if "state" not in stmt.params:
                 raise ValueError(f"Statement '{stmt}' is missing a 'state' parameter.")
 
-            state = stmt.params["state"]
+            # TODO: Use a list representation of the "state" key.
+            state = list(map(int, bin(stmt.params["state"])[2:].zfill(num_wires)))
 
-            if len(state) != len(stmt.wires):
-                raise ValueError(
-                    f"Statement '{stmt}' must specify a 'state' parameter that "
-                    f"matches the number of applied wires."
-                )
+            if len(state) != num_wires:
+                raise ValueError(f"Statement '{stmt}' has a 'state' parameter which is too large.")
 
             if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
             output = _compute_amplitude(circuit=circuit, state=state)
-            result.append(output)
-
-        elif stmt.name in ("probability", "Probability"):
-            if stmt.wires != tuple(range(num_wires)):
-                raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
-
-            output = _compute_probability(circuit=circuit)
             result.append(output)
 
         else:
@@ -330,37 +321,3 @@ def _compute_amplitude(
     tn = circuit.tensor_network(dtype=dtype)
     amplitude = tn.contract()
     return dtype(amplitude.scalar)
-
-
-def _compute_probability(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:
-    """Computes the probability distribution at the end of a circuit.
-
-    Args:
-        circuit (Circuit): Circuit to produce the probability distribution for.
-        dtype (type): Data type of the probability computation.
-
-    Returns:
-        NumPy array representing the probability of measuring each basis state.
-    """
-    tn = circuit.tensor_network(dtype=dtype)
-
-    if len(tn.nodes) == 1:
-        # No contractions are necessary with a single tensor.
-        amplitudes = np.array(tn.nodes[0].tensor.data)
-
-    else:
-        # Contract all the tensors (not just the ones with shared indices).
-        # TODO: Use a better contraction path algorithm.
-        path = [(i, i + 1) for i in range(0, 2 * len(tn.nodes) - 3, 2)]
-        path_info = PathInfo(tn=tn, path=path)
-
-        tbc = TaskBasedContractor(dtype=dtype)
-        tbc.add_contraction_tasks(tn=tn, path_info=path_info)
-        tbc.add_deletion_tasks()
-        tbc.contract()
-
-        # Arrange the indices in increasing order of wire ID.
-        state = tbc.results[0].transpose([wire.index for wire in circuit.wires])
-        amplitudes = np.array(state.data).flatten()
-
-    return amplitudes.conj() * amplitudes
