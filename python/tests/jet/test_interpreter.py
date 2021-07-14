@@ -261,6 +261,10 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
             r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
         ),
         (
+            xir.parse_script("X | [0]; amplitude(state) | [0];"),
+            r"Statement 'amplitude\(state\) \| \[0\]' is missing a 'state' parameter\.",
+        ),
+        (
             xir.parse_script("X | [0]; amplitude(state: [0, -1]) | [0, 1];"),
             (
                 r"Statement 'amplitude\(state: \[0, -1\]\) \| \[0, 1\]' has a 'state' "
