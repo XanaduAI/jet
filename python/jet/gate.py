@@ -64,7 +64,8 @@ class Gate(ABC):
     Args:
         name (str): Name of the gate.
         num_wires (int): Number of wires the gate is applied to.
-        dim (int): Dimension of the qudits the gate can be applied to.
+        dim (int): Dimension of the gate. This should match the dimension of the
+            qudits the gate can be applied to.
         params (List[float] or None): Parameters of the gate.
 
     Raises:
@@ -94,7 +95,7 @@ class Gate(ABC):
 
     @dimension.setter
     def dimension(self, dim: int) -> None:
-        """Sets the dimension (cutoff) of this gate.
+        """Sets the dimension of this gate.
 
         Args:
             dim (int): New dimension of this gate.
@@ -273,8 +274,8 @@ class FockGate(Gate):
     Args:
         name (str): Name of the gate.
         num_wires (int): Number of wires the gate is applied to.
-        params (List[float] or None): Parameters of the gate.
         cutoff (int): Fock ladder cutoff.
+        params (List[float] or None): Parameters of the gate.
     """
 
     def __init__(
