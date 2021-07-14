@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* The Jet interpreter for XIR scripts now accepts a `dimension` option for CV circuits. [(#47)](https://github.com/XanaduAI/jet/pull/47)
+
 * The Jet interpreter for XIR scripts now handles gate definitions. [(#37)](https://github.com/XanaduAI/jet/pull/37)
 
 * Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
