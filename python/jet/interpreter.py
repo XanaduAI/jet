@@ -91,10 +91,10 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
         H | [0];
         CNOT | [0, 1];
 
-        amplitude(state: 0) | [0, 1];
-        amplitude(state: 1) | [0, 1];
-        amplitude(state: 2) | [0, 1];
-        amplitude(state: 3) | [0, 1];
+        amplitude(state: [0, 0]) | [0, 1];
+        amplitude(state: [0, 1]) | [0, 1];
+        amplitude(state: [1, 0]) | [0, 1];
+        amplitude(state: [1, 1]) | [0, 1];
 
     If the contents of this script are stored in a string called ``xir_script``,
     then each amplitude of the Bell state can be displayed using Jet as follows:
@@ -118,7 +118,8 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
 
     num_wires = len(program.wires)
     # TODO: Extract the Fock cutoff dimension from the XIR script.
-    circuit = Circuit(num_wires=num_wires, dim=2)
+    dimension = program.options.get("dimension", 2)
+    circuit = Circuit(num_wires=num_wires, dim=dimension)
 
     for stmt in _resolve_xir_program_statements(program):
         if stmt.name in GateFactory.registry:
@@ -127,16 +128,29 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             circuit.append_gate(gate, wire_ids=stmt.wires)
 
         elif stmt.name == "amplitude" or stmt.name == "Amplitude":
-            if "state" not in stmt.params:
+            if not isinstance(stmt.params, dict) or "state" not in stmt.params:
                 raise ValueError(f"Statement '{stmt}' is missing a 'state' parameter.")
 
-            # TODO: Use a list representation of the "state" key.
-            state = list(map(int, bin(stmt.params["state"])[2:].zfill(num_wires)))
+            state = stmt.params["state"]
 
-            if len(state) != num_wires:
-                raise ValueError(f"Statement '{stmt}' has a 'state' parameter which is too large.")
+            if not isinstance(state, list):
+                raise ValueError(
+                    f"Statement '{stmt}' has a 'state' parameter which is not an array."
+                )
 
-            if stmt.wires != tuple(range(num_wires)):
+            elif not all(0 <= entry < dimension for entry in state):
+                raise ValueError(
+                    f"Statement '{stmt}' has a 'state' parameter with at least "
+                    f"one entry that falls outside the range [0, {dimension})."
+                )
+
+            elif len(state) != num_wires:
+                raise ValueError(
+                    f"Statement '{stmt}' has a 'state' parameter with "
+                    f"{len(state)} (!= {num_wires}) entries."
+                )
+
+            elif stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
             output = _compute_amplitude(circuit=circuit, state=state)
