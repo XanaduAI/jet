@@ -1,7 +1,7 @@
+import warnings
 from copy import deepcopy
 from inspect import signature
 from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
-import warnings
 
 import numpy as np
 
