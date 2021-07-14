@@ -58,6 +58,8 @@
 
 ### Breaking Changes
 
+* The Jet interpreter for XIR scripts now requires an amplitude state to be specified as an array. [(#45)](https://github.com/XanaduAI/jet/pull/45)
+
 * The Jet interpreter for XIR scripts is now case-sensitive with respect to gate names. [(#36)](https://github.com/XanaduAI/jet/pull/36)
 
 * Python bindings for `complex<float>` and `complex<double>` specializations are now suffixed with `C64` and `C128`, respectively. [(#15)](https://github.com/XanaduAI/jet/pull/15)
