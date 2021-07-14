@@ -9,7 +9,7 @@ from xir import Statement, XIRProgram
 from xir import parse_script as parse_xir_script
 
 from .circuit import Circuit
-from .gate import GateFactory
+from .gate import FockGate, GateFactory
 from .state import Qudit
 
 __all__ = [
@@ -48,14 +48,16 @@ def get_xir_library() -> XIRProgram:
     for name, cls in sorted(GateFactory.registry.items()):
         # Instantiating the Gate subclass (with placeholder parameters) is an
         # easy way to access properties such as the number of wires a Gate can
-        # be applied to. The [1:] below is a consequence of the fact that the
-        # first __init__ parameter, ``self``, is not explicitly passed.
-        params = list(signature(cls.__init__).parameters)[1:]
-        gate = cls(*[None for _ in params])
+        # be applied to.
+        param_vals = signature(cls.__init__).parameters.values()
+        # There is no need to mock parameters with default values; the [1:] is
+        # required because self is not explicitly passed.
+        param_keys = [param.name for param in param_vals if param.default is param.empty][1:]
+        gate = cls(*[None for _ in param_keys])
 
         # TODO: Replace gate definitions with gate declarations when parameter
         #       and wire names are supported in gate declarations.
-        xir_params = "" if not params else "(" + ", ".join(params) + ")"
+        xir_params = "" if not param_keys else "(" + ", ".join(param_keys) + ")"
         xir_wires = list(range(gate.num_wires))
 
         line = f"gate {name} {xir_params} {xir_wires}: {name} {xir_params} | {xir_wires}; end;"
@@ -123,8 +125,17 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
 
     for stmt in _resolve_xir_program_statements(program):
         if stmt.name in GateFactory.registry:
-            # TODO: Automatically insert the Fock cutoff dimension for CV gates.
             gate = GateFactory.create(stmt.name, **stmt.params)
+
+            if isinstance(gate, FockGate):
+                gate.dimension = circuit.dimension
+
+            if gate.dimension != circuit.dimension:
+                raise ValueError(
+                    f"Statement '{stmt}' applies a gate with a dimension ({gate.dimension}) "
+                    f"that differs from the dimension of the circuit ({circuit.dimension})."
+                )
+
             circuit.append_gate(gate, wire_ids=stmt.wires)
 
         elif stmt.name == "amplitude" or stmt.name == "Amplitude":
