@@ -16,10 +16,41 @@ class MockGate(jet.Gate):
     """
 
     def __init__(self):
-        super().__init__(name="MockGate", num_wires=2)
+        super().__init__(name="MockGate", num_wires=2, dim=3)
 
     def _data(self) -> np.ndarray:
         return np.eye(3 ** 2) * (1 + 1j)
+
+    def _validate_dimension(self, dim):
+        if dim != 3:
+            raise ValueError(f"The dimension of a mock gate ({dim}) must be exactly three.")
+
+
+class MockFockGate(jet.FockGate):
+    """MockFockGate represents a fictional, unnormalized Fock gate which can be
+    applied to a single qudit with an arbitrary Fock ladder cutoff.
+
+    Args:
+        cutoff (int): Fock ladder cutoff.
+    """
+
+    def __init__(self, cutoff: int = 3):
+        super().__init__(name="MockFockGate", num_wires=2, cutoff=cutoff)
+
+    def _data(self) -> np.ndarray:
+        return np.eye(self.dimension ** 2) * (1 + 1j)
+
+
+class MockQubitGate(jet.QubitGate):
+    """MockQubitGate represents an identity qubit gate which can be applied to a
+    single qubit.
+    """
+
+    def __init__(self):
+        super().__init__(name="MockQubitGate", num_wires=1)
+
+    def _data(self):
+        return np.eye(2)
 
 
 class TestGate:
@@ -109,6 +140,46 @@ class TestGateFactory:
         assert gate.tensor() == MockGate().tensor()
 
         jet.GateFactory.unregister(MockGate)
+
+
+class TestFockGate:
+    @pytest.fixture
+    def gate(self) -> MockFockGate:
+        """Returns a mock Fock gate instance."""
+        return MockFockGate()
+
+    def test_set_valid_dimension(self, gate):
+        """Tests that the dimension of a Fock gate can be set to a valid value."""
+        gate.dimension = 2
+        assert gate.dimension == 2
+
+    def test_set_invalid_dimension(self, gate):
+        """Tests that a ValueError is raised when the dimension of a Fock gate
+        is set to an invalid value.
+        """
+        match = r"The dimension of a Fock gate must be greater than one\."
+        with pytest.raises(ValueError, match=match):
+            gate.dimension = 1
+
+
+class TestQubitGate:
+    @pytest.fixture
+    def gate(self) -> MockQubitGate:
+        """Returns a mock qubit gate instance."""
+        return MockQubitGate()
+
+    def test_set_valid_dimension(self, gate):
+        """Tests that the dimension of a qubit gate can be set to a valid value."""
+        gate.dimension = 2
+        assert gate.dimension == 2
+
+    def test_set_invalid_dimension(self, gate):
+        """Tests that a ValueError is raised when the dimension of a qubit gate
+        is set to an invalid value.
+        """
+        match = r"The dimension of a qubit gate must be exactly two\."
+        with pytest.raises(ValueError, match=match):
+            gate.dimension = 3
 
 
 @pytest.mark.parametrize(
