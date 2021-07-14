@@ -139,7 +139,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
 
             circuit.append_gate(gate, wire_ids=stmt.wires)
 
-        elif stmt.name == "amplitude" or stmt.name == "Amplitude":
+        elif stmt.name in ("amplitude", "Amplitude"):
             if not isinstance(stmt.params, dict) or "state" not in stmt.params:
                 raise ValueError(f"Statement '{stmt}' is missing a 'state' parameter.")
 

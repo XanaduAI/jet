@@ -76,14 +76,6 @@ class TestGate:
         assert tensor.shape == [3, 3, 3, 3]
         assert tensor.data == np.ravel(np.eye(9) * (1 + 1j)).tolist()
 
-    def test_tensor_adjoint(self, gate):
-        """Tests that the correct adjoint tensor is returned for a gate."""
-        tensor = gate.tensor(adjoint=True)
-
-        assert tensor.indices == ["0", "1", "2", "3"]
-        assert tensor.shape == [3, 3, 3, 3]
-        assert tensor.data == np.ravel(np.eye(9) * (1 - 1j) / 2).tolist()
-
     @pytest.mark.parametrize("indices", [1, ["i", "j", "k", 4], ["x", "x", "x", "x"], []])
     def test_indices_are_invalid(self, gate, indices):
         """Tests that a ValueError is raised when the indices of a gate are set
@@ -97,7 +89,11 @@ class TestGate:
         """Tests that the indices of a gate can be set and retrieved."""
         assert gate.indices is None
         gate.indices = indices
-        assert gate.indices == indices
+
+        if indices is None:
+            assert gate.indices is None
+        else:
+            assert list(gate.indices) == list(indices)
 
 
 class TestGateFactory:
@@ -140,6 +136,41 @@ class TestGateFactory:
         assert gate.tensor() == MockGate().tensor()
 
         jet.GateFactory.unregister(MockGate)
+
+
+class TestAdjoint:
+    @pytest.mark.parametrize("gate", [jet.Hadamard(), jet.U2(1, 2)])
+    def test_attributes(self, gate):
+        """Tests that Adjoint returns the same attributes as the decorated gate."""
+        adjoint = jet.Adjoint(gate)
+        assert adjoint.name == gate.name
+        assert adjoint.num_wires == gate.num_wires
+        assert adjoint.params == gate.params
+
+    @pytest.mark.parametrize(
+        ["gate", "state", "want_tensor"],
+        [
+            pytest.param(
+                jet.PhaseShift(pi / 2),
+                jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+                jet.Tensor(indices=["0"], shape=[2], data=[1, 0]),
+                id="P†|0>",
+            ),
+            pytest.param(
+                jet.PhaseShift(pi / 2),
+                jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+                jet.Tensor(indices=["0"], shape=[2], data=[0, -1j]),
+                id="P†|1>",
+            ),
+        ],
+    )
+    def test_data(self, gate, state, want_tensor):
+        """Tests that Adjoint takes the conjugate transpose of a ``PhaseShift`` gate."""
+        adjoint = jet.Adjoint(gate)
+        have_tensor = jet.contract_tensors(adjoint.tensor(), state)
+        assert have_tensor.data == pytest.approx(want_tensor.data)
+        assert have_tensor.shape == want_tensor.shape
+        assert have_tensor.indices == want_tensor.indices
 
 
 class TestFockGate:
