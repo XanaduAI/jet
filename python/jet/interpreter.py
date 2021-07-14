@@ -50,8 +50,8 @@ def get_xir_library() -> XIRProgram:
         # easy way to access properties such as the number of wires a Gate can
         # be applied to.
         param_vals = signature(cls.__init__).parameters.values()
-        # There is no need to mock parameters with default values; the [1:] is
-        # required because self is not explicitly passed.
+        # There is no need to mock parameters that have default values; the [1:]
+        # is required because self is not explicitly passed to cls.__init__().
         param_keys = [param.name for param in param_vals if param.default is param.empty][1:]
         gate = cls(*[None for _ in param_keys])
 
@@ -183,10 +183,11 @@ def _validate_xir_program_options(program: XIRProgram) -> None:
     Raises:
         ValueError: If the value of at least one option is invalid.
     """
-    ignored_options = program.options.copy()
+    # A deep copy is not needed since the value of each option will not be changed.
+    options = program.options.copy()
 
-    if "dimension" in ignored_options:
-        dimension = ignored_options.pop("dimension")
+    if "dimension" in options:
+        dimension = options.pop("dimension")
 
         if not isinstance(dimension, int):
             raise ValueError("Option 'dimension' must be an integer.")
@@ -194,7 +195,7 @@ def _validate_xir_program_options(program: XIRProgram) -> None:
         elif dimension < 2:
             raise ValueError("Option 'dimension' must be greater than one.")
 
-    for option in ignored_options:
+    for option in sorted(options):
         warnings.warn(f"Option '{option}' is not supported and will be ignored.")
 
 
