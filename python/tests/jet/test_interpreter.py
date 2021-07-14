@@ -211,6 +211,108 @@ def test_run_xir_program_with_no_output_statements(program):
         (
             xir.parse_script(
                 """
+                options:
+                    dimension: 2;
+                end;
+
+                H | [0];
+                S | [0];
+                Displacement(3, 1) | [0];
+
+                amplitude(state: [0]) | [0];
+                amplitude(state: [1]) | [0];
+                """
+            ),
+            [-0.011974639958 - 0.012732623852j, 0.012732623852 - 0.043012087532j],
+        ),
+        (
+            xir.parse_script(
+                """
+                options:
+                    dimension: 3;
+                end;
+
+                Squeezing(1, 2) | [0];
+                Squeezing(2, 1) | [1];
+
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [0, 2]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
+                amplitude(state: [1, 2]) | [0, 1];
+                amplitude(state: [2, 0]) | [0, 1];
+                amplitude(state: [2, 1]) | [0, 1];
+                amplitude(state: [2, 2]) | [0, 1];
+                """
+            ),
+            [
+                0.415035263978,
+                0,
+                -0.152860853701 - 0.238066674351j,
+                0,
+                0,
+                0,
+                0.093012260922 - 0.203235497887j,
+                0,
+                -0.150834249845 + 0.021500900893j,
+            ],
+        ),
+    ],
+)
+def test_run_xir_program_with_options(program, want_result):
+    """Tests that running an XIR program with script-level options gives the correct result."""
+    assert jet.run_xir_program(program) == pytest.approx(want_result)
+
+
+@pytest.mark.parametrize(
+    "program, match",
+    [
+        (
+            xir.parse_script("options: dimension: [2]; end;"),
+            r"Option 'dimension' must be an integer\.",
+        ),
+        (
+            xir.parse_script("options: dimension: 1; end;"),
+            r"Option 'dimension' must be greater than one\.",
+        ),
+    ],
+)
+def test_run_xir_program_with_invalid_options(program, match):
+    """Tests that a ValueError is raised when an XIR program contains an invalid option."""
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
+def test_run_xir_program_with_unsupported_options():
+    """Tests that a UserWarning is given when an XIR program specifies at least
+    one unsupported option.
+    """
+    program = xir.parse_script("options: dimension: 3; speed: fast; end;")
+    with pytest.warns(UserWarning, match=r"Option 'speed' is not supported and will be ignored\."):
+        jet.run_xir_program(program)
+
+
+def test_run_xir_program_with_incompatible_dimensions():
+    """Tests that a ValueError is raised when an XIR program applies a qubit
+    gate in the context of a CV circuit with a dimension greater than two.
+    """
+    program = xir.parse_script("options: dimension: 3; end; X | [0];")
+    match = (
+        r"Statement 'X \| \[0\]' applies a gate with a dimension \(2\) that "
+        r"differs from the dimension of the circuit \(3\)\."
+    )
+
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
+@pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            xir.parse_script(
+                """
                 X | [0];
 
                 amplitude(state: [0]) | [0];

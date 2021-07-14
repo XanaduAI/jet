@@ -1,7 +1,7 @@
 from copy import deepcopy
 from inspect import signature
 from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
-from warnings import warn
+import warnings
 
 import numpy as np
 
@@ -118,8 +118,9 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     """
     result: List[Union[np.number, np.ndarray]] = []
 
+    _validate_xir_program_options(program=program)
+
     num_wires = len(program.wires)
-    # TODO: Extract the Fock cutoff dimension from the XIR script.
     dimension = program.options.get("dimension", 2)
     circuit = Circuit(num_wires=num_wires, dim=dimension)
 
@@ -173,6 +174,30 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     return result
 
 
+def _validate_xir_program_options(program: XIRProgram) -> None:
+    """Validates the options in an ``XIRProgram``.
+
+    Args:
+        program (XIRProgram): Program with the options to validate.
+
+    Raises:
+        ValueError: If the value of at least one option is invalid.
+    """
+    ignored_options = program.options.copy()
+
+    if "dimension" in ignored_options:
+        dimension = ignored_options.pop("dimension")
+
+        if not isinstance(dimension, int):
+            raise ValueError("Option 'dimension' must be an integer.")
+
+        elif dimension < 2:
+            raise ValueError("Option 'dimension' must be greater than one.")
+
+    for option in ignored_options:
+        warnings.warn(f"Option '{option}' is not supported and will be ignored.")
+
+
 def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
     """Resolves the statements in an ``XIRProgram`` such that each yielded
     gate application ``Statement`` is applied to a registered Jet gate.
@@ -195,7 +220,7 @@ def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
 
     for name in program.gates:
         if name in stmt_generator_map:
-            warn(f"Gate '{name}' overrides the Jet gate with the same name.")
+            warnings.warn(f"Gate '{name}' overrides the Jet gate with the same name.")
 
         stmt_generator_map[name] = _create_statement_generator_for_composite_gate(
             name=name, stmt_generator_map=stmt_generator_map, gate_signature_map=gate_signature_map
