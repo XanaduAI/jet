@@ -288,8 +288,8 @@ def test_run_xir_program_with_unsupported_options():
     """Tests that a UserWarning is given when an XIR program specifies at least
     one unsupported option.
     """
-    program = xir.parse_script("options: dimension: 3; speed: fast; end;")
-    with pytest.warns(UserWarning, match=r"Option 'speed' is not supported and will be ignored\."):
+    program = xir.parse_script("options: dimension: 3; VSync: off; end;")
+    with pytest.warns(UserWarning, match=r"Option 'VSync' is not supported and will be ignored\."):
         jet.run_xir_program(program)
 
 

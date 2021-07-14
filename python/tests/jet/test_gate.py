@@ -150,8 +150,8 @@ class TestFockGate:
 
     def test_set_valid_dimension(self, gate):
         """Tests that the dimension of a Fock gate can be set to a valid value."""
-        gate.dimension = 2
-        assert gate.dimension == 2
+        gate.dimension = 7
+        assert gate.dimension == 7
 
     def test_set_invalid_dimension(self, gate):
         """Tests that a ValueError is raised when the dimension of a Fock gate
