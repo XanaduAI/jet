@@ -35,13 +35,6 @@ class TestState:
         assert tensor.shape == [3]
         assert tensor.data == [1j, 0, 0]
 
-    def test_tensor_adjoint(self, state):
-        """Tests that the correct adjoint tensor is returned for a state."""
-        tensor = state.tensor(adjoint=True)
-        assert tensor.indices == ["0"]
-        assert tensor.shape == [3]
-        assert tensor.data == [-1j, 0, 0]
-
     @pytest.mark.parametrize("indices", [1, [2], ["x", "x"], []])
     def test_indices_are_invalid(self, state, indices):
         """Tests that a ValueError is raised when the indices of a state are set
