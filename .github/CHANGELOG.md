@@ -2,7 +2,11 @@
 
 ### New features since last release
 
+<<<<<<< HEAD
 * The Jet interpreter for XIR programs now supports a `probabilities` output. [(#44)](https://github.com/XanaduAI/jet/pull/44)
+=======
+* The `Circuit` class now supports taking the expected value of an observable. [(#46)](https://github.com/XanaduAI/jet/pull/46)
+>>>>>>> main
 
 * The Jet interpreter for XIR scripts now handles gate definitions. [(#37)](https://github.com/XanaduAI/jet/pull/37)
 
@@ -59,6 +63,8 @@
 * `Tensor` class now checks data type at compile-time. [(#4)](https://github.com/XanaduAI/jet/pull/4)
 
 ### Breaking Changes
+
+* The Jet interpreter for XIR scripts now requires an amplitude state to be specified as an array. [(#45)](https://github.com/XanaduAI/jet/pull/45)
 
 * The Jet interpreter for XIR scripts is now case-sensitive with respect to gate names. [(#36)](https://github.com/XanaduAI/jet/pull/36)
 

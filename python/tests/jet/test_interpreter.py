@@ -213,8 +213,8 @@ def test_run_xir_program_with_no_output_statements(program):
                 """
                 X | [0];
 
-                amplitude(state: 0) | [0];
-                amplitude(state: 1) | [0];
+                amplitude(state: [0]) | [0];
+                amplitude(state: [1]) | [0];
                 """
             ),
             [0, 1],
@@ -225,10 +225,10 @@ def test_run_xir_program_with_no_output_statements(program):
                 H | [0];
                 CNOT | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [1 / sqrt(2), 0, 0, 1 / sqrt(2)],
@@ -238,10 +238,10 @@ def test_run_xir_program_with_no_output_statements(program):
                 """
                 TwoModeSqueezing(3, 1, 2) | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [0.0993279274194332, 0, 0, 0.053401711152745175 + 0.08316823745907517j],
@@ -261,16 +261,44 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
             r"Statement 'amplitude \| \[0\]' is missing a 'state' parameter\.",
         ),
         (
-            xir.parse_script("X | [0]; amplitude(state: 2) | [0];"),
-            r"Statement 'amplitude\(state: 2\) \| \[0\]' has a 'state' parameter which is too large\.",
+            xir.parse_script("X | [0]; amplitude(state) | [0];"),
+            r"Statement 'amplitude\(state\) \| \[0\]' is missing a 'state' parameter\.",
         ),
         (
-            xir.parse_script("CNOT | [0, 1]; amplitude(state: 0) | [0];"),
-            r"Statement 'amplitude\(state: 0\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
+            xir.parse_script("X | [0]; amplitude(state: [0, -1]) | [0, 1];"),
+            (
+                r"Statement 'amplitude\(state: \[0, -1\]\) \| \[0, 1\]' has a 'state' "
+                r"parameter with at least one entry that falls outside the range \[0, 2\)\."
+            ),
         ),
         (
-            xir.parse_script("CNOT | [0, 1]; amplitude(state: 0) | [1, 0];"),
-            r"Statement 'amplitude\(state: 0\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
+            xir.parse_script("X | [0]; amplitude(state: [0, 2]) | [0, 1];"),
+            (
+                r"Statement 'amplitude\(state: \[0, 2\]\) \| \[0, 1\]' has a 'state' "
+                r"parameter with at least one entry that falls outside the range \[0, 2\)\."
+            ),
+        ),
+        (
+            xir.parse_script("X | [0]; amplitude(state: [0, 0]) | [0];"),
+            (
+                r"Statement 'amplitude\(state: \[0, 0\]\) \| \[0\]' has a 'state' "
+                r"parameter with 2 \(!= 1\) entries\."
+            ),
+        ),
+        (
+            xir.parse_script("X | [0]; amplitude(state: [0]) | [0, 1];"),
+            (
+                r"Statement 'amplitude\(state: \[0\]\) \| \[0, 1\]' has a 'state' "
+                r"parameter with 1 \(!= 2\) entries\."
+            ),
+        ),
+        (
+            xir.parse_script("CNOT | [0, 1]; amplitude(state: [0, 1]) | [0];"),
+            r"Statement 'amplitude\(state: \[0, 1\]\) \| \[0\]' must be applied to \[0 \.\. 1\]\.",
+        ),
+        (
+            xir.parse_script("CNOT | [0, 1]; amplitude(state: [0, 1]) | [1, 0];"),
+            r"Statement 'amplitude\(state: \[0, 1\]\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
         ),
     ],
 )
@@ -374,8 +402,8 @@ def test_run_xir_program_with_invalid_probabilities_statement():
 
                 X | [0];
 
-                amplitude(state: 0) | [0];
-                amplitude(state: 1) | [0];
+                amplitude(state: [0]) | [0];
+                amplitude(state: [1]) | [0];
                 """
             ),
             [0, 1],
@@ -390,10 +418,10 @@ def test_run_xir_program_with_invalid_probabilities_statement():
 
                 H2 | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [0.5, 0.5, 0.5, 0.5],
@@ -417,10 +445,10 @@ def test_run_xir_program_with_invalid_probabilities_statement():
 
                 FlipStay | [0, 1];
 
-                amplitude(state: 0) | [0, 1];
-                amplitude(state: 1) | [0, 1];
-                amplitude(state: 2) | [0, 1];
-                amplitude(state: 3) | [0, 1];
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
                 """
             ),
             [0, 0, 1, 0],
@@ -440,14 +468,14 @@ def test_run_xir_program_with_invalid_probabilities_statement():
 
                 RX3(a: 0, b: 3.141592653589793, c: 3.141592653589793) | [0, 1, 2];
 
-                amplitude(state: 0) | [0, 1, 2];
-                amplitude(state: 1) | [0, 1, 2];
-                amplitude(state: 2) | [0, 1, 2];
-                amplitude(state: 3) | [0, 1, 2];
-                amplitude(state: 4) | [0, 1, 2];
-                amplitude(state: 5) | [0, 1, 2];
-                amplitude(state: 6) | [0, 1, 2];
-                amplitude(state: 7) | [0, 1, 2];
+                amplitude(state: [0, 0, 0]) | [0, 1, 2];
+                amplitude(state: [0, 0, 1]) | [0, 1, 2];
+                amplitude(state: [0, 1, 0]) | [0, 1, 2];
+                amplitude(state: [0, 1, 1]) | [0, 1, 2];
+                amplitude(state: [1, 0, 0]) | [0, 1, 2];
+                amplitude(state: [1, 0, 1]) | [0, 1, 2];
+                amplitude(state: [1, 1, 0]) | [0, 1, 2];
+                amplitude(state: [1, 1, 1]) | [0, 1, 2];
                 """
             ),
             [0, 0, 0, 0, 0, 0, 1, 0],
