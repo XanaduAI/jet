@@ -10,7 +10,7 @@
 ## on the system you wish to run this job. Setting the library at a custom modulefile 
 ## location allows this to be accessed as needed.
 
-module use /home/mlxd/project/custom_modules
+module use /home/$USER/project/custom_modules
 module load intel cmake cuda/11.1.1 cutensor/1.3.1
 
 cd $SLURM_SUBMIT_DIR
