@@ -142,6 +142,43 @@ class TestAdjoint:
         assert have_tensor.indices == want_tensor.indices
 
 
+class TestScale:
+    @pytest.mark.parametrize("gate", [jet.Hadamard(), jet.U2(1, 2)])
+    def test_attributes(self, gate):
+        """Tests that Scale returns the same attributes as the decorated gate."""
+        scaled_gate = jet.Scale(gate, scalar=1)
+        assert scaled_gate.name == gate.name
+        assert scaled_gate.num_wires == gate.num_wires
+        assert scaled_gate.params == gate.params
+
+    @pytest.mark.parametrize(
+        ["gate", "state", "scalar", "want_tensor"],
+        [
+            pytest.param(
+                jet.PauliX(),
+                jet.Tensor(indices=["1"], shape=[2], data=[1, 0]),
+                2,
+                jet.Tensor(indices=["0"], shape=[2], data=[0, 2]),
+                id="2 * X|0>",
+            ),
+            pytest.param(
+                jet.PauliX(),
+                jet.Tensor(indices=["1"], shape=[2], data=[0, 1]),
+                -3j,
+                jet.Tensor(indices=["0"], shape=[2], data=[-3j, 0]),
+                id="-3i * X|1>",
+            ),
+        ],
+    )
+    def test_data(self, gate, state, scalar, want_tensor):
+        """Tests that Scale linearly scales the tensor of a ``PauliX`` gate."""
+        scaled_gate = jet.Scale(gate, scalar=scalar)
+        have_tensor = jet.contract_tensors(scaled_gate.tensor(), state)
+        assert have_tensor.data == pytest.approx(want_tensor.data)
+        assert have_tensor.shape == want_tensor.shape
+        assert have_tensor.indices == want_tensor.indices
+
+
 @pytest.mark.parametrize(
     ["gate", "state", "want_tensor"],
     [

@@ -19,6 +19,7 @@ __all__ = [
     "GateFactory",
     # Decorator gates
     "Adjoint",
+    "Scale",
     # CV Fock gates
     "Displacement",
     "Squeezing",
@@ -159,7 +160,9 @@ class GateFactory:
     registry: Dict[str, type] = {}
 
     @staticmethod
-    def create(name: str, *params: float, adjoint: bool = False, **kwargs) -> Gate:
+    def create(
+        name: str, *params: float, adjoint: bool = False, scalar: float = 1, **kwargs
+    ) -> Gate:
         """Constructs a gate by name.
 
         Raises:
@@ -168,6 +171,8 @@ class GateFactory:
         Args:
             name (str): Registered name of the desired gate.
             params (float): Parameters to pass to the gate constructor.
+            adjoint (bool): Whether to take the adjoint of the gate.
+            scalar (float): Scaling factor to apply to the gate.
             kwargs: Keyword arguments to pass to the gate constructor.
 
         Returns:
@@ -180,7 +185,10 @@ class GateFactory:
         gate = subclass(*params, **kwargs)
 
         if adjoint:
-            gate = Adjoint(gate)
+            gate = Adjoint(gate=gate)
+
+        if scalar != 1:
+            gate = Scale(gate=gate, scalar=scalar)
 
         return gate
 
@@ -238,6 +246,23 @@ class Adjoint(Gate):
 
     def _data(self):
         return self._gate._data().conj().T
+
+
+class Scale(Gate):
+    """Scale is a decorator which linearly scales an existing ``Gate``.
+
+    Args:
+        gate (Gate): Gate to scale.
+        scalar (float): Scaling factor.
+    """
+
+    def __init__(self, gate: Gate, scalar: float):
+        super().__init__(name=gate.name, num_wires=gate.num_wires, params=gate.params)
+        self._gate = gate
+        self._scalar = scalar
+
+    def _data(self):
+        return self._scalar * self._gate._data()
 
 
 ####################################################################################################
