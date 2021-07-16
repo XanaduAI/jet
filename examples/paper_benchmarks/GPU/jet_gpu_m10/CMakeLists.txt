@@ -1,9 +1,9 @@
 #############################
 cmake_minimum_required(VERSION 3.14)
 
-project("Jet TBCC Benchmark"
+project("Jet TBC Benchmark"
     VERSION 0.1.0
-    DESCRIPTION "Jet project benchmarks using TBCC"
+    DESCRIPTION "Jet project benchmarks using TBC"
     LANGUAGES CXX
 )
 
