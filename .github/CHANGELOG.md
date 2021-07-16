@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
+
 * The Jet interpreter for XIR scripts now accepts a `dimension` option for CV circuits. [(#47)](https://github.com/XanaduAI/jet/pull/47)
 
 * The Jet interpreter for XIR programs now supports a `probabilities` output. [(#44)](https://github.com/XanaduAI/jet/pull/44)
