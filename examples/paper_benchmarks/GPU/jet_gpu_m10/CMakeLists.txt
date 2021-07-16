@@ -1,9 +1,9 @@
 #############################
 cmake_minimum_required(VERSION 3.14)
 
-project("Jet TBC Benchmark"
+project("Jet GPU m=10 Benchmark"
     VERSION 0.1.0
-    DESCRIPTION "Jet project benchmarks using TBC"
+    DESCRIPTION "Jet project benchmarks using GPU for m=10"
     LANGUAGES CXX
 )
 
