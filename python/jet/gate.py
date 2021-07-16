@@ -112,7 +112,6 @@ class Gate(ABC):
         Raises:
             ValueError: If the dimension is invalid.
         """
-        pass
 
     @property
     def indices(self) -> Optional[Sequence[str]]:
