@@ -17,7 +17,7 @@ make -j4
 The examples in `jet_cpu_m10` and the associated SLURM submission scripts for Niagara were used to collect the data of the full network (default) simulations, and the sliced (shared work) simulations for the m=10 Sycamore circuit. We sweep over the OpenMP and the Taskflow (Pthread) thread-spaces to find the optimal parameters, and ensure we are utilising the node's resources at maximum capacity.
 
 # Cotengra m=10 full network
-The associated runs with Cotengra for the full-network m=10 comparison can be found in `cotengra_cpu_m10`.
+The associated runs with Cotengra for the full-network m=10 comparison can be found in `cotengra_cpu_m10`. All required dependencies are specified in the given `requirements.txt`file, and `env_setup.sh` will create a runnable Python environment with these installed.
 
 To run the same comparison for the full network with Cotengra, we fix the path (provided in the Python file) to the same as used for Jet. Additionally, we sweep the OpenMP parameter space as several backend packages of Cotengra can gain performance from these.
 
@@ -32,7 +32,7 @@ For brevity, we include an example to contract all slices of the network for bot
 # Plot figures
 The submission scripts will aggregate the runtimes into CSV files for each set of run-type. These CSV files can be plotted using the given Python environment created with `env_setup.sh`.
 Two options exist for plotting: non-sliced data-sets (CSV columns are `OMP,PTHREADS,t0,..,t9`) and sliced data-sets (CSV columns are `OMP,PTHREADS,SLICES,t0,..,t9`).
-They can be run respecitvely using:
+They can be run respectively using:
 
 ```bash
 # sliced data
