@@ -418,6 +418,85 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
         (
             xir.parse_script(
                 """
+                probabilities | [0];
+                """
+            ),
+            [1, 0],
+        ),
+        (
+            xir.parse_script(
+                """
+                probabilities | [0, 1, 2];
+                """
+            ),
+            [1, 0, 0, 0, 0, 0, 0, 0],
+        ),
+        (
+            xir.parse_script(
+                """
+                X | [0];
+
+                probabilities | [0];
+                """
+            ),
+            [0, 1],
+        ),
+        (
+            xir.parse_script(
+                """
+                X | [1];
+
+                probabilities | [0, 1];
+                """
+            ),
+            [0, 1, 0, 0],
+        ),
+        (
+            xir.parse_script(
+                """
+                H | [0];
+                CNOT | [0, 1];
+
+                probabilities | [0, 1];
+                """
+            ),
+            [0.5, 0, 0, 0.5],
+        ),
+        (
+            xir.parse_script(
+                """
+                H | [0];
+                Y | [0];
+
+                probabilities | [0];
+                """
+            ),
+            [0.5, 0.5],
+        ),
+    ],
+)
+def test_run_xir_program_with_probabilities_statement(program, want_result):
+    """Tests that running an XIR program with a probabilities statement gives the correct result."""
+    assert jet.run_xir_program(program) == [pytest.approx(want_result)]
+
+
+def test_run_xir_program_with_invalid_probabilities_statement():
+    """Tests that a ValueError is raised when an XIR program contains an invalid
+    probabilities statement.
+    """
+    program = xir.parse_script("CNOT | [0, 1]; probabilities | [0];")
+    match = r"Statement 'probabilities \| \[0\]' must be applied to \[0 \.\. 1\]\."
+
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
+@pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            xir.parse_script(
+                """
                 gate H2:
                     H | [0];
                     H | [1];
@@ -506,7 +585,7 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
     ],
 )
 def test_run_xir_program_with_valid_gate_definitions(program, want_result):
-    """Tests that running an XIR program with gate definitionsgives the correct result."""
+    """Tests that running an XIR program with valid gate definitions gives the correct result."""
     assert jet.run_xir_program(program) == pytest.approx(want_result)
 
 

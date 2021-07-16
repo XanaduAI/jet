@@ -4,6 +4,8 @@
 
 * The Jet interpreter for XIR scripts now accepts a `dimension` option for CV circuits. [(#47)](https://github.com/XanaduAI/jet/pull/47)
 
+* The Jet interpreter for XIR programs now supports a `probabilities` output. [(#44)](https://github.com/XanaduAI/jet/pull/44)
+
 * The `Circuit` class now supports taking the expected value of an observable. [(#46)](https://github.com/XanaduAI/jet/pull/46)
 
 * The Jet interpreter for XIR scripts now handles gate definitions. [(#37)](https://github.com/XanaduAI/jet/pull/37)
@@ -43,6 +45,8 @@
 * Running CMake with `-DBUILD_PYTHON=ON` now generates Python bindings within a `jet` package. [(#1)](https://github.com/XanaduAI/jet/pull/1)
 
 ### Improvements
+
+* The Jet interpreter for XIR programs now uses the task-based contractor. [(#44)](https://github.com/XanaduAI/jet/pull/44)
 
 * CudaTensor `SliceIndex` calls now avoid intermediate CPU transfer operations. [(#42)](https://github.com/XanaduAI/jet/pull/42)
 
