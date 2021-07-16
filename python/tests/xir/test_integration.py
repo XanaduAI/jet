@@ -77,6 +77,10 @@ gate H2:
     H | [1];
 end;
 
+operator op[0]:
+    1, X[0];
+end;
+
 H2 | [0, 1];
 CNOT | [0, 1];
 amplitude(state: [0, 0]) | [0, 1];

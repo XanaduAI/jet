@@ -119,6 +119,10 @@ class OperatorStmt:
     def use_floats(self) -> bool:
         return self._use_floats
 
+    @property
+    def wires(self) -> Tuple:
+        return tuple({t[1] for t in self.terms})
+
 
 class Declaration:
     """General declaration for declaring operators, gates, functions and outputs
