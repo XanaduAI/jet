@@ -373,11 +373,12 @@ def _simulate(circuit: Circuit, dtype: type = np.complex128) -> TensorType:
         Tensor: Result of the simulation.
     """
     tn = circuit.tensor_network(dtype=dtype)
-    path_info = _find_contraction_path(tn=tn)
 
     if len(tn.nodes) == 1:
         # No contractions are necessary for a single tensor.
         return tn.nodes[0].tensor
+
+    path_info = _find_contraction_path(tn=tn)
 
     tbc = TaskBasedContractor(dtype=dtype)
     tbc.add_contraction_tasks(tn=tn, path_info=path_info)
