@@ -12,7 +12,7 @@ from xir import parse_script as parse_xir_script
 from .bindings import PathInfo
 from .circuit import Circuit
 from .factory import TaskBasedContractor, TensorNetworkType, TensorType
-from .gate import GateFactory
+from .gate import FockGate, GateFactory
 from .state import Qudit
 
 __all__ = [
@@ -51,14 +51,16 @@ def get_xir_library() -> XIRProgram:
     for name, cls in sorted(GateFactory.registry.items()):
         # Instantiating the Gate subclass (with placeholder parameters) is an
         # easy way to access properties such as the number of wires a Gate can
-        # be applied to. The [1:] below is a consequence of the fact that the
-        # first __init__ parameter, ``self``, is not explicitly passed.
-        params = list(signature(cls.__init__).parameters)[1:]
-        gate = cls(*[None for _ in params])
+        # be applied to.
+        param_vals = signature(cls.__init__).parameters.values()
+        # There is no need to mock parameters that have default values; the [1:]
+        # is required because self is not explicitly passed to cls.__init__().
+        param_keys = [param.name for param in param_vals if param.default is param.empty][1:]
+        gate = cls(*[None for _ in param_keys])
 
         # TODO: Replace gate definitions with gate declarations when parameter
         #       and wire names are supported in gate declarations.
-        xir_params = "" if not params else "(" + ", ".join(params) + ")"
+        xir_params = "" if not param_keys else "(" + ", ".join(param_keys) + ")"
         xir_wires = list(range(gate.num_wires))
 
         line = f"gate {name} {xir_params} {xir_wires}: {name} {xir_params} | {xir_wires}; end;"
@@ -119,15 +121,25 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     """
     result: List[Union[np.number, np.ndarray]] = []
 
+    _validate_xir_program_options(program=program)
+
     num_wires = len(program.wires)
-    # TODO: Extract the Fock cutoff dimension from the XIR script.
     dimension = program.options.get("dimension", 2)
     circuit = Circuit(num_wires=num_wires, dim=dimension)
 
     for stmt in _resolve_xir_program_statements(program):
         if stmt.name in GateFactory.registry:
-            # TODO: Automatically insert the Fock cutoff dimension for CV gates.
             gate = GateFactory.create(stmt.name, **stmt.params)
+
+            if isinstance(gate, FockGate):
+                gate.dimension = circuit.dimension
+
+            if gate.dimension != circuit.dimension:
+                raise ValueError(
+                    f"Statement '{stmt}' applies a gate with a dimension ({gate.dimension}) "
+                    f"that differs from the dimension of the circuit ({circuit.dimension})."
+                )
+
             circuit.append_gate(gate, wire_ids=stmt.wires)
 
         elif stmt.name in ("Amplitude", "amplitude"):
@@ -170,6 +182,31 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             raise ValueError(f"Statement '{stmt}' is not supported.")
 
     return result
+
+
+def _validate_xir_program_options(program: XIRProgram) -> None:
+    """Validates the options in an ``XIRProgram``.
+
+    Args:
+        program (XIRProgram): Program with the options to validate.
+
+    Raises:
+        ValueError: If the value of at least one option is invalid.
+    """
+    # A deep copy is not needed since the value of each option will not be changed.
+    options = program.options.copy()
+
+    if "dimension" in options:
+        dimension = options.pop("dimension")
+
+        if not isinstance(dimension, int):
+            raise ValueError("Option 'dimension' must be an integer.")
+
+        elif dimension < 2:
+            raise ValueError("Option 'dimension' must be greater than one.")
+
+    for option in sorted(options):
+        warnings.warn(f"Option '{option}' is not supported and will be ignored.")
 
 
 def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:

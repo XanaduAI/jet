@@ -20,11 +20,13 @@ __all__ = [
     # Decorator gates
     "Adjoint",
     # CV Fock gates
+    "FockGate",
     "Displacement",
     "Squeezing",
     "TwoModeSqueezing",
     "Beamsplitter",
     # Qubit gates
+    "QubitGate",
     "Hadamard",
     "PauliX",
     "PauliY",
@@ -64,15 +66,52 @@ class Gate(ABC):
     Args:
         name (str): Name of the gate.
         num_wires (int): Number of wires the gate is applied to.
+        dim (int): Dimension of the gate. This should match the dimension of the
+            qudits the gate can be applied to.
         params (List[float] or None): Parameters of the gate.
+
+    Raises:
+        ValueError: If the dimension is invalid.
     """
 
-    def __init__(self, name: str, num_wires: int, params: Optional[List[float]] = None):
+    def __init__(self, name: str, num_wires: int, dim: int, params: Optional[List[float]] = None):
         self.name = name
 
         self._indices = None
         self._num_wires = num_wires
         self._params = params
+
+        self._validate_dimension(dim)
+        self._dim = dim
+
+    @property
+    def dimension(self) -> int:
+        """Returns the dimension of this gate."""
+        return self._dim
+
+    @dimension.setter
+    def dimension(self, dim: int) -> None:
+        """Sets the dimension of this gate.
+
+        Args:
+            dim (int): New dimension of this gate.
+
+        Raises:
+            ValueError: If the dimension is invalid.
+        """
+        self._validate_dimension(dim)
+        self._dim = dim
+
+    @abstractmethod
+    def _validate_dimension(self, dim: int) -> None:
+        """Validates a candidate dimension for this gate.
+
+        Args:
+            dim (int): Dimension to be validated.
+
+        Raises:
+            ValueError: If the dimension is invalid.
+        """
 
     @property
     def indices(self) -> Optional[Sequence[str]]:
@@ -233,11 +272,16 @@ class Adjoint(Gate):
     """
 
     def __init__(self, gate: Gate):
-        super().__init__(name=gate.name, num_wires=gate.num_wires, params=gate.params)
         self._gate = gate
+        super().__init__(
+            name=gate.name, num_wires=gate.num_wires, dim=gate.dimension, params=gate.params
+        )
 
     def _data(self):
         return self._gate._data().conj().T
+
+    def _validate_dimension(self, dim):
+        self._gate._validate_dimension(dim)
 
 
 ####################################################################################################
@@ -245,8 +289,28 @@ class Adjoint(Gate):
 ####################################################################################################
 
 
+class FockGate(Gate):
+    """FockGate represents a (continuous variable) Fock gate.
+
+    Args:
+        name (str): Name of the gate.
+        num_wires (int): Number of wires the gate is applied to.
+        cutoff (int): Fock ladder cutoff.
+        params (List[float] or None): Parameters of the gate.
+    """
+
+    def __init__(
+        self, name: str, num_wires: int, cutoff: int, params: Optional[List[float]] = None
+    ):
+        super().__init__(name=name, num_wires=num_wires, dim=cutoff, params=params)
+
+    def _validate_dimension(self, dim):
+        if dim < 2:
+            raise ValueError("The dimension of a Fock gate must be greater than one.")
+
+
 @GateFactory.register(names=["Displacement", "displacement", "D", "d"])
-class Displacement(Gate):
+class Displacement(FockGate):
     """Displacement represents a displacement gate. See `thewalrus.displacement
     <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.displacement.html>`__
     for more details.
@@ -257,16 +321,16 @@ class Displacement(Gate):
         cutoff (int): Fock ladder cutoff.
     """
 
-    def __init__(self, r: float, phi: float, cutoff: int):
-        super().__init__(name="Displacement", num_wires=1, params=[r, phi, cutoff])
+    def __init__(self, r: float, phi: float, cutoff: int = 2):
+        super().__init__(name="Displacement", num_wires=1, cutoff=cutoff, params=[r, phi])
 
     @lru_cache()
     def _data(self):
-        return displacement(*self.params)
+        return displacement(*self.params, cutoff=self.dimension)
 
 
 @GateFactory.register(names=["Squeezing", "squeezing"])
-class Squeezing(Gate):
+class Squeezing(FockGate):
     """Squeezing represents a squeezing gate. See `thewalrus.squeezing
     <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.squeezing.html>`__
     for more details.
@@ -277,16 +341,16 @@ class Squeezing(Gate):
         cutoff (int): Fock ladder cutoff.
     """
 
-    def __init__(self, r: float, theta: float, cutoff: int):
-        super().__init__(name="Squeezing", num_wires=1, params=[r, theta, cutoff])
+    def __init__(self, r: float, theta: float, cutoff: int = 2):
+        super().__init__(name="Squeezing", num_wires=1, cutoff=cutoff, params=[r, theta])
 
     @lru_cache()
     def _data(self):
-        return squeezing(*self.params)
+        return squeezing(*self.params, cutoff=self.dimension)
 
 
 @GateFactory.register(names=["TwoModeSqueezing", "twomodesqueezing"])
-class TwoModeSqueezing(Gate):
+class TwoModeSqueezing(FockGate):
     """TwoModeSqueezing represents a two-mode squeezing gate. See `thewalrus.two_mode_squeezing
     <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.two_mode_squeezing.html>`__
     for more details.
@@ -297,12 +361,12 @@ class TwoModeSqueezing(Gate):
         cutoff (int): Fock ladder cutoff.
     """
 
-    def __init__(self, r: float, theta: float, cutoff: int):
-        super().__init__(name="TwoModeSqueezing", num_wires=2, params=[r, theta, cutoff])
+    def __init__(self, r: float, theta: float, cutoff: int = 2):
+        super().__init__(name="TwoModeSqueezing", num_wires=2, cutoff=cutoff, params=[r, theta])
 
     @lru_cache()
     def _data(self):
-        return two_mode_squeezing(*self.params)
+        return two_mode_squeezing(*self.params, cutoff=self.dimension)
 
 
 @GateFactory.register(
@@ -313,7 +377,7 @@ class TwoModeSqueezing(Gate):
         "bs",
     ]
 )
-class Beamsplitter(Gate):
+class Beamsplitter(FockGate):
     """Beamsplitter represents a beamsplitter gate. See `thewalrus.beamsplitter
     <https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.beamsplitter.html>`__
     for more details.
@@ -325,12 +389,12 @@ class Beamsplitter(Gate):
         cutoff (int): Fock ladder cutoff.
     """
 
-    def __init__(self, theta: float, phi: float, cutoff: int):
-        super().__init__(name="Beamsplitter", num_wires=2, params=[theta, phi, cutoff])
+    def __init__(self, theta: float, phi: float, cutoff: int = 2):
+        super().__init__(name="Beamsplitter", num_wires=2, cutoff=cutoff, params=[theta, phi])
 
     @lru_cache()
     def _data(self):
-        return beamsplitter(*self.params)
+        return beamsplitter(*self.params, cutoff=self.dimension)
 
 
 ####################################################################################################
@@ -338,8 +402,25 @@ class Beamsplitter(Gate):
 ####################################################################################################
 
 
+class QubitGate(Gate):
+    """QubitGate represents a qubit gate.
+
+    Args:
+        name (str): Name of the gate.
+        num_wires (int): Number of wires the gate is applied to.
+        params (List[float] or None): Parameters of the gate.
+    """
+
+    def __init__(self, name: str, num_wires: int, params: Optional[List[float]] = None):
+        super().__init__(name=name, num_wires=num_wires, dim=2, params=params)
+
+    def _validate_dimension(self, dim):
+        if dim != 2:
+            raise ValueError("The dimension of a qubit gate must be exactly two.")
+
+
 @GateFactory.register(names=["Hadamard", "hadamard", "H", "h"])
-class Hadamard(Gate):
+class Hadamard(QubitGate):
     """Hadamard represents a Hadamard gate."""
 
     def __init__(self):
@@ -352,7 +433,7 @@ class Hadamard(Gate):
 
 
 @GateFactory.register(names=["PauliX", "paulix", "X", "x", "NOT", "not"])
-class PauliX(Gate):
+class PauliX(QubitGate):
     """PauliX represents a Pauli-X gate."""
 
     def __init__(self):
@@ -365,7 +446,7 @@ class PauliX(Gate):
 
 
 @GateFactory.register(names=["PauliY", "pauliy", "Y", "y"])
-class PauliY(Gate):
+class PauliY(QubitGate):
     """PauliY represents a Pauli-Y gate."""
 
     def __init__(self):
@@ -378,7 +459,7 @@ class PauliY(Gate):
 
 
 @GateFactory.register(names=["PauliZ", "pauliz", "Z", "z"])
-class PauliZ(Gate):
+class PauliZ(QubitGate):
     """PauliZ represents a Pauli-Z gate."""
 
     def __init__(self):
@@ -391,7 +472,7 @@ class PauliZ(Gate):
 
 
 @GateFactory.register(names=["S", "s"])
-class S(Gate):
+class S(QubitGate):
     """S represents a single-qubit phase gate."""
 
     def __init__(self):
@@ -404,7 +485,7 @@ class S(Gate):
 
 
 @GateFactory.register(names=["T", "t"])
-class T(Gate):
+class T(QubitGate):
     """T represents a single-qubit T gate."""
 
     def __init__(self):
@@ -417,7 +498,7 @@ class T(Gate):
 
 
 @GateFactory.register(names=["SX", "sx"])
-class SX(Gate):
+class SX(QubitGate):
     """SX represents a single-qubit Square-Root X gate."""
 
     def __init__(self):
@@ -430,7 +511,7 @@ class SX(Gate):
 
 
 @GateFactory.register(names=["PhaseShift", "phaseshift"])
-class PhaseShift(Gate):
+class PhaseShift(QubitGate):
     """PhaseShift represents a single-qubit local phase shift gate.
 
     Args:
@@ -448,7 +529,7 @@ class PhaseShift(Gate):
 
 
 @GateFactory.register(names=["CPhaseShift", "cphaseshift"])
-class CPhaseShift(Gate):
+class CPhaseShift(QubitGate):
     """CPhaseShift represents a controlled phase shift gate.
 
     Args:
@@ -466,7 +547,7 @@ class CPhaseShift(Gate):
 
 
 @GateFactory.register(names=["CX", "cx", "CNOT", "cnot"])
-class CX(Gate):
+class CX(QubitGate):
     """CX represents a controlled-X gate."""
 
     def __init__(self):
@@ -479,7 +560,7 @@ class CX(Gate):
 
 
 @GateFactory.register(names=["CY", "cy"])
-class CY(Gate):
+class CY(QubitGate):
     """CY represents a controlled-Y gate."""
 
     def __init__(self):
@@ -492,7 +573,7 @@ class CY(Gate):
 
 
 @GateFactory.register(names=["CZ", "cz"])
-class CZ(Gate):
+class CZ(QubitGate):
     """CZ represents a controlled-Z gate."""
 
     def __init__(self):
@@ -505,7 +586,7 @@ class CZ(Gate):
 
 
 @GateFactory.register(names=["SWAP", "swap"])
-class SWAP(Gate):
+class SWAP(QubitGate):
     """SWAP represents a SWAP gate."""
 
     def __init__(self):
@@ -518,7 +599,7 @@ class SWAP(Gate):
 
 
 @GateFactory.register(names=["ISWAP", "iswap"])
-class ISWAP(Gate):
+class ISWAP(QubitGate):
     """ISWAP represents a ISWAP gate."""
 
     def __init__(self):
@@ -531,7 +612,7 @@ class ISWAP(Gate):
 
 
 @GateFactory.register(names=["CSWAP", "cswap"])
-class CSWAP(Gate):
+class CSWAP(QubitGate):
     """CSWAP represents a CSWAP gate."""
 
     def __init__(self):
@@ -553,7 +634,7 @@ class CSWAP(Gate):
 
 
 @GateFactory.register(names=["Toffoli", "toffoli"])
-class Toffoli(Gate):
+class Toffoli(QubitGate):
     """Toffoli represents a Toffoli gate."""
 
     def __init__(self):
@@ -575,7 +656,7 @@ class Toffoli(Gate):
 
 
 @GateFactory.register(names=["RX", "rx"])
-class RX(Gate):
+class RX(QubitGate):
     """RX represents a single-qubit X rotation gate.
 
     Args:
@@ -596,7 +677,7 @@ class RX(Gate):
 
 
 @GateFactory.register(names=["RY", "ry"])
-class RY(Gate):
+class RY(QubitGate):
     """RY represents a single-qubit Y rotation gate.
 
     Args:
@@ -618,7 +699,7 @@ class RY(Gate):
 
 
 @GateFactory.register(names=["RZ", "rz"])
-class RZ(Gate):
+class RZ(QubitGate):
     """RZ represents a single-qubit Z rotation gate.
 
     Args:
@@ -638,7 +719,7 @@ class RZ(Gate):
 
 
 @GateFactory.register(names=["Rot", "rot"])
-class Rot(Gate):
+class Rot(QubitGate):
     """Rot represents an arbitrary single-qubit rotation gate with three Euler
     angles. Each Pauli rotation gate can be recovered by fixing two of the three
     parameters:
@@ -674,7 +755,7 @@ class Rot(Gate):
 
 
 @GateFactory.register(names=["CRX", "crx"])
-class CRX(Gate):
+class CRX(QubitGate):
     """CRX represents a controlled-RX gate.
 
     Args:
@@ -695,7 +776,7 @@ class CRX(Gate):
 
 
 @GateFactory.register(names=["CRY", "cry"])
-class CRY(Gate):
+class CRY(QubitGate):
     """CRY represents a controlled-RY gate.
 
     Args:
@@ -716,7 +797,7 @@ class CRY(Gate):
 
 
 @GateFactory.register(names=["CRZ", "crz"])
-class CRZ(Gate):
+class CRZ(QubitGate):
     """CRZ represents a controlled-RZ gate.
 
     Args:
@@ -739,7 +820,7 @@ class CRZ(Gate):
 
 
 @GateFactory.register(names=["CRot", "crot"])
-class CRot(Gate):
+class CRot(QubitGate):
     """CRot represents a controlled-rotation gate.
 
     Args:
@@ -767,7 +848,7 @@ class CRot(Gate):
 
 
 @GateFactory.register(names=["U1", "u1"])
-class U1(Gate):
+class U1(QubitGate):
     """U1 represents a U1 gate.
 
     Args:
@@ -785,7 +866,7 @@ class U1(Gate):
 
 
 @GateFactory.register(names=["U2", "u2"])
-class U2(Gate):
+class U2(QubitGate):
     """U2 represents a U2 gate.
 
     Args:
@@ -807,7 +888,7 @@ class U2(Gate):
 
 
 @GateFactory.register(names=["U3", "u3"])
-class U3(Gate):
+class U3(QubitGate):
     """U3 represents a U3 gate.
 
     Args:
