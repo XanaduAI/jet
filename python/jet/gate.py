@@ -171,7 +171,7 @@ class Gate(ABC):
         """Returns the matrix representation of this gate."""
         pass
 
-    def tensor(self, dtype: type = np.complex128) -> TensorType:
+    def tensor(self, dtype: np.dtype = np.complex128) -> TensorType:
         """Returns the tensor representation of this gate.
 
         Args:
