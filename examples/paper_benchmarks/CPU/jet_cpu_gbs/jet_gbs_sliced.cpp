@@ -50,7 +50,6 @@ int main(int argc, char *argv[])
     auto tn = tensor_file.tensors;
     auto path = tensor_file.path.value().GetPath();
 
-    // Comment on why these indices required
     std::vector<std::string> possible_sliced_indices =
         {"w0", "m", "I", "a0", "g0", "G", "Y", "j", "y0", "q0"};
 
