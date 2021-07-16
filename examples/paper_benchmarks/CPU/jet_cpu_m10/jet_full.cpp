@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     auto t2 = high_resolution_clock::now();
 
     // Output timings
-    auto duration = duration_cast<std::chrono::duration<float>>(t2 - t1).count();
+    auto duration = duration_cast<duration<float>>(t2 - t1).count();
     std::cout << "t=" << duration << "s" << std::endl;
     std::cout << "result=" << tbcc.GetResults() << std::endl;
 

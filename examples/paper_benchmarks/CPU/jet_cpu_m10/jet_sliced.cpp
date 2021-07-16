@@ -50,7 +50,6 @@ int main(int argc, char *argv[])
     auto tn = tensor_file.tensors;
     auto path = tensor_file.path.value().GetPath();
 
-    // Comment on why these indices required
     std::vector<std::string> possible_sliced_indices = {
         "p7", "s7", "h4", "m1", "m2", "I2", "V4", "z2", "t4", "C1"};
 
@@ -87,7 +86,7 @@ int main(int argc, char *argv[])
     contractor.Contract().wait();
     auto t2 = high_resolution_clock::now();
 
-    auto duration = duration_cast<std::chrono::duration<float>>(t2 - t1).count();
+    auto duration = duration_cast<duration<float>>(t2 - t1).count();
 
     std::cout << "t=" << duration << "s" << std::endl;
     std::cout << "result="

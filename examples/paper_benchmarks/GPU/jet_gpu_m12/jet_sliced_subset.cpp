@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     auto t2 = high_resolution_clock::now();
 
     auto duration =
-        duration_cast<std::chrono::duration<float>>(t2 - t1).count();
+        duration_cast<duration<float>>(t2 - t1).count();
 
     std::cout << "t=" << duration << "s" << std::endl;
     std::cout << "result=" << contractor.GetReductionResult().GetHostDataVector() << std::endl;

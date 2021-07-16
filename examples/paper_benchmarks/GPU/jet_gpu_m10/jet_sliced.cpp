@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     contractor.Contract().wait();
     auto t2 = high_resolution_clock::now();
 
-    auto duration = duration_cast<std::chrono::duration<float>>(t2 - t1).count();
+    auto duration = duration_cast<duration<float>>(t2 - t1).count();
 
     std::cout << "t=" << duration << "s" << std::endl;
     auto res = contractor.GetReductionResult().GetHostDataVector();
