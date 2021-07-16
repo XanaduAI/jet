@@ -383,7 +383,11 @@ def _simulate(circuit: Circuit, dtype: type = np.complex128) -> TensorType:
     tbc = TaskBasedContractor(dtype=dtype)
     tbc.add_contraction_tasks(tn=tn, path_info=path_info)
     tbc.add_deletion_tasks()
+
+    # Warning: The call to contract() below can take a while depending on the
+    # size of the tensor network and the quality of the contraction path.
     tbc.contract()
+
     return tbc.results[0]
 
 
