@@ -16,7 +16,7 @@ Include(FetchContent)
 FetchContent_Declare(
     Jet
     GIT_REPOSITORY  git@github.com:XanaduAI/jet.git
-    GIT_TAG         main
+    GIT_TAG         0.2.0-benchmarks
 )
 FetchContent_MakeAvailable(Jet)
 
