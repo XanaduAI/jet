@@ -22,7 +22,7 @@ The associated runs with Cotengra for the full-network m=10 comparison can be fo
 To run the same comparison for the full network with Cotengra, we fix the path (provided in the Python file) to the same as used for Jet. Additionally, we sweep the OpenMP parameter space as several backend packages of Cotengra can gain performance from these.
 
 # Jet m=12 single network slice
-The examples in `jet_cpu_m12` and the associated SLURM submission scripts for Niagara were used to collect data for the much larger m=12 circuit. Given that the m=12 circuit requires significantly more RAM than a consumer workstation, we instead opt to slice 7,8, and 9 nodes of the network respectively, partitioning it into 64, 128, and 512 slices for each instance. For this example, we showcase the contraction of a single slice (`jet_sliced_single.cpp`).
+The examples in `jet_cpu_m12` and the associated SLURM submission scripts for Niagara were used to collect data for the much larger m=12 circuit. Given that the m=12 circuit requires significantly more RAM than a consumer workstation, we instead opt to slice 7, 8, and 9 nodes of the network respectively, partitioning it into 64, 128, and 512 slices for each instance. For this example, we showcase the contraction of a single slice ([`jet_sliced_single.cpp`](CPU/jet_cpu_m12/jet_sliced_single.cpp)).
 
 The comparative GPU example can be found in `jet_gpu_m12` (`jet_sliced_single.cpp`).
 
