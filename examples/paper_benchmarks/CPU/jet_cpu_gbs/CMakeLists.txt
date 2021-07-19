@@ -27,8 +27,5 @@ FetchContent_MakeAvailable(Jet)
 ## III. Create project target
 #############################
 
-add_executable(jet_gbs_sliced jet_gbs_sliced.cpp)
-target_link_libraries(jet_gbs_sliced Jet)
-
 add_executable(jet_gbs_full jet_gbs_full.cpp)
 target_link_libraries(jet_gbs_full Jet)

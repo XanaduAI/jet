@@ -1,34 +1,26 @@
-#!/bin/bash 
-#SBATCH --nodes=1
-#SBATCH --time=24:00:00
-#SBATCH --job-name=thewlarus_gbs
-#SBATCH --ntasks-per-node=80
+#!/bin/bash
+#----------------------------------------------------
+#SBATCH -J gbs_eig           # Job name
+#SBATCH -o gbs_%j.o       # Name of stdout output file
+#SBATCH -e gbs_%j.e       # Name of stderr error file
+#SBATCH -N 1               # Total # of nodes
+#SBATCH -n 40             # Total # of mpi tasks
+#SBATCH -t 23:00:00        # Run time (hh:mm:ss)
+#SBATCH -p compute
+#SBATCH --mail-user=trevor@xanadu.ai
+#SBATCH --mail-type=all    # Send email at begin and end of job
 
 cd $SLURM_SUBMIT_DIR
+module purge && module load NiaEnv/2019b gcc/8.3.0 intelmpi/2019u5 python/3.6.8
 
-source $1/bin/activate # sbatch <filename> <py_env_path>
+source $SCRATCH/.virtualenvs/cotengra/bin/activate
 
-module load intel/2019u4 cmake
+python3 run.py gbs_8x8.xbb 0 > results_0.txt
+python3 run.py gbs_8x8.xbb 10 > results_10.txt
+python3 run.py gbs_8x8.xbb 20 > results_20.txt
+python3 run.py gbs_8x8.xbb 30 > results_30.txt
+python3 run.py gbs_8x8.xbb 40 > results_40.txt
+python3 run.py gbs_8x8.xbb 50 > results_50.txt
+python3 run.py gbs_8x8.xbb 60 > results_60.txt
 
-export num_runs=1
-
-export OMP_PROC_BIND=false 
-export OMP_PLACES=cores 
-export OMP_DYNAMIC=false 
-export OMP_SCHEDULE=static 
-
-# The Walrus: 8x8 (64 qumodes/qudits) 000.. GBS
-for i in $(seq 1 10); do
-    for th in 16 32 64; do
-        echo "### RUN=${i} ###" >> walrus_omp${th}_r0.out;
-        OMP_NUM_THREADS=${th} python ../../data_files/gbs_8x8.xbb 0 >> walrus_omp${th}_r0.out;
-    done
-done
-
-# The Walrus: 8x8 (64 qumodes/qudits) random GBS
-for i in $(seq 1 1); do
-    for th in 16 32 64; do
-        echo "### RUN=${i} ###" >> walrus_omp${th}_r1.out;
-        OMP_NUM_THREADS=${th} python ../../data_files/gbs_8x8.xbb 1 >> walrus_omp${th}_r1.out;
-    done
-done
+# ---------------------------------------------------
