@@ -110,8 +110,8 @@ class TestGetXIRLibrary:
         """Tests that the correct XIRProgram is returned for the real gate registry."""
         have_xir_program = jet.get_xir_library().serialize(minimize=True)
         want_xir_program = (
-            "gate BS(theta, phi, cutoff)[0, 1]: BS(theta, phi, cutoff) | [0, 1]; end; "
-            "gate Beamsplitter(theta, phi, cutoff)[0, 1]: Beamsplitter(theta, phi, cutoff) | [0, 1]; end; "
+            "gate BS(theta, phi)[0, 1]: BS(theta, phi) | [0, 1]; end; "
+            "gate Beamsplitter(theta, phi)[0, 1]: Beamsplitter(theta, phi) | [0, 1]; end; "
             "gate CNOT[0, 1]: CNOT | [0, 1]; end; "
             "gate CPhaseShift(phi)[0, 1]: CPhaseShift(phi) | [0, 1]; end; "
             "gate CRX(theta)[0, 1]: CRX(theta) | [0, 1]; end; "
@@ -122,8 +122,8 @@ class TestGetXIRLibrary:
             "gate CX[0, 1]: CX | [0, 1]; end; "
             "gate CY[0, 1]: CY | [0, 1]; end; "
             "gate CZ[0, 1]: CZ | [0, 1]; end; "
-            "gate D(r, phi, cutoff)[0]: D(r, phi, cutoff) | [0]; end; "
-            "gate Displacement(r, phi, cutoff)[0]: Displacement(r, phi, cutoff) | [0]; end; "
+            "gate D(r, phi)[0]: D(r, phi) | [0]; end; "
+            "gate Displacement(r, phi)[0]: Displacement(r, phi) | [0]; end; "
             "gate H[0]: H | [0]; end; "
             "gate Hadamard[0]: Hadamard | [0]; end; "
             "gate ISWAP[0, 1]: ISWAP | [0, 1]; end; "
@@ -139,18 +139,18 @@ class TestGetXIRLibrary:
             "gate S[0]: S | [0]; end; "
             "gate SWAP[0, 1]: SWAP | [0, 1]; end; "
             "gate SX[0]: SX | [0]; end; "
-            "gate Squeezing(r, theta, cutoff)[0]: Squeezing(r, theta, cutoff) | [0]; end; "
+            "gate Squeezing(r, theta)[0]: Squeezing(r, theta) | [0]; end; "
             "gate T[0]: T | [0]; end; "
             "gate Toffoli[0, 1, 2]: Toffoli | [0, 1, 2]; end; "
-            "gate TwoModeSqueezing(r, theta, cutoff)[0, 1]: TwoModeSqueezing(r, theta, cutoff) | [0, 1]; end; "
+            "gate TwoModeSqueezing(r, theta)[0, 1]: TwoModeSqueezing(r, theta) | [0, 1]; end; "
             "gate U1(phi)[0]: U1(phi) | [0]; end; "
             "gate U2(phi, lam)[0]: U2(phi, lam) | [0]; end; "
             "gate U3(theta, phi, lam)[0]: U3(theta, phi, lam) | [0]; end; "
             "gate X[0]: X | [0]; end; "
             "gate Y[0]: Y | [0]; end; "
             "gate Z[0]: Z | [0]; end; "
-            "gate beamsplitter(theta, phi, cutoff)[0, 1]: beamsplitter(theta, phi, cutoff) | [0, 1]; end; "
-            "gate bs(theta, phi, cutoff)[0, 1]: bs(theta, phi, cutoff) | [0, 1]; end; "
+            "gate beamsplitter(theta, phi)[0, 1]: beamsplitter(theta, phi) | [0, 1]; end; "
+            "gate bs(theta, phi)[0, 1]: bs(theta, phi) | [0, 1]; end; "
             "gate cnot[0, 1]: cnot | [0, 1]; end; "
             "gate cphaseshift(phi)[0, 1]: cphaseshift(phi) | [0, 1]; end; "
             "gate crot(phi, theta, omega)[0, 1]: crot(phi, theta, omega) | [0, 1]; end; "
@@ -161,8 +161,8 @@ class TestGetXIRLibrary:
             "gate cx[0, 1]: cx | [0, 1]; end; "
             "gate cy[0, 1]: cy | [0, 1]; end; "
             "gate cz[0, 1]: cz | [0, 1]; end; "
-            "gate d(r, phi, cutoff)[0]: d(r, phi, cutoff) | [0]; end; "
-            "gate displacement(r, phi, cutoff)[0]: displacement(r, phi, cutoff) | [0]; end; "
+            "gate d(r, phi)[0]: d(r, phi) | [0]; end; "
+            "gate displacement(r, phi)[0]: displacement(r, phi) | [0]; end; "
             "gate h[0]: h | [0]; end; "
             "gate hadamard[0]: hadamard | [0]; end; "
             "gate iswap[0, 1]: iswap | [0, 1]; end; "
@@ -176,12 +176,12 @@ class TestGetXIRLibrary:
             "gate ry(theta)[0]: ry(theta) | [0]; end; "
             "gate rz(theta)[0]: rz(theta) | [0]; end; "
             "gate s[0]: s | [0]; end; "
-            "gate squeezing(r, theta, cutoff)[0]: squeezing(r, theta, cutoff) | [0]; end; "
+            "gate squeezing(r, theta)[0]: squeezing(r, theta) | [0]; end; "
             "gate swap[0, 1]: swap | [0, 1]; end; "
             "gate sx[0]: sx | [0]; end; "
             "gate t[0]: t | [0]; end; "
             "gate toffoli[0, 1, 2]: toffoli | [0, 1, 2]; end; "
-            "gate twomodesqueezing(r, theta, cutoff)[0, 1]: twomodesqueezing(r, theta, cutoff) | [0, 1]; end; "
+            "gate twomodesqueezing(r, theta)[0, 1]: twomodesqueezing(r, theta) | [0, 1]; end; "
             "gate u1(phi)[0]: u1(phi) | [0]; end; "
             "gate u2(phi, lam)[0]: u2(phi, lam) | [0]; end; "
             "gate u3(theta, phi, lam)[0]: u3(theta, phi, lam) | [0]; end; "
@@ -203,6 +203,108 @@ class TestGetXIRLibrary:
 def test_run_xir_program_with_no_output_statements(program):
     """Tests that running an XIR program with no output statements returns an empty list."""
     assert jet.run_xir_program(program) == []
+
+
+@pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            xir.parse_script(
+                """
+                options:
+                    dimension: 2;
+                end;
+
+                H | [0];
+                S | [0];
+                Displacement(3, 1) | [0];
+
+                amplitude(state: [0]) | [0];
+                amplitude(state: [1]) | [0];
+                """
+            ),
+            [-0.011974639958 - 0.012732623852j, 0.012732623852 - 0.043012087532j],
+        ),
+        (
+            xir.parse_script(
+                """
+                options:
+                    dimension: 3;
+                end;
+
+                Squeezing(1, 2) | [0];
+                Squeezing(2, 1) | [1];
+
+                amplitude(state: [0, 0]) | [0, 1];
+                amplitude(state: [0, 1]) | [0, 1];
+                amplitude(state: [0, 2]) | [0, 1];
+                amplitude(state: [1, 0]) | [0, 1];
+                amplitude(state: [1, 1]) | [0, 1];
+                amplitude(state: [1, 2]) | [0, 1];
+                amplitude(state: [2, 0]) | [0, 1];
+                amplitude(state: [2, 1]) | [0, 1];
+                amplitude(state: [2, 2]) | [0, 1];
+                """
+            ),
+            [
+                0.415035263978,
+                0,
+                -0.152860853701 - 0.238066674351j,
+                0,
+                0,
+                0,
+                0.093012260922 - 0.203235497887j,
+                0,
+                -0.150834249845 + 0.021500900893j,
+            ],
+        ),
+    ],
+)
+def test_run_xir_program_with_options(program, want_result):
+    """Tests that running an XIR program with script-level options gives the correct result."""
+    assert jet.run_xir_program(program) == pytest.approx(want_result)
+
+
+@pytest.mark.parametrize(
+    "program, match",
+    [
+        (
+            xir.parse_script("options: dimension: [2]; end;"),
+            r"Option 'dimension' must be an integer\.",
+        ),
+        (
+            xir.parse_script("options: dimension: 1; end;"),
+            r"Option 'dimension' must be greater than one\.",
+        ),
+    ],
+)
+def test_run_xir_program_with_invalid_options(program, match):
+    """Tests that a ValueError is raised when an XIR program contains an invalid option."""
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
+def test_run_xir_program_with_unsupported_options():
+    """Tests that a UserWarning is given when an XIR program specifies at least
+    one unsupported option.
+    """
+    program = xir.parse_script("options: dimension: 3; VSync: off; end;")
+    with pytest.warns(UserWarning, match=r"Option 'VSync' is not supported and will be ignored\."):
+        jet.run_xir_program(program)
+
+
+def test_run_xir_program_with_incompatible_dimensions():
+    """Tests that a ValueError is raised when an XIR program applies a qubit
+    gate in the context of a CV circuit with a dimension greater than two.
+    """
+    program = xir.parse_script("options: dimension: 3; end; X | [0];")
+    match = (
+        r"Statement 'X \| \[0\]' applies a gate with a dimension \(2\) that "
+        r"differs from the dimension of the circuit \(3\)\."
+    )
+
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
 
 
 @pytest.mark.parametrize(
@@ -236,7 +338,7 @@ def test_run_xir_program_with_no_output_statements(program):
         (
             xir.parse_script(
                 """
-                TwoModeSqueezing(3, 1, 2) | [0, 1];
+                TwoModeSqueezing(3, 1) | [0, 1];
 
                 amplitude(state: [0, 0]) | [0, 1];
                 amplitude(state: [0, 1]) | [0, 1];
@@ -306,6 +408,85 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
     """Tests that a ValueError is raised when an XIR program contains an
     invalid amplitude statement.
     """
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
+@pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            xir.parse_script(
+                """
+                probabilities | [0];
+                """
+            ),
+            [1, 0],
+        ),
+        (
+            xir.parse_script(
+                """
+                probabilities | [0, 1, 2];
+                """
+            ),
+            [1, 0, 0, 0, 0, 0, 0, 0],
+        ),
+        (
+            xir.parse_script(
+                """
+                X | [0];
+
+                probabilities | [0];
+                """
+            ),
+            [0, 1],
+        ),
+        (
+            xir.parse_script(
+                """
+                X | [1];
+
+                probabilities | [0, 1];
+                """
+            ),
+            [0, 1, 0, 0],
+        ),
+        (
+            xir.parse_script(
+                """
+                H | [0];
+                CNOT | [0, 1];
+
+                probabilities | [0, 1];
+                """
+            ),
+            [0.5, 0, 0, 0.5],
+        ),
+        (
+            xir.parse_script(
+                """
+                H | [0];
+                Y | [0];
+
+                probabilities | [0];
+                """
+            ),
+            [0.5, 0.5],
+        ),
+    ],
+)
+def test_run_xir_program_with_probabilities_statement(program, want_result):
+    """Tests that running an XIR program with a probabilities statement gives the correct result."""
+    assert jet.run_xir_program(program) == [pytest.approx(want_result)]
+
+
+def test_run_xir_program_with_invalid_probabilities_statement():
+    """Tests that a ValueError is raised when an XIR program contains an invalid
+    probabilities statement.
+    """
+    program = xir.parse_script("CNOT | [0, 1]; probabilities | [0];")
+    match = r"Statement 'probabilities \| \[0\]' must be applied to \[0 \.\. 1\]\."
+
     with pytest.raises(ValueError, match=match):
         jet.run_xir_program(program)
 
@@ -404,7 +585,7 @@ def test_run_xir_program_with_invalid_amplitude_statement(program, match):
     ],
 )
 def test_run_xir_program_with_valid_gate_definitions(program, want_result):
-    """Tests that running an XIR program with gate definitionsgives the correct result."""
+    """Tests that running an XIR program with valid gate definitions gives the correct result."""
     assert jet.run_xir_program(program) == pytest.approx(want_result)
 
 

@@ -1,15 +1,18 @@
+import random
+import warnings
 from copy import deepcopy
 from inspect import signature
 from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
-from warnings import warn
 
 import numpy as np
 
 from xir import Statement, XIRProgram
 from xir import parse_script as parse_xir_script
 
+from .bindings import PathInfo
 from .circuit import Circuit
-from .gate import GateFactory
+from .factory import TaskBasedContractor, TensorNetworkType, TensorType
+from .gate import FockGate, GateFactory
 from .state import Qudit
 
 __all__ = [
@@ -48,14 +51,16 @@ def get_xir_library() -> XIRProgram:
     for name, cls in sorted(GateFactory.registry.items()):
         # Instantiating the Gate subclass (with placeholder parameters) is an
         # easy way to access properties such as the number of wires a Gate can
-        # be applied to. The [1:] below is a consequence of the fact that the
-        # first __init__ parameter, ``self``, is not explicitly passed.
-        params = list(signature(cls.__init__).parameters)[1:]
-        gate = cls(*[None for _ in params])
+        # be applied to.
+        param_vals = signature(cls.__init__).parameters.values()
+        # There is no need to mock parameters that have default values; the [1:]
+        # is required because self is not explicitly passed to cls.__init__().
+        param_keys = [param.name for param in param_vals if param.default is param.empty][1:]
+        gate = cls(*[None for _ in param_keys])
 
         # TODO: Replace gate definitions with gate declarations when parameter
         #       and wire names are supported in gate declarations.
-        xir_params = "" if not params else "(" + ", ".join(params) + ")"
+        xir_params = "" if not param_keys else "(" + ", ".join(param_keys) + ")"
         xir_wires = list(range(gate.num_wires))
 
         line = f"gate {name} {xir_params} {xir_wires}: {name} {xir_params} | {xir_wires}; end;"
@@ -116,18 +121,28 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     """
     result: List[Union[np.number, np.ndarray]] = []
 
+    _validate_xir_program_options(program=program)
+
     num_wires = len(program.wires)
-    # TODO: Extract the Fock cutoff dimension from the XIR script.
     dimension = program.options.get("dimension", 2)
     circuit = Circuit(num_wires=num_wires, dim=dimension)
 
     for stmt in _resolve_xir_program_statements(program):
         if stmt.name in GateFactory.registry:
-            # TODO: Automatically insert the Fock cutoff dimension for CV gates.
             gate = GateFactory.create(stmt.name, **stmt.params)
+
+            if isinstance(gate, FockGate):
+                gate.dimension = circuit.dimension
+
+            if gate.dimension != circuit.dimension:
+                raise ValueError(
+                    f"Statement '{stmt}' applies a gate with a dimension ({gate.dimension}) "
+                    f"that differs from the dimension of the circuit ({circuit.dimension})."
+                )
+
             circuit.append_gate(gate, wire_ids=stmt.wires)
 
-        elif stmt.name in ("amplitude", "Amplitude"):
+        elif stmt.name in ("Amplitude", "amplitude"):
             if not isinstance(stmt.params, dict) or "state" not in stmt.params:
                 raise ValueError(f"Statement '{stmt}' is missing a 'state' parameter.")
 
@@ -156,10 +171,42 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             output = _compute_amplitude(circuit=circuit, state=state)
             result.append(output)
 
+        elif stmt.name in ("Probabilities", "probabilities"):
+            if stmt.wires != tuple(range(num_wires)):
+                raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
+
+            output = _compute_probabilities(circuit=circuit)
+            result.append(output)
+
         else:
             raise ValueError(f"Statement '{stmt}' is not supported.")
 
     return result
+
+
+def _validate_xir_program_options(program: XIRProgram) -> None:
+    """Validates the options in an ``XIRProgram``.
+
+    Args:
+        program (XIRProgram): Program with the options to validate.
+
+    Raises:
+        ValueError: If the value of at least one option is invalid.
+    """
+    # A deep copy is not needed since the value of each option will not be changed.
+    options = program.options.copy()
+
+    if "dimension" in options:
+        dimension = options.pop("dimension")
+
+        if not isinstance(dimension, int):
+            raise ValueError("Option 'dimension' must be an integer.")
+
+        elif dimension < 2:
+            raise ValueError("Option 'dimension' must be greater than one.")
+
+    for option in sorted(options):
+        warnings.warn(f"Option '{option}' is not supported and will be ignored.")
 
 
 def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
@@ -184,7 +231,7 @@ def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
 
     for name in program.gates:
         if name in stmt_generator_map:
-            warn(f"Gate '{name}' overrides the Jet gate with the same name.")
+            warnings.warn(f"Gate '{name}' overrides the Jet gate with the same name.")
 
         stmt_generator_map[name] = _create_statement_generator_for_composite_gate(
             name=name, stmt_generator_map=stmt_generator_map, gate_signature_map=gate_signature_map
@@ -318,7 +365,7 @@ def _compute_amplitude(
         dtype (type): Data type of the amplitude.
 
     Returns:
-        NumPy number representing the amplitude of the given state.
+        Number: NumPy number representing the amplitude of the given state.
     """
     # Do not modify the original circuit.
     circuit = deepcopy(circuit)
@@ -329,7 +376,141 @@ def _compute_amplitude(
         qudit = Qudit(dim=circuit.dimension, data=data)
         circuit.append_state(qudit, wire_ids=[i])
 
-    # TODO: Find a contraction path and use the TBCC.
+    result = _simulate(circuit=circuit, dtype=dtype)
+    return dtype(result.scalar)
+
+
+def _compute_probabilities(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:
+    """Computes the probability distribution at the end of a circuit.
+
+    Args:
+        circuit (Circuit): Circuit to produce the probability distribution for.
+        dtype (type): Data type of the probability computation.
+
+    Returns:
+        Array: NumPy array representing the probability of measuring each basis state.
+    """
+    result = _simulate(circuit=circuit, dtype=dtype)
+
+    # Arrange the indices in increasing order of wire ID.
+    state = result.transpose([wire.index for wire in circuit.wires])
+
+    amplitudes = np.array(state.data).flatten()
+    return amplitudes.conj() * amplitudes
+
+
+def _simulate(circuit: Circuit, dtype: type = np.complex128) -> TensorType:
+    """Simulates a circuit using the task-based contractor.
+
+    Args:
+        circuit (Circuit): Circuit to simulate.
+        dtype (type): Data type of the tensor network to contract.
+
+    Returns:
+        Tensor: Result of the simulation.
+    """
     tn = circuit.tensor_network(dtype=dtype)
-    amplitude = tn.contract()
-    return dtype(amplitude.scalar)
+
+    if len(tn.nodes) == 1:
+        # No contractions are necessary for a single tensor.
+        return tn.nodes[0].tensor
+
+    path_info = _find_contraction_path(tn=tn)
+
+    tbc = TaskBasedContractor(dtype=dtype)
+    tbc.add_contraction_tasks(tn=tn, path_info=path_info)
+    tbc.add_deletion_tasks()
+
+    # Warning: The call to contract() below can take a while depending on the
+    # size of the tensor network and the quality of the contraction path.
+    tbc.contract()
+
+    return tbc.results[0]
+
+
+def _find_contraction_path(tn: TensorNetworkType, samples: int = 100) -> PathInfo:
+    """Finds a contraction path for a tensor network. This is done by sampling
+    several random contraction paths and choosing the one which minimizes the
+    total number of FLOPS.
+
+    Args:
+        tn (TensorNetwork): Tensor network to be contracted.
+        samples (int): Number of contraction paths to sample.
+
+    Returns:
+        PathInfo: Contraction path for the given tensor network.
+    """
+    paths = (_sample_contraction_path(tn=tn) for _ in range(samples))
+    return min(paths, key=lambda path: path.total_flops())
+
+
+def _sample_contraction_path(tn: TensorNetworkType) -> PathInfo:
+    """Samples a random contraction path for a tensor network.
+
+    Args:
+        tn (TensorNetwork): Tensor network to be contracted.
+
+    Returns:
+        PathInfo: Contraction path for the given tensor network. Contractions
+        between nodes that share an index are always preferred.
+    """
+    path = []
+
+    # Caching the index-to-edge map improves performance significantly.
+    index_to_edge_map = tn.index_to_edge_map
+
+    # Build an adjacency list using the node IDs in the tensor network.
+    neighbours = {node.id: set() for node in tn.nodes}
+    for node in tn.nodes:
+        for index in node.indices:
+            node_ids = index_to_edge_map[index].node_ids
+            neighbours[node.id].update(node_ids)
+
+        # Nodes are not neighbours with themselves.
+        neighbours[node.id].remove(node.id)
+
+    # Track the set of tensors with no neighbours.
+    isolated = list(sorted(node_id for node_id in neighbours if not neighbours[node_id]))
+
+    for node_id in isolated:
+        del neighbours[node_id]
+
+    # Iteratively contract two adjacent tensors while it is possible to do so.
+    while len(neighbours) > 1:
+        node_id_1 = random.choice(tuple(neighbours))
+        node_id_2 = random.choice(tuple(neighbours[node_id_1]))
+        path.append((node_id_1, node_id_2))
+
+        # Derive the neighbours of the contracted node.
+        node_id_3 = max(*neighbours, *isolated) + 1
+        neighbours[node_id_3] = neighbours[node_id_1] | neighbours[node_id_2]
+        neighbours[node_id_3] -= {node_id_1, node_id_2}
+
+        # Decide whether the contracted node is isolated.
+        if not neighbours[node_id_3]:
+            isolated.append(node_id_3)
+            del neighbours[node_id_3]
+
+        # Replace node_id_1 with node_id_3 and then do the same for node_id_2.
+        for node_id in neighbours[node_id_1]:
+            if node_id != node_id_2:
+                neighbours[node_id].remove(node_id_1)
+                neighbours[node_id].add(node_id_3)
+
+        for node_id in neighbours[node_id_2]:
+            if node_id != node_id_1:
+                neighbours[node_id].remove(node_id_2)
+                neighbours[node_id].add(node_id_3)
+
+        del neighbours[node_id_1]
+        del neighbours[node_id_2]
+
+    if len(isolated) > 1:
+        # The final iteration of the while loop always yields an isolated node.
+        # The ID of this node is always the largest ID in the tensor network.
+        node_id_1 = isolated[-1]
+        for node_id_2 in isolated[:-1]:
+            path.append((node_id_1, node_id_2))
+            node_id_1 += 1
+
+    return PathInfo(tn=tn, path=path)
