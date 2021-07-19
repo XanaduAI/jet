@@ -14,7 +14,7 @@ make -j4
 ```
 
 # Jet m=10 full network and sliced network
-The examples in `jet_cpu_m10` and the associated SLURM submission scripts for Niagara were used to collect the data of the full network (default) simulations, and the sliced (shared work) simulations for the m=10 Sycamore circuit. We sweep over the OpenMP and the Taskflow (Pthread) thread-spaces to find the optimal parameters, and ensure we are utilising the node's resources at maximum capacity.
+The examples in `jet_cpu_m10` and the associated SLURM submission scripts for Niagara were used to collect the data of the full network (default) simulations, and the sliced (shared work) simulations for the m=10 Sycamore circuit. We sweep over the OpenMP and the Taskflow (Pthread) thread-spaces to find the optimal parameters, and ensure we are utilizing the node's resources at maximum capacity.
 
 # Cotengra m=10 full network
 The associated runs with Cotengra for the full-network m=10 comparison can be found in `cotengra_cpu_m10`. All required dependencies are specified in the given `requirements.txt`file, and `env_setup.sh` will create a runnable Python environment with these installed.
