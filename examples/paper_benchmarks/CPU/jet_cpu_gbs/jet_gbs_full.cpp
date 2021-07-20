@@ -32,11 +32,11 @@ int main(int argc, char **argv)
     TensorNetworkFile<Tensor<c_fp32>> tensor_file;
     try {
         std::ifstream tn_data(file_name);
-        std::string m10_str{std::istreambuf_iterator<char>(tn_data),
+        std::string gbs_str{std::istreambuf_iterator<char>(tn_data),
                             std::istreambuf_iterator<char>()};
         // Load data into TensorNetwork and PathInfo objects
         Jet::TensorNetworkSerializer<Tensor<c_fp32>> serializer;
-        tensor_file = serializer(m10_str);
+        tensor_file = serializer(gbs_str);
     }
     catch (...) {
         std::cerr << "Please specify a valid JSON file to contract"
@@ -49,19 +49,19 @@ int main(int argc, char **argv)
         tensor_file.path.value(); // std::optional requires value()
 
     // Create contractor and add TN and path data
-    TaskBasedContractor<Tensor<c_fp32>> tbcc(num_threads);
-    tbcc.AddContractionTasks(tn, path);
+    TaskBasedContractor<Tensor<c_fp32>> tbc(num_threads);
+    tbc.AddContractionTasks(tn, path);
 
     // Time the contraction operation
     auto t1 = high_resolution_clock::now();
-    tbcc.Contract().wait(); // Contract() non-blocking so requires wait()
+    tbc.Contract().wait(); // Contract() non-blocking so requires wait()
     auto t2 = high_resolution_clock::now();
 
     // Output timings
     auto duration =
         duration_cast<std::chrono::duration<float>>(t2 - t1).count();
     std::cout << "t=" << duration << "s" << std::endl;
-    std::cout << "result=" << tbcc.GetResults() << std::endl;
+    std::cout << "result=" << tbc.GetResults() << std::endl;
 
     return 0;
 }
