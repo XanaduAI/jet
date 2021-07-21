@@ -200,8 +200,7 @@ int main(int argc, char *argv[])
     }
 
     Jet::TensorNetwork<CudaTensor<cuComplex, 1>> tn_1 = tensor_file_1.tensors;
-    Jet::PathInfo path_1 =
-        tensor_file_1.path.value(); // std::optional requires value()
+    Jet::PathInfo path_1 = tensor_file_1.path.value();
 
     /**
      * Load third tensor network file onto CPU
