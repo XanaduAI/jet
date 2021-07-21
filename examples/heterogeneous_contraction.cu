@@ -89,8 +89,7 @@ void AddCudaContractionToTaskflow(
     }
 
     tf::Task task = taskflow.emplace_on(
-        [&tensors, &plans, &result, &kernel_tasks, path_node_info, path,
-         num_leafs, &tn](tf::cudaFlowCapturer &capturer) {
+        [&](tf::cudaFlowCapturer &capturer) {
             for (int i = 0; i < path.size(); i++) {
 
                 const PathStepInfo &pnia = path_node_info[path[i].first];
