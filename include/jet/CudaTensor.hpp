@@ -38,12 +38,12 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     using scalar_type_t = T;
     using scalar_type_t_precision = decltype(std::declval<T>().x);
 
-    template <class U = T, int D = cuda_device>
-    static CudaTensor<U, d> AddTensors(const CudaTensor<U, d> &A,
-                                       const CudaTensor<U, d> &B)
+    template <class U = T, int D = CUDA_DEVICE>
+    static CudaTensor<U, D> AddTensors(const CudaTensor<U, D> &A,
+                                       const CudaTensor<U, D> &B)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
-        static const CudaTensor<U, d> zero;
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        static const CudaTensor<U, D> zero;
 
         // The zero tensor is used in reductions where the shape of an
         // accumulator is not known beforehand.
@@ -61,7 +61,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
             disjoint_indices.empty(),
             "Tensor addition with disjoint indices is not supported.");
 
-        CudaTensor<U, d> C(A);
+        CudaTensor<U, D> C(A);
 
         // Align the underlying data vectors of `A` and `B`.
         cutensorHandle_t handle;
@@ -139,16 +139,16 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         return C;
     }
 
-    CudaTensor<T, cuda_device>
-    AddTensor(const CudaTensor<T, cuda_device> &other) const
+    CudaTensor<T, CUDA_DEVICE>
+    AddTensor(const CudaTensor<T, CUDA_DEVICE> &other) const
     {
-        return AddTensors<T, cuda_device>(*this, other);
+        return AddTensors<T, CUDA_DEVICE>(*this, other);
     }
 
     void InitIndicesAndShape(const std::vector<std::string> &indices,
                              const std::vector<size_t> &shape)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         Clear_();
         shape_ = shape;
         indices_ = indices;
@@ -165,10 +165,8 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     CudaTensor() : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(cuda_device);
-        T h_dat;
-        h_dat.x = 0.;
-        h_dat.y = 0.;
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        T h_dat({.x = 0.0, .y = 0.0});
         JET_CUDA_IS_SUCCESS(
             cudaMalloc(reinterpret_cast<void **>(&data_), sizeof(T)));
         JET_CUDA_IS_SUCCESS(
@@ -186,7 +184,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
                const std::vector<size_t> &shape, const std::vector<T> data)
         : CudaTensor(indices, shape)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, data.data(),
                                        sizeof(T) * data.size(),
                                        cudaMemcpyHostToDevice));
@@ -196,7 +194,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
                const std::vector<size_t> &shape, const T *data)
         : CudaTensor(indices, shape)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(
             data_, data, sizeof(T) * Jet::Utilities::ShapeToSize(shape),
             cudaMemcpyHostToDevice));
@@ -212,13 +210,17 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         InitIndicesAndShape(indices, shape);
     }
 
-    ~CudaTensor() { JET_CUDA_IS_SUCCESS(cudaFree(data_)); }
-
-    template <class U = T, int d = cuda_device>
-    static CudaTensor<U, d> ContractTensors(const CudaTensor<U, d> &a_tensor,
-                                            const CudaTensor<U, d> &b_tensor)
+    ~CudaTensor()
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        JET_CUDA_IS_SUCCESS(tf::cudaScopedDevice ctx(CUDA_DEVICE);
+                            cudaFree(data_));
+    }
+
+    template <class U = T, int D = CUDA_DEVICE>
+    static CudaTensor<U, D> ContractTensors(const CudaTensor<U, D> &a_tensor,
+                                            const CudaTensor<U, D> &b_tensor)
+    {
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         using namespace Utilities;
 
         auto &&left_indices =
@@ -245,7 +247,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
             c_shape[i + left_indices.size()] =
                 b_tensor.GetIndexToDimension().at(right_indices[i]);
 
-        CudaTensor<U, d> c_tensor(c_indices, c_shape);
+        CudaTensor<U, D> c_tensor(c_indices, c_shape);
 
         CudaContractionPlan cplan;
 
@@ -255,10 +257,10 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         return c_tensor;
     }
 
-    CudaTensor<T, cuda_device>
-    ContractTensors(const CudaTensor<T, cuda_device> &other) const
+    CudaTensor<T, CUDA_DEVICE>
+    ContractTensors(const CudaTensor<T, CUDA_DEVICE> &other) const
     {
-        return ContractTensors<T, cuda_device>(*this, other);
+        return ContractTensors<T, CUDA_DEVICE>(*this, other);
     }
 
     const std::vector<std::string> &GetIndices() const { return indices_; }
@@ -296,13 +298,13 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     CudaTensor(CudaTensor &&other) : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         Move_(std::move(other));
     }
 
     CudaTensor(const CudaTensor &other) : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         InitIndicesAndShape(other.GetIndices(), other.GetShape());
 
         JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, other.GetData(),
@@ -313,7 +315,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     template <class CPUData>
     CudaTensor(const Tensor<CPUData> &other) : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
@@ -325,7 +327,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     template <class CPUData> CudaTensor &operator=(const Tensor<CPUData> &other)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
@@ -338,7 +340,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     CudaTensor &operator=(const CudaTensor &other)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         if (this != &other) // not a self-assignment
         {
             InitIndicesAndShape(other.GetIndices(), other.GetShape());
@@ -358,21 +360,21 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     inline void CopyHostDataToGpu(T *host_tensor)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(
             data_, host_tensor, sizeof(T) * GetSize(), cudaMemcpyHostToDevice));
     }
 
     inline void CopyGpuDataToHost(T *host_tensor) const
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(
             host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost));
     }
 
     inline void CopyGpuDataToGpu(T *host_tensor)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(host_tensor, data_,
                                        sizeof(T) * GetSize(),
                                        cudaMemcpyDeviceToDevice));
@@ -380,7 +382,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     inline void AsyncCopyHostDataToGpu(T *host_tensor, cudaStream_t stream = 0)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(data_, host_tensor,
                                             sizeof(T) * GetSize(),
                                             cudaMemcpyHostToDevice, stream));
@@ -388,7 +390,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     inline void AsyncCopyGpuDataToHost(T *host_tensor, cudaStream_t stream = 0)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(host_tensor, data_,
                                             sizeof(T) * GetSize(),
                                             cudaMemcpyDeviceToHost, stream));
@@ -401,7 +403,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     explicit operator Tensor<std::complex<scalar_type_t_precision>>() const
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         std::vector<std::complex<scalar_type_t_precision>> host_data(
             GetSize(), {0.0, 0.0});
 
@@ -419,7 +421,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
      */
     void FillRandom(size_t seed)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         static curandGenerator_t rng;
         JET_CURAND_IS_SUCCESS(
             curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
@@ -435,7 +437,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
      */
     void FillRandom()
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         static curandGenerator_t rng;
         JET_CURAND_IS_SUCCESS(
             curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
@@ -469,21 +471,26 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     }
 
     struct CudaContractionPlan {
-
         cutensorHandle_t handle;
         cutensorContractionPlan_t plan;
         size_t work_size;
         void *work;
+        int cuda_device;
 
-        // ~CudaContractionPlan() { JET_CUDA_IS_SUCCESS(cudaFree(work)); }
+        ~CudaContractionPlan()
+        {
+            tf::cudaScopedDevice ctx(cuda_device);
+            JET_CUDA_IS_SUCCESS(cudaFree(work));
+        }
     };
 
-    template <class U = T, int d = cuda_device>
+    template <class U = T, int D = CUDA_DEVICE>
     static void GetCudaContractionPlan(CudaContractionPlan &cplan,
-                                       const CudaTensor<U, d> &a_tensor,
-                                       const CudaTensor<U, d> &b_tensor,
-                                       const CudaTensor<U, d> &c_tensor)
+                                       const CudaTensor<U, D> &a_tensor,
+                                       const CudaTensor<U, D> &b_tensor,
+                                       const CudaTensor<U, D> &c_tensor)
     {
+        cplan.cuda_device = CUDA_DEVICE;
         using namespace Jet::Utilities;
 
         cudaDataType_t data_type;
@@ -641,10 +648,10 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         cplan.work_size = work_size;
     }
 
-    template <class U = T, int d = cuda_device>
-    static void ContractTensorsWithoutAllocation(const CudaTensor<U, d> &a,
-                                                 const CudaTensor<U, d> &b,
-                                                 CudaTensor<U, d> &c,
+    template <class U = T, int D = CUDA_DEVICE>
+    static void ContractTensorsWithoutAllocation(const CudaTensor<U, D> &a,
+                                                 const CudaTensor<U, D> &b,
+                                                 CudaTensor<U, D> &c,
                                                  CudaContractionPlan &c_plan,
                                                  cudaStream_t stream = 0)
     {
@@ -666,16 +673,16 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         JET_CUTENSOR_IS_SUCCESS(cutensor_err);
     }
 
-    template <typename U = T, int d = cuda_device>
-    static CudaTensor<U, d> Reshape(const CudaTensor<U> &old_tensor,
+    template <typename U = T, int D = CUDA_DEVICE>
+    static CudaTensor<U, D> Reshape(const CudaTensor<U> &old_tensor,
                                     const std::vector<size_t> &new_shape)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         JET_ABORT_IF_NOT(old_tensor.GetSize() ==
                              Jet::Utilities::ShapeToSize(new_shape),
                          "Size is inconsistent between tensors.");
 
-        CudaTensor<U, d> reshaped_tensor(new_shape);
+        CudaTensor<U, D> reshaped_tensor(new_shape);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(reshaped_tensor.data_, old_tensor.data_,
                                        sizeof(U) * old_tensor.GetSize(),
                                        cudaMemcpyDeviceToDevice));
@@ -696,12 +703,12 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
      * @param new_indices New `%Tensor` index label ordering.
      * @return Transposed `%CudaTensor` object.
      */
-    template <class U = T, int d = cuda_device>
-    static CudaTensor<U, d>
-    Transpose(const CudaTensor<U, d> &tensor,
+    template <class U = T, int D = CUDA_DEVICE>
+    static CudaTensor<U, D>
+    Transpose(const CudaTensor<U, D> &tensor,
               const std::vector<std::string> &new_indices)
     {
-        tf::cudaScopedDevice ctx(cuda_device);
+        tf::cudaScopedDevice ctx(CUDA_DEVICE);
         using namespace Jet::Utilities;
 
         if (tensor.GetIndices() == new_indices)
@@ -720,7 +727,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         const std::vector<std::string> &old_indices = tensor.GetIndices();
 
         // 1. Allocate permuted tensor memory
-        CudaTensor<U, d> permuted_tensor(new_indices, output_shape);
+        CudaTensor<U, D> permuted_tensor(new_indices, output_shape);
 
         // 2. Initialise CuTensor runtime & setup necessary options
         cutensorHandle_t handle;
@@ -821,8 +828,8 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
      * @param new_ordering New `%Tensor` index permutation.
      * @return Transposed `%Tensor` object.
      */
-    template <class U = T, int d = cuda_device>
-    static CudaTensor<U, d> Transpose(const CudaTensor<U, d> &A,
+    template <class U = T, int D = CUDA_DEVICE>
+    static CudaTensor<U, D> Transpose(const CudaTensor<U, D> &A,
                                       const std::vector<size_t> &new_ordering)
     {
         const size_t num_indices = A.GetIndices().size();
@@ -837,35 +844,35 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
             new_indices[i] = old_indices[new_ordering[i]];
         }
 
-        return Transpose<U, d>(A, new_indices);
+        return Transpose<U, D>(A, new_indices);
     }
     /**
      * @brief Transposes the indices of the `%Tensor` object to a new ordering.
      *
      * @see Transpose(const Tensor<U>&, const std::vector<size_t>&)
      */
-    CudaTensor<T, cuda_device>
+    CudaTensor<T, CUDA_DEVICE>
     Transpose(const std::vector<size_t> &new_ordering) const
     {
-        return Transpose<T, cuda_device>(*this, new_ordering);
+        return Transpose<T, CUDA_DEVICE>(*this, new_ordering);
     }
     /**
      * @brief Transposes the indices of the `%Tensor` object to a new ordering.
      *
      * @see Transpose(const Tensor<U>&, const std::vector<std::string>&)
      */
-    CudaTensor<T, cuda_device>
+    CudaTensor<T, CUDA_DEVICE>
     Transpose(const std::vector<std::string> &new_indices) const
     {
-        return Transpose<T, cuda_device>(*this, new_indices);
+        return Transpose<T, CUDA_DEVICE>(*this, new_indices);
     }
 
-    template <typename U = T, int d = cuda_device>
-    static CudaTensor<U, d> SliceIndex(const CudaTensor<U, d> &tens,
+    template <typename U = T, int D = CUDA_DEVICE>
+    static CudaTensor<U, D> SliceIndex(const CudaTensor<U, D> &tens,
                                        const std::string &index_str,
                                        size_t index_value)
     {
-        tf::cudaScopedDevice ctx(d);
+        tf::cudaScopedDevice ctx(D);
         std::vector<std::string> new_indices = tens.GetIndices();
         std::vector<std::string> old_indices = tens.GetIndices();
 
@@ -880,9 +887,9 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
             std::swap(output_shape[offset], output_shape.back());
         }
 
-        CudaTensor<U, d> permuted_tensor = Transpose(tens, new_indices);
+        CudaTensor<U, D> permuted_tensor = Transpose(tens, new_indices);
 
-        CudaTensor<U, d> sliced_tensor({permuted_tensor.GetIndices().begin(),
+        CudaTensor<U, D> sliced_tensor({permuted_tensor.GetIndices().begin(),
                                         permuted_tensor.GetIndices().end() - 1},
                                        {permuted_tensor.GetShape().begin(),
                                         permuted_tensor.GetShape().end() - 1});
@@ -902,7 +909,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         return sliced_tensor.Transpose(old_indices);
     }
 
-    CudaTensor<T, cuda_device> SliceIndex(const std::string &index_str,
+    CudaTensor<T, CUDA_DEVICE> SliceIndex(const std::string &index_str,
                                           size_t index_value)
     {
         return SliceIndex<T>(*this, index_str, index_value);
@@ -933,7 +940,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     std::unordered_map<std::string, size_t> index_to_dimension_;
     std::unordered_map<std::string, size_t> index_to_axes_;
 
-    bool operator==(const CudaTensor<T, cuda_device> &other) const noexcept
+    bool operator==(const CudaTensor<T, CUDA_DEVICE> &other) const noexcept
     {
         return shape_ == other.GetShape() && indices_ == other.GetIndices() &&
                index_to_dimension_ == other.GetIndexToDimension() &&

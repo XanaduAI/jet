@@ -19,18 +19,20 @@
 #include <taskflow/cudaflow.hpp>
 
 
+using namespace Jet;
+
 template <typename T, int device = 0> struct CudaflowContractionTask {
 
-    std::vector<std::unique_ptr<Jet::CudaTensor<T, device>>> tensors;
-    std::vector<typename Jet::CudaTensor<T, device>::CudaContractionPlan> plans;
+    std::vector<std::unique_ptr<CudaTensor<T, device>>> tensors;
+    std::vector<typename CudaTensor<T, device>::CudaContractionPlan> plans;
     std::vector<tf::cudaTask> kernel_tasks;
     std::vector<T> result;
 };
 
 template <typename T, int device = 0>
 void AddCudaContractionToTaskflow(
-    const Jet::TensorNetwork<Jet::CudaTensor<T, device>> &tn,
-    const Jet::PathInfo &path_info, tf::Taskflow &taskflow,
+    const TensorNetwork<CudaTensor<T, device>> &tn,
+    const PathInfo &path_info, tf::Taskflow &taskflow,
     CudaflowContractionTask<T, device> &gpu_task)
 {
     auto &tensors = gpu_task.tensors;
@@ -143,8 +145,6 @@ void AddCudaContractionToTaskflow(
 
 int main(int argc, char *argv[])
 {
-    using namespace Jet;
-    using c_fp32 = cuComplex;
 
     if (argc != 4) {
         std::cout << "heterogeneous_contraction.cu <tensor network file 1 on GPU 0> "
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
         std::string circuit_str{std::istreambuf_iterator<char>(tn_data),
                                 std::istreambuf_iterator<char>()};
         // Load data into TensorNetwork and PathInfo objects
-        Jet::TensorNetworkSerializer<CudaTensor<cuComplex, 0>> serializer;
+        TensorNetworkSerializer<CudaTensor<cuComplex, 0>> serializer;
         tensor_file_0 = serializer(circuit_str, true);
     }
     catch (...) {
@@ -177,8 +177,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    Jet::TensorNetwork<CudaTensor<cuComplex, 0>> tn_0 = tensor_file_0.tensors;
-    Jet::PathInfo path_0 = tensor_file_0.path.value();
+    TensorNetwork<CudaTensor<cuComplex, 0>> tn_0 = tensor_file_0.tensors;
+    PathInfo path_0 = tensor_file_0.path.value();
 
     /**
      * Load second tensor network file onto GPU 1
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
         std::string circuit_str{std::istreambuf_iterator<char>(tn_data),
                                 std::istreambuf_iterator<char>()};
         // Load data into TensorNetwork and PathInfo objects
-        Jet::TensorNetworkSerializer<CudaTensor<cuComplex, 1>> serializer;
+        TensorNetworkSerializer<CudaTensor<cuComplex, 1>> serializer;
         tensor_file_1 = serializer(circuit_str, true);
     }
     catch (...) {
@@ -199,8 +199,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    Jet::TensorNetwork<CudaTensor<cuComplex, 1>> tn_1 = tensor_file_1.tensors;
-    Jet::PathInfo path_1 = tensor_file_1.path.value();
+    TensorNetwork<CudaTensor<cuComplex, 1>> tn_1 = tensor_file_1.tensors;
+    PathInfo path_1 = tensor_file_1.path.value();
 
     /**
      * Load third tensor network file onto CPU
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
         std::string circuit_str{std::istreambuf_iterator<char>(tn_data),
                                 std::istreambuf_iterator<char>()};
         // Load data into TensorNetwork and PathInfo objects
-        Jet::TensorNetworkSerializer<Tensor<std::complex<float>>> serializer;
+        TensorNetworkSerializer<Tensor<std::complex<float>>> serializer;
         tensor_file_2 = serializer(circuit_str, true);
     }
     catch (...) {
@@ -220,9 +220,9 @@ int main(int argc, char *argv[])
                   << std::endl;
         exit(1);
     }
-    Jet::TensorNetwork<Jet::Tensor<std::complex<float>>> tn_2 =
+    TensorNetwork<Tensor<std::complex<float>>> tn_2 =
         tensor_file_2.tensors;
-    Jet::PathInfo path_2 = tensor_file_2.path.value();
+    PathInfo path_2 = tensor_file_2.path.value();
 
     tf::Taskflow taskflow;
 
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
                                                gpu_task_1);
 
     /* set up cpu contraction task */
-    Jet::TaskBasedContractor<Jet::Tensor<std::complex<float>>> contractor;
+    TaskBasedContractor<Tensor<std::complex<float>>> contractor;
     contractor.AddContractionTasks(tn_2, path_2);
 
     // Add gpu task graph to cpu task graph
