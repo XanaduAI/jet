@@ -28,7 +28,7 @@ using namespace Jet::CudaTensorHelpers;
 
 namespace Jet {
 
-template <class T = cuComplex, int cuda_device = 0> class CudaTensor {
+template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     static_assert(CudaTensorHelpers::is_supported_data_type<T>,
                   "CudaTensor supports cuComplex (float2) and cuDoubleComplex "
