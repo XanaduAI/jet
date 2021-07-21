@@ -222,8 +222,7 @@ int main(int argc, char *argv[])
     }
     Jet::TensorNetwork<Jet::Tensor<std::complex<float>>> tn_2 =
         tensor_file_2.tensors;
-    Jet::PathInfo path_2 =
-        tensor_file_2.path.value(); // std::optional requires value()
+    Jet::PathInfo path_2 = tensor_file_2.path.value();
 
     tf::Taskflow taskflow;
 
