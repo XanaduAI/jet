@@ -47,7 +47,7 @@ void AddCudaContractionToTaskflow(
     tensors.resize(path_node_info.size());
     plans.resize(path.size());
 
-    for (int i = 0; i < path.size(); i++) {
+    for (size_t i = 0; i < path.size(); i++) {
 
         const PathStepInfo &pnia = path_node_info[path[i].first];
         const PathStepInfo &pnib = path_node_info[path[i].second];
