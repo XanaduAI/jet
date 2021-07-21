@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
         tensor_file_1 = serializer(circuit_str, true);
     }
     catch (...) {
-        std::cerr << "Please specify a valid JSON file to contract"
+        std::cerr << "Please specify a valid second JSON file to contract"
                   << std::endl;
         exit(1);
     }
