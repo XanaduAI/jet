@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
     std::string file_name_1 = argv[2];
     std::string file_name_2 = argv[3];
 
-    /**
-    /* Load first tensor network file onto GPU 0
+    /*
+     * Load first tensor network file onto GPU 0
      */
 
     TensorNetworkFile<CudaTensor<cuComplex, 0>> tensor_file_0;
