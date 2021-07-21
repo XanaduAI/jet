@@ -101,7 +101,6 @@ void AddCudaContractionToTaskflow(
                 auto tensor_b = tensors[path[i].second]->GetData();
                 auto tensor_c = tensors[num_leafs + i]->GetData();
 
-                // 	std::cout << "Checkpoint 0 = " << std::endl;
                 auto &c_plan = plans[i];
                 tf::cudaTask kernel =
                     capturer.on([&, c_plan, tensor_a, tensor_b,
