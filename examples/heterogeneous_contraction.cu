@@ -18,7 +18,6 @@
 #include <cuComplex.h>
 #include <taskflow/cudaflow.hpp>
 
-// using namespace tf;
 
 template <typename T, int device = 0> struct CudaflowContractionTask {
 
