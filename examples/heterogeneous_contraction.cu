@@ -40,8 +40,8 @@ void AddCudaContractionToTaskflow(
     auto &kernel_tasks = gpu_task.kernel_tasks;
 
     using namespace Jet;
-    const std::vector<PathStepInfo> &path_node_info = path_info.GetSteps();
-    const std::vector<std::pair<size_t, size_t>> &path = path_info.GetPath();
+    const auto &path_node_info = path_info.GetSteps();
+    const auto &path = path_info.GetPath();
     const auto &nodes = tn.GetNodes();
     size_t num_leafs = nodes.size();
     tensors.resize(path_node_info.size());
