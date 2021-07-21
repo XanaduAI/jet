@@ -38,7 +38,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     using scalar_type_t = T;
     using scalar_type_t_precision = decltype(std::declval<T>().x);
 
-    template <class U = T, int d = cuda_device>
+    template <class U = T, int D = cuda_device>
     static CudaTensor<U, d> AddTensors(const CudaTensor<U, d> &A,
                                        const CudaTensor<U, d> &B)
     {
