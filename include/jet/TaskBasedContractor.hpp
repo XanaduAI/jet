@@ -125,6 +125,8 @@ template <class TensorType> class TaskBasedContractor {
     /**
      * @brief Adds another Taskflow graph to this `%TaskBasedContractor`.
      *
+     * @warning This function does not update the values returned by GetFlops()
+     *          or GetMemory().
      */
     void AddTaskflow(tf::Taskflow &taskflow) noexcept
     {
