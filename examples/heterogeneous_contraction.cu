@@ -147,10 +147,10 @@ int main(int argc, char *argv[])
     using c_fp32 = cuComplex;
 
     if (argc != 4) {
-        std::cout << "heterogeneous_contraction.cu <tensor network file 1 on gpu 0> "
-                     "<tensor network file 2 on gpu 1> <tensor network file 3 on gpu 2>"
+        std::cout << "heterogeneous_contraction.cu <tensor network file 1 on GPU 0> "
+                     "<tensor network file 2 on GPU 1> <tensor network file 3 on CPU>"
                   << std::endl;
-        std::cout << "Contracts three circuits on two gpus and one cpu"
+        std::cout << "Contracts three circuits on two GPUs and one CPU"
                   << std::endl;
     }
 
