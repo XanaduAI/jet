@@ -14,8 +14,8 @@
 #include "Tensor.hpp"
 #include "TensorNetwork.hpp"
 #include "TensorNetworkIO.hpp"
-#include <cuComplex.h>
 
+#include <cuComplex.h>
 #include <taskflow/cudaflow.hpp>
 
 // using namespace tf;
