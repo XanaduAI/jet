@@ -150,10 +150,10 @@ int main(int argc, char *argv[])
     using c_fp32 = cuComplex;
 
     if (argc != 4) {
-        std::cout << "heterogeneous_contraction.cu <json file 1 on gpu 0> "
-                     "<json file 2 on gpu 1> <json file 3 on gpu 2>"
+        std::cout << "heterogeneous_contraction.cu <tensor network file 1 on gpu 0> "
+                     "<tensor network file 2 on gpu 1> <tensor network file 3 on gpu 2>"
                   << std::endl;
-        std::cout << "Contracts three circuits on two gpus and on cpu"
+        std::cout << "Contracts three circuits on two gpus and one cpu"
                   << std::endl;
     }
 
@@ -254,15 +254,15 @@ int main(int argc, char *argv[])
 
     /* Display results */
     auto result0 = gpu_task_0.result;
-    std::cout << "Gpu 0 result = " << result0[0].x << " " << result0[0].y
+    std::cout << "GPU 0 result = " << result0[0].x << " " << result0[0].y
               << std::endl;
 
     auto result1 = gpu_task_1.result;
-    std::cout << "Gpu 1 result = " << result1[0].x << " " << result1[0].y
+    std::cout << "GPU 1 result = " << result1[0].x << " " << result1[0].y
               << std::endl;
 
     auto result2 = contractor.GetResults()[0];
-    std::cout << "Cpu result = " << result2 << std::endl;
+    std::cout << "CPU result = " << result2 << std::endl;
 
     return 0;
 }
