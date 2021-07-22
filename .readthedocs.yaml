@@ -1,9 +1,9 @@
 version: 2
 
 build:
-  image: stable
+  image: latest
   apt_packages:
-    - libatlas-base-dev
+    - libopenblas-dev
     - python3.7-dev
     - python3-wheel
     - doxygen
