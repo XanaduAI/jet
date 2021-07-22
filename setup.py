@@ -33,6 +33,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_BUILD_TYPE=Release",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DENABLE_WARNINGS=Off",
         ]
 
         cmake_cmd = ["cmake", ext.sourcedir] + cmake_args
