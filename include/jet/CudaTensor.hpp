@@ -475,11 +475,10 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
         cutensorContractionPlan_t plan;
         size_t work_size;
         void *work;
-        int cuda_device;
 
         ~CudaContractionPlan()
         {
-            tf::cudaScopedDevice ctx(cuda_device);
+            tf::cudaScopedDevice ctx(CUDA_DEVICE);
             JET_CUDA_IS_SUCCESS(cudaFree(work));
         }
     };
@@ -490,7 +489,6 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
                                        const CudaTensor<U, D> &b_tensor,
                                        const CudaTensor<U, D> &c_tensor)
     {
-        cplan.cuda_device = CUDA_DEVICE;
         using namespace Jet::Utilities;
 
         cudaDataType_t data_type;
