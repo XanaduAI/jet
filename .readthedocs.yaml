@@ -4,13 +4,13 @@ build:
   image: stable
   apt_packages:
     - libopenblas-dev
-    - python3.8-dev
+    - python3.7-dev
     - python3-wheel
     - doxygen
     - graphviz
 
 python:
-  version: 3.8
+  version: 3.7
   install:
     - requirements: docs/requirements.txt
     - requirements: python/requirements.txt
