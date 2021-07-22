@@ -40,7 +40,6 @@ void AddCudaContractionToTaskflow(
     auto &result = gpu_task.result;
     auto &kernel_tasks = gpu_task.kernel_tasks;
 
-    using namespace Jet;
     const auto &path_node_info = path_info.GetSteps();
     const auto &path = path_info.GetPath();
     const auto &nodes = tn.GetNodes();
