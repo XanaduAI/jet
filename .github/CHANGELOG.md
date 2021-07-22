@@ -1,4 +1,15 @@
-## Release 0.2.0 (development release)
+## Release 0.3.0 (development release)
+### Documentation
+
+* Read the Docs is now configured to build the Sphinx documentation. [(#51)](https://github.com/XanaduAI/jet/pull/51)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+[Mikhail Andrenkov](https://github.com/Mandrenkov).
+
+## Release 0.2.0 (current release)
 
 ### New features since last release
 
