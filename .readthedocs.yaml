@@ -3,7 +3,7 @@ version: 2
 build:
   image: latest
   apt_packages:
-    - libopenblas-dev
+    - libgsl-dev
     - python3.7-dev
     - python3-wheel
     - doxygen
