@@ -1,7 +1,7 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Any, Dict, List, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Sequence, Set, Tuple, Union, Optional
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
@@ -50,37 +50,63 @@ class Statement:
         self._params = params
         self._wires = wires
 
+        self._is_adjoint = False
+        self._ctrl_wires = None
+
         self._use_floats = use_floats
 
     def __str__(self):
+        """Serialized string representation of a Statement"""
         if isinstance(self.params, dict):
             params = [f"{k}: {v}" for k, v in self.params.items()]
         else:
             params = [str(p) for p in self.params]
         params_str = ", ".join(params)
+        if params_str != "":
+            params_str = "(" + params_str + ")"
 
         wires = ", ".join([str(w) for w in self.wires])
 
-        if params_str == "":
-            return f"{self.name} | [{wires}]"
-        return f"{self.name}({params_str}) | [{wires}]"
+        modifier_str = ""
+        if self.ctrl_wires is not None:
+            ctrl_wires = ", ".join([str(w) for w in self.ctrl_wires])
+            modifier_str = f"ctrl[{ctrl_wires}] "
+        if self.is_adjoint:
+            modifier_str = "adjoint " + modifier_str
+
+        return f"{modifier_str}{self.name}{params_str} | [{wires}]"
 
     @property
     def name(self) -> str:
+        """Returns the name of the gate statement"""
         return self._name
 
     @property
     def params(self) -> Union[List, Dict]:
+        """Returns the parameters of the gate statement"""
         if self.use_floats:
             return get_floats(self._params)
         return self._params
 
     @property
     def wires(self) -> Tuple:
+        """Returns the wires that the gate is applied to"""
         return self._wires
 
     @property
+    def is_adjoint(self) -> bool:
+        """Whether the statement is an adjoint gate"""
+        return self._is_adjoint
+
+    @property
+    def ctrl_wires(self) -> Optional[tuple]:
+        """Returns the control wires of a controlled gate statement"""
+        return self._ctrl_wires
+
+    @property
     def use_floats(self) -> bool:
+        """Whether floats and complex types are returned instead of ``Decimal``
+        and ``DecimalComplex`` objects."""
         return self._use_floats
 
 

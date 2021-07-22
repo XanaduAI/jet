@@ -196,6 +196,21 @@ class XIRTransformer(Transformer):
 
         return Statement(name, params, wires, use_floats=self.use_floats)
 
+    def adjoint_gatestmt(self, args):
+        """Gate statement preceded by the adjoint modifier"""
+        gatestmt = args[0]
+        gatestmt._is_adjoint = True
+        return gatestmt
+
+    def ctrl_gatestmt(self, args):
+        """Gate statement preceded by the ctrl modifier and a list of
+        control wires"""
+        ctrl_wires = args[0]
+        gatestmt = args[1]
+
+        gatestmt._ctrl_wires = ctrl_wires
+        return gatestmt
+
     def opstmt(self, args):
         """Operator statements defined inside an operator declaration
 
