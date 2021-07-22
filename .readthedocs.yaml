@@ -4,8 +4,6 @@ build:
   image: latest
   apt_packages:
     - libblas-dev
-    - liblapack-dev
-    - gfortran
     - python3.7-dev
     - python3-wheel
     - doxygen
