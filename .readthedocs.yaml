@@ -1,0 +1,21 @@
+version: 2
+
+build:
+  image: stable
+  apt_packages:
+    - libopenblas-dev
+    - python3.8-dev
+    - python3-wheel
+    - doxygen
+    - graphviz
+
+python:
+  version: 3.8
+  install:
+    - requirements: docs/requirements.txt
+    - requirements: python/requirements.txt
+    - method: pip
+      path: .
+
+sphinx:
+  configuration: docs/conf.py
