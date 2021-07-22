@@ -463,7 +463,11 @@ template <class Tensor> class TensorNetwork {
         // Create a copy of the indices from the index-to-edge map since this
         // map will be modified in the next loop.
         std::vector<std::string> indices;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
         for (const auto &[index, _] : index_to_edge_map_) {
+#pragma GCC diagnostic pop
             indices.emplace_back(index);
         }
 
