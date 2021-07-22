@@ -3,7 +3,8 @@ version: 2
 build:
   image: latest
   apt_packages:
-    - libatlas-base-dev
+    - libblas-dev
+    - liblapack-dev
     - gfortran
     - python3.7-dev
     - python3-wheel
