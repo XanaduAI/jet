@@ -4,7 +4,7 @@ build:
   image: latest
   apt_packages:
     - libatlas-base-dev
-    - libgsl-dev
+    - gfortran
     - python3.7-dev
     - python3-wheel
     - doxygen
