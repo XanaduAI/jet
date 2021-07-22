@@ -55,6 +55,8 @@ end;
 g_one(pi) | [0, 1];
 g_two | [2];
 g_three(1, 3.3) | [2];
+adjoint g_four(1.23) | [2];
+ctrl[0, 2] g_five(3.21) | [1];
 
 // The circuit and statistics
 ry(1.23) | [0];
