@@ -71,7 +71,7 @@ class TestParser:
         ],
     )
     def test_adjoint_modifier(self, script, adjoint):
-        """Test that adjoint modifier for gate statments works correctly"""
+        """Test that adjoint modifier for gate statements works correctly"""
         irprog = parse_script(script)
 
         assert irprog.statements[0].is_adjoint is adjoint
@@ -84,7 +84,9 @@ class TestParser:
         ],
     )
     def test_ctrl_modifier(self, script, ctrl_wires):
-        """Test that no ctrl modifier for gate statments works correctly"""
+        """Test that control wires modifier for gate statements correctly sets
+        the ``Statement.ctrl_wires`` property.
+        """
         irprog = parse_script(script)
 
         assert irprog.statements[0].ctrl_wires == ctrl_wires

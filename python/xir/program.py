@@ -105,8 +105,9 @@ class Statement:
 
     @property
     def use_floats(self) -> bool:
-        """Whether floats and complex types are returned instead of ``Decimal``
-        and ``DecimalComplex`` objects."""
+        """Returns whether floats and complex types are returned instead of
+        ``Decimal`` and ``DecimalComplex`` objects, respectively.
+        """
         return self._use_floats
 
 
