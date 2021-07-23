@@ -1,5 +1,10 @@
 ## Release 0.3.0 (development release)
+
 ### Documentation
+
+* The documentation section of the development guide now lists system dependencies. [(#52)](https://github.com/XanaduAI/jet/pull/52)
+
+* Static versions of jQuery and Bootstrap are no longer included in the CSS theme. [(#52)](https://github.com/XanaduAI/jet/pull/52)
 
 * Read the Docs is now configured to build the Sphinx documentation. [(#51)](https://github.com/XanaduAI/jet/pull/51)
 
