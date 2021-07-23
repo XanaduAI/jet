@@ -63,20 +63,26 @@ class TestParser:
         assert key in irprog.options
         assert irprog.options[key] == val
 
-    @pytest.mark.parametrize("script, adjoint", [
-        ("adjoint ry(2.4) | [2];", True),
-        ("ry(2.4) | [2];", False),
-    ])
+    @pytest.mark.parametrize(
+        "script, adjoint",
+        [
+            ("adjoint ry(2.4) | [2];", True),
+            ("ry(2.4) | [2];", False),
+        ],
+    )
     def test_adjoint_modifier(self, script, adjoint):
         """Test that adjoint modifier for gate statments works correctly"""
         irprog = parse_script(script)
 
         assert irprog.statements[0].is_adjoint is adjoint
 
-    @pytest.mark.parametrize("script, ctrl_wires", [
-        ("ctrl[0, 1] ry(2.4) | [2];", (0, 1)),
-        ("ry(2.4) | [2];", None),
-    ])
+    @pytest.mark.parametrize(
+        "script, ctrl_wires",
+        [
+            ("ctrl[0, 1] ry(2.4) | [2];", (0, 1)),
+            ("ry(2.4) | [2];", None),
+        ],
+    )
     def test_ctrl_modifier(self, script, ctrl_wires):
         """Test that no ctrl modifier for gate statments works correctly"""
         irprog = parse_script(script)
