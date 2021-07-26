@@ -239,7 +239,7 @@ class XIRTransformer(Transformer):
     #########
 
     def mathop(self, args):
-        self._program._called_ops.add(args[0])
+        self._program._called_functions.add(args[0])
         return str(args[0]) + "(" + str(args[1]) + ")"
 
     def add(self, args):

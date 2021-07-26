@@ -119,7 +119,7 @@ class TestStrawberryFieldsToXIR:
 
         assert irprog.version == "0.1.0"
 
-        assert list(irprog.called_ops) == []
+        assert list(irprog.called_functions) == []
         assert dict(irprog.declarations) == {
             "gate": [],
             "func": [],

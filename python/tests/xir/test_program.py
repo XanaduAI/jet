@@ -290,16 +290,16 @@ class TestSerialize:
 class TestXIRProgram:
     """Unit tests for the XIRProgram class"""
 
-    def test_init_default(self):
-        """Tests that an XIR program can be constructed with no arguments."""
-        program = XIRProgram()
+    def test_init(self):
+        """Tests that an (empty) XIR program can be constructed."""
+        program = XIRProgram(version="1.2.3", use_floats=False)
 
-        assert program.version == "0.1.0"
-        assert program.use_floats is True
+        assert program.version == "1.2.3"
+        assert program.use_floats is False
 
         assert list(program.wires) == []
 
-        assert list(program.called_ops) == []
+        assert list(program.called_functions) == []
         assert dict(program.declarations) == {
             "gate": [],
             "func": [],

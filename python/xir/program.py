@@ -228,7 +228,7 @@ class XIRProgram:
         self._operators = {}
 
         self._variables = set()
-        self._called_ops = set()
+        self._called_functions = set()
 
     @staticmethod
     def _validate_version(version: str) -> None:
@@ -281,13 +281,13 @@ class XIRProgram:
         return iter(set(wires))
 
     @property
-    def called_ops(self) -> Iterator[str]:
+    def called_functions(self) -> Iterator[str]:
         """Return the functions that are called in the XIR program.
 
         Returns:
             Iterator[str]: functions as strings
         """
-        return self._called_ops
+        return self._called_functions
 
     @property
     def declarations(self) -> Mapping[str, Iterator[Declaration]]:
@@ -367,7 +367,7 @@ class XIRProgram:
         Args:
             name (str): name of the function
         """
-        self._called_ops.add(name)
+        self._called_functions.add(name)
 
     def add_declaration(self, key: str, decl: Declaration) -> None:
         """Adds a declaration to the XIR program.
