@@ -340,7 +340,7 @@ class TestXIRProgram:
         program.add_statement(Statement("X", {}, [0]))
         assert [stmt.name for stmt in program.statements] == ["X"]
 
-        program.add_statement(Statement("X", {}, [1]))
+        program.add_statement(Statement("Y", {}, [0]))
         assert [stmt.name for stmt in program.statements] == ["X", "Y"]
 
         program.add_statement(Statement("X", {}, [0]))
