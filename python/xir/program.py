@@ -346,7 +346,7 @@ class XIRProgram:
         """
         return iter(self._variables)
 
-    def add_called_op(self, name: str) -> None:
+    def add_called_function(self, name: str) -> None:
         """Adds the name of a called function to the XIR program.
 
         Args:

@@ -313,26 +313,20 @@ class TestXIRProgram:
         assert list(program.statements) == []
         assert list(program.variables) == []
 
-    @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
-    def test_validate_version(self, version):
-        """Test that a valid version passes validation."""
-        XIRProgram._validate_version(version)
-
-    @pytest.mark.parametrize("version", [42, 0.2, True, object()])
-    def test_validate_version_with_wrong_type(self, version):
-        """Test that an Exception is raised when a version has the wrong type."""
-        with pytest.raises(TypeError, match=r"Version '[^']*' must be a string"):
-            XIRProgram._validate_version(version)
-
-    @pytest.mark.parametrize("version", ["", "abc", "4.2", "1.2.3-alpha", "0.1.2.3"])
-    def test_validate_version_with_wrong_format(self, version):
-        """Test that an Exception is raised when a version has the wrong format."""
-        with pytest.raises(ValueError, match=r"Version '[^']*' must be a semantic version"):
-            XIRProgram._validate_version(version)
-
     def test_repr(self):
-        irprog = XIRProgram()
-        assert irprog.__repr__() == f"<XIRProgram: version=0.1.0>"
+        """Test that __repr__() returns a string with the correct format."""
+        program = XIRProgram(version="1.2.3")
+        assert repr(program) == f"<XIRProgram: version=1.2.3>"
+
+    def test_add_called_function(self):
+        program = XIRProgram()
+        assert list(program.called_functions) == []
+
+        program.add_called_function("cos")
+        assert list(program.called_functions) == ["cos"]
+
+        program.add_called_function("sin")
+        assert list(program.called_functions) == ["cos", "sin"]
 
     def test_add_gate(self):
         """Test that the add_gate function works"""
@@ -404,3 +398,20 @@ class TestXIRProgram:
             "H": {"params": params, "wires": wires, "statements": statements},
             "my_op": {"params": params_2, "wires": wires_2, "statements": statements_2},
         }
+
+    @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
+    def test_validate_version(self, version):
+        """Test that a valid version passes validation."""
+        XIRProgram._validate_version(version)
+
+    @pytest.mark.parametrize("version", [42, 0.2, True, object()])
+    def test_validate_version_with_wrong_type(self, version):
+        """Test that an Exception is raised when a version has the wrong type."""
+        with pytest.raises(TypeError, match=r"Version '[^']*' must be a string"):
+            XIRProgram._validate_version(version)
+
+    @pytest.mark.parametrize("version", ["", "abc", "4.2", "1.2.3-alpha", "0.1.2.3"])
+    def test_validate_version_with_wrong_format(self, version):
+        """Test that an Exception is raised when a version has the wrong format."""
+        with pytest.raises(ValueError, match=r"Version '[^']*' must be a semantic version"):
+            XIRProgram._validate_version(version)
