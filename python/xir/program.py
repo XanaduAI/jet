@@ -230,21 +230,6 @@ class XIRProgram:
         self._variables = set()
         self._called_functions = set()
 
-    @staticmethod
-    def _validate_version(version: str) -> None:
-        """Validates the given version number.
-
-        Raises:
-            TypeError: If the version number is not a string.
-            ValueError: If the version number is not a semantic version.
-        """
-        if not isinstance(version, str):
-            raise TypeError(f"Version '{version}' must be a string.")
-
-        valid_match = re.fullmatch(r"\d+\.\d+\.\d+", version)
-        if valid_match is None or valid_match.string != version:
-            raise ValueError(f"Version '{version}' must be a semantic version (MAJOR.MINOR.PATCH).")
-
     def __repr__(self) -> str:
         """Returns a string representation of the XIR program."""
         return f"<XIRProgram: version={self._version}>"
@@ -522,3 +507,18 @@ class XIRProgram:
         if minimize:
             return strip(res_script)
         return res_script
+
+    @staticmethod
+    def _validate_version(version: str) -> None:
+        """Validates the given version number.
+
+        Raises:
+            TypeError: If the version number is not a string.
+            ValueError: If the version number is not a semantic version.
+        """
+        if not isinstance(version, str):
+            raise TypeError(f"Version '{version}' must be a string.")
+
+        valid_match = re.fullmatch(r"\d+\.\d+\.\d+", version)
+        if valid_match is None or valid_match.string != version:
+            raise ValueError(f"Version '{version}' must be a semantic version (MAJOR.MINOR.PATCH).")
