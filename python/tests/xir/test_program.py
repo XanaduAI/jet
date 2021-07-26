@@ -319,14 +319,46 @@ class TestXIRProgram:
         assert repr(program) == f"<XIRProgram: version=1.2.3>"
 
     def test_add_called_function(self):
+        """Tests that the called functions can be added to an XIR program."""
         program = XIRProgram()
-        assert list(program.called_functions) == []
+        assert set(program.called_functions) == set()
 
         program.add_called_function("cos")
-        assert list(program.called_functions) == ["cos"]
+        assert set(program.called_functions) == {"cos"}
 
         program.add_called_function("sin")
-        assert list(program.called_functions) == ["cos", "sin"]
+        assert set(program.called_functions) == {"cos", "sin"}
+
+        program.add_called_function("cos")
+        assert set(program.called_functions) == {"cos", "sin"}
+
+    def test_add_statement(self):
+        """Tests that statements can be added to an XIR program."""
+        program = XIRProgram()
+        assert list(program.statements) == []
+
+        program.add_statement(Statement("X", {}, [0]))
+        assert [stmt.name for stmt in program.statements] == ["X"]
+
+        program.add_statement(Statement("X", {}, [1]))
+        assert [stmt.name for stmt in program.statements] == ["X", "Y"]
+
+        program.add_statement(Statement("X", {}, [0]))
+        assert [stmt.name for stmt in program.statements] == ["X", "Y", "X"]
+
+    def test_add_variable(self):
+        """Tests that variables can be added to an XIR program."""
+        program = XIRProgram()
+        assert set(program.variables) == set()
+
+        program.add_variable("theta")
+        assert set(program.variables) == {"theta"}
+
+        program.add_variable("phi")
+        assert set(program.variables) == {"theta", "phi"}
+
+        program.add_variable("theta")
+        assert set(program.variables) == {"theta", "phi"}
 
     def test_add_gate(self):
         """Test that the add_gate function works"""
