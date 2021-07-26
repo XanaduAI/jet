@@ -21,7 +21,7 @@ def to_program(xir, **kwargs):
     Returns:
         Program: corresponding Strawberry Fields program
     """
-    num_of_modes = len(xir.wires)
+    num_of_modes = len(set(xir.wires))
     name = kwargs.get("name", "xir")
     if num_of_modes == 0:
         raise ValueError(

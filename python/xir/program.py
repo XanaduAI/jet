@@ -241,7 +241,7 @@ class XIRProgram:
         if not isinstance(version, str):
             raise TypeError(f"Version '{version}' must be a string.")
 
-        valid_match = re.match(r"\d+\.\d+\.\d+", version)
+        valid_match = re.fullmatch(r"\d+\.\d+\.\d+", version)
         if valid_match is None or valid_match.string != version:
             raise ValueError(f"Version '{version}' must be a semantic version (MAJOR.MINOR.PATCH).")
 
@@ -281,33 +281,13 @@ class XIRProgram:
         return iter(set(wires))
 
     @property
-    def include(self) -> Iterator[str]:
-        """Returns the included XIR modules used by the XIR program.
+    def called_ops(self) -> Iterator[str]:
+        """Return the functions that are called in the XIR program.
 
         Returns:
-            Iterator[str]: iterator over the included XIR modules
+            Iterator[str]: functions as strings
         """
-        return iter(self._includes)
-
-    @property
-    def options(self) -> Mapping[str, Any]:
-        """Returns the script-level options declared in the XIR program.
-
-        Returns:
-            Mapping[str, Any]: declared scipt-level options
-        """
-        if self.use_floats:
-            return get_floats(self._options)
-        return self._options
-
-    @property
-    def statements(self) -> Iterator[Statement]:
-        """Returns the statements in the XIR program.
-
-        Returns:
-            Iterator[Statement]: iterator over the statements
-        """
-        return iter(self._statements)
+        return self._called_ops
 
     @property
     def declarations(self) -> Mapping[str, Iterator[Declaration]]:
@@ -332,6 +312,15 @@ class XIRProgram:
         return self._gates
 
     @property
+    def includes(self) -> Iterator[str]:
+        """Returns the included XIR modules used by the XIR program.
+
+        Returns:
+            Iterator[str]: iterator over the included XIR modules
+        """
+        return iter(self._includes)
+
+    @property
     def operators(self) -> Mapping[str, Mapping[str, Sequence]]:
         """Returns the operators in the XIR program.
 
@@ -343,6 +332,26 @@ class XIRProgram:
         return self._operators
 
     @property
+    def options(self) -> Mapping[str, Any]:
+        """Returns the script-level options declared in the XIR program.
+
+        Returns:
+            Mapping[str, Any]: declared scipt-level options
+        """
+        if self.use_floats:
+            return get_floats(self._options)
+        return self._options
+
+    @property
+    def statements(self) -> Iterator[Statement]:
+        """Returns the statements in the XIR program.
+
+        Returns:
+            Iterator[Statement]: iterator over the statements
+        """
+        return iter(self._statements)
+
+    @property
     def variables(self) -> Iterator[str]:
         """Returns the free parameter variables used when defining gates and
         operators in the XIR program.
@@ -351,15 +360,6 @@ class XIRProgram:
             Iterator[str]: free parameter variables as strings
         """
         return iter(self._variables)
-
-    @property
-    def called_ops(self) -> Iterator[str]:
-        """Return the functions that are called in the XIR program.
-
-        Returns:
-            Iterator[str]: functions as strings
-        """
-        return self._called_ops
 
     def add_called_op(self, name: str) -> None:
         """Adds the name of a called function to the XIR program.

@@ -27,7 +27,7 @@ class TestSerialize:
     def test_includes(self):
         """Test serializing the included libraries statement"""
         irprog = XIRProgram()
-        irprog._include.extend(["xstd", "randomlib"])
+        irprog._includes.extend(["xstd", "randomlib"])
         res = irprog.serialize()
         assert res == "use xstd;\nuse randomlib;"
 
@@ -287,28 +287,31 @@ class TestSerialize:
         assert res == f"operator {name}:\n    42, X[0] @ Y[1];\nend;"
 
 
-class TestIRProgram:
+class TestXIRProgram:
     """Unit tests for the XIRProgram class"""
 
-    def test_empty_initialize(self):
-        """Test initializing an empty program"""
-        irprog = XIRProgram()
+    def test_init_default(self):
+        """Tests that an XIR program can be constructed with no arguments."""
+        program = XIRProgram()
 
-        assert irprog.version == "0.1.0"
-        assert irprog.statements == []
-        assert irprog.include == []
-        assert irprog.statements == []
-        assert irprog.declarations == {
+        assert program.version == "0.1.0"
+        assert program.use_floats is True
+
+        assert list(program.wires) == []
+
+        assert list(program.called_ops) == []
+        assert dict(program.declarations) == {
             "gate": [],
             "func": [],
             "output": [],
             "operator": [],
         }
-
-        assert irprog.gates == dict()
-        assert irprog.operators == dict()
-        assert irprog.variables == set()
-        assert irprog._called_ops == set()
+        assert dict(program.gates) == {}
+        assert list(program.includes) == []
+        assert dict(program.operators) == {}
+        assert list(program.options) == []
+        assert list(program.statements) == []
+        assert list(program.variables) == []
 
     def test_repr(self):
         irprog = XIRProgram()
@@ -330,7 +333,7 @@ class TestIRProgram:
     @pytest.mark.parametrize("version", ["4.2", "0.1.2.3", "abc", 42, 0.2])
     def test_invalid_version(self, version):
         """Test that error is raised when passing invalid version numbers"""
-        with pytest.raises((ValueError, TypeError), match="Invalid version number"):
+        with pytest.raises((ValueError, TypeError), match="Version"):
             XIRProgram(version=version)
 
     def test_add_gate(self):
@@ -350,7 +353,7 @@ class TestIRProgram:
         # check that gate is replaced, with a warning, if added again
         params = ["a", "b", "c"]
         wires = (1,)
-        with pytest.warns(Warning, match="Gate already defined"):
+        with pytest.warns(Warning, match=r"Gate '[^']*' already defined"):
             irprog.add_gate("rot", params, wires, statements)
 
         assert irprog.gates == {"rot": {"params": params, "wires": wires, "statements": statements}}
@@ -386,7 +389,7 @@ class TestIRProgram:
             OperatorStmt(2, [("X", 0)]),
         ]
         wires = (0,)
-        with pytest.warns(Warning, match="Operator already defined"):
+        with pytest.warns(Warning, match=r"Operator '[^']*' already defined"):
             irprog.add_operator("H", params, wires, statements)
 
         assert irprog.operators == {

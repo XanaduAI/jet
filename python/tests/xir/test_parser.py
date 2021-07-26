@@ -26,7 +26,7 @@ class TestParser:
         circuit = f"an_output_statement(array: {array}) | [0, 1];"
         irprog = parse_script(circuit)
 
-        assert irprog.statements[0].params["array"] == res
+        assert next(irprog.statements).params["array"] == res
 
     @pytest.mark.parametrize(
         "key, val, expected",
@@ -80,7 +80,7 @@ class TestParser:
         circuit = f"a_gate({param}) | [0, 1];"
         irprog = parse_script(circuit, use_floats=use_floats)
 
-        assert isinstance(irprog.statements[0].params[0], t)
+        assert isinstance(next(irprog.statements).params[0], t)
 
     @pytest.mark.parametrize("eval_pi", [True, False])
     @pytest.mark.parametrize("param, expected", [("pi", math.pi), ("pi / 2", math.pi / 2)])
@@ -89,6 +89,6 @@ class TestParser:
         circuit = f"a_gate({param}) | [0, 1];"
         irprog = parse_script(circuit, eval_pi=eval_pi)
         if eval_pi:
-            assert irprog.statements[0].params[0] == expected
+            assert next(irprog.statements).params[0] == expected
         else:
-            assert irprog.statements[0].params[0] == param.upper()
+            assert next(irprog.statements).params[0] == param.upper()

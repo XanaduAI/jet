@@ -75,7 +75,7 @@ class XIRTransformer(Transformer):
 
     def include(self, file_name):
         """Includ statements for external files"""
-        self._program._include.append(file_name[0])
+        self._program._includes.append(file_name[0])
 
     def circuit(self, args):
         """Main circuit containing all the gate statements. Should be empty after tree has been parsed from the leaves up, and all statemtents been passed to the program."""

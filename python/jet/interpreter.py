@@ -123,7 +123,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
 
     _validate_xir_program_options(program=program)
 
-    num_wires = len(program.wires)
+    num_wires = len(set(program.wires))
     dimension = program.options.get("dimension", 2)
     circuit = Circuit(num_wires=num_wires, dim=dimension)
 
