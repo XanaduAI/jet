@@ -1,6 +1,8 @@
 Development guide
 =================
 
+.. _dependencies:
+
 Dependencies
 ------------
 
@@ -22,7 +24,7 @@ Please choose whichever option below best suits your system:
 .. code-block:: bash
 
     # Ubuntu installation
-    sudo apt-get install libopenblas-dev
+    sudo apt install libopenblas-dev
 
     # CentOS/RedHat/Fedora
     sudo yum install openblas openblas-devel
@@ -234,18 +236,25 @@ All files within the listed directories will be modified to fit the expected for
 Documentation
 -------------
 
-A few Python packages are required to build the documentation, as specified in
-``docs/requirements.txt``. These packages can be installed using:
+A few system packages are required to build the documentation. These include
+the libraries mentioned in the :ref:`dependencies` section in addition to
+
+* Header files for the Python C API
+* `Doxygen <https://www.doxygen.nl/index.html>`_
+* `Graphviz <https://graphviz.org/>`_
+
+On Ubuntu, the above packages can be installed using:
 
 .. code-block:: bash
 
-    pip install -r docs/requirements.txt
+    # Replace 3.X below with your Python version (e.g., 3.7).
+    sudo apt install python3.X-dev doxygen graphviz
 
-To build the HTML documentation, change into the ``docs/`` folder and run
+To build the HTML documentation, run
 
 .. code-block:: bash
 
-    make html
+    make docs
 
 The documentation can then be found in the :file:`docs/_build/html/` directory.
 

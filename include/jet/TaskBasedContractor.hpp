@@ -123,6 +123,17 @@ template <class TensorType> class TaskBasedContractor {
     const TaskFlow &GetTaskflow() const noexcept { return taskflow_; }
 
     /**
+     * @brief Adds another Taskflow graph to this `%TaskBasedContractor`.
+     *
+     * @warning This function does not update the values returned by GetFlops()
+     *          or GetMemory().
+     */
+    void AddTaskflow(tf::Taskflow &taskflow) noexcept
+    {
+        taskflow_.composed_of(taskflow);
+    }
+
+    /**
      * @brief Returns the number of floating-point operations needed to perform
      *        all the contraction tasks (assuming the tensor elements are
      *        floating-point numbers).
