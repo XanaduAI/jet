@@ -272,7 +272,7 @@ class XIRProgram:
         Returns:
             Iterator[str]: functions as strings
         """
-        return self._called_functions
+        return iter(self._called_functions)
 
     @property
     def declarations(self) -> Mapping[str, List[Declaration]]:
@@ -322,9 +322,7 @@ class XIRProgram:
         Returns:
             Mapping[str, Any]: declared scipt-level options
         """
-        if self.use_floats:
-            return get_floats(self._options)
-        return self._options
+        return get_floats(self._options) if self.use_floats else self._options
 
     @property
     def statements(self) -> Iterator[Statement]:
