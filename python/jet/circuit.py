@@ -181,7 +181,7 @@ class Circuit:
         """Returns the tensor network representation of this circuit.
 
         Args:
-            dtype (type): Data type of the tensor network.
+            dtype (np.dtype): Data type of the tensor network.
 
         Returns:
             TensorNetworkType: Tensor network representation of this circuit.
