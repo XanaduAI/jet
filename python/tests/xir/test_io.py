@@ -25,17 +25,18 @@ def create_xir_prog(
         irprog = XIRProgram(version=version)
 
     # add the statements to the program
-    stmts = [Statement(n, p, w) for n, p, w in data]
-    irprog._statements.extend(stmts)
+    for stmt in (Statement(n, p, w) for n, p, w in data):
+        irprog.add_statement(stmt)
 
     # if declaration should be included, add them to the program
     if include_decl:
-        declarations = [GateDeclaration(n, len(p), len(w)) for n, p, w in data]
-        irprog._declarations["gate"].extend(declarations)
+        for decl in (GateDeclaration(n, len(p), len(w)) for n, p, w in data):
+            irprog.add_declaration("gate", decl)
 
     # if any external libraries/files are included, add them to the program
     if external_libs is not None:
-        irprog._includes.extend(external_libs)
+        for lib in external_libs:
+            irprog.add_include(lib)
 
     return irprog
 

@@ -99,7 +99,7 @@ def to_xir(prog, **kwargs):
         if "Measure" in name:
             if kwargs.get("add_decl", False):
                 output_decl = OutputDeclaration(name)
-                xir._declarations["output"].append(output_decl)
+                xir.add_declaration("output", output_decl)
 
             params = dict()
             # special case to take into account 'select' keyword argument
@@ -118,7 +118,7 @@ def to_xir(prog, **kwargs):
             if kwargs.get("add_decl", False):
                 if name not in [gdecl.name for gdecl in xir._declarations["gate"]]:
                     gate_decl = GateDeclaration(name, len(cmd.op.p), len(wires))
-                    xir._declarations["gate"].append(gate_decl)
+                    xir.add_declaration("gate", gate_decl)
 
             params = []
             for a in cmd.op.p:
@@ -128,6 +128,6 @@ def to_xir(prog, **kwargs):
                 params.append(a)
 
         op = Statement(name, params, wires)
-        xir._statements.append(op)
+        xir.add_statement(op)
 
     return xir

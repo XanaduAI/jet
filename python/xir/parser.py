@@ -75,7 +75,7 @@ class XIRTransformer(Transformer):
 
     def include(self, file_name):
         """Includ statements for external files"""
-        self._program._includes.append(file_name[0])
+        self._program.add_include(file_name[0])
 
     def circuit(self, args):
         """Main circuit containing all the gate statements. Should be empty after tree has been parsed from the leaves up, and all statemtents been passed to the program."""
@@ -125,7 +125,7 @@ class XIRTransformer(Transformer):
     def var(self, v):
         """Expressions that are strings are considered to be variables. Can be
         substituted by values at a later stage."""
-        self._program._variables.add(v[0])
+        self._program.add_variable(v[0])
         return str(v[0])
 
     def range(self, args):
@@ -219,27 +219,23 @@ class XIRTransformer(Transformer):
     ###############
 
     def gate_decl(self, args):
-        decl = GateDeclaration(*args)
-        self._program._declarations["gate"].append(decl)
+        self._program.add_declaration("gate", GateDeclaration(*args))
 
     def operator_decl(self, args):
-        decl = OperatorDeclaration(*args)
-        self._program._declarations["operator"].append(decl)
+        self._program.add_declaration("operator", OperatorDeclaration(*args))
 
     def func_decl(self, args):
-        decl = FuncDeclaration(*args)
-        self._program._declarations["func"].append(decl)
+        self._program.add_declaration("func", FuncDeclaration(*args))
 
     def output_decl(self, args):
-        decl = OutputDeclaration(*args)
-        self._program._declarations["output"].append(decl)
+        self._program.add_declaration("output", OutputDeclaration(*args))
 
     #########
     # maths
     #########
 
     def mathop(self, args):
-        self._program._called_functions.add(args[0])
+        self._program.add_called_function(args[0])
         return str(args[0]) + "(" + str(args[1]) + ")"
 
     def add(self, args):
