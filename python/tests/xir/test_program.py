@@ -409,9 +409,9 @@ class TestXIRProgram:
             "params": ["theta"],
             "wires": (0, 1),
             "statements": [
-                Statement(name="X", params=[], wires=(0,)),
-                Statement(name="X", params=[], wires=(0,)),
-                Statement(name="CRX", params=["theta"], wires=(0, 1)),
+                Statement(name="X", params=[], wires=[0]),
+                Statement(name="X", params=[], wires=[0]),
+                Statement(name="CRX", params=["theta"], wires=[0, 1]),
             ],
         }
         program.add_gate("CRX", **crx)
@@ -419,8 +419,8 @@ class TestXIRProgram:
 
         u3 = {
             "params": ["theta", "phi", "lam"],
-            "wires": (1,),
-            "statements": [Statement(name="U3", params=["theta", "phi", "lam"], wires=(1,))],
+            "wires": [1],
+            "statements": [Statement(name="U3", params=["theta", "phi", "lam"], wires=[1])],
         }
         program.add_gate("U3", **u3)
         assert program.gates == {"CRX": crx, "U3": u3}
@@ -429,8 +429,8 @@ class TestXIRProgram:
         """Tests that a warning is issued when two gates with the same name are
         added to an XIR program.
         """
-        phi = {"params": ["phi"], "wires": (0, 1), "statements": []}
-        psi = {"params": ["psi"], "wires": (0, 1), "statements": []}
+        phi = {"params": ["phi"], "wires": [0, 1], "statements": []}
+        psi = {"params": ["psi"], "wires": [0, 1], "statements": []}
 
         program.add_gate("CRX", **phi)
         assert program.gates == {"CRX": phi}
@@ -460,11 +460,11 @@ class TestXIRProgram:
 
     def test_add_operator(self, program):
         """Tests that operators can be added to an XIR program."""
-        x = ({"params": [], "wires": (0,), "statements": [OperatorStmt(pref=1, terms=[("X", 0)])]},)
+        x = {"params": [], "wires": [0], "statements": [OperatorStmt(pref=1, terms=[("X", 0)])]}
         program.add_operator("X", **x)
         assert program.operators == {"X": x}
 
-        y = ({"params": [], "wires": (1,), "statements": [OperatorStmt(pref=2, terms=[("Y", 0)])]},)
+        y = {"params": [], "wires": [1], "statements": [OperatorStmt(pref=2, terms=[("Y", 0)])]}
         program.add_operator("Y", **y)
         assert program.operators == {"X": x, "Y": y}
 

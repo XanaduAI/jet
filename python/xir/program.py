@@ -369,15 +369,19 @@ class XIRProgram:
         self._declarations[key].append(decl)
 
     def add_gate(
-        self, name: str, params: List[str], wires: Tuple, statements: List[Statement]
+        self,
+        name: str,
+        params: Sequence[str],
+        wires: Sequence[Wire],
+        statements: Sequence[Statement],
     ) -> None:
         """Adds a gate to the XIR program.
 
         Args:
             name (str): name of the gate
-            params (str): parameters used in the gate
-            wires (str): wires that the gate is applied to
-            statements (list[Statement]): statements that the gate applies
+            params (Sequence[str]): parameters used in the gate
+            wires (Sequence[Wire]): wires that the gate is applied to
+            statements (Sequence[Statement]): statements that the gate applies
         """
         if name in self._gates:
             warnings.warn(
@@ -399,15 +403,19 @@ class XIRProgram:
         self._includes.append(include)
 
     def add_operator(
-        self, name: str, params: List[str], wires: Tuple, statements: List[OperatorStmt]
+        self,
+        name: str,
+        params: Sequence[str],
+        wires: Sequence[Wire],
+        statements: Sequence[OperatorStmt],
     ) -> None:
         """Adds an operator to the XIR program.
 
         Args:
             name (str): name of the operator
-            params (str): parameters used in the operator
-            wires (str): wires that the operator is applied to
-            statements (list[OperatorStmt]): statements that the operator applies
+            params (Sequence[str]): parameters used in the operator
+            wires (Sequence[Wire]): wires that the operator is applied to
+            statements (Sequence[OperatorStmt]): statements that the operator applies
         """
         if name in self._operators:
             warnings.warn(
