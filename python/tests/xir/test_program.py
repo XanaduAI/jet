@@ -374,6 +374,14 @@ class TestXIRProgram:
             "output": [samples, picture],
         }
 
+    def test_add_declaration_with_wrong_type(self, program):
+        """Tests that the concrete type of a declaration does not affect the
+        key(s) that can be associated with it in an XIR program.
+        """
+        decl = OutputDeclaration("Gradient")
+        program.add_declaration("func", decl)
+        assert program.declarations == {"func": [decl], "gate": [], "operator": [], "output": []}
+
     def test_add_declaration_with_wrong_key(self, program):
         """Tests that an exception is raised when a declaration with an unknown
         key is added to an XIR program.
@@ -412,9 +420,7 @@ class TestXIRProgram:
         u3 = {
             "params": ["theta", "phi", "lam"],
             "wires": (1,),
-            "statements": [
-                Statement("U3", ["theta", "phi", "lam"], (1,)),
-            ],
+            "statements": [Statement("U3", ["theta", "phi", "lam"], (1,))],
         }
         program.add_gate("U3", **u3)
         assert program.gates == {"CRX": crx, "U3": u3}
