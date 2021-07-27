@@ -302,14 +302,11 @@ class TestXIRProgram:
 
         assert program.version == "1.2.3"
         assert program.use_floats is False
+
         assert list(program.wires) == []
+
         assert list(program.called_functions) == []
-        assert dict(program.declarations) == {
-            "gate": [],
-            "func": [],
-            "output": [],
-            "operator": [],
-        }
+        assert dict(program.declarations) == {"gate": [], "func": [], "output": [], "operator": []}
         assert dict(program.gates) == {}
         assert list(program.includes) == []
         assert dict(program.operators) == {}
@@ -318,7 +315,7 @@ class TestXIRProgram:
         assert list(program.variables) == []
 
     def test_repr(self):
-        """Test that __repr__() returns a string with the correct format."""
+        """Test that the string representation of an XIR program has the correct format."""
         program = XIRProgram(version="1.2.3")
         assert repr(program) == f"<XIRProgram: version=1.2.3>"
 
@@ -326,32 +323,16 @@ class TestXIRProgram:
         """Tests that called functions can be added to an XIR program."""
         program.add_called_function("cos")
         assert set(program.called_functions) == {"cos"}
+
         program.add_called_function("sin")
         assert set(program.called_functions) == {"cos", "sin"}
+
         program.add_called_function("cos")
         assert set(program.called_functions) == {"cos", "sin"}
 
-    def test_add_statement(self, program):
-        """Tests that statements can be added to an XIR program."""
-        program.add_statement(Statement("X", {}, [0]))
-        assert [stmt.name for stmt in program.statements] == ["X"]
-        program.add_statement(Statement("Y", {}, [0]))
-        assert [stmt.name for stmt in program.statements] == ["X", "Y"]
-        program.add_statement(Statement("X", {}, [0]))
-        assert [stmt.name for stmt in program.statements] == ["X", "Y", "X"]
-
-    def test_add_variable(self, program):
-        """Tests that variables can be added to an XIR program."""
-        program.add_variable("theta")
-        assert set(program.variables) == {"theta"}
-        program.add_variable("phi")
-        assert set(program.variables) == {"theta", "phi"}
-        program.add_variable("theta")
-        assert set(program.variables) == {"theta", "phi"}
-
     def test_add_declaration(self, program):
         """Tests that declarations can be added to an XIR program."""
-        tan = FuncDeclaration("Tan", 1)
+        tan = FuncDeclaration("tan", 1)
         program.add_declaration("func", tan)
         assert program.declarations == {"func": [tan], "gate": [], "operator": [], "output": []}
 
@@ -363,22 +344,21 @@ class TestXIRProgram:
         program.add_declaration("operator", z3)
         assert program.declarations == {"func": [tan], "gate": [u2], "operator": [z3], "output": []}
 
-        samples = OutputDeclaration("samples")
-        picture = OutputDeclaration("picture")
-        program.add_declaration("output", samples)
-        program.add_declaration("output", picture)
-        assert program.declarations == {
-            "func": [tan],
-            "gate": [u2],
-            "operator": [z3],
-            "output": [samples, picture],
-        }
+    def test_add_declaration_with_same_key(self, program):
+        """Tests that multiple declarations with the same key can be added to an XIR program."""
+        amplitude = OutputDeclaration("amplitude")
+        program.add_declaration("output", amplitude)
 
-    def test_add_declaration_with_wrong_type(self, program):
+        probabilities = OutputDeclaration("probabilities")
+        program.add_declaration("output", probabilities)
+
+        assert program.declarations["output"] == [amplitude, probabilities]
+
+    def test_add_declaration_with_wrong_subclass(self, program):
         """Tests that the concrete type of a declaration does not affect the
         key(s) that can be associated with it in an XIR program.
         """
-        decl = OutputDeclaration("Gradient")
+        decl = OutputDeclaration("gradient")
         program.add_declaration("func", decl)
         assert program.declarations == {"func": [decl], "gate": [], "operator": [], "output": []}
 
@@ -441,7 +421,7 @@ class TestXIRProgram:
         assert program.gates == {"CRX": psi}
 
     def test_add_include(self, program):
-        """Tests that included XIR programs can be added to an XIR program."""
+        """Tests that includes can be added to an XIR program."""
         program.add_include("complex")
         assert list(program.includes) == ["complex"]
         program.add_include("algorithm")
@@ -486,35 +466,57 @@ class TestXIRProgram:
     def test_add_option(self, program):
         """Tests that options can be added to an XIR program."""
         program.add_option("cutoff", 3)
-        assert dict(program.options) == {"cutoff": 3}
+        assert program.options == {"cutoff": 3}
         program.add_option("speed", "fast")
-        assert dict(program.options) == {"cutoff": 3, "speed": "fast"}
+        assert program.options == {"cutoff": 3, "speed": "fast"}
 
     def test_add_option_with_same_key(self, program):
         """Tests that a warning is issued when two options with the same key
         are added to an XIR program.
         """
         program.add_option("precision", "float")
-        assert dict(program.options) == {"precision": "float"}
+        assert program.options == {"precision": "float"}
 
         with pytest.warns(Warning, match=r"Option 'precision' already set"):
             program.add_option("precision", "double")
 
-        assert dict(program.options) == {"precision": "double"}
+        assert program.options == {"precision": "double"}
+
+    def test_add_statement(self, program):
+        """Tests that statements can be added to an XIR program."""
+        program.add_statement(Statement("X", {}, [0]))
+        assert [stmt.name for stmt in program.statements] == ["X"]
+
+        program.add_statement(Statement("Y", {}, [0]))
+        assert [stmt.name for stmt in program.statements] == ["X", "Y"]
+
+        program.add_statement(Statement("X", {}, [0]))
+        assert [stmt.name for stmt in program.statements] == ["X", "Y", "X"]
+
+    def test_add_variable(self, program):
+        """Tests that variables can be added to an XIR program."""
+        program.add_variable("theta")
+        assert set(program.variables) == {"theta"}
+
+        program.add_variable("phi")
+        assert set(program.variables) == {"theta", "phi"}
+
+        program.add_variable("theta")
+        assert set(program.variables) == {"theta", "phi"}
 
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
-        """Test that a valid version passes validation."""
+        """Test that a correct version passes validation."""
         XIRProgram._validate_version(version)
 
     @pytest.mark.parametrize("version", [42, 0.2, True, object()])
     def test_validate_version_with_wrong_type(self, version):
-        """Test that an Exception is raised when a version has the wrong type."""
+        """Test that an exception is raised when a version has the wrong type."""
         with pytest.raises(TypeError, match=r"Version '[^']*' must be a string"):
             XIRProgram._validate_version(version)
 
     @pytest.mark.parametrize("version", ["", "abc", "4.2", "1.2.3-alpha", "0.1.2.3"])
     def test_validate_version_with_wrong_format(self, version):
-        """Test that an Exception is raised when a version has the wrong format."""
+        """Test that an exception is raised when a version has the wrong format."""
         with pytest.raises(ValueError, match=r"Version '[^']*' must be a semantic version"):
             XIRProgram._validate_version(version)

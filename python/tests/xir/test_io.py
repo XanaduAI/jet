@@ -120,12 +120,7 @@ class TestStrawberryFieldsToXIR:
         assert irprog.version == "0.1.0"
 
         assert list(irprog.called_functions) == []
-        assert dict(irprog.declarations) == {
-            "gate": [],
-            "func": [],
-            "output": [],
-            "operator": [],
-        }
+        assert dict(irprog.declarations) == {"gate": [], "func": [], "output": [], "operator": []}
         assert dict(irprog.gates) == {}
         assert list(irprog.includes) == []
         assert dict(irprog.operators) == {}
@@ -143,10 +138,11 @@ class TestStrawberryFieldsToXIR:
         sfprog = create_sf_prog(num_of_wires=2, ops=circuit_data)
         irprog = to_xir(sfprog, add_decl=add_decl)
 
-        stmts = list(irprog.statements)
-        assert stmts[0].name == "Vacuum"
-        assert stmts[0].params == []
-        assert stmts[0].wires == (0,)
+        stmt = next(irprog.statements)
+
+        assert stmt.name == "Vacuum"
+        assert stmt.params == []
+        assert stmt.wires == (0,)
 
         decls = list(irprog.declarations["gate"])
 
@@ -171,6 +167,7 @@ class TestStrawberryFieldsToXIR:
         irprog = to_xir(sfprog, add_decl=add_decl)
 
         stmts = list(irprog.statements)
+
         assert stmts[0].name == "Sgate"
         assert stmts[0].params == [0.1, 0.2]
         assert stmts[0].wires == (0,)
