@@ -424,6 +424,7 @@ class TestXIRProgram:
         """Tests that includes can be added to an XIR program."""
         program.add_include("complex")
         assert list(program.includes) == ["complex"]
+
         program.add_include("algorithm")
         assert list(program.includes) == ["complex", "algorithm"]
 
@@ -467,6 +468,7 @@ class TestXIRProgram:
         """Tests that options can be added to an XIR program."""
         program.add_option("cutoff", 3)
         assert program.options == {"cutoff": 3}
+
         program.add_option("speed", "fast")
         assert program.options == {"cutoff": 3, "speed": "fast"}
 
