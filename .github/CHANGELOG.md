@@ -1,5 +1,10 @@
 ## Release 0.3.0 (development release)
+
 ### Documentation
+
+* The documentation section of the development guide now lists system dependencies. [(#52)](https://github.com/XanaduAI/jet/pull/52)
+
+* Static versions of jQuery and Bootstrap are no longer included in the CSS theme. [(#52)](https://github.com/XanaduAI/jet/pull/52)
 
 * Read the Docs is now configured to build the Sphinx documentation. [(#51)](https://github.com/XanaduAI/jet/pull/51)
 
@@ -21,7 +26,7 @@ This release contains contributions from (in alphabetical order):
 
 * The Jet interpreter for XIR scripts now handles gate definitions. [(#37)](https://github.com/XanaduAI/jet/pull/37)
 
-* Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
+* Full and sliced contractions can now be run with `TaskBasedContractor`on the GPU using the `CudaTensor` class. [(#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * CudaTensor now supports `Transpose` calls. [(#42)](https://github.com/XanaduAI/jet/pull/42)
 
@@ -87,7 +92,7 @@ This release contains contributions from (in alphabetical order):
 
 * The Jet and XIR Python packages can now be installed from a source distribution. [(#38)](https://github.com/XanaduAI/jet/pull/38)
 
-* An issue with the `CudaTensor` indices was fixed when converting between the CPU `Tensor` class. (#29)](https://github.com/XanaduAI/jet/pull/29)
+* An issue with the `CudaTensor` indices was fixed when converting between the CPU `Tensor` class. [(#29)](https://github.com/XanaduAI/jet/pull/29)
 
 * The Jet versions returned by `Jet::Version()` (C++) and `jet.Version()` (Python) are now correct. [(#26)](https://github.com/XanaduAI/jet/pull/26)
 
