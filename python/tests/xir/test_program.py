@@ -483,6 +483,25 @@ class TestXIRProgram:
 
         assert program.operators == {"Rotate": radians}
 
+    def test_add_option(self, program):
+        """Tests that options can be added to an XIR program."""
+        program.add_option("cutoff", 3)
+        assert dict(program.options) == {"cutoff": 3}
+        program.add_option("speed", "fast")
+        assert dict(program.options) == {"cutoff": 3, "speed": "fast"}
+
+    def test_add_option_with_same_key(self, program):
+        """Tests that a warning is issued when two options with the same key
+        are added to an XIR program.
+        """
+        program.add_option("precision", "float")
+        assert dict(program.options) == {"precision": "float"}
+
+        with pytest.warns(Warning, match=r"Option 'precision' already set"):
+            program.add_option("precision", "double")
+
+        assert dict(program.options) == {"precision": "double"}
+
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
         """Test that a valid version passes validation."""
