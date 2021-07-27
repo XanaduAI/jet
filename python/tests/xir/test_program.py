@@ -409,9 +409,9 @@ class TestXIRProgram:
             "params": ["theta"],
             "wires": (0, 1),
             "statements": [
-                Statement("X", [], (0,)),
-                Statement("X", [], (0,)),
-                Statement("CRX", ["theta"], (0, 1)),
+                Statement(name="X", params=[], wires=(0,)),
+                Statement(name="X", params=[], wires=(0,)),
+                Statement(name="CRX", params=["theta"], wires=(0, 1)),
             ],
         }
         program.add_gate("CRX", **crx)
@@ -420,7 +420,7 @@ class TestXIRProgram:
         u3 = {
             "params": ["theta", "phi", "lam"],
             "wires": (1,),
-            "statements": [Statement("U3", ["theta", "phi", "lam"], (1,))],
+            "statements": [Statement(name="U3", params=["theta", "phi", "lam"], wires=(1,))],
         }
         program.add_gate("U3", **u3)
         assert program.gates == {"CRX": crx, "U3": u3}
@@ -458,43 +458,30 @@ class TestXIRProgram:
 
         assert list(program.includes) == ["memory"]
 
-    def test_add_operator(self):
-        """Test that the add_operator function works"""
-        irprog = XIRProgram()
-        statements = [
-            OperatorStmt(13, [("X", 0), ("Y", 1)]),
-            OperatorStmt(-2, [("ABC", 1), ("D", 0)]),
-        ]
-        params = []
-        wires = (0, 1)
-        irprog.add_operator("H", params, wires, statements)
+    def test_add_operator(self, program):
+        """Tests that operators can be added to an XIR program."""
+        x = ({"params": [], "wires": (0,), "statements": [OperatorStmt(pref=1, terms=[("X", 0)])]},)
+        program.add_operator("X", **x)
+        assert program.operators == {"X": x}
 
-        assert irprog.operators == {
-            "H": {"params": params, "wires": wires, "statements": statements}
-        }
+        y = ({"params": [], "wires": (1,), "statements": [OperatorStmt(pref=2, terms=[("Y", 0)])]},)
+        program.add_operator("Y", **y)
+        assert program.operators == {"X": x, "Y": y}
 
-        # check that operator is replaced, with a warning, if added again
-        statements = [
-            OperatorStmt(2, [("X", 0)]),
-        ]
-        wires = (0,)
-        with pytest.warns(Warning, match=r"Operator '[^']*' already defined"):
-            irprog.add_operator("H", params, wires, statements)
+    def test_add_operator_with_same_name(self, program):
+        """Tests that a warning is issued when two operators with the same name
+        are added to an XIR program.
+        """
+        degrees = {"params": ["degrees"], "wires": (0, 1), "statements": []}
+        radians = {"params": ["radians"], "wires": (0, 1), "statements": []}
 
-        assert irprog.operators == {
-            "H": {"params": params, "wires": wires, "statements": statements}
-        }
+        program.add_operator("Rotate", **degrees)
+        assert program.operators == {"Rotate": degrees}
 
-        # check that a second operator can be added and the former is kept
-        params_2 = ["a"]
-        wires_2 = (2,)
-        statements_2 = [OperatorStmt("2 * a", [("X", 2)])]
-        irprog.add_operator("my_op", params_2, wires_2, statements_2)
+        with pytest.warns(Warning, match=r"Operator 'Rotate' already defined"):
+            program.add_operator("Rotate", **radians)
 
-        assert irprog.operators == {
-            "H": {"params": params, "wires": wires, "statements": statements},
-            "my_op": {"params": params_2, "wires": wires_2, "statements": statements_2},
-        }
+        assert program.operators == {"Rotate": radians}
 
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
