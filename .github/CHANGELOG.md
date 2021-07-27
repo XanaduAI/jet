@@ -1,5 +1,8 @@
 ## Release 0.3.0 (development release)
 
+### New features since last release
+
+* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
 ### Documentation
 
 * The documentation section of the development guide now lists system dependencies. [(#52)](https://github.com/XanaduAI/jet/pull/52)
@@ -17,8 +20,6 @@ This release contains contributions from (in alphabetical order):
 ## Release 0.2.0 (current release)
 
 ### New features since last release
-
-* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
 
 * The Jet interpreter for XIR scripts now accepts a `dimension` option for CV circuits. [(#47)](https://github.com/XanaduAI/jet/pull/47)
 
