@@ -3,6 +3,7 @@
 ### New features since last release
 
 * The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
+
 ### Documentation
 
 * The documentation section of the development guide now lists system dependencies. [(#52)](https://github.com/XanaduAI/jet/pull/52)
