@@ -275,13 +275,12 @@ class XIRProgram:
         return self._called_functions
 
     @property
-    def declarations(self) -> Mapping[str, Iterator[Declaration]]:
+    def declarations(self) -> Mapping[str, List[Declaration]]:
         """Returns the declarations in the XIR program.
 
         Returns:
-            Mapping[str, Iterator[Declaration]]: dictionary of declarations
-                sorted into the following keys: 'gate', 'func', 'output' and
-                'operator'.
+            Mapping[str, List[Declaration]]: dictionary of declarations sorted
+                into the following keys: 'gate', 'func', 'output' and 'operator'.
         """
         return self._declarations
 

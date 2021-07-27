@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 
 from xir.program import (
+    Declaration,
     FuncDeclaration,
     GateDeclaration,
     OperatorDeclaration,
@@ -290,15 +291,18 @@ class TestSerialize:
 class TestXIRProgram:
     """Unit tests for the XIRProgram class"""
 
+    @pytest.fixture
+    def program(self):
+        """Returns an empty XIR program."""
+        return XIRProgram()
+
     def test_init(self):
         """Tests that an (empty) XIR program can be constructed."""
         program = XIRProgram(version="1.2.3", use_floats=False)
 
         assert program.version == "1.2.3"
         assert program.use_floats is False
-
         assert list(program.wires) == []
-
         assert list(program.called_functions) == []
         assert dict(program.declarations) == {
             "gate": [],
@@ -318,80 +322,135 @@ class TestXIRProgram:
         program = XIRProgram(version="1.2.3")
         assert repr(program) == f"<XIRProgram: version=1.2.3>"
 
-    def test_add_called_function(self):
-        """Tests that the called functions can be added to an XIR program."""
-        program = XIRProgram()
-        assert set(program.called_functions) == set()
-
+    def test_add_called_function(self, program):
+        """Tests that called functions can be added to an XIR program."""
         program.add_called_function("cos")
         assert set(program.called_functions) == {"cos"}
-
         program.add_called_function("sin")
         assert set(program.called_functions) == {"cos", "sin"}
-
         program.add_called_function("cos")
         assert set(program.called_functions) == {"cos", "sin"}
 
-    def test_add_statement(self):
+    def test_add_statement(self, program):
         """Tests that statements can be added to an XIR program."""
-        program = XIRProgram()
-        assert list(program.statements) == []
-
         program.add_statement(Statement("X", {}, [0]))
         assert [stmt.name for stmt in program.statements] == ["X"]
-
         program.add_statement(Statement("Y", {}, [0]))
         assert [stmt.name for stmt in program.statements] == ["X", "Y"]
-
         program.add_statement(Statement("X", {}, [0]))
         assert [stmt.name for stmt in program.statements] == ["X", "Y", "X"]
 
-    def test_add_variable(self):
+    def test_add_variable(self, program):
         """Tests that variables can be added to an XIR program."""
-        program = XIRProgram()
-        assert set(program.variables) == set()
-
         program.add_variable("theta")
         assert set(program.variables) == {"theta"}
-
         program.add_variable("phi")
         assert set(program.variables) == {"theta", "phi"}
-
         program.add_variable("theta")
         assert set(program.variables) == {"theta", "phi"}
 
-    def test_add_gate(self):
-        """Test that the add_gate function works"""
-        irprog = XIRProgram()
-        statements = [
-            Statement("rx", ["x"], (0,)),
-            Statement("ry", ["y"], (0,)),
-            Statement("rx", ["x"], (0,)),
-        ]
-        params = ["x", "y", "z"]
-        wires = (0,)
-        irprog.add_gate("rot", params, wires, statements)
+    def test_add_declaration(self, program):
+        """Tests that declarations can be added to an XIR program."""
+        tan = FuncDeclaration("Tan", 1)
+        program.add_declaration("func", tan)
+        assert program.declarations == {"func": [tan], "gate": [], "operator": [], "output": []}
 
-        assert irprog.gates == {"rot": {"params": params, "wires": wires, "statements": statements}}
+        u2 = GateDeclaration("U2", 2, 1)
+        program.add_declaration("gate", u2)
+        assert program.declarations == {"func": [tan], "gate": [u2], "operator": [], "output": []}
 
-        # check that gate is replaced, with a warning, if added again
-        params = ["a", "b", "c"]
-        wires = (1,)
-        with pytest.warns(Warning, match=r"Gate '[^']*' already defined"):
-            irprog.add_gate("rot", params, wires, statements)
+        z3 = GateDeclaration("Z3", 0, 3)
+        program.add_declaration("operator", z3)
+        assert program.declarations == {"func": [tan], "gate": [u2], "operator": [z3], "output": []}
 
-        assert irprog.gates == {"rot": {"params": params, "wires": wires, "statements": statements}}
-
-        # check that a second gate can be added and the former is kept
-        params_2 = []
-        wires_2 = (0, 1)
-        statements_2 = ["cnot", [], (0, 1)]
-        irprog.add_gate("cnot", params_2, wires_2, statements_2)
-
-        assert irprog.gates == {
-            "rot": {"params": params, "wires": wires, "statements": statements},
-            "cnot": {"params": params_2, "wires": wires_2, "statements": statements_2},
+        samples = OutputDeclaration("samples")
+        picture = OutputDeclaration("picture")
+        program.add_declaration("output", samples)
+        program.add_declaration("output", picture)
+        assert program.declarations == {
+            "func": [tan],
+            "gate": [u2],
+            "operator": [z3],
+            "output": [samples, picture],
         }
+
+    def test_add_declaration_with_wrong_key(self, program):
+        """Tests that an exception is raised when a declaration with an unknown
+        key is added to an XIR program.
+        """
+        decl = Declaration("Variable")
+        with pytest.raises(KeyError, match=r"Key 'var' is not a supported declaration"):
+            program.add_declaration("var", decl)
+
+    def test_add_declaration_with_same_name(self, program):
+        """Tests that a warning is issued when two declarations with the same
+        name are added to an XIR program.
+        """
+        atan1 = FuncDeclaration("atan", 1)
+        program.add_declaration("func", atan1)
+
+        with pytest.warns(UserWarning, match=r"Func 'atan' has already been declared"):
+            atan2 = FuncDeclaration("atan", 2)
+            program.add_declaration("func", atan2)
+
+        assert program.declarations["func"] == [atan1, atan2]
+
+    def test_add_gate(self, program):
+        """Tests that gates can be added to an XIR program."""
+        crx = {
+            "params": ["theta"],
+            "wires": (0, 1),
+            "statements": [
+                Statement("X", [], (0,)),
+                Statement("X", [], (0,)),
+                Statement("CRX", ["theta"], (0, 1)),
+            ],
+        }
+        program.add_gate("CRX", **crx)
+        assert program.gates == {"CRX": crx}
+
+        u3 = {
+            "params": ["theta", "phi", "lam"],
+            "wires": (1,),
+            "statements": [
+                Statement("U3", ["theta", "phi", "lam"], (1,)),
+            ],
+        }
+        program.add_gate("U3", **u3)
+        assert program.gates == {"CRX": crx, "U3": u3}
+
+    def test_add_gate_with_same_name(self, program):
+        """Tests that a warning is issued when two gates with the same name are
+        added to an XIR program.
+        """
+        phi = {"params": ["phi"], "wires": (0, 1), "statements": []}
+        psi = {"params": ["psi"], "wires": (0, 1), "statements": []}
+
+        program.add_gate("CRX", **phi)
+        assert program.gates == {"CRX": phi}
+
+        with pytest.warns(Warning, match=r"Gate 'CRX' already defined"):
+            program.add_gate("CRX", **psi)
+
+        assert program.gates == {"CRX": psi}
+
+    def test_add_include(self, program):
+        """Tests that included XIR programs can be added to an XIR program."""
+        program.add_include("complex")
+        assert list(program.includes) == ["complex"]
+        program.add_include("algorithm")
+        assert list(program.includes) == ["complex", "algorithm"]
+
+    def test_add_gate_with_same_name(self, program):
+        """Tests that a warning is issued when two identical includes are added
+        to an XIR program.
+        """
+        program.add_include("memory")
+
+        with pytest.warns(Warning, match=r"Module 'memory' is already included"):
+            program.add_include("memory")
+
+        assert list(program.includes) == ["memory"]
 
     def test_add_operator(self):
         """Test that the add_operator function works"""
