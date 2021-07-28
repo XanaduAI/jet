@@ -1,7 +1,7 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Any, Dict, List, Sequence, Set, Tuple, Union, Optional
+from typing import Any, Dict, List, Sequence, Set, Tuple, Union
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
@@ -30,6 +30,8 @@ def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
 
     return params_with_floats
 
+Wire = Union[int, str]
+
 
 class Statement:
     """A general statement consisting of a name, optional parameters and wires
@@ -41,19 +43,29 @@ class Statement:
         name (str): name of the statement
         params (list, Dict): parameters for the statement (can be empty)
         wires (tuple): the wires on which the statement is applied
+
+    Keyword args:
+        adjoint (bool): whether the statement is an adjoint gate
+        ctrl_wires (tuple): the control wires of a controlled gate statement
         use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
             and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(self, name: str, params: Union[List, Dict], wires: Tuple, use_floats: bool = True):
+    def __init__(
+            self,
+            name: str,
+            params: Union[List, Dict],
+            wires: Tuple,
+            **kwargs
+        ):
         self._name = name
         self._params = params
         self._wires = wires
 
-        self._is_adjoint = False
-        self._ctrl_wires = None
+        self._is_adjoint = kwargs.get("adjoint", False)
+        self._ctrl_wires = kwargs.get("ctrl_wires", tuple())
 
-        self._use_floats = use_floats
+        self._use_floats = kwargs.get("use_floats", True)
 
     def __str__(self):
         """Serialized string representation of a Statement"""
@@ -68,7 +80,7 @@ class Statement:
         wires = ", ".join([str(w) for w in self.wires])
 
         modifier_str = ""
-        if self.ctrl_wires is not None:
+        if len(self.ctrl_wires) != 0:
             ctrl_wires = ", ".join([str(w) for w in self.ctrl_wires])
             modifier_str = f"ctrl[{ctrl_wires}] "
         if self.is_adjoint:
@@ -89,7 +101,7 @@ class Statement:
         return self._params
 
     @property
-    def wires(self) -> Tuple:
+    def wires(self) -> Tuple[Wire, ...]:
         """Returns the wires that the gate is applied to"""
         return self._wires
 
@@ -99,7 +111,7 @@ class Statement:
         return self._is_adjoint
 
     @property
-    def ctrl_wires(self) -> Optional[tuple]:
+    def ctrl_wires(self) -> Tuple[Wire, ...]:
         """Returns the control wires of a controlled gate statement"""
         return self._ctrl_wires
 
