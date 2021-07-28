@@ -19,6 +19,7 @@ __all__ = [
     "GateFactory",
     # Decorator gates
     "Adjoint",
+    "Scale",
     # CV Fock gates
     "FockGate",
     "Displacement",
@@ -170,7 +171,7 @@ class Gate(ABC):
         """Returns the matrix representation of this gate."""
         pass
 
-    def tensor(self, dtype: type = np.complex128) -> TensorType:
+    def tensor(self, dtype: np.dtype = np.complex128) -> TensorType:
         """Returns the tensor representation of this gate.
 
         Args:
@@ -198,7 +199,9 @@ class GateFactory:
     registry: Dict[str, type] = {}
 
     @staticmethod
-    def create(name: str, *params: float, adjoint: bool = False, **kwargs) -> Gate:
+    def create(
+        name: str, *params: float, adjoint: bool = False, scalar: float = 1, **kwargs
+    ) -> Gate:
         """Constructs a gate by name.
 
         Raises:
@@ -207,6 +210,8 @@ class GateFactory:
         Args:
             name (str): Registered name of the desired gate.
             params (float): Parameters to pass to the gate constructor.
+            adjoint (bool): Whether to take the adjoint of the gate.
+            scalar (float): Scaling factor to apply to the gate.
             kwargs: Keyword arguments to pass to the gate constructor.
 
         Returns:
@@ -219,7 +224,10 @@ class GateFactory:
         gate = subclass(*params, **kwargs)
 
         if adjoint:
-            gate = Adjoint(gate)
+            gate = Adjoint(gate=gate)
+
+        if scalar != 1:
+            gate = Scale(gate=gate, scalar=scalar)
 
         return gate
 
@@ -273,12 +281,36 @@ class Adjoint(Gate):
 
     def __init__(self, gate: Gate):
         self._gate = gate
+
         super().__init__(
             name=gate.name, num_wires=gate.num_wires, dim=gate.dimension, params=gate.params
         )
 
     def _data(self):
         return self._gate._data().conj().T
+
+    def _validate_dimension(self, dim):
+        self._gate._validate_dimension(dim)
+
+
+class Scale(Gate):
+    """Scale is a decorator which linearly scales an existing ``Gate``.
+
+    Args:
+        gate (Gate): Gate to scale.
+        scalar (float): Scaling factor.
+    """
+
+    def __init__(self, gate: Gate, scalar: float):
+        self._gate = gate
+        self._scalar = scalar
+
+        super().__init__(
+            name=gate.name, num_wires=gate.num_wires, dim=gate.dimension, params=gate.params
+        )
+
+    def _data(self):
+        return self._scalar * self._gate._data()
 
     def _validate_dimension(self, dim):
         self._gate._validate_dimension(dim)

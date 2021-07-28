@@ -6,11 +6,11 @@ from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
 
 import numpy as np
 
-from xir import Statement, XIRProgram
+from xir import OperatorStmt, Statement, XIRProgram
 from xir import parse_script as parse_xir_script
 
 from .bindings import PathInfo
-from .circuit import Circuit
+from .circuit import Circuit, Operation
 from .factory import TaskBasedContractor, TensorNetworkType, TensorType
 from .gate import FockGate, GateFactory
 from .state import Qudit
@@ -176,6 +176,34 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
             output = _compute_probabilities(circuit=circuit)
+            result.append(output)
+
+        elif stmt.name in ("Expval", "expval"):
+            if not isinstance(stmt.params, dict) or "observable" not in stmt.params:
+                raise ValueError(f"Statement '{stmt}' is missing an 'observable' parameter.")
+
+            operator = stmt.params["observable"]
+
+            if operator not in program.operators:
+                raise ValueError(
+                    f"Statement '{stmt}' has an 'observable' parameter which "
+                    f"references an undefined operator."
+                )
+
+            elif program.operators[operator]["params"]:
+                raise ValueError(
+                    f"Statement '{stmt}' has an 'observable' parameter which "
+                    f"references a parameterized operator."
+                )
+
+            elif stmt.wires != tuple(range(num_wires)):
+                raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
+
+            observable = _generate_observable_from_operation_statements(
+                program.operators[operator]["statements"]
+            )
+
+            output = _compute_expected_value(circuit=circuit, observable=observable)
             result.append(output)
 
         else:
@@ -354,15 +382,41 @@ def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: St
     return {name: have_wires[i] for (i, name) in enumerate(want_wires)}
 
 
+def _generate_observable_from_operation_statements(
+    stmts: Iterator[OperatorStmt],
+) -> Iterator[Operation]:
+    """Generates an observable from a series of operator statements.
+
+    Args:
+        stmts (Iterator[OperatorStmt]): Operator statements defining the observable.
+
+    Returns:
+        Iterator[Operation]: Iterator over a sequence of ``Operation`` objects
+            which implement the observable given by the operator statements.
+    """
+    for stmt in stmts:
+        try:
+            scalar = float(stmt.pref)
+        except ValueError:
+            raise ValueError(
+                f"Operator statement '{stmt}' has a prefactor ({stmt.pref}) "
+                f"which cannot be converted to a floating-point number."
+            )
+
+        for gate_name, wire_id in stmt.terms:
+            gate = GateFactory.create(gate_name, scalar=scalar)
+            yield Operation(part=gate, wire_ids=[wire_id])
+
+
 def _compute_amplitude(
-    circuit: Circuit, state: List[int], dtype: type = np.complex128
+    circuit: Circuit, state: List[int], dtype: np.dtype = np.complex128
 ) -> np.number:
     """Computes the amplitude of a state at the end of a circuit.
 
     Args:
         circuit (Circuit): Circuit to apply the amplitude measurement to.
         state (list[int]): State to measure the amplitude of.
-        dtype (type): Data type of the amplitude.
+        dtype (np.dtype): Data type of the amplitude.
 
     Returns:
         Number: NumPy number representing the amplitude of the given state.
@@ -376,35 +430,57 @@ def _compute_amplitude(
         qudit = Qudit(dim=circuit.dimension, data=data)
         circuit.append_state(qudit, wire_ids=[i])
 
-    result = _simulate(circuit=circuit, dtype=dtype)
-    return dtype(result.scalar)
+    amplitude = _simulate(circuit=circuit, dtype=dtype)
+    return dtype(amplitude.scalar)
 
 
-def _compute_probabilities(circuit: Circuit, dtype: type = np.complex128) -> np.ndarray:
+def _compute_probabilities(circuit: Circuit, dtype: np.dtype = np.complex128) -> np.ndarray:
     """Computes the probability distribution at the end of a circuit.
 
     Args:
         circuit (Circuit): Circuit to produce the probability distribution for.
-        dtype (type): Data type of the probability computation.
+        dtype (np.dtype): Data type of the probability computation.
 
     Returns:
         Array: NumPy array representing the probability of measuring each basis state.
     """
-    result = _simulate(circuit=circuit, dtype=dtype)
+    tensor = _simulate(circuit=circuit, dtype=dtype)
 
     # Arrange the indices in increasing order of wire ID.
-    state = result.transpose([wire.index for wire in circuit.wires])
+    state = tensor.transpose([wire.index for wire in circuit.wires])
 
     amplitudes = np.array(state.data).flatten()
     return amplitudes.conj() * amplitudes
 
 
-def _simulate(circuit: Circuit, dtype: type = np.complex128) -> TensorType:
+def _compute_expected_value(
+    circuit: Circuit, observable: Iterator[Operation], dtype: np.dtype = np.complex128
+) -> np.number:
+    """Computes the expected value of an observable with respect to a circuit.
+
+    Args:
+        circuit (Circuit): Circuit to apply the expectation measurement to.
+        observable (Observable): Observable to take the expected value of.
+        dtype (np.dtype): Data type of the expected value.
+
+    Returns:
+        Number: NumPy number representing the expected value.
+    """
+    # Do not modify the original circuit.
+    circuit = deepcopy(circuit)
+
+    circuit.take_expected_value(observable)
+
+    expval = _simulate(circuit=circuit, dtype=dtype)
+    return dtype(expval.scalar)
+
+
+def _simulate(circuit: Circuit, dtype: np.dtype = np.complex128) -> TensorType:
     """Simulates a circuit using the task-based contractor.
 
     Args:
         circuit (Circuit): Circuit to simulate.
-        dtype (type): Data type of the tensor network to contract.
+        dtype (np.dtype): Data type of the tensor network to contract.
 
     Returns:
         Tensor: Result of the simulation.

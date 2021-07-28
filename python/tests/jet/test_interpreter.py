@@ -692,6 +692,146 @@ def test_run_xir_program_with_overridden_gate_definition():
         jet.run_xir_program(program)
 
 
+@pytest.mark.parametrize(
+    "program, want_result",
+    [
+        (
+            xir.parse_script(
+                """
+                operator Z:
+                    1, Z[0];
+                end;
+
+                expval(observable: Z) | [0];
+                """
+            ),
+            [1],
+        ),
+        (
+            xir.parse_script(
+                """
+                operator Z3:
+                    3, Z[0];
+                end;
+
+                X | [0];
+
+                expval(observable: Z3) | [0];
+                """
+            ),
+            [-3],
+        ),
+        (
+            xir.parse_script(
+                """
+                operator XY:
+                    1, X[0];
+                    1, Y[1];
+                end;
+
+                operator YX:
+                    1, Y[0];
+                    1, X[1];
+                end;
+
+                RY(pi/2) | [0];
+                RX(pi/4) | [1];
+
+                expval(observable: XY) | [0, 1];
+                expval(observable: YX) | [0, 1];
+                """,
+                eval_pi=True,
+            ),
+            [-1 / sqrt(2), 0],
+        ),
+    ],
+)
+def test_run_xir_program_with_expval_statements(program, want_result):
+    """Tests that running an XIR program with expected value statements gives
+    the correct result.
+    """
+    assert jet.run_xir_program(program) == pytest.approx(want_result)
+
+
+@pytest.mark.parametrize(
+    "program, match",
+    [
+        (
+            xir.parse_script("expval | [0];"),
+            r"Statement 'expval \| \[0\]' is missing an 'observable' parameter\.",
+        ),
+        (
+            xir.parse_script("expval(observable: dne) | [0];"),
+            (
+                r"Statement 'expval\(observable: dne\) \| \[0\]' has an "
+                r"'observable' parameter which references an undefined operator\."
+            ),
+        ),
+        (
+            xir.parse_script("operator box, 0, 1; expval(observable: box) | [0];"),
+            (
+                r"Statement 'expval\(observable: box\) \| \[0\]' has an "
+                r"'observable' parameter which references an undefined operator\."
+            ),
+        ),
+        (
+            xir.parse_script(
+                """
+                operator up(scale):
+                    scale, Z[0];
+                end;
+
+                expval(observable: up) | [0];
+                """
+            ),
+            (
+                r"Statement 'expval\(observable: up\) \| \[0\]' has an 'observable' "
+                r"parameter which references a parameterized operator\."
+            ),
+        ),
+        (
+            xir.parse_script(
+                """
+                operator obs:
+                    1, Z[0];
+                end;
+
+                X | [0];
+                X | [1];
+
+                expval(observable: obs) | [0];
+                """
+            ),
+            (
+                r"Statement 'expval\(observable: obs\) \| \[0\]' must be applied "
+                r"to \[0 \.\. 1\]\."
+            ),
+        ),
+        (
+            xir.parse_script(
+                """
+                operator natural:
+                    one, Z[0];
+                end;
+
+                expval(observable: natural) | [0];
+                """
+            ),
+            (
+                r"Operator statement 'one, Z\[0\]' has a prefactor \(one\) "
+                r"which cannot be converted to a floating-point number\."
+            ),
+        ),
+    ],
+)
+def test_run_xir_program_with_invalid_expval_statements(program, match):
+    """Tests that a ValueError is raised when an XIR program contains an
+    invalid expected value statement.
+    """
+    with pytest.raises(ValueError, match=match):
+        jet.run_xir_program(program)
+
+
 def test_run_xir_program_with_unsupported_statement():
     """Tests that a ValueError is raised when an XIR program contains an
     unsupported statement.
