@@ -87,7 +87,7 @@ class TestParser:
             ("ctrl[0, 1] adjoint ctrl[3] rx(3.1) | [4];", (0, 1, 3)),
             ("ry(2.4) | [2];", ()),
             ("ctrl [0, 1] ctrl [0] rx(6.2) | [2];", (0, 1)),
-            ("ctrl [0, 0, 1, 2, 2] rx(6.2) | [2];", (0, 1, 2))
+            ("ctrl [0, 0, 1, 2, 2] rx(6.2) | [2];", (0, 1, 2)),
         ],
     )
     def test_ctrl_modifier(self, script, ctrl_wires):
