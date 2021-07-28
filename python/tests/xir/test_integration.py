@@ -63,7 +63,7 @@ ctrl[0, 2] g_five(3.21) | [1];
 ry(1.23) | [0];
 rot(0.1, 0.2, 0.3) | [1];
 h(0.2) | [0, 1, 2];
-adjoint ctrl[3] h(0.2) | [0, 1, 2];
+ctrl[3] adjoint h(0.2) | [0, 1, 2];
 
 sample(observable: o(0.2), shots: 1000) | [0, 1];
 """

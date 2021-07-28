@@ -191,14 +191,16 @@ class XIRTransformer(Transformer):
         a gate declaration."""
 
         adjoint = False
-        ctrl_wires = tuple()
+        ctrl_wires = []
 
         while args[0] in ("adjoint", "ctrl"):
             a = args.pop(0)
             if a == "adjoint":
                 adjoint = not adjoint
             elif a == "ctrl":
-                ctrl_wires += args.pop(0)[1]
+                for cw in args.pop(0)[1]:
+                    if cw not in ctrl_wires:
+                        ctrl_wires.append(cw)
 
         name = args[0]
         if isinstance(args[1], list):
@@ -212,7 +214,7 @@ class XIRTransformer(Transformer):
             wires = args[1][1]
 
         stmt_options = {
-            "ctrl_wires": ctrl_wires,
+            "ctrl_wires": tuple(ctrl_wires),
             "adjoint": adjoint,
             "use_floats": self.use_floats
         }

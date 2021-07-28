@@ -2,35 +2,42 @@ import re
 import warnings
 from decimal import Decimal
 from typing import Any, Dict, List, Sequence, Set, Tuple, Union
+from numbers import Number
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
 
 """This module contains the XIRProgram class and classes for the Xanadu IR"""
 
+Wire = Union[int, str]
+Param = Union[complex, str, bool, List["Param"]]
+Params = Union[List[Param], Dict[str, Param]]
 
-def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
+
+def get_floats(params: Params) -> Params:
     """Converts `decimal.Decimal` and `DecimalComplex` objects to ``float`` and
     ``complex`` respectively"""
-    params_with_floats = params.copy()
-
     if isinstance(params, List):
-        for i, p in enumerate(params_with_floats):
+        params_with_floats = []
+        for p in params:
             if isinstance(p, DecimalComplex):
-                params_with_floats[i] = complex(p)
+                params_with_floats.append(complex(p))
             elif isinstance(p, Decimal):
-                params_with_floats[i] = float(p)
+                params_with_floats.append(float(p))
+            else:
+                params_with_floats.append(p)
 
     elif isinstance(params, Dict):
-        for k, v in params_with_floats.items():
+        params_with_floats = dict()
+        for k, v in params.items():
             if isinstance(v, DecimalComplex):
                 params_with_floats[k] = complex(v)
             elif isinstance(v, Decimal):
                 params_with_floats[k] = float(v)
+            else:
+                params_with_floats[k] = v
 
     return params_with_floats
-
-Wire = Union[int, str]
 
 
 class Statement:
@@ -54,8 +61,8 @@ class Statement:
     def __init__(
             self,
             name: str,
-            params: Union[List, Dict],
-            wires: Tuple,
+            params: Params,
+            wires: Sequence[Wire],
             **kwargs
         ):
         self._name = name
@@ -84,7 +91,7 @@ class Statement:
             ctrl_wires = ", ".join([str(w) for w in self.ctrl_wires])
             modifier_str = f"ctrl[{ctrl_wires}] "
         if self.is_adjoint:
-            modifier_str = "adjoint " + modifier_str
+            modifier_str += "adjoint "
 
         return f"{modifier_str}{self.name}{params_str} | [{wires}]"
 
@@ -94,14 +101,14 @@ class Statement:
         return self._name
 
     @property
-    def params(self) -> Union[List, Dict]:
+    def params(self) -> Params:
         """Returns the parameters of the gate statement"""
         if self.use_floats:
             return get_floats(self._params)
         return self._params
 
     @property
-    def wires(self) -> Tuple[Wire, ...]:
+    def wires(self) -> Sequence[Wire]:
         """Returns the wires that the gate is applied to"""
         return self._wires
 
@@ -111,7 +118,7 @@ class Statement:
         return self._is_adjoint
 
     @property
-    def ctrl_wires(self) -> Tuple[Wire, ...]:
+    def ctrl_wires(self) -> Sequence[Wire]:
         """Returns the control wires of a controlled gate statement.
         If no control wires are specified, an empty tuple is returned.
         """
@@ -317,7 +324,9 @@ class XIRProgram:
             Dict: declared scipt-level options
         """
         if self.use_floats:
-            return get_floats(self._options)
+            options_with_floats = get_floats(self._options)
+            if isinstance(options_with_floats, Dict):
+                return options_with_floats
         return self._options
 
     @property
