@@ -43,6 +43,7 @@ use xstd;
 gate h(a)[0, 1]:
     rz(-2.3932854391951004) | [0];
     rz(a) | [1];
+    adjoint rz(a) | [1];
     // rz(pi / sin(3 * 4 / 2 - 2)) | [a, 2];
 end;
 
@@ -62,6 +63,7 @@ ctrl[0, 2] g_five(3.21) | [1];
 ry(1.23) | [0];
 rot(0.1, 0.2, 0.3) | [1];
 h(0.2) | [0, 1, 2];
+adjoint ctrl[3] h(0.2) | [0, 1, 2];
 
 sample(observable: o(0.2), shots: 1000) | [0, 1];
 """

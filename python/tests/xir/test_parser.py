@@ -67,6 +67,9 @@ class TestParser:
         "script, adjoint",
         [
             ("adjoint ry(2.4) | [2];", True),
+            ("adjoint adjoint ry(2.4) | [2];", False),
+            ("adjoint ctrl[0, 1] adjoint ry(2.4) | [2];", False),
+            ("adjoint adjoint ctrl[0, 1] adjoint ry(2.4) | [2];", True),
             ("ry(2.4) | [2];", False),
         ],
     )
@@ -80,7 +83,9 @@ class TestParser:
         "script, ctrl_wires",
         [
             ("ctrl[0, 1] ry(2.4) | [2];", (0, 1)),
-            ("ry(2.4) | [2];", None),
+            ("ctrl[0, 1] ctrl[3] rz(4.2) | [2];", (0, 1, 3)),
+            ("ctrl[0, 1] adjoint ctrl[3] rx(3.1) | [4];", (0, 1, 3)),
+            ("ry(2.4) | [2];", tuple()),
         ],
     )
     def test_ctrl_modifier(self, script, ctrl_wires):
