@@ -107,12 +107,14 @@ class Statement:
 
     @property
     def is_adjoint(self) -> bool:
-        """Whether the statement is an adjoint gate"""
+        """Returns whether the statement applies an adjoint gate"""
         return self._is_adjoint
 
     @property
     def ctrl_wires(self) -> Tuple[Wire, ...]:
-        """Returns the control wires of a controlled gate statement"""
+        """Returns the control wires of a controlled gate statement.
+        If no control wires are specified, an empty tuple is returned.
+        """
         return self._ctrl_wires
 
     @property

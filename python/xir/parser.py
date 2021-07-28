@@ -202,7 +202,7 @@ class XIRTransformer(Transformer):
 
         name = args[0]
         if isinstance(args[1], list):
-            params = [simplify_math(a) for a in args[1]]
+            params = list(map(simplify_math, args[1]))
             wires = args[2][1]
         elif isinstance(args[1], dict):
             params = {k: simplify_math(v) for k, v in args[1].items()}
