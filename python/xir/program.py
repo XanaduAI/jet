@@ -514,6 +514,65 @@ class XIRProgram:
         return res_script
 
     @staticmethod
+    def merge(*programs) -> "XIRProgram":
+        """Merges one or more XIR programs into a new XIR program.
+
+        The merged XIR program is formed by concatenating the given XIR programs
+        in the orderthey are passed to the function. Warnings may be issued for
+        duplicate declarations, gates, includes, operators, and options.
+
+        Args:
+            programs (XIRProgram): XIR programs to merge
+
+        Returns:
+            XIRProgram: the merged XIR program
+
+        Raises:
+            ValueError: If no XIR programs are provided or if at least two XIR
+                programs have different versions or float settings.
+        """
+        if len(programs) == 0:
+            raise ValueError("Merging requires at least one XIR program.")
+
+        version = programs[0].version
+        if any(program.version != version for program in programs):
+            raise ValueError("XIR programs with different versions cannot be merged.")
+
+        use_floats = programs[0].use_floats
+        if any(program.use_floats != use_floats for program in programs):
+            raise ValueError("XIR programs with different float settings cannot be merged.")
+
+        result = XIRProgram(version=version, use_floats=use_floats)
+
+        for program in programs:
+            for called_function in program.called_functions:
+                result.add_called_function(called_function)
+
+            for key, decls in program.declarations.items():
+                for decl in decls:
+                    result.add_declaration(key, decl)
+
+            for name, gate in program.gates.items():
+                result.add_gate(name, **gate)
+
+            for include in program.includes:
+                result.add_include(include)
+
+            for name, operator in program.operators.items():
+                result.add_operator(name, **operator)
+
+            for name, value in program.options.items():
+                result.add_option(name, value)
+
+            for statement in program.statements:
+                result.add_statement(statement)
+
+            for variable in program.variables:
+                result.add_variable(variable)
+
+        return result
+
+    @staticmethod
     def _validate_version(version: str) -> None:
         """Validates the given version number.
 

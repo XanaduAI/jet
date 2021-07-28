@@ -1,6 +1,7 @@
 """Unit tests for the program class"""
 
 from decimal import Decimal
+from typing import Any, Dict, Mapping, Sequence
 
 import pytest
 
@@ -20,6 +21,29 @@ from xir.program import (
 def program():
     """Returns an empty XIR program."""
     return XIRProgram()
+
+
+def make_program(
+    called_functions: Sequence[str],
+    declarations: Mapping[str, Sequence[Declaration]],
+    gates: Mapping[str, Dict[str, Any]],
+    includes: Sequence[str],
+    operators: Mapping[str, Dict[str, Any]],
+    options: Mapping[str, Any],
+    statements: Sequence[str],
+    variables: Sequence[str],
+):
+    """Returns an XIR program with the given attributes."""
+    program = XIRProgram()
+    program._called_functions = called_functions
+    program._declarations = declarations
+    program._gates = gates
+    program._includes = includes
+    program._operators = operators
+    program._options = options
+    program._statements = statements
+    program._variables = variables
+    return program
 
 
 class TestSerialize:
@@ -442,6 +466,142 @@ class TestXIRProgram:
 
         program.add_variable("theta")
         assert set(program.variables) == {"theta", "phi"}
+
+    def test_merge_zero_programs(self):
+        with pytest.raises(ValueError, match=r"Merging requires at least one XIR program"):
+            XIRProgram.merge()
+
+    def test_merge_programs_with_different_versions(self):
+        p1 = XIRProgram(version="0.0.1")
+        p2 = XIRProgram(version="0.0.2")
+
+        match = r"XIR programs with different versions cannot be merged"
+
+        with pytest.raises(ValueError, match=match):
+            XIRProgram.merge(p1, p2)
+
+    def test_merge_programs_with_different_float_settings(self):
+        p1 = XIRProgram(use_floats=True)
+        p2 = XIRProgram(use_floats=False)
+
+        match = r"XIR programs with different float settings cannot be merged"
+
+        with pytest.raises(ValueError, match=match):
+            XIRProgram.merge(p1, p2)
+
+    @pytest.mark.parametrize(
+        ["programs", "want_result"],
+        [
+            (
+                [
+                    make_program(
+                        called_functions=["tanh"],
+                        declarations={"func": [], "gate": [], "operator": [], "output": []},
+                        gates={"U2": {"params": ["phi", "lam"], "wires": [0], "statements": []}},
+                        includes=["xstd"],
+                        operators={"Z": {"params": [], "wires": [1], "statements": []}},
+                        options={"cutoff": 3},
+                        statements=[Statement("U1", {"phi": 1}, [0])],
+                        variables=["angle"],
+                    ),
+                ],
+                make_program(
+                    called_functions=["tanh"],
+                    declarations={"func": [], "gate": [], "operator": [], "output": []},
+                    gates={"U2": {"params": ["phi", "lam"], "wires": [0], "statements": []}},
+                    includes=["xstd"],
+                    operators={"Z": {"params": [], "wires": [1], "statements": []}},
+                    options={"cutoff": 3},
+                    statements=[Statement("U1", {"phi": 1}, [0])],
+                    variables=["angle"],
+                ),
+            ),
+            (
+                [
+                    make_program(
+                        called_functions=["cos"],
+                        declarations={
+                            "func": [FuncDeclaration("cos", 1)],
+                            "gate": [GateDeclaration("H", 0, 1)],
+                            "operator": [],
+                            "output": [],
+                        },
+                        gates={"H": {"params": [], "wires": [0], "statements": []}},
+                        includes=[],
+                        operators={"X": {"params": [], "wires": [0], "statements": []}},
+                        options={"cutoff": 2},
+                        statements=[Statement("S", [], [0])],
+                        variables=["theta"],
+                    ),
+                    make_program(
+                        called_functions=["sin"],
+                        declarations={
+                            "func": [FuncDeclaration("sin", 1)],
+                            "gate": [],
+                            "operator": [OperatorDeclaration("Y", 0, 1)],
+                            "output": [],
+                        },
+                        gates={"D": {"params": ["r", "phi"], "wires": [1], "statements": []}},
+                        includes=["xstd"],
+                        operators={"Y": {"params": [], "wires": [1], "statements": []}},
+                        options={"cutoff": 4},
+                        statements=[Statement("T", [], [0])],
+                        variables=[],
+                    ),
+                ],
+                make_program(
+                    called_functions=["cos", "sin"],
+                    declarations={
+                        "func": [FuncDeclaration("cos", 1), FuncDeclaration("sin", 1)],
+                        "gate": [GateDeclaration("H", 0, 1)],
+                        "operator": [OperatorDeclaration("Y", 0, 1)],
+                        "output": [],
+                    },
+                    gates={
+                        "H": {"params": [], "wires": [0], "statements": []},
+                        "D": {"params": ["r", "phi"], "wires": [1], "statements": []},
+                    },
+                    includes=["xstd"],
+                    operators={
+                        "X": {"params": [], "wires": [0], "statements": []},
+                        "Y": {"params": [], "wires": [1], "statements": []},
+                    },
+                    options={"cutoff": 4},
+                    statements=[Statement("S", [], [0]), Statement("T", [], [0])],
+                    variables=["theta"],
+                ),
+            ),
+        ],
+    )
+    def test_merge_programs(self, programs, want_result):
+        have_result = XIRProgram.merge(*programs)
+
+        assert set(have_result.called_functions) == set(want_result.called_functions)
+        assert set(have_result.variables) == set(want_result.variables)
+        assert list(have_result.includes) == list(want_result.includes)
+        assert dict(have_result.options) == dict(want_result.options)
+
+        def serialize(mapping: Dict[str, Sequence[Any]]) -> Dict[str, Sequence[str]]:
+            """Partially serializes a dictionary with sequence values by casting
+            each item of each sequence into a string.
+            """
+            return {k: list(map(str, v)) for k, v in mapping.items()}
+
+        have_declarations = serialize(have_result.declarations)
+        want_declarations = serialize(want_result.declarations)
+        assert have_declarations == want_declarations
+
+        have_gates = {k: serialize(v) for k, v in have_result.gates.items()}
+        want_gates = {k: serialize(v) for k, v in want_result.gates.items()}
+        assert have_gates == want_gates
+
+        have_operators = {k: serialize(v) for k, v in have_result.operators.items()}
+        want_operators = {k: serialize(v) for k, v in want_result.operators.items()}
+        assert have_operators == want_operators
+
+        have_statements = list(map(str, have_result.statements))
+        want_statements = list(map(str, want_result.statements))
+        assert have_statements == want_statements
 
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
