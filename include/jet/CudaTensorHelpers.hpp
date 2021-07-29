@@ -176,7 +176,6 @@ ReverseVector(const std::vector<DataType> &input)
     return std::vector<DataType>{input.rbegin(), input.rend()};
 }
 
-
 /** @class CudaScopedDevice
 
 @brief RAII-styled device context switch. Code taken from Taskflow.
@@ -186,7 +185,6 @@ ReverseVector(const std::vector<DataType> &input)
 class CudaScopedDevice {
 
   public:
-    
     /**
     @brief constructs a RAII-styled device switcher
 
@@ -200,31 +198,30 @@ class CudaScopedDevice {
     ~CudaScopedDevice();
 
   private:
-    
     CudaScopedDevice() = delete;
-    CudaScopedDevice(const CudaScopedDevice&) = delete;
-    CudaScopedDevice(CudaScopedDevice&&) = delete;
+    CudaScopedDevice(const CudaScopedDevice &) = delete;
+    CudaScopedDevice(CudaScopedDevice &&) = delete;
 
     int _p;
 };
 
-inline CudaScopedDevice::CudaScopedDevice(int dev) { 
-  JET_CUDA_IS_SUCCESS(cudaGetDevice(&_p));
-  if(_p == dev) {
-    _p = -1;
-  }
-  else {
-    JET_CUDA_IS_SUCCESS(cudaSetDevice(dev));
-  }
+inline CudaScopedDevice::CudaScopedDevice(int dev)
+{
+    JET_CUDA_IS_SUCCESS(cudaGetDevice(&_p));
+    if (_p == dev) {
+        _p = -1;
+    }
+    else {
+        JET_CUDA_IS_SUCCESS(cudaSetDevice(dev));
+    }
 }
 
-inline CudaScopedDevice::~CudaScopedDevice() { 
-  if(_p != -1) {
-    cudaSetDevice(_p);
-  }
+inline CudaScopedDevice::~CudaScopedDevice()
+{
+    if (_p != -1) {
+        cudaSetDevice(_p);
+    }
 }
 
-
-  
 } // namespace CudaTensorHelpers
 } // namespace Jet

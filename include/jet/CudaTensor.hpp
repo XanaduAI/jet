@@ -210,7 +210,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     ~CudaTensor()
     {
         CudaScopedDevice ctx(CUDA_DEVICE);
-	JET_CUDA_IS_SUCCESS(cudaFree(data_));
+        JET_CUDA_IS_SUCCESS(cudaFree(data_));
     }
 
     template <class U = T, int D = CUDA_DEVICE>
