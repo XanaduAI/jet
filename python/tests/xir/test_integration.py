@@ -43,7 +43,7 @@ use xstd;
 gate h(a)[0, 1]:
     rz(-2.3932854391951004) | [0];
     rz(a) | [1];
-    adjoint rz(a) | [1];
+    ctrl[0] adjoint rz(a) | [1];
     // rz(pi / sin(3 * 4 / 2 - 2)) | [a, 2];
 end;
 
