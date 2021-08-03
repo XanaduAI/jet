@@ -191,16 +191,14 @@ class XIRTransformer(Transformer):
         a gate declaration."""
 
         adjoint = False
-        ctrl_wires = []
+        ctrl_wires = set()
 
         while args[0] in ("adjoint", "ctrl"):
             a = args.pop(0)
             if a == "adjoint":
                 adjoint = not adjoint
             elif a == "ctrl":
-                for cw in args.pop(0)[1]:
-                    if cw not in ctrl_wires:
-                        ctrl_wires.append(cw)
+                ctrl_wires.update(args.pop(0)[1])
 
         name = args[0]
         if isinstance(args[1], list):
