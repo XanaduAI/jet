@@ -2,7 +2,6 @@ import re
 import warnings
 from decimal import Decimal
 from typing import Any, Dict, List, Sequence, Set, Tuple, Union
-from numbers import Number
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
