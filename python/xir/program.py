@@ -9,7 +9,7 @@ from .utils import strip
 """This module contains the XIRProgram class and classes for the Xanadu IR"""
 
 Wire = Union[int, str]
-Param = Union[complex, str, bool, List["Param"]]
+Param = Union[complex, str, Decimal, DecimalComplex, bool, List["Param"]]
 Params = Union[List[Param], Dict[str, Param]]
 
 
