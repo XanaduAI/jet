@@ -1,6 +1,12 @@
-## Release 0.3.0 (development release)
+## Release 0.2.1 (development release)
+
+### Improvements
+
+* The `CudaTensor` class no longer includes [Taskflow](https://taskflow.github.io/) headers. [(#56)](https://github.com/XanaduAI/jet/pull/56)
 
 ### Documentation
+
+* The `CudaScopedDevice` documentation is now consistent with other classes in Jet. [(#59)](https://github.com/XanaduAI/jet/pull/59)
 
 * The documentation section of the development guide now lists system dependencies. [(#52)](https://github.com/XanaduAI/jet/pull/52)
 
@@ -12,7 +18,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-[Mikhail Andrenkov](https://github.com/Mandrenkov).
+[Mikhail Andrenkov](https://github.com/Mandrenkov), [Trevor Vincent](https://github.com/trevor-vincent).
 
 ## Release 0.2.0 (current release)
 
