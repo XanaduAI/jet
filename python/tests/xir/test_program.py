@@ -1,7 +1,7 @@
 """Unit tests for the program class"""
 
 from decimal import Decimal
-from typing import Any, Dict, Mapping, Sequence
+from typing import Any, Dict, List, Iterable, Set
 
 import pytest
 
@@ -24,14 +24,14 @@ def program():
 
 
 def make_program(
-    called_functions: Sequence[str],
-    declarations: Mapping[str, Sequence[Declaration]],
-    gates: Mapping[str, Dict[str, Any]],
-    includes: Sequence[str],
-    operators: Mapping[str, Dict[str, Any]],
-    options: Mapping[str, Any],
-    statements: Sequence[str],
-    variables: Sequence[str],
+    called_functions: Set[str],
+    declarations: Dict[str, List[Declaration]],
+    gates: Dict[str, Dict[str, Any]],
+    includes: List[str],
+    operators: Dict[str, Dict[str, Any]],
+    options: Dict[str, Any],
+    statements: Set[str],
+    variables: List[str],
 ):
     """Returns an XIR program with the given attributes."""
     program = XIRProgram()
@@ -492,34 +492,35 @@ class TestXIRProgram:
     @pytest.mark.parametrize(
         ["programs", "want_result"],
         [
-            (
+            pytest.param(
                 [
                     make_program(
-                        called_functions=["tanh"],
+                        called_functions={"tanh"},
                         declarations={"func": [], "gate": [], "operator": [], "output": []},
                         gates={"U2": {"params": ["phi", "lam"], "wires": [0], "statements": []}},
                         includes=["xstd"],
                         operators={"Z": {"params": [], "wires": [1], "statements": []}},
                         options={"cutoff": 3},
                         statements=[Statement("U1", {"phi": 1}, [0])],
-                        variables=["angle"],
+                        variables={"angle"},
                     ),
                 ],
                 make_program(
-                    called_functions=["tanh"],
+                    called_functions={"tanh"},
                     declarations={"func": [], "gate": [], "operator": [], "output": []},
                     gates={"U2": {"params": ["phi", "lam"], "wires": [0], "statements": []}},
                     includes=["xstd"],
                     operators={"Z": {"params": [], "wires": [1], "statements": []}},
                     options={"cutoff": 3},
                     statements=[Statement("U1", {"phi": 1}, [0])],
-                    variables=["angle"],
+                    variables={"angle"},
                 ),
+                id="One XIR program",
             ),
-            (
+            pytest.param(
                 [
                     make_program(
-                        called_functions=["cos"],
+                        called_functions={"cos"},
                         declarations={
                             "func": [FuncDeclaration("cos", 1)],
                             "gate": [GateDeclaration("H", 0, 1)],
@@ -531,10 +532,10 @@ class TestXIRProgram:
                         operators={"X": {"params": [], "wires": [0], "statements": []}},
                         options={"cutoff": 2},
                         statements=[Statement("S", [], [0])],
-                        variables=["theta"],
+                        variables={"theta"},
                     ),
                     make_program(
-                        called_functions=["sin"],
+                        called_functions={"sin"},
                         declarations={
                             "func": [FuncDeclaration("sin", 1)],
                             "gate": [],
@@ -546,11 +547,11 @@ class TestXIRProgram:
                         operators={"Y": {"params": [], "wires": [1], "statements": []}},
                         options={"cutoff": 4},
                         statements=[Statement("T", [], [0])],
-                        variables=[],
+                        variables=set(),
                     ),
                 ],
                 make_program(
-                    called_functions=["cos", "sin"],
+                    called_functions={"cos", "sin"},
                     declarations={
                         "func": [FuncDeclaration("cos", 1), FuncDeclaration("sin", 1)],
                         "gate": [GateDeclaration("H", 0, 1)],
@@ -568,20 +569,21 @@ class TestXIRProgram:
                     },
                     options={"cutoff": 4},
                     statements=[Statement("S", [], [0]), Statement("T", [], [0])],
-                    variables=["theta"],
+                    variables={"theta"},
                 ),
+                id="Two XIR programs"
             ),
         ],
     )
     def test_merge_programs(self, programs, want_result):
         have_result = XIRProgram.merge(*programs)
 
-        assert set(have_result.called_functions) == set(want_result.called_functions)
-        assert set(have_result.variables) == set(want_result.variables)
-        assert list(have_result.includes) == list(want_result.includes)
-        assert dict(have_result.options) == dict(want_result.options)
+        assert have_result.called_functions == want_result.called_functions
+        assert have_result.variables == want_result.variables
+        assert have_result.includes == want_result.includes
+        assert have_result.options == want_result.options
 
-        def serialize(mapping: Dict[str, Sequence[Any]]) -> Dict[str, Sequence[str]]:
+        def serialize(mapping: Dict[str, Iterable[Any]]) -> Dict[str, List[str]]:
             """Partially serializes a dictionary with sequence values by casting
             each item of each sequence into a string.
             """
