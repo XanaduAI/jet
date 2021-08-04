@@ -1,5 +1,9 @@
 ## Release 0.2.1 (development release)
 
+### New features since last release
+
+* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
+
 ### Improvements
 
 * The `CudaTensor` class no longer includes [Taskflow](https://taskflow.github.io/) headers. [(#56)](https://github.com/XanaduAI/jet/pull/56)
@@ -23,8 +27,6 @@ This release contains contributions from (in alphabetical order):
 ## Release 0.2.0 (current release)
 
 ### New features since last release
-
-* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
 
 * The Jet interpreter for XIR scripts now accepts a `dimension` option for CV circuits. [(#47)](https://github.com/XanaduAI/jet/pull/47)
 
