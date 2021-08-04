@@ -2,10 +2,9 @@
 
 import math
 from decimal import Decimal
-from lark.exceptions import UnexpectedToken, VisitError
 
 import pytest
-
+from lark.exceptions import UnexpectedToken, VisitError
 from xir import DecimalComplex, parse_script
 
 

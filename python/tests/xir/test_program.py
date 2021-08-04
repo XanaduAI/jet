@@ -3,13 +3,7 @@
 from decimal import Decimal
 
 import pytest
-
-from xir.program import (
-    XIRProgram,
-    Declaration,
-    Statement,
-    OperatorStmt,
-)
+from xir.program import Declaration, OperatorStmt, Statement, XIRProgram
 
 
 class TestSerialize:
