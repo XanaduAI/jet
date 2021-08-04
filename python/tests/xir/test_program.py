@@ -1,7 +1,7 @@
 """Unit tests for the program class"""
 
 from decimal import Decimal
-from typing import Any, Dict, List, Iterable, Set
+from typing import Any, Dict, Iterable, List, Set
 
 import pytest
 
@@ -571,7 +571,7 @@ class TestXIRProgram:
                     statements=[Statement("S", [], [0]), Statement("T", [], [0])],
                     variables={"theta"},
                 ),
-                id="Two XIR programs"
+                id="Two XIR programs",
             ),
         ],
     )
