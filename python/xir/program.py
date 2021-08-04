@@ -3,7 +3,7 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Any, Dict, Iterator, List, Mapping, Sequence, Tuple, Union
+from typing import Any, Collection, Dict, List, Mapping, Sequence, Tuple, Union
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
@@ -253,34 +253,35 @@ class XIRProgram:
         return self._use_floats
 
     @property
-    def wires(self) -> Iterator[Wire]:
+    def wires(self) -> Collection[Wire]:
         """Returns the wires of the XIR program.
 
         Returns:
-            Iterator[Wire]: iterator over the wires
+            Collection[Wire]: collection of wires
         """
         wires = []
         for stmt in self.statements:
             wires.extend(stmt.wires)
 
-        return iter(set(wires))
+        return set(wires)
 
     @property
-    def called_functions(self) -> Iterator[str]:
-        """Return the functions that are called in the XIR program.
+    def called_functions(self) -> Collection[str]:
+        """Returns the functions that are called in the XIR program.
 
         Returns:
-            Iterator[str]: functions as strings
+            Collection[str]: collection of function names
         """
-        return iter(self._called_functions)
+        return self._called_functions
 
     @property
-    def declarations(self) -> Mapping[str, List[Declaration]]:
+    def declarations(self) -> Mapping[str, Sequence[Declaration]]:
         """Returns the declarations in the XIR program.
 
         Returns:
-            Mapping[str, List[Declaration]]: dictionary of declarations sorted
-                into the following keys: 'gate', 'func', 'output' and 'operator'.
+            Mapping[str, Sequence[Declaration]]: dictionary of declarations
+                sorted into the following keys: 'gate', 'func', 'output' and
+                'operator'.
         """
         return self._declarations
 
@@ -296,13 +297,13 @@ class XIRProgram:
         return self._gates
 
     @property
-    def includes(self) -> Iterator[str]:
+    def includes(self) -> Sequence[str]:
         """Returns the included XIR modules used by the XIR program.
 
         Returns:
-            Iterator[str]: iterator over the included XIR modules
+            Sequence[str]: sequence of included XIR modules
         """
-        return iter(self._includes)
+        return self._includes
 
     @property
     def operators(self) -> Mapping[str, Mapping[str, Sequence]]:
@@ -325,23 +326,23 @@ class XIRProgram:
         return get_floats(self._options) if self.use_floats else self._options
 
     @property
-    def statements(self) -> Iterator[Statement]:
+    def statements(self) -> Sequence[Statement]:
         """Returns the statements in the XIR program.
 
         Returns:
-            Iterator[Statement]: iterator over the statements
+            Sequence[Statement]: sequence of statements
         """
-        return iter(self._statements)
+        return self._statements
 
     @property
-    def variables(self) -> Iterator[str]:
+    def variables(self) -> Collection[str]:
         """Returns the free parameter variables used when defining gates and
         operators in the XIR program.
 
         Returns:
-            Iterator[str]: free parameter variables as strings
+            Collection[str]: collection of free parameter variable names
         """
-        return iter(self._variables)
+        return self._variables
 
     def add_called_function(self, name: str) -> None:
         """Adds the name of a called function to the XIR program.
