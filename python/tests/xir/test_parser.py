@@ -130,10 +130,11 @@ class TestParser:
             assert irprog.statements[0].params[0] == param.upper()
 
     @pytest.mark.parametrize(
-        "circuit", [
+        "circuit",
+        [
             "adjective name(a, b)[0];",
             "gate name(a, b)[];",
-        ]
+        ],
     )
     def test_invalid_declarations_token_error(self, circuit):
         """Test that an UnexpectedToken error is raised when using invalid declaration syntax"""
@@ -141,9 +142,10 @@ class TestParser:
             parse_script(circuit)
 
     @pytest.mark.parametrize(
-        "circuit", [
+        "circuit",
+        [
             "gate name(a, a)[0, 1];",
-        ]
+        ],
     )
     def test_invalid_declarations_visit_error(self, circuit):
         """Test that a VisitError is raised when using invalid declarations
