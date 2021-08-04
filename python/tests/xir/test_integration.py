@@ -43,6 +43,7 @@ use xstd;
 gate h(a)[0, 1]:
     rz(-2.3932854391951004) | [0];
     rz(a) | [1];
+    ctrl[0] adjoint rz(a) | [1];
     // rz(pi / sin(3 * 4 / 2 - 2)) | [a, 2];
 end;
 
@@ -55,11 +56,14 @@ end;
 g_one(pi) | [0, 1];
 g_two | [2];
 g_three(1, 3.3) | [2];
+adjoint g_four(1.23) | [2];
+ctrl[0, 2] g_five(3.21) | [1];
 
 // The circuit and statistics
 ry(1.23) | [0];
 rot(0.1, 0.2, 0.3) | [1];
 h(0.2) | [0, 1, 2];
+ctrl[3] adjoint h(0.2) | [0, 1, 2];
 
 sample(observable: o(0.2), shots: 1000) | [0, 1];
 """
