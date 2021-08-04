@@ -323,7 +323,9 @@ class XIRProgram:
         Returns:
             Mapping[str, Any]: declared scipt-level options
         """
-        return get_floats(self._options) if self.use_floats else self._options
+        if self.use_floats:
+            return get_floats(self._options)
+        return self._options
 
     @property
     def statements(self) -> Sequence[Statement]:
