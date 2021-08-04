@@ -1,8 +1,8 @@
 """Unit tests for the program class"""
 
+import pytest
 from decimal import Decimal
 
-import pytest
 from xir.program import Declaration, OperatorStmt, Statement, XIRProgram
 
 
