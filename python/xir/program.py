@@ -195,6 +195,8 @@ class Declaration:
     def __init__(self, name: str, params, wires, declaration_type: str):
         self.name = name
         self.params = list(map(str, params))
+        if len(set(self.params)) != len(self.params):
+            raise ValueError("All parameters must be unique")
         self.wires = wires
         if declaration_type not in ("gate", "output", "operator", "function"):
             raise TypeError(f"Declaration type {declaration_type} is not valid.")
@@ -204,7 +206,7 @@ class Declaration:
         return _decl_str(self.name, self.params, self.wires, self.declaration_type)
 
     def __repr__(self) -> str:
-        return f"<{self.declaration_type.capitalize()} declaration:name={self.name}"
+        return f"<{self.declaration_type.capitalize()} declaration:name={self.name}>"
 
 
 class XIRProgram:

@@ -17,7 +17,7 @@ photonics_script = """
 gate Sgate(a, b)[0];
 gate BSgate(theta, phi)[0, 1];
 gate Rgate(p0)[0];
-output MeasureHomodyne(p0)[0];
+output MeasureHomodyne[0];
 
 Sgate(0.7, 0) | [1];
 BSgate(0.1, 0.0) | [0, 1];

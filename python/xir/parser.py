@@ -111,9 +111,13 @@ class XIRTransformer(Transformer):
         """Tuple with wires and identifier"""
         return "wires", tuple(w)
 
+    def params(self, args):
+        """Tuple with params and identifier"""
+        if all(isinstance(p, tuple) for p in args):
+            return "params", dict(args)
+        return "params", list(args)
+
     option = tuple
-    options_dict = dict
-    params = list
     array = list
     FALSE_ = lambda self, _: False
     TRUE_ = lambda self, _: True
@@ -148,15 +152,20 @@ class XIRTransformer(Transformer):
 
     def operator_def(self, args):
         """Operator definition. Starts with keyword 'operator'"""
-        name = args[0]
-        if isinstance(args[2], tuple) and args[2][0] == "wires":
-            params = args[1]
-            wires = args[2][1]
-            stmts = args[3:]
-        else:  # no wires are declared
-            params = args[1]
-            wires = ()
-            stmts = args[2:]
+        name = args.pop(0)
+        wires = ()
+        params = []
+        stmts = []
+
+        for i, arg in enumerate(args):
+            if is_param(arg):
+                params = arg[1]
+            elif is_wire(arg):
+                wires = arg[1]
+
+            if isinstance(arg, OperatorStmt):
+                stmts = args[i:]
+                break
 
         if len(wires) > 0:
             check_wires(wires, stmts)
@@ -164,15 +173,20 @@ class XIRTransformer(Transformer):
 
     def gate_def(self, args):
         """Gate definition. Starts with keyword 'gate'"""
-        name = args[0]
-        if isinstance(args[2], tuple) and args[2][0] == "wires":
-            params = args[1]
-            wires = args[2][1]
-            stmts = args[3:]
-        else:  # no wires are declared
-            params = args[1]
-            wires = ()
-            stmts = args[2:]
+        name = args.pop(0)
+        wires = ()
+        params = []
+        stmts = []
+
+        for i, arg in enumerate(args):
+            if is_param(arg):
+                params = arg[1]
+            elif is_wire(arg):
+                wires = arg[1]
+
+            if isinstance(arg, Statement):
+                stmts = args[i:]
+                break
 
         if len(wires) > 0:
             check_wires(wires, stmts)
@@ -196,16 +210,17 @@ class XIRTransformer(Transformer):
             elif a == "ctrl":
                 ctrl_wires.update(args.pop(0)[1])
 
-        name = args[0]
-        if isinstance(args[1], list):
-            params = list(map(simplify_math, args[1]))
-            wires = args[2][1]
-        elif isinstance(args[1], dict):
-            params = {k: simplify_math(v) for k, v in args[1].items()}
-            wires = args[2][1]
+        name = args.pop(0)
+        if is_param(args[0]):
+            if isinstance(args[0][1], list):
+                params = list(map(simplify_math, args[0][1]))
+                wires = args[1][1]
+            else:  # if dict
+                params = {k: simplify_math(v) for k, v in args[0][1].items()}
+                wires = args[1][1]
         else:
             params = []
-            wires = args[1][1]
+            wires = args[0][1]
 
         stmt_options = {
             "ctrl_wires": tuple(sorted(ctrl_wires, key=hash)),
@@ -237,19 +252,40 @@ class XIRTransformer(Transformer):
     ###############
 
     def gate_decl(self, args):
-        decl = Declaration(*args, declaration_type="gate")
+        if len(args) == 3:
+            name, params, wires = args[0], args[1][1], args[2][1]
+        else:
+            name, wires = args[0], args[1][1]
+            params = []
+
+        decl = Declaration(name, params, wires, declaration_type="gate")
         self._program._declarations["gate"].append(decl)
 
     def operator_decl(self, args):
-        decl = Declaration(*args, declaration_type="operator")
+        if len(args) == 3:
+            name, params, wires = args[0], args[1][1], args[2][1]
+        else:
+            name, wires = args[0], args[1][1]
+            params = []
+        decl = Declaration(name, params, wires, declaration_type="operator")
         self._program._declarations["operator"].append(decl)
 
     def func_decl(self, args):
-        decl = Declaration(*args, declaration_type="function")
+        if len(args) == 2:
+            name, params = args[0], args[1][1]
+        else:
+            name = args[0]
+            params = []
+        decl = Declaration(name, params, (), declaration_type="function")
         self._program._declarations["func"].append(decl)
 
     def output_decl(self, args):
-        decl = Declaration(*args, declaration_type="output")
+        if len(args) == 3:
+            name, params, wires = args[0], args[1][1], args[2][1]
+        else:
+            name, wires = args[0], args[1][1]
+            params = []
+        decl = Declaration(name, params, wires, declaration_type="output")
         self._program._declarations["output"].append(decl)
 
     #########
@@ -290,3 +326,11 @@ class XIRTransformer(Transformer):
         return "-" + str(args[0])
 
     PI = lambda self, _: "PI" if not self._eval_pi else Decimal(str(math.pi))
+
+def is_wire(arg):
+    """TODO"""
+    return isinstance(arg, tuple) and arg[0] == "wires"
+
+def is_param(arg):
+    """TODO"""
+    return isinstance(arg, tuple) and arg[0] == "params"
