@@ -3,32 +3,40 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Any, Dict, Iterator, List, Mapping, Sequence, Tuple, Union
+from typing import Any, Collection, Dict, List, Mapping, Sequence, Tuple, Union
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
 
 Wire = Union[int, str]
 
+Wire = Union[int, str]
+Param = Union[complex, str, Decimal, DecimalComplex, bool, List["Param"]]
+Params = Union[List[Param], Dict[str, Param]]
 
-def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
+
+def get_floats(params: Params) -> Params:
     """Converts `decimal.Decimal` and `DecimalComplex` objects to ``float`` and
     ``complex`` respectively"""
-    params_with_floats = params.copy()
-
     if isinstance(params, List):
-        for i, p in enumerate(params_with_floats):
+        params_with_floats = []
+        for p in params:
             if isinstance(p, DecimalComplex):
-                params_with_floats[i] = complex(p)
+                params_with_floats.append(complex(p))
             elif isinstance(p, Decimal):
-                params_with_floats[i] = float(p)
+                params_with_floats.append(float(p))
+            else:
+                params_with_floats.append(p)
 
     elif isinstance(params, Dict):
-        for k, v in params_with_floats.items():
+        params_with_floats = dict()
+        for k, v in params.items():
             if isinstance(v, DecimalComplex):
                 params_with_floats[k] = complex(v)
             elif isinstance(v, Decimal):
                 params_with_floats[k] = float(v)
+            else:
+                params_with_floats[k] = v
 
     return params_with_floats
 
@@ -43,46 +51,85 @@ class Statement:
         name (str): name of the statement
         params (list, Dict): parameters for the statement (can be empty)
         wires (tuple): the wires on which the statement is applied
+
+    Keyword args:
+        adjoint (bool): whether the statement is an adjoint gate
+        ctrl_wires (tuple): the control wires of a controlled gate statement
         use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
             and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(self, name: str, params: Union[List, Dict], wires: Tuple, use_floats: bool = True):
+    def __init__(
+            self,
+            name: str,
+            params: Params,
+            wires: Sequence[Wire],
+            **kwargs
+        ):
         self._name = name
         self._params = params
         self._wires = wires
 
-        self._use_floats = use_floats
+        self._is_adjoint = kwargs.get("adjoint", False)
+        self._ctrl_wires = kwargs.get("ctrl_wires", tuple())
+
+        self._use_floats = kwargs.get("use_floats", True)
 
     def __str__(self):
+        """Serialized string representation of a Statement"""
         if isinstance(self.params, dict):
             params = [f"{k}: {v}" for k, v in self.params.items()]
         else:
             params = [str(p) for p in self.params]
         params_str = ", ".join(params)
+        if params_str != "":
+            params_str = "(" + params_str + ")"
 
         wires = ", ".join([str(w) for w in self.wires])
 
-        if params_str == "":
-            return f"{self.name} | [{wires}]"
-        return f"{self.name}({params_str}) | [{wires}]"
+        modifier_str = ""
+        if len(self.ctrl_wires) != 0:
+            ctrl_wires = ", ".join([str(w) for w in self.ctrl_wires])
+            modifier_str = f"ctrl[{ctrl_wires}] "
+        if self.is_adjoint:
+            modifier_str += "adjoint "
+
+        return f"{modifier_str}{self.name}{params_str} | [{wires}]"
 
     @property
     def name(self) -> str:
+        """Returns the name of the gate statement"""
         return self._name
 
     @property
-    def params(self) -> Union[List, Dict]:
+    def params(self) -> Params:
+        """Returns the parameters of the gate statement"""
         if self.use_floats:
             return get_floats(self._params)
         return self._params
 
     @property
-    def wires(self) -> Tuple:
+    def wires(self) -> Sequence[Wire]:
+        """Returns the wires that the gate is applied to"""
         return self._wires
 
     @property
+    def is_adjoint(self) -> bool:
+        """Returns whether the statement applies an adjoint gate"""
+        return self._is_adjoint
+
+    @property
+    def ctrl_wires(self) -> Sequence[Wire]:
+        """Returns the control wires of a controlled gate statement.
+        If no control wires are specified, an empty tuple is returned.
+        """
+        return self._ctrl_wires
+
+    @property
     def use_floats(self) -> bool:
+        """Returns whether floats and complex types are returned instead of
+        ``Decimal`` and ``DecimalComplex`` objects, respectively.
+        """
         return self._use_floats
 
 
@@ -253,34 +300,35 @@ class XIRProgram:
         return self._use_floats
 
     @property
-    def wires(self) -> Iterator[Wire]:
+    def wires(self) -> Collection[Wire]:
         """Returns the wires of the XIR program.
 
         Returns:
-            Iterator[Wire]: iterator over the wires
+            Collection[Wire]: collection of wires
         """
         wires = []
         for stmt in self.statements:
             wires.extend(stmt.wires)
 
-        return iter(set(wires))
+        return set(wires)
 
     @property
-    def called_functions(self) -> Iterator[str]:
-        """Return the functions that are called in the XIR program.
+    def called_functions(self) -> Collection[str]:
+        """Returns the functions that are called in the XIR program.
 
         Returns:
-            Iterator[str]: functions as strings
+            Collection[str]: collection of function names
         """
-        return iter(self._called_functions)
+        return self._called_functions
 
     @property
-    def declarations(self) -> Mapping[str, List[Declaration]]:
+    def declarations(self) -> Mapping[str, Sequence[Declaration]]:
         """Returns the declarations in the XIR program.
 
         Returns:
-            Mapping[str, List[Declaration]]: dictionary of declarations sorted
-                into the following keys: 'gate', 'func', 'output' and 'operator'.
+            Mapping[str, Sequence[Declaration]]: dictionary of declarations
+                sorted into the following keys: 'gate', 'func', 'output' and
+                'operator'.
         """
         return self._declarations
 
@@ -296,13 +344,13 @@ class XIRProgram:
         return self._gates
 
     @property
-    def includes(self) -> Iterator[str]:
+    def includes(self) -> Sequence[str]:
         """Returns the included XIR modules used by the XIR program.
 
         Returns:
-            Iterator[str]: iterator over the included XIR modules
+            Sequence[str]: sequence of included XIR modules
         """
-        return iter(self._includes)
+        return self._includes
 
     @property
     def operators(self) -> Mapping[str, Mapping[str, Sequence]]:
@@ -322,26 +370,32 @@ class XIRProgram:
         Returns:
             Mapping[str, Any]: declared scipt-level options
         """
-        return get_floats(self._options) if self.use_floats else self._options
+        if self.use_floats:
+            options_with_floats = get_floats(self._options)
+            # The following condition should always be True. For more context,
+            # see https://github.com/XanaduAI/jet/pull/52/files#r681872696.
+            if isinstance(options_with_floats, Dict):
+                return options_with_floats
+        return self._options
 
     @property
-    def statements(self) -> Iterator[Statement]:
+    def statements(self) -> Sequence[Statement]:
         """Returns the statements in the XIR program.
 
         Returns:
-            Iterator[Statement]: iterator over the statements
+            Sequence[Statement]: sequence of statements
         """
-        return iter(self._statements)
+        return self._statements
 
     @property
-    def variables(self) -> Iterator[str]:
+    def variables(self) -> Collection[str]:
         """Returns the free parameter variables used when defining gates and
         operators in the XIR program.
 
         Returns:
-            Iterator[str]: free parameter variables as strings
+            Collection[str]: collection of free parameter variable names
         """
-        return iter(self._variables)
+        return self._variables
 
     def add_called_function(self, name: str) -> None:
         """Adds the name of a called function to the XIR program.
@@ -577,12 +631,12 @@ class XIRProgram:
         """Validates the given version number.
 
         Raises:
-            TypeError: If the version number is not a string.
-            ValueError: If the version number is not a semantic version.
+            TypeError: if the version number is not a string
+            ValueError: if the version number is not a semantic version
         """
         if not isinstance(version, str):
             raise TypeError(f"Version '{version}' must be a string.")
 
         valid_match = re.fullmatch(r"\d+\.\d+\.\d+", version)
-        if valid_match is None or valid_match.string != version:
+        if valid_match is None:
             raise ValueError(f"Version '{version}' must be a semantic version (MAJOR.MINOR.PATCH).")

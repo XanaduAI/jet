@@ -104,19 +104,25 @@ class XIRTransformer(Transformer):
 
     def imag(self, c):
         """Imaginary numbers"""
-        return DecimalComplex("0.0", float(c[0]))
+        return DecimalComplex("0.0", c[0])
 
     def bool(self, b):
         """Boolean expressions"""
         return bool(b[0])
 
+    def wires(self, w):
+        """Tuple with wires and identifier"""
+        return "wires", tuple(w)
+
     option = tuple
     options_dict = dict
-    wires = tuple
     params = list
     array = list
     FALSE_ = lambda self, _: False
     TRUE_ = lambda self, _: True
+
+    ADJOINT = str
+    CTRL = str
 
     #############################
     # variables and expressions
@@ -146,11 +152,11 @@ class XIRTransformer(Transformer):
     def operator_def(self, args):
         """Operator definition. Starts with keyword 'operator'"""
         name = args[0]
-        if isinstance(args[2], tuple):
+        if isinstance(args[2], tuple) and args[2][0] == "wires":
             params = args[1]
-            wires = args[2]
+            wires = args[2][1]
             stmts = args[3:]
-        else:
+        else:  # no wires are declared
             params = args[1]
             wires = ()
             stmts = args[2:]
@@ -162,11 +168,11 @@ class XIRTransformer(Transformer):
     def gate_def(self, args):
         """Gate definition. Starts with keyword 'gate'"""
         name = args[0]
-        if isinstance(args[2], tuple):
+        if isinstance(args[2], tuple) and args[2][0] == "wires":
             params = args[1]
-            wires = args[2]
+            wires = args[2][1]
             stmts = args[3:]
-        else:
+        else:  # no wires are declared
             params = args[1]
             wires = ()
             stmts = args[2:]
@@ -183,18 +189,34 @@ class XIRTransformer(Transformer):
     def gatestmt(self, args):
         """Gate statements that are defined directly in the circuit or inside
         a gate declaration."""
+
+        adjoint = False
+        ctrl_wires = set()
+
+        while args[0] in ("adjoint", "ctrl"):
+            a = args.pop(0)
+            if a == "adjoint":
+                adjoint = not adjoint
+            elif a == "ctrl":
+                ctrl_wires.update(args.pop(0)[1])
+
         name = args[0]
         if isinstance(args[1], list):
-            params = simplify_math(args[1])
-            wires = args[2]
+            params = list(map(simplify_math, args[1]))
+            wires = args[2][1]
         elif isinstance(args[1], dict):
-            params = args[1]
-            wires = args[2]
+            params = {k: simplify_math(v) for k, v in args[1].items()}
+            wires = args[2][1]
         else:
             params = []
-            wires = args[1]
+            wires = args[1][1]
 
-        return Statement(name, params, wires, use_floats=self.use_floats)
+        stmt_options = {
+            "ctrl_wires": tuple(sorted(ctrl_wires, key=hash)),
+            "adjoint": adjoint,
+            "use_floats": self.use_floats
+        }
+        return Statement(name, params, wires, **stmt_options)
 
     def opstmt(self, args):
         """Operator statements defined inside an operator declaration
@@ -202,7 +224,7 @@ class XIRTransformer(Transformer):
         Returns:
             OperatorStmt: object containing statement data
         """
-        pref = simplify_math([args[0]])[0]
+        pref = simplify_math(args[0])
         term = args[1]
         return OperatorStmt(pref, term, use_floats=self.use_floats)
 

@@ -36,9 +36,9 @@ Features
 * Models quantum systems with an arbitrary number of basis states.
 
 To get started with Jet, read one of our `tutorial walkthroughs
-<https://quantum-jet.readthedocs.io/en/stable/use/introduction.html>`__ or
+<https://quantum-jet.readthedocs.io/en/latest/use/introduction.html>`__ or
 browse the full `API documentation
-<https://quantum-jet.readthedocs.io/en/stable/api/library_root.html>`__.
+<https://quantum-jet.readthedocs.io/en/latest/api/library_root.html>`__.
 
 Installation
 ============

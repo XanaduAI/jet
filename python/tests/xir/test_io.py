@@ -139,13 +139,13 @@ class TestStrawberryFieldsToXIR:
         sfprog = create_sf_prog(num_of_wires=2, ops=circuit_data)
         irprog = to_xir(sfprog, add_decl=add_decl)
 
-        stmt = next(irprog.statements)
+        stmt = irprog.statements[0]
 
         assert stmt.name == "Vacuum"
         assert stmt.params == []
         assert stmt.wires == (0,)
 
-        decls = list(irprog.declarations["gate"])
+        decls = irprog.declarations["gate"]
 
         if add_decl:
             assert len(decls) == 1
@@ -153,7 +153,7 @@ class TestStrawberryFieldsToXIR:
             assert decls[0].num_params == 0
             assert decls[0].num_wires == 1
         else:
-            assert decls == []
+            assert len(decls) == 0
 
     @pytest.mark.parametrize("add_decl", [True, False])
     def test_gates_with_args(self, add_decl):
@@ -167,7 +167,7 @@ class TestStrawberryFieldsToXIR:
         sfprog = create_sf_prog(num_of_wires=2, ops=circuit_data)
         irprog = to_xir(sfprog, add_decl=add_decl)
 
-        stmts = list(irprog.statements)
+        stmts = irprog.statements
 
         assert stmts[0].name == "Sgate"
         assert stmts[0].params == [0.1, 0.2]
@@ -177,7 +177,7 @@ class TestStrawberryFieldsToXIR:
         assert stmts[1].params == [0.3, 0.0]
         assert stmts[1].wires == (1,)
 
-        decls = list(irprog.declarations["gate"])
+        decls = irprog.declarations["gate"]
 
         if add_decl:
             assert len(decls) == 1
@@ -185,4 +185,4 @@ class TestStrawberryFieldsToXIR:
             assert decls[0].num_params == 2
             assert decls[0].num_wires == 1
         else:
-            assert decls == []
+            assert len(decls) == 0

@@ -26,7 +26,7 @@ class TestParser:
         circuit = f"an_output_statement(array: {array}) | [0, 1];"
         irprog = parse_script(circuit)
 
-        assert next(irprog.statements).params["array"] == res
+        assert irprog.statements[0].params["array"] == res
 
     @pytest.mark.parametrize(
         "key, val, expected",
@@ -63,6 +63,41 @@ class TestParser:
         assert key in irprog.options
         assert irprog.options[key] == val
 
+    @pytest.mark.parametrize(
+        "script, adjoint",
+        [
+            ("adjoint ry(2.4) | [2];", True),
+            ("adjoint adjoint ry(2.4) | [2];", False),
+            ("adjoint ctrl[0, 1] adjoint ry(2.4) | [2];", False),
+            ("adjoint adjoint ctrl[0, 1] adjoint ry(2.4) | [2];", True),
+            ("ry(2.4) | [2];", False),
+        ],
+    )
+    def test_adjoint_modifier(self, script, adjoint):
+        """Test that adjoint modifier for gate statements works correctly"""
+        irprog = parse_script(script)
+
+        assert irprog.statements[0].is_adjoint is adjoint
+
+    @pytest.mark.parametrize(
+        "script, ctrl_wires",
+        [
+            ("ctrl[0, 1] ry(2.4) | [2];", (0, 1)),
+            ("ctrl[0, 1] ctrl[3] rz(4.2) | [2];", (0, 1, 3)),
+            ("ctrl[0, 1] adjoint ctrl[3] rx(3.1) | [4];", (0, 1, 3)),
+            ("ry(2.4) | [2];", ()),
+            ("ctrl [0, 1] ctrl [0] rx(6.2) | [2];", (0, 1)),
+            ("ctrl [0, 0, 1, 2, 2] rx(6.2) | [2];", (0, 1, 2)),
+        ],
+    )
+    def test_ctrl_modifier(self, script, ctrl_wires):
+        """Test that control wires modifier for gate statements correctly sets
+        the ``Statement.ctrl_wires`` property.
+        """
+        irprog = parse_script(script)
+
+        assert irprog.statements[0].ctrl_wires == ctrl_wires
+
     @pytest.mark.parametrize("use_floats", [True, False])
     @pytest.mark.parametrize("param", [3, 4.2, 2j])
     def test_use_floats(self, use_floats, param):
@@ -80,7 +115,7 @@ class TestParser:
         circuit = f"a_gate({param}) | [0, 1];"
         irprog = parse_script(circuit, use_floats=use_floats)
 
-        assert isinstance(next(irprog.statements).params[0], t)
+        assert isinstance(irprog.statements[0].params[0], t)
 
     @pytest.mark.parametrize("eval_pi", [True, False])
     @pytest.mark.parametrize("param, expected", [("pi", math.pi), ("pi / 2", math.pi / 2)])
@@ -89,6 +124,6 @@ class TestParser:
         circuit = f"a_gate({param}) | [0, 1];"
         irprog = parse_script(circuit, eval_pi=eval_pi)
         if eval_pi:
-            assert next(irprog.statements).params[0] == expected
+            assert irprog.statements[0].params[0] == expected
         else:
-            assert next(irprog.statements).params[0] == param.upper()
+            assert irprog.statements[0].params[0] == param.upper()
