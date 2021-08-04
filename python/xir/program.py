@@ -518,12 +518,12 @@ class XIRProgram:
         """Validates the given version number.
 
         Raises:
-            TypeError: If the version number is not a string.
-            ValueError: If the version number is not a semantic version.
+            TypeError: if the version number is not a string
+            ValueError: if the version number is not a semantic version
         """
         if not isinstance(version, str):
             raise TypeError(f"Version '{version}' must be a string.")
 
         valid_match = re.fullmatch(r"\d+\.\d+\.\d+", version)
-        if valid_match is None or valid_match.string != version:
+        if valid_match is None:
             raise ValueError(f"Version '{version}' must be a semantic version (MAJOR.MINOR.PATCH).")
