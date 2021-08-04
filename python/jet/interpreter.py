@@ -247,9 +247,8 @@ def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
     Returns:
         Iterator[Statement]: Resolved statements in the given ``XIRProgram``.
     """
-    # TODO: Merge the two XIRPrograms (once merging is implemented) and use
-    #       gate declarations when parameter and wire names are supported.
-    gate_signature_map = {**get_xir_library().gates, **program.gates}
+    # TODO: Use gate declarations when parameter and wire names are supported.
+    gate_signature_map = XIRProgram.merge(get_xir_library(), program).gates
 
     # Create a mapping from gate names to XIR statement generators.
     stmt_generator_map = {}
