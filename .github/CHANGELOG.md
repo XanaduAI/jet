@@ -10,6 +10,8 @@
 
 ### Documentation
 
+* Links to the [Jet paper](https://arxiv.org/abs/2107.09793) are now included in the README and Sphinx documentation. [(#59)](https://github.com/XanaduAI/jet/pull/59)
+
 * The `CudaScopedDevice` documentation is now consistent with other classes in Jet. [(#59)](https://github.com/XanaduAI/jet/pull/59)
 
 * The documentation section of the development guide now lists system dependencies. [(#52)](https://github.com/XanaduAI/jet/pull/52)
