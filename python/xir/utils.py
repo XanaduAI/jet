@@ -4,17 +4,17 @@ import re
 from typing import List, Tuple
 
 
-def simplify_math(numstr: List[str]) -> List[str]:
+def simplify_math(numstr: str) -> str:
     """Simplifies specified substrings and removes unnecessary parantheses
 
     Used for e.g. statement parameter inputs to beautify mathematical expressions.
     For example, ``((a+2))+-(b*(3+c))`` becomes ``a+2-b*(3+c)``.
 
     Args:
-        numstr (list[str]): string(s) containing mathematical expressions
+        numstr (str): string containing mathematical expressions
 
     Returns:
-        list[str]: the input expression(s) beautified
+        str: the input expression simplified
     """
     # list of replacement strings; can be expanded with more if needed
     repstr = [
@@ -24,53 +24,48 @@ def simplify_math(numstr: List[str]) -> List[str]:
         ("++", "+"),
     ]
 
-    for i, n in enumerate(numstr):
-        if not isinstance(n, str):
-            continue
+    if isinstance(numstr, str):
         for r in repstr:
-            numstr[i] = numstr[i].replace(*r)
-        if n[0] == "+":
-            numstr[i] = numstr[i][1:]
+            numstr = numstr.replace(*r)
+        if numstr[0] == "+":
+            numstr = numstr[1:]
 
-    numstr = remove_parantheses(numstr)
+        numstr = remove_parantheses(numstr)
     return numstr
 
 
-def remove_parantheses(numstr: List[str]) -> List[str]:
+def remove_parantheses(numstr: str) -> str:
     """Removes matching parantheses where unnecessary
 
     For example, ``((a+b)+c)`` becomes ``a+b+c``.
 
     Args:
-        numstr (list[str]): string(s) containing mathematical expressions
+        numstr (str): string containing mathematical expressions
 
     Returns:
-        list[str]: the input expressions beautified
+        str: the input expression without unnecessary parantheses
     """
-    for i, n in enumerate(numstr):
-        if not isinstance(n, str):
-            continue
-
+    if isinstance(numstr, str):
         pre = []
-        dels = [0, len(n) + 1]
+        dels = [0, len(numstr) + 1]
 
         # expand string with "+" so that outer parantheses can be removed,
         # then store all indices where unnecessary mathing parantheses are found
-        n = "+" + n + "+"
-        for j, char in enumerate(n):
+        numstr = "+" + numstr + "+"
+        for j, char in enumerate(numstr):
             if char == "(":
-                pre.append((n[j - 1], j))
+                pre.append((numstr[j - 1], j))
             if char == ")":
                 p = pre.pop()
-                if p[0] in ("+", "-", "(") and n[j + 1] in ("+", "-", ")"):
+                if p[0] in ("+", "-", "(") and numstr[j + 1] in ("+", "-", ")"):
                     dels.extend([p[1], j])
 
         # delete all unnecessary mathing parantheses found int the previous step
         new_str = ""
         dels = sorted(dels)
         for j in range(len(dels) - 1):
-            new_str += n[dels[j] + 1 : dels[j + 1]]
-        numstr[i] = new_str
+            new_str += numstr[dels[j] + 1 : dels[j + 1]]
+        numstr = new_str
 
     return numstr
 
