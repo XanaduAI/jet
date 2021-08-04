@@ -572,7 +572,7 @@ class XIRProgram:
         """Merges one or more XIR programs into a new XIR program.
 
         The merged XIR program is formed by concatenating the given XIR programs
-        in the orderthey are passed to the function. Warnings may be issued for
+        in the order they are passed to the function. Warnings may be issued for
         duplicate declarations, gates, includes, operators, and options.
 
         Args:
@@ -582,8 +582,8 @@ class XIRProgram:
             XIRProgram: the merged XIR program
 
         Raises:
-            ValueError: If no XIR programs are provided or if at least two XIR
-                programs have different versions or float settings.
+            ValueError: if no XIR programs are provided or if at least two XIR
+                programs have different versions or float settings
         """
         if len(programs) == 0:
             raise ValueError("Merging requires at least one XIR program.")
