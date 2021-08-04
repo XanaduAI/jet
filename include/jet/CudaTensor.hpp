@@ -19,9 +19,6 @@
 #include <curand.h>
 #include <cutensor.h>
 
-#include <taskflow/cudaflow.hpp>
-#include <taskflow/taskflow.hpp>
-
 namespace {
 using namespace Jet::CudaTensorHelpers;
 }
@@ -42,7 +39,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     static CudaTensor<U, D> AddTensors(const CudaTensor<U, D> &A,
                                        const CudaTensor<U, D> &B)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         static const CudaTensor<U, D> zero;
 
         // The zero tensor is used in reductions where the shape of an
@@ -148,7 +145,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     void InitIndicesAndShape(const std::vector<std::string> &indices,
                              const std::vector<size_t> &shape)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         Clear_();
         shape_ = shape;
         indices_ = indices;
@@ -165,7 +162,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     CudaTensor() : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         T h_dat({.x = 0.0, .y = 0.0});
         JET_CUDA_IS_SUCCESS(
             cudaMalloc(reinterpret_cast<void **>(&data_), sizeof(T)));
@@ -184,7 +181,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
                const std::vector<size_t> &shape, const std::vector<T> data)
         : CudaTensor(indices, shape)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, data.data(),
                                        sizeof(T) * data.size(),
                                        cudaMemcpyHostToDevice));
@@ -194,7 +191,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
                const std::vector<size_t> &shape, const T *data)
         : CudaTensor(indices, shape)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(
             data_, data, sizeof(T) * Jet::Utilities::ShapeToSize(shape),
             cudaMemcpyHostToDevice));
@@ -212,15 +209,15 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     ~CudaTensor()
     {
-        JET_CUDA_IS_SUCCESS(tf::cudaScopedDevice ctx(CUDA_DEVICE);
-                            cudaFree(data_));
+        CudaScopedDevice ctx(CUDA_DEVICE);
+        JET_CUDA_IS_SUCCESS(cudaFree(data_));
     }
 
     template <class U = T, int D = CUDA_DEVICE>
     static CudaTensor<U, D> ContractTensors(const CudaTensor<U, D> &a_tensor,
                                             const CudaTensor<U, D> &b_tensor)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         using namespace Utilities;
 
         auto &&left_indices =
@@ -298,13 +295,13 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     CudaTensor(CudaTensor &&other) : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         Move_(std::move(other));
     }
 
     CudaTensor(const CudaTensor &other) : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         InitIndicesAndShape(other.GetIndices(), other.GetShape());
 
         JET_CUDA_IS_SUCCESS(cudaMemcpy(data_, other.GetData(),
@@ -315,7 +312,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     template <class CPUData>
     CudaTensor(const Tensor<CPUData> &other) : data_{nullptr}
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
@@ -327,7 +324,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     template <class CPUData> CudaTensor &operator=(const Tensor<CPUData> &other)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         static_assert(sizeof(CPUData) == sizeof(T),
                       "Size of CPU and GPU data types do not match.");
 
@@ -340,7 +337,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     CudaTensor &operator=(const CudaTensor &other)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         if (this != &other) // not a self-assignment
         {
             InitIndicesAndShape(other.GetIndices(), other.GetShape());
@@ -360,21 +357,21 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     inline void CopyHostDataToGpu(T *host_tensor)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(
             data_, host_tensor, sizeof(T) * GetSize(), cudaMemcpyHostToDevice));
     }
 
     inline void CopyGpuDataToHost(T *host_tensor) const
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(
             host_tensor, data_, sizeof(T) * GetSize(), cudaMemcpyDeviceToHost));
     }
 
     inline void CopyGpuDataToGpu(T *host_tensor)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpy(host_tensor, data_,
                                        sizeof(T) * GetSize(),
                                        cudaMemcpyDeviceToDevice));
@@ -382,7 +379,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     inline void AsyncCopyHostDataToGpu(T *host_tensor, cudaStream_t stream = 0)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(data_, host_tensor,
                                             sizeof(T) * GetSize(),
                                             cudaMemcpyHostToDevice, stream));
@@ -390,7 +387,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     inline void AsyncCopyGpuDataToHost(T *host_tensor, cudaStream_t stream = 0)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_CUDA_IS_SUCCESS(cudaMemcpyAsync(host_tensor, data_,
                                             sizeof(T) * GetSize(),
                                             cudaMemcpyDeviceToHost, stream));
@@ -403,7 +400,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
     explicit operator Tensor<std::complex<scalar_type_t_precision>>() const
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         std::vector<std::complex<scalar_type_t_precision>> host_data(
             GetSize(), {0.0, 0.0});
 
@@ -421,7 +418,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
      */
     void FillRandom(size_t seed)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         static curandGenerator_t rng;
         JET_CURAND_IS_SUCCESS(
             curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
@@ -437,7 +434,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
      */
     void FillRandom()
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         static curandGenerator_t rng;
         JET_CURAND_IS_SUCCESS(
             curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_DEFAULT));
@@ -478,7 +475,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
 
         ~CudaContractionPlan()
         {
-            tf::cudaScopedDevice ctx(CUDA_DEVICE);
+            CudaScopedDevice ctx(CUDA_DEVICE);
             JET_CUDA_IS_SUCCESS(cudaFree(work));
         }
     };
@@ -675,7 +672,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     static CudaTensor<U, D> Reshape(const CudaTensor<U> &old_tensor,
                                     const std::vector<size_t> &new_shape)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         JET_ABORT_IF_NOT(old_tensor.GetSize() ==
                              Jet::Utilities::ShapeToSize(new_shape),
                          "Size is inconsistent between tensors.");
@@ -706,7 +703,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     Transpose(const CudaTensor<U, D> &tensor,
               const std::vector<std::string> &new_indices)
     {
-        tf::cudaScopedDevice ctx(CUDA_DEVICE);
+        CudaScopedDevice ctx(CUDA_DEVICE);
         using namespace Jet::Utilities;
 
         if (tensor.GetIndices() == new_indices)
@@ -870,7 +867,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
                                        const std::string &index_str,
                                        size_t index_value)
     {
-        tf::cudaScopedDevice ctx(D);
+        CudaScopedDevice ctx(D);
         std::vector<std::string> new_indices = tens.GetIndices();
         std::vector<std::string> old_indices = tens.GetIndices();
 
