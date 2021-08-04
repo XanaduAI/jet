@@ -8,7 +8,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 
 from xir.interfaces.strawberryfields_io import to_program, to_xir
-from xir.program import GateDeclaration, Statement, XIRProgram
+from xir.program import Declaration, Statement, XIRProgram
 
 
 def create_xir_prog(
@@ -30,7 +30,7 @@ def create_xir_prog(
 
     # if declaration should be included, add them to the program
     if include_decl:
-        declarations = [GateDeclaration(n, len(p), len(w)) for n, p, w in data]
+        declarations = [Declaration(n, p, w, declaration_type="gate") for n, p, w in data]
         irprog._declarations["gate"].extend(declarations)
 
     # if any external libraries/files are included, add them to the program
@@ -150,8 +150,8 @@ class TestStrawberryFieldsToXIR:
         if add_decl:
             assert len(irprog.declarations["gate"]) == 1
             assert irprog.declarations["gate"][0].name == "Vacuum"
-            assert irprog.declarations["gate"][0].num_params == 0
-            assert irprog.declarations["gate"][0].num_wires == 1
+            assert irprog.declarations["gate"][0].params == []
+            assert irprog.declarations["gate"][0].wires == (0,)
         else:
             assert irprog.declarations["gate"] == []
 
@@ -178,7 +178,7 @@ class TestStrawberryFieldsToXIR:
         if add_decl:
             assert len(irprog.declarations["gate"]) == 1
             assert irprog.declarations["gate"][0].name == "Sgate"
-            assert irprog.declarations["gate"][0].num_params == 2
-            assert irprog.declarations["gate"][0].num_wires == 1
+            assert irprog.declarations["gate"][0].params == ["p0", "p1"]
+            assert irprog.declarations["gate"][0].wires == (0,)
         else:
             assert irprog.declarations["gate"] == []

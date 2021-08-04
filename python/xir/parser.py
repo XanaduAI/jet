@@ -7,13 +7,10 @@ from lark import Lark, Transformer
 
 from .decimal_complex import DecimalComplex
 from .program import (
-    FuncDeclaration,
-    GateDeclaration,
-    OperatorDeclaration,
-    OperatorStmt,
-    OutputDeclaration,
-    Statement,
     XIRProgram,
+    Declaration,
+    Statement,
+    OperatorStmt,
 )
 from .utils import check_wires, simplify_math
 
@@ -182,7 +179,7 @@ class XIRTransformer(Transformer):
 
     def gatestmt(self, args):
         """Gate statements that are defined directly in the circuit or inside
-        a gate declaration."""
+        a gate definition."""
         name = args[0]
         if isinstance(args[1], list):
             params = simplify_math(args[1])
@@ -197,7 +194,7 @@ class XIRTransformer(Transformer):
         return Statement(name, params, wires, use_floats=self.use_floats)
 
     def opstmt(self, args):
-        """Operator statements defined inside an operator declaration
+        """Operator statements defined inside an operator definition.
 
         Returns:
             OperatorStmt: object containing statement data
@@ -219,19 +216,19 @@ class XIRTransformer(Transformer):
     ###############
 
     def gate_decl(self, args):
-        decl = GateDeclaration(*args)
+        decl = Declaration(*args, declaration_type="gate")
         self._program._declarations["gate"].append(decl)
 
     def operator_decl(self, args):
-        decl = OperatorDeclaration(*args)
+        decl = Declaration(*args, declaration_type="operator")
         self._program._declarations["operator"].append(decl)
 
     def func_decl(self, args):
-        decl = FuncDeclaration(*args)
+        decl = Declaration(*args, declaration_type="function")
         self._program._declarations["func"].append(decl)
 
     def output_decl(self, args):
-        decl = OutputDeclaration(*args)
+        decl = Declaration(*args, declaration_type="output")
         self._program._declarations["output"].append(decl)
 
     #########

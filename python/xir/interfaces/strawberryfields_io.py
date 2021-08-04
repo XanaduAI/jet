@@ -3,7 +3,7 @@ from decimal import Decimal
 import strawberryfields as sf
 from strawberryfields import ops
 
-from xir.program import GateDeclaration, OutputDeclaration, Statement, XIRProgram
+from xir.program import Declaration, Statement, XIRProgram
 
 
 def to_program(xir, **kwargs):
@@ -98,7 +98,7 @@ def to_xir(prog, **kwargs):
 
         if "Measure" in name:
             if kwargs.get("add_decl", False):
-                output_decl = OutputDeclaration(name)
+                output_decl = Declaration(name, [], (), declaration_type="output")
                 xir._declarations["output"].append(output_decl)
 
             params = dict()
@@ -117,7 +117,7 @@ def to_xir(prog, **kwargs):
         else:
             if kwargs.get("add_decl", False):
                 if name not in [gdecl.name for gdecl in xir._declarations["gate"]]:
-                    gate_decl = GateDeclaration(name, len(cmd.op.p), len(wires))
+                    gate_decl = Declaration(name, [f"p{i}" for i, _ in enumerate(cmd.op.p)], wires, declaration_type="gate")
                     xir._declarations["gate"].append(gate_decl)
 
             params = []
