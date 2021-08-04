@@ -328,9 +328,9 @@ class XIRTransformer(Transformer):
     PI = lambda self, _: "PI" if not self._eval_pi else Decimal(str(math.pi))
 
 def is_wire(arg):
-    """TODO"""
+    """Returns whether the passed argument is a tuple of wires."""
     return isinstance(arg, tuple) and arg[0] == "wires"
 
 def is_param(arg):
-    """TODO"""
+    """Returns whether the passed argument is a list of params."""
     return isinstance(arg, tuple) and arg[0] == "params"
