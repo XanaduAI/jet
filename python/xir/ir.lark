@@ -5,7 +5,7 @@ include: "use" name ";"
 // the main circuit
 circuit: statement+
 statement: gatestmt | gate_def | operator_def | script_options
-gatestmt: name (params | options_dict)? "|" wires ";"
+gatestmt: (ADJOINT | (CTRL wires))* name (params | options_dict)? "|" wires ";"
 opstmt: expr "," obs_group";"
 script_options: _OPTIONS ":" (option ";")+ _END ";"
 
@@ -58,6 +58,8 @@ _GATE: "gate"
 _FUNC: "func"
 _OP: "operator"
 _OUT: "output"
+ADJOINT: "adjoint"
+CTRL: "ctrl"
 
 _END: "end"
 

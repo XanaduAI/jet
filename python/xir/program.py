@@ -8,25 +8,33 @@ from .utils import strip
 
 """This module contains the XIRProgram class and classes for the Xanadu IR"""
 
+Wire = Union[int, str]
+Param = Union[complex, str, Decimal, DecimalComplex, bool, List["Param"]]
+Params = Union[List[Param], Dict[str, Param]]
 
-def get_floats(params: Union[List, Dict]) -> Union[List, Dict]:
+
+def get_floats(params: Params) -> Params:
     """Converts `decimal.Decimal` and `DecimalComplex` objects to ``float`` and
     ``complex`` respectively"""
-    params_with_floats = params.copy()
-
     if isinstance(params, List):
-        for i, p in enumerate(params_with_floats):
+        params_with_floats = []
+        for p in params:
             if isinstance(p, DecimalComplex):
-                params_with_floats[i] = complex(p)
+                params_with_floats.append(complex(p))
             elif isinstance(p, Decimal):
-                params_with_floats[i] = float(p)
+                params_with_floats.append(float(p))
+            else:
+                params_with_floats.append(p)
 
     elif isinstance(params, Dict):
-        for k, v in params_with_floats.items():
+        params_with_floats = dict()
+        for k, v in params.items():
             if isinstance(v, DecimalComplex):
                 params_with_floats[k] = complex(v)
             elif isinstance(v, Decimal):
                 params_with_floats[k] = float(v)
+            else:
+                params_with_floats[k] = v
 
     return params_with_floats
 
@@ -41,46 +49,85 @@ class Statement:
         name (str): name of the statement
         params (list, Dict): parameters for the statement (can be empty)
         wires (tuple): the wires on which the statement is applied
+
+    Keyword args:
+        adjoint (bool): whether the statement is an adjoint gate
+        ctrl_wires (tuple): the control wires of a controlled gate statement
         use_floats (bool): Whether floats and complex types are returned instead of ``Decimal``
             and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(self, name: str, params: Union[List, Dict], wires: Tuple, use_floats: bool = True):
+    def __init__(
+            self,
+            name: str,
+            params: Params,
+            wires: Sequence[Wire],
+            **kwargs
+        ):
         self._name = name
         self._params = params
         self._wires = wires
 
-        self._use_floats = use_floats
+        self._is_adjoint = kwargs.get("adjoint", False)
+        self._ctrl_wires = kwargs.get("ctrl_wires", tuple())
+
+        self._use_floats = kwargs.get("use_floats", True)
 
     def __str__(self):
+        """Serialized string representation of a Statement"""
         if isinstance(self.params, dict):
             params = [f"{k}: {v}" for k, v in self.params.items()]
         else:
             params = [str(p) for p in self.params]
         params_str = ", ".join(params)
+        if params_str != "":
+            params_str = "(" + params_str + ")"
 
         wires = ", ".join([str(w) for w in self.wires])
 
-        if params_str == "":
-            return f"{self.name} | [{wires}]"
-        return f"{self.name}({params_str}) | [{wires}]"
+        modifier_str = ""
+        if len(self.ctrl_wires) != 0:
+            ctrl_wires = ", ".join([str(w) for w in self.ctrl_wires])
+            modifier_str = f"ctrl[{ctrl_wires}] "
+        if self.is_adjoint:
+            modifier_str += "adjoint "
+
+        return f"{modifier_str}{self.name}{params_str} | [{wires}]"
 
     @property
     def name(self) -> str:
+        """Returns the name of the gate statement"""
         return self._name
 
     @property
-    def params(self) -> Union[List, Dict]:
+    def params(self) -> Params:
+        """Returns the parameters of the gate statement"""
         if self.use_floats:
             return get_floats(self._params)
         return self._params
 
     @property
-    def wires(self) -> Tuple:
+    def wires(self) -> Sequence[Wire]:
+        """Returns the wires that the gate is applied to"""
         return self._wires
 
     @property
+    def is_adjoint(self) -> bool:
+        """Returns whether the statement applies an adjoint gate"""
+        return self._is_adjoint
+
+    @property
+    def ctrl_wires(self) -> Sequence[Wire]:
+        """Returns the control wires of a controlled gate statement.
+        If no control wires are specified, an empty tuple is returned.
+        """
+        return self._ctrl_wires
+
+    @property
     def use_floats(self) -> bool:
+        """Returns whether floats and complex types are returned instead of
+        ``Decimal`` and ``DecimalComplex`` objects, respectively.
+        """
         return self._use_floats
 
 
@@ -235,7 +282,9 @@ class XIRProgram:
             Dict: declared scipt-level options
         """
         if self.use_floats:
-            return get_floats(self._options)
+            options_with_floats = get_floats(self._options)
+            if isinstance(options_with_floats, Dict):
+                return options_with_floats
         return self._options
 
     @property
