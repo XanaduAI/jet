@@ -22,8 +22,8 @@
     :alt: License
     :target: https://www.apache.org/licenses/LICENSE-2.0
 
-`Jet <https://quantum-jet.readthedocs.io>`_ is a cross-platform C++ library for
-simulating quantum circuits using tensor network contractions.
+`Jet <https://quantum-jet.readthedocs.io>`_ is a cross-platform C++ and Python
+library for simulating quantum circuits using tensor network contractions.
 
 Features
 ========
@@ -172,6 +172,15 @@ Support
 
 If you are having issues, please let us know by posting the issue on our GitHub
 issue tracker.
+
+Authors
+=======
+
+Jet is the work of `many contributors <https://github.com/XanaduAI/jet/graphs/contributors>`_.
+
+If you are doing research using Jet, please cite our paper:
+
+    Trevor Vincent, Lee J. O'Riordan, Mikhail Andrenkov, Jack Brown, Nathan Killoran, Haoyu Qi, and Ish Dhand. *Jet: Fast quantum circuit simulations with parallel task-based tensor-network contraction.* 2021. `arxiv:2107.09793 <https://arxiv.org/abs/2107.09793>`_
 
 License
 =======
