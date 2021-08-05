@@ -1,6 +1,18 @@
-## Release 0.3.0 (development release)
+## Release 0.2.1 (development release)
+
+### New features since last release
+
+* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
+
+### Improvements
+
+* The `CudaTensor` class no longer includes [Taskflow](https://taskflow.github.io/) headers. [(#56)](https://github.com/XanaduAI/jet/pull/56)
 
 ### Documentation
+
+* Links to the [Jet paper](https://arxiv.org/abs/2107.09793) are now included in the README and Sphinx documentation. [(#59)](https://github.com/XanaduAI/jet/pull/59)
+
+* The `CudaScopedDevice` documentation is now consistent with other classes in Jet. [(#59)](https://github.com/XanaduAI/jet/pull/59)
 
 * The documentation section of the development guide now lists system dependencies. [(#52)](https://github.com/XanaduAI/jet/pull/52)
 
@@ -12,13 +24,11 @@
 
 This release contains contributions from (in alphabetical order):
 
-[Mikhail Andrenkov](https://github.com/Mandrenkov).
+[Mikhail Andrenkov](https://github.com/Mandrenkov), [Trevor Vincent](https://github.com/trevor-vincent).
 
 ## Release 0.2.0 (current release)
 
 ### New features since last release
-
-* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
 
 * The Jet interpreter for XIR scripts now accepts a `dimension` option for CV circuits. [(#47)](https://github.com/XanaduAI/jet/pull/47)
 

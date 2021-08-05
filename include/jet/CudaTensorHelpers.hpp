@@ -176,25 +176,28 @@ ReverseVector(const std::vector<DataType> &input)
     return std::vector<DataType>{input.rbegin(), input.rend()};
 }
 
-/** @class CudaScopedDevice
-
-@brief RAII-styled device context switch. Code taken from Taskflow.
-
-%cudaScopedDevice is neither movable nor copyable.
-*/
+/** @brief `%CudaScopedDevice` uses RAII to select a CUDA device context.
+ *
+ * @see https://taskflow.github.io/taskflow/classtf_1_1cudaScopedDevice.html
+ *
+ * @note A `%CudaScopedDevice` instance cannot be moved or copied.
+ *
+ * @warning This class is not thread-safe.
+ */
 class CudaScopedDevice {
 
   public:
     /**
-    @brief constructs a RAII-styled device switcher
-
-    @param device device context to scope in the guard
-    */
+     * @brief Constructs a `%CudaScopedDevice` using a CUDA device.
+     *
+     *  @param device CUDA device to scope in the guard.
+     */
     explicit CudaScopedDevice(int device);
 
     /**
-    @brief destructs the guard and switches back to the previous device context
-    */
+     * @brief Destructs a `%CudaScopedDevice`, switching back to the previous
+     *        CUDA device context.
+     */
     ~CudaScopedDevice();
 
   private:
@@ -202,24 +205,28 @@ class CudaScopedDevice {
     CudaScopedDevice(const CudaScopedDevice &) = delete;
     CudaScopedDevice(CudaScopedDevice &&) = delete;
 
-    int _p;
+    /// The previous CUDA device (or -1 if the device passed to the constructor
+    /// is the current CUDA device).
+    int prev_device_;
 };
 
-inline CudaScopedDevice::CudaScopedDevice(int dev)
+inline CudaScopedDevice::CudaScopedDevice(int device)
 {
-    JET_CUDA_IS_SUCCESS(cudaGetDevice(&_p));
-    if (_p == dev) {
-        _p = -1;
+    JET_CUDA_IS_SUCCESS(cudaGetDevice(&prev_device_));
+    if (prev_device_ == device) {
+        prev_device_ = -1;
     }
     else {
-        JET_CUDA_IS_SUCCESS(cudaSetDevice(dev));
+        JET_CUDA_IS_SUCCESS(cudaSetDevice(device));
     }
 }
 
 inline CudaScopedDevice::~CudaScopedDevice()
 {
-    if (_p != -1) {
-        cudaSetDevice(_p);
+    if (prev_device_ != -1) {
+        // Throwing exceptions from a destructor can be dangerous.
+        // See https://isocpp.org/wiki/faq/exceptions#ctor-exceptions.
+        cudaSetDevice(prev_device_);
     }
 }
 
