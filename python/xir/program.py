@@ -3,7 +3,18 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Any, Collection, Dict, List, Mapping, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    List,
+    Mapping,
+    MutableMapping,
+    MutableSet,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
@@ -59,13 +70,7 @@ class Statement:
             and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(
-            self,
-            name: str,
-            params: Params,
-            wires: Sequence[Wire],
-            **kwargs
-        ):
+    def __init__(self, name: str, params: Params, wires: Sequence[Wire], **kwargs):
         self._name = name
         self._params = params
         self._wires = wires
@@ -625,6 +630,138 @@ class XIRProgram:
                 result.add_variable(variable)
 
         return result
+
+    @staticmethod
+    def resolve(library: Mapping[str, "XIRProgram"], name: str) -> "XIRProgram":
+        """Resolves the includes of an XIR program using an XIR library.
+
+        Args:
+            library (Mapping[str, XIRProgram]): mapping from names to XIR programs
+            name (str): name of the root XIR program to resolve
+
+        Returns:
+            XIRProgram: XIR program obtained by recursively merging each XIR
+            program starting from the root XIR program
+
+        **Example**
+
+        Consider an XIR program ``main`` which includes another XIR program ``util``:
+
+        .. code-block:: python
+
+            import xir
+
+            # Create two simple XIR programs.
+            main_program = xir.parse_script("use util; H2 | [0, 1];")
+            util_program = xir.parse_script("gate H2, 0, 2; gate H2: H | [0]; H | [1]; end;")
+
+        The ``main`` XIR program can be resolved using
+
+        .. code-block:: python
+
+            # Define a library containing the XIR programs in the resolution scope.
+            library = {"main": main_program, "util": util_program}
+
+            # Resolve the imports from the main XIR program.
+            resolved_main_program = xir.XIRProgram.resolve(library, "main")
+
+            # Display the result.
+            print(resolved_main_program.serialize())
+
+        The output is
+
+        .. code-block:: haskell
+
+            gate H2, 0, 2;
+
+            gate H2:
+                H | [0];
+                H | [1];
+            end;
+
+            H2 | [0, 1];
+        """
+        resolved_names = XIRProgram._resolve_include_order(library, name, stack=set(), cache={})
+        resolved_programs = map(library.get, resolved_names)
+
+        resolved_program = XIRProgram.merge(*resolved_programs)
+        resolved_program._includes = []
+        return resolved_program
+
+    @staticmethod
+    def _resolve_include_order(
+        library: Mapping[str, "XIRProgram"],
+        name: str,
+        stack: MutableSet[str],
+        cache: MutableMapping[str, Sequence[str]],
+    ) -> Sequence[str]:
+        """
+        Resolves the include order of an XIR program using C3 superclass linearization.
+
+        See https://en.wikipedia.org/wiki/C3_linearization for a summary of the
+        properties that hold following the linearization.
+
+        Args:
+            library (Mapping[str, XIRProgram]): mapping from names to XIR programs
+            name (str): name of the root XIR program to resolve
+            stack (MutableSet[str]): names in the current call stack; prevents
+                infinite recursion in the case of circular dependencies.
+            cache (MutableMapping[str, Sequence[str]]): mapping from names to
+                linearizations; improves performance when an XIR program is
+                included by multiple XIR programs.
+
+        Returns:
+            Sequence[str]: names representing a C3 linearization of the given XIR program.
+
+        Raises:
+            KeyError: if ``library`` does not have an entry for ``name``, or the
+                XIR program associated with ``name`` (transitively) includes
+                another XIR program which does not have an entry in ``library``.
+            ValueError: if ``name`` is already in ``stack``, or the XIR program
+                associated with ``name`` (transitively) includes an XIR program
+                with a circular dependency.
+        """
+        if name not in library:
+            raise KeyError(f"XIR program '{name}' cannot be found.")
+        elif name in stack:
+            raise ValueError(f"XIR program '{name}' has a circular dependency.")
+
+        if name in cache:
+            return list(cache[name])
+
+        # Step 1: Generate the C3 linearizations of the included XIR programs.
+        stack.add(name)
+
+        linearizations = []
+        for include in library[name].includes:
+            linearization = XIRProgram._resolve_include_order(library, include, stack, cache)
+            linearizations.append(list(linearization))
+
+        stack.discard(name)
+
+        # Step 2: Iteratively select the next XIR program to be included.
+        includes = []
+
+        while linearizations:
+            tails = {include for include in includes[1:] for includes in linearizations}
+            heads = (includes[0] for includes in linearizations)
+
+            selection = next(head for head in heads if head not in tails)
+            includes.append(selection)
+
+            # Remove the included XIR program from the linearizations and delete
+            # any empty linearizations that are generated as a result.
+            for linearization in linearizations:
+                if selection in linearization:
+                    linearization.remove(selection)
+            linearizations = [linearization for linearization in linearizations if linearization]
+
+        # Unlike MRO, the current XIR program has lower precendence than its includes.
+        includes.append(name)
+
+        cache[name] = includes
+
+        return includes
 
     @staticmethod
     def _validate_version(version: str) -> None:

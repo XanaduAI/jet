@@ -1,10 +1,12 @@
 """Unit tests for the program class"""
 
+from ast import parse
 from decimal import Decimal
 from typing import Any, Dict, Iterable, List, Set
 
 import pytest
 
+from xir import parse_script
 from xir.program import (
     Declaration,
     FuncDeclaration,
@@ -24,25 +26,25 @@ def program():
 
 
 def make_program(
-    called_functions: Set[str],
-    declarations: Dict[str, List[Declaration]],
-    gates: Dict[str, Dict[str, Any]],
-    includes: List[str],
-    operators: Dict[str, Dict[str, Any]],
-    options: Dict[str, Any],
-    statements: Set[str],
-    variables: List[str],
+    called_functions: Set[str] = None,
+    declarations: Dict[str, List[Declaration]] = None,
+    gates: Dict[str, Dict[str, Any]] = None,
+    includes: List[str] = None,
+    operators: Dict[str, Dict[str, Any]] = None,
+    options: Dict[str, Any] = None,
+    statements: List[str] = None,
+    variables: Set[str] = None,
 ):
     """Returns an XIR program with the given attributes."""
     program = XIRProgram()
-    program._called_functions = called_functions
-    program._declarations = declarations
-    program._gates = gates
-    program._includes = includes
-    program._operators = operators
-    program._options = options
-    program._statements = statements
-    program._variables = variables
+    program._called_functions = called_functions or set()
+    program._declarations = declarations or {"gate": [], "func": [], "output": [], "operator": []}
+    program._gates = gates or {}
+    program._includes = includes or []
+    program._operators = operators or {}
+    program._options = options or {}
+    program._statements = statements or set()
+    program._variables = variables or []
     return program
 
 
@@ -604,6 +606,211 @@ class TestXIRProgram:
         have_statements = list(map(str, have_result.statements))
         want_statements = list(map(str, want_result.statements))
         assert have_statements == want_statements
+
+    @pytest.mark.parametrize(
+        "name, library, want_program",
+        [
+            pytest.param(
+                "empty",
+                {
+                    "empty": XIRProgram(),
+                },
+                XIRProgram(),
+                id="Empty",
+            ),
+            pytest.param(
+                "play",
+                {
+                    "play": make_program(
+                        statements=[Statement("Play", [], [0])],
+                    ),
+                    "loop": make_program(
+                        includes=["loop"],
+                        statements=[Statement("Loop", [], [0])],
+                    ),
+                },
+                make_program(
+                    statements=[
+                        Statement("Play", [], [0]),
+                    ],
+                ),
+                id="Lazy",
+            ),
+            pytest.param(
+                "coffee",
+                {
+                    "coffee": make_program(
+                        includes=["cream", "milk", "sugar"],
+                        statements=[Statement("Coffee", [], [0])],
+                    ),
+                    "cream": make_program(
+                        statements=[Statement("Cream", [], [0])],
+                    ),
+                    "milk": make_program(
+                        statements=[Statement("Milk", [], [0])],
+                    ),
+                    "sugar": make_program(
+                        statements=[Statement("Sugar", [], [0])],
+                    ),
+                },
+                make_program(
+                    statements=[
+                        Statement("Cream", [], [0]),
+                        Statement("Milk", [], [0]),
+                        Statement("Sugar", [], [0]),
+                        Statement("Coffee", [], [0]),
+                    ],
+                ),
+                id="Flat",
+            ),
+            pytest.param(
+                "bot",
+                {
+                    "bot": make_program(
+                        includes=["mid"],
+                        statements=[Statement("Bottom", [], [0])],
+                    ),
+                    "mid": make_program(
+                        includes=["top"],
+                        statements=[Statement("Middle", [], [0])],
+                    ),
+                    "top": make_program(
+                        statements=[Statement("Top", [], [0])],
+                    ),
+                },
+                make_program(
+                    statements=[
+                        Statement("Top", [], [0]),
+                        Statement("Middle", [], [0]),
+                        Statement("Bottom", [], [0]),
+                    ],
+                ),
+                id="Linear",
+            ),
+            pytest.param(
+                "salad",
+                {
+                    "salad": make_program(
+                        includes=["lettuce", "spinach"],
+                        statements=[Statement("Salad", [], [0])],
+                    ),
+                    "lettuce": make_program(
+                        includes=["spinach"],
+                        statements=[Statement("Lettuce", [], [0])],
+                    ),
+                    "spinach": make_program(
+                        statements=[Statement("Spinach", [], [0])],
+                    ),
+                },
+                make_program(
+                    statements=[
+                        Statement("Spinach", [], [0]),
+                        Statement("Lettuce", [], [0]),
+                        Statement("Salad", [], [0]),
+                    ],
+                ),
+                id="Acyclic",
+            ),
+            pytest.param(
+                "Z",
+                {
+                    "Z": make_program(
+                        includes=["K1", "K2", "K3"],
+                        statements=[Statement("Z", [], [0])],
+                    ),
+                    "K1": make_program(
+                        includes=["A", "B", "C"],
+                        statements=[Statement("K1", [], [0])],
+                    ),
+                    "K2": make_program(
+                        includes=["B", "D", "E"],
+                        statements=[Statement("K2", [], [0])],
+                    ),
+                    "K3": make_program(
+                        includes=["A", "D"],
+                        statements=[Statement("K3", [], [0])],
+                    ),
+                    "A": make_program(
+                        includes=["O"],
+                        statements=[Statement("A", [], [0])],
+                    ),
+                    "B": make_program(
+                        includes=["O"],
+                        statements=[Statement("B", [], [0])],
+                    ),
+                    "C": make_program(
+                        includes=["O"],
+                        statements=[Statement("C", [], [0])],
+                    ),
+                    "D": make_program(
+                        includes=["O"],
+                        statements=[Statement("D", [], [0])],
+                    ),
+                    "E": make_program(
+                        includes=["O"],
+                        statements=[Statement("E", [], [0])],
+                    ),
+                    "O": make_program(
+                        includes=[],
+                        statements=[Statement("O", [], [0])],
+                    ),
+                },
+                make_program(
+                    statements=[
+                        Statement("O", [], [0]),
+                        Statement("A", [], [0]),
+                        Statement("B", [], [0]),
+                        Statement("C", [], [0]),
+                        Statement("K1", [], [0]),
+                        Statement("D", [], [0]),
+                        Statement("E", [], [0]),
+                        Statement("K2", [], [0]),
+                        Statement("K3", [], [0]),
+                        Statement("Z", [], [0]),
+                    ],
+                ),
+                id="Wikipedia",
+            ),
+        ],
+    )
+    def test_resolve_programs(self, name, library, want_program):
+        """Test that a library of XIR programs."""
+        have_program = XIRProgram.resolve(library=library, name=name)
+        assert have_program.serialize() == want_program.serialize()
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            ("null", {}),
+            ("init", {"init": make_program(includes=["stop"])}),
+        ],
+    )
+    def test_resolve_unknown_program(self, name, library):
+        """Test that a KeyError is raised when an XIR program that is missing
+        from the passed XIR library is resolved.
+        """
+        with pytest.raises(KeyError, match=r"XIR program '[^']+' cannot be found"):
+            XIRProgram.resolve(library=library, name=name)
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            ("self", {"self": make_program(includes=["self"])}),
+            (
+                "tick",
+                {
+                    "tick": make_program(includes=["tock"]),
+                    "tock": make_program(includes=["tick"]),
+                },
+            ),
+        ],
+    )
+    def test_resolve_program_with_circular_dependency(self, name, library):
+        """Test that a ValueError is raised when an XIR program that (transitively)
+        includes itself is resolved.
+        """
+        with pytest.raises(ValueError, match=r"XIR program '[^']+' has a circular dependency"):
+            XIRProgram.resolve(library=library, name=name)
 
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
