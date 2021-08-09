@@ -84,7 +84,8 @@ class XIRTransformer(Transformer):
 
     def script_options(self, args):
         """Script level options."""
-        self._program._options = {k: v for k, v in args}
+        for name, value in args:
+            self._program.add_option(name, value)
 
     ###############
     # basic types
@@ -184,7 +185,7 @@ class XIRTransformer(Transformer):
     def statement(self, args):
         """Any statement that is part of the circuit."""
         if args[0] is not None:
-            self._program._statements.append(args[0])
+            self._program.add_statement(args[0])
 
     def gatestmt(self, args):
         """Gate statements that are defined directly in the circuit or inside
