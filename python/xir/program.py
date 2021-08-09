@@ -327,8 +327,8 @@ class XIRProgram:
 
         Returns:
             Mapping[str, Sequence[Declaration]]: dictionary of declarations
-                sorted into the following keys: 'gate', 'func', 'output' and
-                'operator'.
+            sorted into the following keys: 'gate', 'func', 'output' and
+            'operator'.
         """
         return self._declarations
 
@@ -338,8 +338,8 @@ class XIRProgram:
 
         Returns:
             Mapping[str, Mapping[str, Sequence]]: dictionary of gates, each gate
-                consisting of a name and a dictionary with the following keys:
-                'parameters', 'wires' and 'statements'
+            consisting of a name and a dictionary with the following keys:
+            'parameters', 'wires' and 'statements'
         """
         return self._gates
 
@@ -358,8 +358,8 @@ class XIRProgram:
 
         Returns:
             Mapping[str, Mapping[str, Sequence]]: dictionary of operators, each
-                operator consisting of a name and a dictionary with the following
-                keys: 'parameters', 'wires' and 'statements'
+            operator consisting of a name and a dictionary with the following
+            keys: 'parameters', 'wires' and 'statements'
         """
         return self._operators
 
