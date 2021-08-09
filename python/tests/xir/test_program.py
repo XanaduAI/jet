@@ -1,12 +1,10 @@
 """Unit tests for the program class"""
 
-from ast import parse
 from decimal import Decimal
-from typing import Any, Dict, Iterable, List, Set
+from typing import Any, Dict, Iterable, List, MutableSet
 
 import pytest
 
-from xir import parse_script
 from xir.program import (
     Declaration,
     FuncDeclaration,
@@ -26,14 +24,14 @@ def program():
 
 
 def make_program(
-    called_functions: Set[str] = None,
+    called_functions: MutableSet[str] = None,
     declarations: Dict[str, List[Declaration]] = None,
     gates: Dict[str, Dict[str, Any]] = None,
     includes: List[str] = None,
     operators: Dict[str, Dict[str, Any]] = None,
     options: Dict[str, Any] = None,
     statements: List[str] = None,
-    variables: Set[str] = None,
+    variables: MutableSet[str] = None,
 ):
     """Returns an XIR program with the given attributes."""
     program = XIRProgram()
@@ -43,8 +41,8 @@ def make_program(
     program._includes = includes or []
     program._operators = operators or {}
     program._options = options or {}
-    program._statements = statements or set()
-    program._variables = variables or []
+    program._statements = statements or []
+    program._variables = variables or set()
     return program
 
 
@@ -774,7 +772,7 @@ class TestXIRProgram:
         ],
     )
     def test_resolve_programs(self, name, library, want_program):
-        """Test that a library of XIR programs."""
+        """Test that a valid XIR program include hierarchy can be resolved."""
         have_program = XIRProgram.resolve(library=library, name=name)
         assert have_program.serialize() == want_program.serialize()
 
