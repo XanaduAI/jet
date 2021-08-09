@@ -468,10 +468,14 @@ class TestXIRProgram:
         assert set(program.variables) == {"theta", "phi"}
 
     def test_merge_zero_programs(self):
+        """Test that a ValueError is raised when zero XIR programs are merged."""
         with pytest.raises(ValueError, match=r"Merging requires at least one XIR program"):
             XIRProgram.merge()
 
     def test_merge_programs_with_different_versions(self):
+        """Test that a ValueError is raised when two XIR programs with different
+        versions are merged.
+        """
         p1 = XIRProgram(version="0.0.1")
         p2 = XIRProgram(version="0.0.2")
 
@@ -481,6 +485,9 @@ class TestXIRProgram:
             XIRProgram.merge(p1, p2)
 
     def test_merge_programs_with_different_float_settings(self):
+        """Test that a ValueError is raised when two XIR programs with different
+        float settings are merged.
+        """
         p1 = XIRProgram(use_floats=True)
         p2 = XIRProgram(use_floats=False)
 
@@ -576,6 +583,7 @@ class TestXIRProgram:
         ],
     )
     def test_merge_programs(self, programs, want_result):
+        """Test that one or more XIR programs can be merged."""
         have_result = XIRProgram.merge(*programs)
 
         assert have_result.called_functions == want_result.called_functions
