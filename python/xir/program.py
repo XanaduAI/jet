@@ -9,8 +9,6 @@ from .decimal_complex import DecimalComplex
 from .utils import strip
 
 Wire = Union[int, str]
-
-Wire = Union[int, str]
 Param = Union[complex, str, Decimal, DecimalComplex, bool, List["Param"]]
 Params = Union[List[Param], Dict[str, Param]]
 
