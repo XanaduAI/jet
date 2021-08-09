@@ -99,7 +99,7 @@ The output of this program should resemble
     (-0.0786964,-0.771624)
     (2.98721,-0.657124)
     (-1.90032,1.58051)
-    You have successfully used Jet version 0.2.0
+    You have successfully used Jet version 0.2.1
 
 For more detailed instructions, see the `development guide
 <https://quantum-jet.readthedocs.io/en/stable/dev/guide.html>`_.
@@ -149,7 +149,7 @@ The output of this program should resemble
     -0.16588-1.44652j
     -1.43005+0.49516j
     1.66881-1.67099j
-    You have successfully used Jet version 0.2.0
+    You have successfully used Jet version 0.2.1
 
 Contributing to Jet
 ===================

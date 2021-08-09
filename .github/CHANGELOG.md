@@ -8,6 +8,11 @@
 
 * The `CudaTensor` class no longer includes [Taskflow](https://taskflow.github.io/) headers. [(#56)](https://github.com/XanaduAI/jet/pull/56)
 
+### Bug Fixes
+
+* The paper benchmarks now fetch the Jet repository at tag "0.2.1". [(#62)](https://github.com/XanaduAI/jet/pull/62)
+
+
 ### Documentation
 
 * Links to the [Jet paper](https://arxiv.org/abs/2107.09793) are now included in the README and Sphinx documentation. [(#59)](https://github.com/XanaduAI/jet/pull/59)
