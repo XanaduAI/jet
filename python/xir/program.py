@@ -670,7 +670,7 @@ class XIRProgram:
 
         The output is
 
-        .. code-block:: haskell
+        .. code-block:: none
 
             gate H2, 0, 2;
 
