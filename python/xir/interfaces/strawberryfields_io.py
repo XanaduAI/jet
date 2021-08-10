@@ -21,7 +21,7 @@ def to_program(xir, **kwargs):
     Returns:
         Program: corresponding Strawberry Fields program
     """
-    num_of_modes = len(xir.wires)
+    num_of_modes = len(set(xir.wires))
     name = kwargs.get("name", "xir")
     if num_of_modes == 0:
         raise ValueError(
@@ -99,7 +99,7 @@ def to_xir(prog, **kwargs):
         if "Measure" in name:
             if kwargs.get("add_decl", False):
                 output_decl = OutputDeclaration(name)
-                xir._declarations["output"].append(output_decl)
+                xir.add_declaration("output", output_decl)
 
             params = dict()
             # special case to take into account 'select' keyword argument
@@ -116,9 +116,9 @@ def to_xir(prog, **kwargs):
                     params["dark_counts"] = cmd.op.dark_counts
         else:
             if kwargs.get("add_decl", False):
-                if name not in [gdecl.name for gdecl in xir._declarations["gate"]]:
+                if name not in [gdecl.name for gdecl in xir.declarations["gate"]]:
                     gate_decl = GateDeclaration(name, len(cmd.op.p), len(wires))
-                    xir._declarations["gate"].append(gate_decl)
+                    xir.add_declaration("gate", gate_decl)
 
             params = []
             for a in cmd.op.p:
@@ -128,6 +128,6 @@ def to_xir(prog, **kwargs):
                 params.append(a)
 
         op = Statement(name, params, wires)
-        xir._statements.append(op)
+        xir.add_statement(op)
 
     return xir
