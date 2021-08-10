@@ -4,6 +4,10 @@ Research and contribution
 Research
 --------
 
+If you are doing research using Jet, please cite our paper:
+
+    Trevor Vincent, Lee J. O'Riordan, Mikhail Andrenkov, Jack Brown, Nathan Killoran, Haoyu Qi, and Ish Dhand. *Jet: Fast quantum circuit simulations with parallel task-based tensor-network contraction.* 2021. `arxiv:2107.09793 <https://arxiv.org/abs/2107.09793>`_
+
 We are always open for collaboration, and can be contacted at research@xanadu.ai.
 
 Contribution

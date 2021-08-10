@@ -116,7 +116,7 @@ def to_xir(prog, **kwargs):
                     params["dark_counts"] = cmd.op.dark_counts
         else:
             if kwargs.get("add_decl", False):
-                if name not in [gdecl.name for gdecl in xir._declarations["gate"]]:
+                if name not in [gdecl.name for gdecl in xir.declarations["gate"]]:
                     gate_decl = GateDeclaration(name, len(cmd.op.p), len(wires))
                     xir.add_declaration("gate", gate_decl)
 
