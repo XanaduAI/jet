@@ -636,9 +636,7 @@ class TestXIRProgram:
                     ),
                 },
                 make_program(
-                    statements=[
-                        Statement("Play", [], [0]),
-                    ],
+                    statements=[Statement("Play", [], [0])],
                 ),
                 id="Lazy",
             ),
