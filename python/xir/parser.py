@@ -215,7 +215,7 @@ class XIRTransformer(Transformer):
         stmt_options = {
             "ctrl_wires": tuple(sorted(ctrl_wires, key=hash)),
             "adjoint": adjoint,
-            "use_floats": self.use_floats
+            "use_floats": self.use_floats,
         }
         return Statement(name, params, wires, **stmt_options)
 

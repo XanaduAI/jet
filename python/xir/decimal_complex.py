@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 from decimal import Decimal
 from numbers import Complex
-from typing import Union, Callable
+from typing import Callable, Union
 
 
 def convert_input(func: Callable) -> Callable:
@@ -37,7 +37,9 @@ class DecimalComplex(Complex):
             to ``0.0`` if not input.
     """
 
-    def __init__(self, real: Union[str, Decimal] = "0.0", imag: Union[str, Decimal] = "0.0") -> None:
+    def __init__(
+        self, real: Union[str, Decimal] = "0.0", imag: Union[str, Decimal] = "0.0"
+    ) -> None:
         self._real = Decimal(real)
         self._imag = Decimal(imag)
 
