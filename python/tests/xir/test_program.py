@@ -119,8 +119,8 @@ class TestSerialize:
         program.add_statement(stmt)
         res = program.serialize()
 
-        params_str = ", ".join(str(p) for p in params)
-        wires_str = ", ".join(str(w) for w in wires)
+        params_str = ", ".join(map(str, params))
+        wires_str = ", ".join(map(str, wires))
         assert res == f"{name}({params_str}) | [{wires_str}];"
 
     @pytest.mark.parametrize("name", ["ry", "toffoli"])
@@ -132,7 +132,7 @@ class TestSerialize:
         program.add_statement(stmt)
         res = program.serialize()
 
-        wires_str = ", ".join(str(w) for w in wires)
+        wires_str = ", ".join(map(str, wires))
         assert res == f"{name} | [{wires_str}];"
 
     @pytest.mark.parametrize("pref", [42, Decimal("3.14"), "2 * a + 1"])
@@ -162,8 +162,8 @@ class TestSerialize:
 
         res = program.serialize()
 
-        params_str = ", ".join(str(p) for p in params)
-        wires_str = ", ".join(str(w) for w in wires)
+        params_str = ", ".join(map(str, params))
+        wires_str = ", ".join(map(str, wires))
         assert (
             res == f"gate {name}({params_str})[{wires_str}]:"
             "\n    rz(0.13) | [0];\n    cnot | [0, 1];\nend;"
@@ -178,7 +178,7 @@ class TestSerialize:
 
         res = program.serialize()
 
-        wires_str = ", ".join(str(w) for w in wires)
+        wires_str = ", ".join(map(str, wires))
         assert res == f"gate {name}[{wires_str}]:\n    rz(0.13) | [0];\n    cnot | [0, 1];\nend;"
 
     @pytest.mark.parametrize("name", ["ry", "toffoli"])
@@ -190,7 +190,7 @@ class TestSerialize:
 
         res = program.serialize()
 
-        params_str = ", ".join(str(p) for p in params)
+        params_str = ", ".join(map(str, params))
         assert res == f"gate {name}({params_str}):\n    rz(0.13) | [0];\n    cnot | [0, 1];\nend;"
 
     @pytest.mark.parametrize("name", ["mygate", "a_beautiful_gate"])
@@ -216,8 +216,8 @@ class TestSerialize:
 
         res = program.serialize()
 
-        params_str = ", ".join(str(p) for p in params)
-        wires_str = ", ".join(str(w) for w in wires)
+        params_str = ", ".join(map(str, params))
+        wires_str = ", ".join(map(str, wires))
         assert res == f"operator {name}({params_str})[{wires_str}]:\n    42, X[0] @ Y[1];\nend;"
 
     @pytest.mark.parametrize("name", ["H", "my_op"])
@@ -229,7 +229,7 @@ class TestSerialize:
 
         res = program.serialize()
 
-        wires_str = ", ".join(str(w) for w in wires)
+        wires_str = ", ".join(map(str, wires))
         assert res == f"operator {name}[{wires_str}]:\n    42, X[0] @ Y[1];\nend;"
 
     @pytest.mark.parametrize("name", ["H", "my_op"])
@@ -241,7 +241,7 @@ class TestSerialize:
 
         res = program.serialize()
 
-        params_str = ", ".join(str(p) for p in params)
+        params_str = ", ".join(map(str, params))
         assert res == f"operator {name}({params_str}):\n    42, X[0] @ Y[1];\nend;"
 
     @pytest.mark.parametrize("name", ["my_op", "op2"])
@@ -266,14 +266,14 @@ class TestXIRProgram:
 
         assert list(program.wires) == []
 
-        assert list(program.called_functions) == []
+        assert set(program.called_functions) == set()
         assert dict(program.declarations) == {"gate": [], "func": [], "output": [], "operator": []}
         assert dict(program.gates) == {}
         assert list(program.includes) == []
         assert dict(program.operators) == {}
         assert list(program.options) == []
         assert list(program.statements) == []
-        assert list(program.variables) == []
+        assert set(program.variables) == set()
 
     def test_repr(self):
         """Test that the string representation of an XIR program has the correct format."""

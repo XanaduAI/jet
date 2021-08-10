@@ -96,6 +96,13 @@ Features
 
 * *Qudits.* Models quantum systems with an **arbitrary number of basis states**.
 
+How to cite
+===========
+
+If you are doing research using Jet, please cite our paper:
+
+    Trevor Vincent, Lee J. O'Riordan, Mikhail Andrenkov, Jack Brown, Nathan Killoran, Haoyu Qi, and Ish Dhand. *Jet: Fast quantum circuit simulations with parallel task-based tensor-network contraction.* 2021. `arxiv:2107.09793 <https://arxiv.org/abs/2107.09793>`_
+
 Support
 =======
 

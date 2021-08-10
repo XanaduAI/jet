@@ -9,8 +9,6 @@ from .decimal_complex import DecimalComplex
 from .utils import strip
 
 Wire = Union[int, str]
-
-Wire = Union[int, str]
 Param = Union[complex, str, Decimal, DecimalComplex, bool, List["Param"]]
 Params = Union[List[Param], Dict[str, Param]]
 
@@ -59,13 +57,7 @@ class Statement:
             and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(
-            self,
-            name: str,
-            params: Params,
-            wires: Sequence[Wire],
-            **kwargs
-        ):
+    def __init__(self, name: str, params: Params, wires: Sequence[Wire], **kwargs):
         self._name = name
         self._params = params
         self._wires = wires
@@ -325,10 +317,15 @@ class XIRProgram:
     def declarations(self) -> Mapping[str, Sequence[Declaration]]:
         """Returns the declarations in the XIR program.
 
-        Returns:
-            Mapping[str, Sequence[Declaration]]: dictionary of declarations
-                sorted into the following keys: 'gate', 'func', 'output' and
-                'operator'.
+                Returns:
+                    Mapping[str, Sequence[Declaration]]: dictionary of declarations
+        <<<<<<< HEAD
+                        sorted into the following keys: 'gate', 'func', 'output' and
+                        'operator'.
+        =======
+                    sorted into the following keys: 'gate', 'func', 'output' and
+                    'operator'.
+        >>>>>>> main
         """
         return self._declarations
 
@@ -336,10 +333,15 @@ class XIRProgram:
     def gates(self) -> Mapping[str, Mapping[str, Sequence]]:
         """Returns the gates in the XIR program.
 
-        Returns:
-            Mapping[str, Mapping[str, Sequence]]: dictionary of gates, each gate
-                consisting of a name and a dictionary with the following keys:
-                'parameters', 'wires' and 'statements'
+                Returns:
+                    Mapping[str, Mapping[str, Sequence]]: dictionary of gates, each gate
+        <<<<<<< HEAD
+                        consisting of a name and a dictionary with the following keys:
+                        'parameters', 'wires' and 'statements'
+        =======
+                    consisting of a name and a dictionary with the following keys:
+                    'parameters', 'wires' and 'statements'
+        >>>>>>> main
         """
         return self._gates
 
@@ -356,10 +358,15 @@ class XIRProgram:
     def operators(self) -> Mapping[str, Mapping[str, Sequence]]:
         """Returns the operators in the XIR program.
 
-        Returns:
-            Mapping[str, Mapping[str, Sequence]]: dictionary of operators, each
-                operator consisting of a name and a dictionary with the following
-                keys: 'parameters', 'wires' and 'statements'
+                Returns:
+                    Mapping[str, Mapping[str, Sequence]]: dictionary of operators, each
+        <<<<<<< HEAD
+                        operator consisting of a name and a dictionary with the following
+                        keys: 'parameters', 'wires' and 'statements'
+        =======
+                    operator consisting of a name and a dictionary with the following
+                    keys: 'parameters', 'wires' and 'statements'
+        >>>>>>> main
         """
         return self._operators
 
