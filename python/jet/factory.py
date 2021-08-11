@@ -1,3 +1,4 @@
+"""Module containing __init__() wrappers for the classes in jet.bindings."""
 from typing import Union
 
 import numpy as np
@@ -49,12 +50,14 @@ def TaskBasedContractor(*args, **kwargs) -> TaskBasedContractorType:
         Task-based contractor instance.
     """
     dtype = kwargs.pop("dtype", np.complex128)
+
     if np.dtype(dtype) == np.complex64:
         return TaskBasedContractorC64(*args, **kwargs)
-    elif np.dtype(dtype) == np.complex128:
+
+    if np.dtype(dtype) == np.complex128:
         return TaskBasedContractorC128(*args, **kwargs)
-    else:
-        raise TypeError(f"Data type '{dtype}' is not supported.")
+
+    raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
 def Tensor(*args, **kwargs) -> TensorType:
@@ -69,12 +72,14 @@ def Tensor(*args, **kwargs) -> TensorType:
         Tensor instance.
     """
     dtype = kwargs.pop("dtype", np.complex128)
+
     if np.dtype(dtype) == np.complex64:
         return TensorC64(*args, **kwargs)
-    elif np.dtype(dtype) == np.complex128:
+
+    if np.dtype(dtype) == np.complex128:
         return TensorC128(*args, **kwargs)
-    else:
-        raise TypeError(f"Data type '{dtype}' is not supported.")
+
+    raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
 def TensorNetwork(*args, **kwargs) -> TensorNetworkType:
@@ -90,12 +95,14 @@ def TensorNetwork(*args, **kwargs) -> TensorNetworkType:
         Tensor network instance.
     """
     dtype = kwargs.pop("dtype", np.complex128)
+
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkC64(*args, **kwargs)
-    elif np.dtype(dtype) == np.complex128:
+
+    if np.dtype(dtype) == np.complex128:
         return TensorNetworkC128(*args, **kwargs)
-    else:
-        raise TypeError(f"Data type '{dtype}' is not supported.")
+
+    raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
 def TensorNetworkFile(*args, **kwargs) -> TensorNetworkFileType:
@@ -111,12 +118,14 @@ def TensorNetworkFile(*args, **kwargs) -> TensorNetworkFileType:
         Tensor network file instance.
     """
     dtype = kwargs.pop("dtype", np.complex128)
+
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkFileC64(*args, **kwargs)
-    elif np.dtype(dtype) == np.complex128:
+
+    if np.dtype(dtype) == np.complex128:
         return TensorNetworkFileC128(*args, **kwargs)
-    else:
-        raise TypeError(f"Data type '{dtype}' is not supported.")
+
+    raise TypeError(f"Data type '{dtype}' is not supported.")
 
 
 def TensorNetworkSerializer(*args, **kwargs) -> TensorNetworkSerializerType:
@@ -132,9 +141,11 @@ def TensorNetworkSerializer(*args, **kwargs) -> TensorNetworkSerializerType:
         Tensor network serializer instance.
     """
     dtype = kwargs.pop("dtype", np.complex128)
+
     if np.dtype(dtype) == np.complex64:
         return TensorNetworkSerializerC64(*args, **kwargs)
-    elif np.dtype(dtype) == np.complex128:
+
+    if np.dtype(dtype) == np.complex128:
         return TensorNetworkSerializerC128(*args, **kwargs)
-    else:
-        raise TypeError(f"Data type '{dtype}' is not supported.")
+
+    raise TypeError(f"Data type '{dtype}' is not supported.")

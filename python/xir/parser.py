@@ -24,7 +24,7 @@ with p.open("r") as _f:
 
 xir_parser = Lark(ir_grammar, start="program", parser="lalr")
 
-
+# pylint: disable=missing-function-docstring
 class XIRTransformer(Transformer):
     """Transformer for processing the Lark parse tree.
 
@@ -46,7 +46,7 @@ class XIRTransformer(Transformer):
         super().__init__(self, *args, **kwargs)
 
     @property
-    def eval_pi(self) -> bool:
+    def eval_pi(self) -> bool:  # pylint: disable=used-before-assignment
         """Reports whether pi is evaluated and stored as a float."""
         return self._eval_pi
 
@@ -79,7 +79,10 @@ class XIRTransformer(Transformer):
         self._program.add_include(file_name[0])
 
     def circuit(self, args):
-        """Main circuit containing all the gate statements. Should be empty after tree has been parsed from the leaves up, and all statemtents been passed to the program."""
+        """Main circuit containing all the gate statements. Should be empty after
+        the tree has been parsed from the leaves up and all statetents have been
+        passed to the program.
+        """
         # assert all stmts are handled
         assert all(a is None for a in args)
 

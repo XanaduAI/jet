@@ -41,17 +41,17 @@ def create_xir_prog(
     return irprog
 
 
-def create_sf_prog(num_of_wires: int, ops: List[Tuple]):
+def create_sf_prog(num_of_wires: int, ops_: List[Tuple]):
     """Create a Strawberry Fields program"""
     prog = sf.Program(num_of_wires)
 
     with prog.context as q:
-        for gate, params, wires in ops:
+        for gate, params, wires in ops_:
             regrefs = [q[w] for w in wires]
             if len(params) == 0:
-                gate | regrefs
+                gate | regrefs  # pylint: disable=pointless-statement
             else:
-                gate(*params) | regrefs
+                gate(*params) | regrefs  # pylint: disable=expression-not-assigned
 
     return prog
 
@@ -115,7 +115,7 @@ class TestStrawberryFieldsToXIR:
 
     def test_empty_sfprogram(self):
         """Test that converting from an empty SF program works"""
-        sfprog = create_sf_prog(num_of_wires=2, ops=[])
+        sfprog = create_sf_prog(num_of_wires=2, ops_=[])
         irprog = to_xir(sfprog)
 
         assert irprog.version == "0.1.0"
@@ -136,7 +136,7 @@ class TestStrawberryFieldsToXIR:
             (ops.Vac, [], (0,)),
         ]
 
-        sfprog = create_sf_prog(num_of_wires=2, ops=circuit_data)
+        sfprog = create_sf_prog(num_of_wires=2, ops_=circuit_data)
         irprog = to_xir(sfprog, add_decl=add_decl)
 
         stmt = irprog.statements[0]
@@ -164,7 +164,7 @@ class TestStrawberryFieldsToXIR:
             (ops.Sgate, [Decimal("0.3")], (1,)),
         ]
 
-        sfprog = create_sf_prog(num_of_wires=2, ops=circuit_data)
+        sfprog = create_sf_prog(num_of_wires=2, ops_=circuit_data)
         irprog = to_xir(sfprog, add_decl=add_decl)
 
         stmts = irprog.statements

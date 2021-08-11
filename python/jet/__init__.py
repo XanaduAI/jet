@@ -3,15 +3,22 @@ with an interpreter for Xanadu IR (XIR) scripts and a set of classes to model
 quantum gates, states, and circuits.
 """
 
-# The existence of a Python binding is proof of its intention to be exposed.
-from .bindings import *  # noqa: F403
+from .bindings import (
+    PathInfo,
+    add_tensors,
+    conj,
+    contract_tensors,
+    reshape,
+    slice_index,
+    version,
+)
 
 # The rest of the modules control their exports using `__all__`.
-from .circuit import *  # noqa: F403
-from .factory import *  # noqa: F403
-from .gate import *  # noqa: F403
-from .interpreter import *  # noqa: F403
-from .state import *  # noqa: F403
+from .circuit import *
+from .factory import *
+from .gate import *
+from .interpreter import *
+from .state import *
 
 # Grab the current Jet version from the C++ headers.
-__version__ = version()  # noqa: F405
+__version__ = version()

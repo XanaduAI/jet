@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 """Unit tests for the program class"""
 
 from decimal import Decimal
@@ -443,17 +444,20 @@ class TestXIRProgram:
         program.add_variable("theta")
         assert set(program.variables) == {"theta", "phi"}
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
         """Test that a correct version passes validation."""
         XIRProgram._validate_version(version)
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", [42, 0.2, True, object()])
     def test_validate_version_with_wrong_type(self, version):
         """Test that an exception is raised when a version has the wrong type."""
         with pytest.raises(TypeError, match=r"Version '[^']*' must be a string"):
             XIRProgram._validate_version(version)
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", ["", "abc", "4.2", "1.2.3-alpha", "0.1.2.3"])
     def test_validate_version_with_wrong_format(self, version):
         """Test that an exception is raised when a version has the wrong format."""

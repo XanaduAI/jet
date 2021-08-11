@@ -1,6 +1,6 @@
-from .decimal_complex import DecimalComplex  # noqa: F401
-from .parser import XIRTransformer, xir_parser  # noqa: F401
-from .program import GateDeclaration, OperatorStmt, Statement, XIRProgram  # noqa: F401
+from .decimal_complex import DecimalComplex
+from .parser import XIRTransformer, xir_parser
+from .program import GateDeclaration, OperatorStmt, Statement, XIRProgram
 
 
 def parse_script(circuit: str, **kwargs) -> XIRProgram:

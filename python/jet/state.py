@@ -1,3 +1,4 @@
+"""Module containing the ``State`` class in addition to all ``State`` subclasses."""
 from abc import ABC, abstractmethod
 from typing import List, Optional, Sequence
 
@@ -81,12 +82,11 @@ class State(ABC):
 
     def __ne__(self, other) -> bool:
         """Reports whether this state is not equivalent to the given state."""
-        return not (self == other)
+        return not self == other
 
     @abstractmethod
     def _data(self) -> np.ndarray:
         """Returns the vector representation of this state."""
-        pass
 
     def tensor(self, dtype: np.dtype = np.complex128) -> TensorType:
         """Returns the tensor representation of this state.

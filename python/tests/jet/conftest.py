@@ -5,8 +5,9 @@ import jet
 
 @pytest.fixture
 def tensor_network():
+    """Returns a function that contructs a tensor network with three connected tensors."""
+
     def tensor_network_(dtype: str):
-        """Returns a tensor network with three tensors of the given type."""
         A = jet.Tensor(shape=[2, 2], indices=["i", "j"], data=[1, 1j, -1j, 1], dtype=dtype)
         B = jet.Tensor(shape=[2, 2], indices=["j", "k"], data=[1, 0, 0, 1], dtype=dtype)
         C = jet.Tensor(shape=[2], indices=["k"], data=[1, 0], dtype=dtype)
