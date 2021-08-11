@@ -57,13 +57,7 @@ class Statement:
             and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(
-            self,
-            name: str,
-            params: Params,
-            wires: Sequence[Wire],
-            **kwargs
-        ):
+    def __init__(self, name: str, params: Params, wires: Sequence[Wire], **kwargs):
         self._name = name
         self._params = params
         self._wires = wires

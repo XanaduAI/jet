@@ -254,7 +254,7 @@ class TestXIRProgram:
     def test_repr(self):
         """Test that the string representation of an XIR program has the correct format."""
         program = XIRProgram(version="1.2.3")
-        assert repr(program) == f"<XIRProgram: version=1.2.3>"
+        assert repr(program) == "<XIRProgram: version=1.2.3>"
 
     def test_add_called_function(self, program):
         """Tests that called functions can be added to an XIR program."""
@@ -365,7 +365,7 @@ class TestXIRProgram:
         program.add_include("algorithm")
         assert list(program.includes) == ["complex", "algorithm"]
 
-    def test_add_gate_with_same_name(self, program):
+    def test_add_include_with_same_name(self, program):
         """Tests that a warning is issued when two identical includes are added
         to an XIR program.
         """

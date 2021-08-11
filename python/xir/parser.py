@@ -2,6 +2,7 @@
 import math
 from decimal import Decimal
 from pathlib import Path
+from typing import Union
 
 from lark import Lark, Transformer
 
@@ -66,7 +67,7 @@ class XIRTransformer(Transformer):
             XIRProgram: program containing all parsed data
         """
         # assert all stmts are handled
-        assert all(a == None for a in args)
+        assert all(a is None for a in args)
         return self._program
 
     opdecl = list
@@ -80,7 +81,7 @@ class XIRTransformer(Transformer):
     def circuit(self, args):
         """Main circuit containing all the gate statements. Should be empty after tree has been parsed from the leaves up, and all statemtents been passed to the program."""
         # assert all stmts are handled
-        assert all(a == None for a in args)
+        assert all(a is None for a in args)
 
     def script_options(self, args):
         """Script level options."""
@@ -115,12 +116,16 @@ class XIRTransformer(Transformer):
         """Tuple with wires and identifier"""
         return "wires", tuple(w)
 
+    def FALSE_(self, _) -> bool:
+        return False
+
+    def TRUE_(self, _) -> bool:
+        return True
+
     option = tuple
     options_dict = dict
     params = list
     array = list
-    FALSE_ = lambda self, _: False
-    TRUE_ = lambda self, _: True
 
     ADJOINT = str
     CTRL = str
@@ -215,7 +220,7 @@ class XIRTransformer(Transformer):
         stmt_options = {
             "ctrl_wires": tuple(sorted(ctrl_wires, key=hash)),
             "adjoint": adjoint,
-            "use_floats": self.use_floats
+            "use_floats": self.use_floats,
         }
         return Statement(name, params, wires, **stmt_options)
 
@@ -290,4 +295,5 @@ class XIRTransformer(Transformer):
             return -args[0]
         return "-" + str(args[0])
 
-    PI = lambda self, _: "PI" if not self._eval_pi else Decimal(str(math.pi))
+    def PI(self, _) -> Union[str, Decimal]:
+        return "PI" if not self._eval_pi else Decimal(str(math.pi))
