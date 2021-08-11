@@ -1,4 +1,16 @@
-## Release 0.2.1 (development release)
+## Release 0.2.2 (development release)
+
+### Improvements
+
+* Python source files are now linted using [Flake8](https://flake8.pycqa.org/en/latest/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+[Mikhail Andrenkov](https://github.com/Mandrenkov).
+
+## Release 0.2.1 (current release)
 
 ### New features since last release
 
