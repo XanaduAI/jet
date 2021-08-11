@@ -1,5 +1,6 @@
 black
 cmake>=3.14
+flake8
 isort>5
 pytest>=5,<6
 wheel
