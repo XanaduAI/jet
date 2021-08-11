@@ -36,4 +36,4 @@ disable=duplicate-code,
         too-few-public-methods,
         too-many-branches,
         too-many-instance-attributes,
-        too-many-public-methods,
+        too-many-public-methods
