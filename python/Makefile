@@ -35,11 +35,11 @@ format: $(.VENV_DIR)/requirements.txt.touch
 ifdef check
 	$(.VENV_BIN)/black -l 100 --check jet tests xir
 	$(.VENV_BIN)/isort --profile black --check-only jet tests xir
-	$(.VENV_BIN)/flake8 --extend-ignore=E203,E501,W503 --show-source jet tests xir
+	$(.VENV_BIN)/pylint jet tests xir
 else
 	$(.VENV_BIN)/black -l 100 jet tests xir
 	$(.VENV_BIN)/isort --profile black jet tests xir
-	$(.VENV_BIN)/flake8 --extend-ignore=E203,E501,W503 --show-source jet tests xir
+	$(.VENV_BIN)/pylint jet tests xir
 endif
 
 
