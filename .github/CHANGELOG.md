@@ -2,7 +2,7 @@
 
 ### Improvements
 
-* Python source files are now linted using [Flake8](https://flake8.pycqa.org/en/latest/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
+* Python source files are now linted using [PyLint](https://pypi.org/project/pylint/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
 
 ### Contributors
 
