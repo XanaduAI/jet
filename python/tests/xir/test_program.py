@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 """Unit tests for the program class"""
 
 from decimal import Decimal
@@ -278,7 +279,7 @@ class TestXIRProgram:
     def test_repr(self):
         """Test that the string representation of an XIR program has the correct format."""
         program = XIRProgram(version="1.2.3")
-        assert repr(program) == f"<XIRProgram: version=1.2.3>"
+        assert repr(program) == "<XIRProgram: version=1.2.3>"
 
     def test_add_called_function(self, program):
         """Tests that called functions can be added to an XIR program."""
@@ -389,7 +390,7 @@ class TestXIRProgram:
         program.add_include("algorithm")
         assert list(program.includes) == ["complex", "algorithm"]
 
-    def test_add_gate_with_same_name(self, program):
+    def test_add_include_with_same_name(self, program):
         """Tests that a warning is issued when two identical includes are added
         to an XIR program.
         """
@@ -613,17 +614,20 @@ class TestXIRProgram:
         want_statements = list(map(str, want_result.statements))
         assert have_statements == want_statements
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
         """Test that a correct version passes validation."""
         XIRProgram._validate_version(version)
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", [42, 0.2, True, object()])
     def test_validate_version_with_wrong_type(self, version):
         """Test that an exception is raised when a version has the wrong type."""
         with pytest.raises(TypeError, match=r"Version '[^']*' must be a string"):
             XIRProgram._validate_version(version)
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", ["", "abc", "4.2", "1.2.3-alpha", "0.1.2.3"])
     def test_validate_version_with_wrong_format(self, version):
         """Test that an exception is raised when a version has the wrong format."""

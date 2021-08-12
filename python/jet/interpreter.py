@@ -1,3 +1,4 @@
+"""Module containing the Jet interpreter for XIR programs."""
 import random
 import warnings
 from copy import deepcopy
@@ -153,19 +154,19 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
                     f"Statement '{stmt}' has a 'state' parameter which is not an array."
                 )
 
-            elif not all(0 <= entry < dimension for entry in state):
+            if not all(0 <= entry < dimension for entry in state):
                 raise ValueError(
                     f"Statement '{stmt}' has a 'state' parameter with at least "
                     f"one entry that falls outside the range [0, {dimension})."
                 )
 
-            elif len(state) != num_wires:
+            if len(state) != num_wires:
                 raise ValueError(
                     f"Statement '{stmt}' has a 'state' parameter with "
                     f"{len(state)} (!= {num_wires}) entries."
                 )
 
-            elif stmt.wires != tuple(range(num_wires)):
+            if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
             output = _compute_amplitude(circuit=circuit, state=state)
@@ -190,13 +191,13 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
                     f"references an undefined operator."
                 )
 
-            elif program.operators[operator]["params"]:
+            if program.operators[operator]["params"]:
                 raise ValueError(
                     f"Statement '{stmt}' has an 'observable' parameter which "
                     f"references a parameterized operator."
                 )
 
-            elif stmt.wires != tuple(range(num_wires)):
+            if stmt.wires != tuple(range(num_wires)):
                 raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
 
             observable = _generate_observable_from_operation_statements(
@@ -230,7 +231,7 @@ def _validate_xir_program_options(program: XIRProgram) -> None:
         if not isinstance(dimension, int):
             raise ValueError("Option 'dimension' must be an integer.")
 
-        elif dimension < 2:
+        if dimension < 2:
             raise ValueError("Option 'dimension' must be greater than one.")
 
     for option in sorted(options):
@@ -352,10 +353,9 @@ def _bind_statement_params(gate_signature_map: Dict[str, GateSignature], stmt: S
             raise ValueError(f"Statement '{stmt}' has the wrong number of parameters.")
         return {name: have_params[i] for (i, name) in enumerate(want_params)}
 
-    else:
-        if set(have_params) != set(want_params):
-            raise ValueError(f"Statement '{stmt}' has an invalid set of parameters.")
-        return {name: have_params[name] for name in want_params}
+    if set(have_params) != set(want_params):
+        raise ValueError(f"Statement '{stmt}' has an invalid set of parameters.")
+    return {name: have_params[name] for name in want_params}
 
 
 def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: Statement) -> Wires:
@@ -396,11 +396,11 @@ def _generate_observable_from_operation_statements(
     for stmt in stmts:
         try:
             scalar = float(stmt.pref)
-        except ValueError:
+        except ValueError as exc:
             raise ValueError(
                 f"Operator statement '{stmt}' has a prefactor ({stmt.pref}) "
                 f"which cannot be converted to a floating-point number."
-            )
+            ) from exc
 
         for gate_name, wire_id in stmt.terms:
             gate = GateFactory.create(gate_name, scalar=scalar)

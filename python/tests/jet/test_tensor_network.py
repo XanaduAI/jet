@@ -9,7 +9,7 @@ class TestTensorNetwork:
         tn = jet.TensorNetwork(dtype=dtype)
 
         with pytest.raises(IndexError):
-            node = tn.nodes[0]
+            tn.nodes[0]  # pylint: disable=pointless-statement
 
         assert tn.num_tensors == 0
         assert tn.path == []
