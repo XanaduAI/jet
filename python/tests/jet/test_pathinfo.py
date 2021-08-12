@@ -21,7 +21,7 @@ class TestPathInfo:
 
         id_a = tn.add_tensor(jet.Tensor(), ["A"])
         id_b = tn.add_tensor(jet.Tensor(), ["B"])
-        id_c = tn.add_tensor(jet.Tensor(), ["C"])
+        tn.add_tensor(jet.Tensor(), ["C"])
 
         path = [(id_a, id_b)]
 

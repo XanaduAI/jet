@@ -15,10 +15,10 @@ def convert_input(func: Callable) -> Callable:
     def convert_wrapper(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         if isinstance(c, DecimalComplex):
             return func(self, c)
-        elif isinstance(c, Decimal):
+        if isinstance(c, Decimal):
             c = DecimalComplex(c)
             return func(self, c)
-        elif isinstance(c, Complex):
+        if isinstance(c, Complex):
             c = DecimalComplex(str(c.real), str(c.imag))
             return func(self, c)
 
@@ -70,12 +70,14 @@ class DecimalComplex(Complex):
     def __rmul__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         return self * c
 
+    # pylint: disable=missing-function-docstring
     @convert_input
     def __div__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         real = (self.real * c.real + self.imag * c.imag) / (c.real ** 2 + c.imag ** 2)
         imag = (self.imag * c.real - self.real * c.imag) / (c.real ** 2 + c.imag ** 2)
         return DecimalComplex(real, imag)
 
+    # pylint: disable=missing-function-docstring
     @convert_input
     def __rdiv__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         return c / self
@@ -88,6 +90,7 @@ class DecimalComplex(Complex):
     def __rtruediv__(self, c: Union[Decimal, Complex]) -> DecimalComplex:
         return c / self
 
+    # pylint: disable=missing-function-docstring
     def __floordiv__(self, _: Union[Decimal, Complex]) -> DecimalComplex:
         raise TypeError("Cannot take floor of DecimalComplex")
 
@@ -143,6 +146,7 @@ class DecimalComplex(Complex):
         return float(self.real) + float(self.imag) * 1j
 
     def _not_implemented(self, op):
+        """Raises a TypeError for the given (unimplemented) operation."""
         raise TypeError(f"Cannot use {op} with complex numbers")
 
     def __hash__(self):

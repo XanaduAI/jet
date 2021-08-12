@@ -159,20 +159,24 @@ class OperatorStmt:
 
     @property
     def pref(self) -> Union[Decimal, float, int, str]:
+        """Returns the prefactor of this operator statement."""
         if isinstance(self._pref, Decimal) and self.use_floats:
             return float(self._pref)
         return self._pref
 
     @property
     def terms(self) -> List:
+        """Returns the terms in this operator statement."""
         return self._terms
 
     @property
     def use_floats(self) -> bool:
+        """Returns the float setting of this operator statement."""
         return self._use_floats
 
     @property
     def wires(self) -> Tuple:
+        """Returns the wires this operator statement is applied to."""
         return tuple({t[1] for t in self.terms})
 
 
@@ -468,7 +472,7 @@ class XIRProgram:
         """
         if include in self._includes:
             warnings.warn(f"Module '{include}' is already included. Skipping include.")
-            return None
+            return
 
         self._includes.append(include)
 
@@ -698,7 +702,7 @@ class XIRProgram:
         resolved_programs = map(library.get, resolved_names)
 
         resolved_program = XIRProgram.merge(*resolved_programs)
-        resolved_program._includes = []
+        resolved_program._includes = []  # pylint: disable=protected-access
         return resolved_program
 
     @staticmethod
@@ -736,7 +740,8 @@ class XIRProgram:
         """
         if name not in library:
             raise KeyError(f"XIR program '{name}' cannot be found.")
-        elif name in stack:
+
+        if name in stack:
             raise ValueError(f"XIR program '{name}' has a circular dependency.")
 
         if name in cache:

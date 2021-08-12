@@ -1,3 +1,4 @@
+"""Module containing the ``Operation``, ``Wire``, and ``Circuit`` classes."""
 from dataclasses import dataclass
 from typing import Iterator, Sequence, Union
 
@@ -207,8 +208,8 @@ class Circuit:
             if not 0 <= wire_id < num_wires:
                 raise ValueError(f"Wire ID {wire_id} falls outside the range [0, {num_wires}).")
 
-            elif wire_ids.count(wire_id) > 1:
+            if wire_ids.count(wire_id) > 1:
                 raise ValueError(f"Wire ID {wire_id} is specified more than once.")
 
-            elif self._wires[wire_id].closed:
+            if self._wires[wire_id].closed:
                 raise ValueError(f"Wire {wire_id} is closed.")
