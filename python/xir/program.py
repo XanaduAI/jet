@@ -744,6 +744,10 @@ class XIRProgram:
         if name in stack:
             raise ValueError(f"XIR program '{name}' has a circular dependency.")
 
+        # The stack is only empty when processing the root XIR program.
+        if stack and library[name].statements:
+            raise ValueError(f"XIR program '{name}' contains a statement.")
+
         if name in cache:
             return list(cache[name])
 

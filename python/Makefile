@@ -55,7 +55,7 @@ dist: $(.VENV_DIR)/requirements.txt.touch
 test: dist
 	$(.VENV_BIN)/pip install -q $(wildcard ../dist/*.whl) --upgrade
 	@# The -I flag ensures the installed `jet` package is imported instead of the local one.
-	$(.VENV_BIN)/python -I -m pytest ./tests $(args)
+	$(.VENV_BIN)/python -I -m pytest ./tests -W ignore::UserWarning $(args)
 
 
 .PHONY: clean

@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, MutableSet
 
 import pytest
 
+from xir import parse_script
 from xir.program import (
     Declaration,
     FuncDeclaration,
@@ -629,151 +630,96 @@ class TestXIRProgram:
             pytest.param(
                 "play",
                 {
-                    "play": make_program(
-                        statements=[Statement("Play", [], [0])],
-                    ),
-                    "loop": make_program(
-                        includes=["loop"],
-                        statements=[Statement("Loop", [], [0])],
-                    ),
+                    "play": parse_script("output Play;"),
+                    "loop": parse_script("use loop; output Loop;"),
                 },
-                make_program(
-                    statements=[Statement("Play", [], [0])],
-                ),
+                parse_script("output Play;"),
                 id="Lazy",
             ),
             pytest.param(
                 "coffee",
                 {
-                    "coffee": make_program(
-                        includes=["cream", "milk", "sugar"],
-                        statements=[Statement("Coffee", [], [0])],
+                    "coffee": parse_script(
+                        """
+                        use cream;
+                        use sugar;
+                        use water;
+                        output Coffee;
+                        """
                     ),
-                    "cream": make_program(
-                        statements=[Statement("Cream", [], [0])],
-                    ),
-                    "milk": make_program(
-                        statements=[Statement("Milk", [], [0])],
-                    ),
-                    "sugar": make_program(
-                        statements=[Statement("Sugar", [], [0])],
-                    ),
+                    "cream": parse_script("output Cream;"),
+                    "sugar": parse_script("output Sugar;"),
+                    "water": parse_script("output Water;"),
                 },
-                make_program(
-                    statements=[
-                        Statement("Cream", [], [0]),
-                        Statement("Milk", [], [0]),
-                        Statement("Sugar", [], [0]),
-                        Statement("Coffee", [], [0]),
-                    ],
+                parse_script(
+                    """
+                    output Cream;
+                    output Sugar;
+                    output Water;
+                    output Coffee;
+                    """
                 ),
                 id="Flat",
             ),
             pytest.param(
                 "bot",
                 {
-                    "bot": make_program(
-                        includes=["mid"],
-                        statements=[Statement("Bottom", [], [0])],
-                    ),
-                    "mid": make_program(
-                        includes=["top"],
-                        statements=[Statement("Middle", [], [0])],
-                    ),
-                    "top": make_program(
-                        statements=[Statement("Top", [], [0])],
-                    ),
+                    "bot": parse_script("use mid; output Bot;"),
+                    "mid": parse_script("use top; output Mid;"),
+                    "top": parse_script("output Top;"),
                 },
-                make_program(
-                    statements=[
-                        Statement("Top", [], [0]),
-                        Statement("Middle", [], [0]),
-                        Statement("Bottom", [], [0]),
-                    ],
+                parse_script(
+                    """
+                    output Top;
+                    output Mid;
+                    output Bot;
+                    """
                 ),
                 id="Linear",
             ),
             pytest.param(
                 "salad",
                 {
-                    "salad": make_program(
-                        includes=["lettuce", "spinach"],
-                        statements=[Statement("Salad", [], [0])],
-                    ),
-                    "lettuce": make_program(
-                        includes=["spinach"],
-                        statements=[Statement("Lettuce", [], [0])],
-                    ),
-                    "spinach": make_program(
-                        statements=[Statement("Spinach", [], [0])],
-                    ),
+                    "salad": parse_script("use lettuce; use spinach; output Salad;"),
+                    "lettuce": parse_script("use spinach; output Lettuce;"),
+                    "spinach": parse_script("output Spinach;"),
                 },
-                make_program(
-                    statements=[
-                        Statement("Spinach", [], [0]),
-                        Statement("Lettuce", [], [0]),
-                        Statement("Salad", [], [0]),
-                    ],
+                parse_script(
+                    """
+                    output Spinach;
+                    output Lettuce;
+                    output Salad;
+                    """
                 ),
                 id="Acyclic",
             ),
             pytest.param(
                 "Z",
                 {
-                    "Z": make_program(
-                        includes=["K1", "K2", "K3"],
-                        statements=[Statement("Z", [], [0])],
-                    ),
-                    "K1": make_program(
-                        includes=["A", "B", "C"],
-                        statements=[Statement("K1", [], [0])],
-                    ),
-                    "K2": make_program(
-                        includes=["B", "D", "E"],
-                        statements=[Statement("K2", [], [0])],
-                    ),
-                    "K3": make_program(
-                        includes=["A", "D"],
-                        statements=[Statement("K3", [], [0])],
-                    ),
-                    "A": make_program(
-                        includes=["O"],
-                        statements=[Statement("A", [], [0])],
-                    ),
-                    "B": make_program(
-                        includes=["O"],
-                        statements=[Statement("B", [], [0])],
-                    ),
-                    "C": make_program(
-                        includes=["O"],
-                        statements=[Statement("C", [], [0])],
-                    ),
-                    "D": make_program(
-                        includes=["O"],
-                        statements=[Statement("D", [], [0])],
-                    ),
-                    "E": make_program(
-                        includes=["O"],
-                        statements=[Statement("E", [], [0])],
-                    ),
-                    "O": make_program(
-                        includes=[],
-                        statements=[Statement("O", [], [0])],
-                    ),
+                    "Z": parse_script("use K1; use K2; use K3; output Z;"),
+                    "K1": parse_script("use A; use B; use C; output K1;"),
+                    "K2": parse_script("use B; use D; use E; output K2;"),
+                    "K3": parse_script("use A; use D; output K3;"),
+                    "A": parse_script("use O; output A;"),
+                    "B": parse_script("use O; output B;"),
+                    "C": parse_script("use O; output C;"),
+                    "D": parse_script("use O; output D;"),
+                    "E": parse_script("use O; output E;"),
+                    "O": parse_script("output O;"),
                 },
-                make_program(
-                    statements=[
-                        Statement("O", [], [0]),
-                        Statement("A", [], [0]),
-                        Statement("B", [], [0]),
-                        Statement("C", [], [0]),
-                        Statement("K1", [], [0]),
-                        Statement("D", [], [0]),
-                        Statement("E", [], [0]),
-                        Statement("K2", [], [0]),
-                        Statement("K3", [], [0]),
-                        Statement("Z", [], [0]),
-                    ],
+                parse_script(
+                    """
+                    output O;
+                    output A;
+                    output B;
+                    output C;
+                    output K1;
+                    output D;
+                    output E;
+                    output K2;
+                    output K3;
+                    output Z;
+                    """
                 ),
                 id="Wikipedia",
             ),
@@ -816,6 +762,33 @@ class TestXIRProgram:
         includes itself is resolved.
         """
         with pytest.raises(ValueError, match=r"XIR program '[^']+' has a circular dependency"):
+            XIRProgram.resolve(library=library, name=name)
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            (
+                "client",
+                {
+                    "client": make_program(includes=["server"]),
+                    "server": make_program(statements=[Statement("Water", [], [0])]),
+                },
+            ),
+            (
+                "private",
+                {
+                    "private": make_program(includes=["colonel"]),
+                    "colonel": make_program(includes=["captain"]),
+                    "captain": make_program(statements=[Statement("Command", [], [0])]),
+                },
+            ),
+        ],
+    )
+    def test_resolve_program_with_included_statements(self, name, library):
+        """Test that a ValueError is raised when an XIR program that (transitively)
+        includes another XIR program with a statement is resolved.
+        """
+        with pytest.raises(ValueError, match=r"XIR program '[^']+' contains a statement"):
             XIRProgram.resolve(library=library, name=name)
 
     # pylint: disable=protected-access
