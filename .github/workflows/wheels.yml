@@ -3,7 +3,7 @@ env:
   CIBW_SKIP: cp27-* cp35-* cp36-*
   CIBW_ARCHS: auto64
   CIBW_BEFORE_BUILD: pip install "cmake>=3.14"
-  CIBW_BEFORE_BUILD_LINUX: apt-get install -yy libopenblas-dev
+  CIBW_BEFORE_BUILD_LINUX: sudo apt-get install -yy libopenblas-dev
 on:
   pull_request:
   push:
