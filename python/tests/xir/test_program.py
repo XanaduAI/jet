@@ -24,6 +24,7 @@ def program():
     return XIRProgram()
 
 
+# pylint: disable=protected-access
 def make_program(
     called_functions: Set[str],
     declarations: Dict[str, List[Declaration]],
