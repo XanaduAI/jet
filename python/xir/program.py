@@ -171,10 +171,10 @@ class OperatorStmt:
         return tuple({t[1] for t in self.terms})
 
 
-def _decl_str(name, params, wires, declaration_type):
+def _serialize_declaration(name, params, wires, declaration_type):
     """TODO"""
-    if params != []:
-        params = "(" + ", ".join([str(p) for p in params]) + ")"
+    if len(params):
+        params = "(" + ", ".join(map(str, params)) + ")"
     else:
         params = ""
     if wires != ():
@@ -192,14 +192,14 @@ class Declaration:
         name (str): name of the declaration
     """
 
-    def __init__(self, name: str, params, wires, declaration_type: str):
+    def __init__(self, name: str, params: Sequence[str], wires: Wires, declaration_type: str):
         self.name = name
         self.params = list(map(str, params))
         if len(set(self.params)) != len(self.params):
-            raise ValueError("All parameters must be unique")
+            raise ValueError("All parameters in a declaration must be unique.")
         self.wires = wires
         if declaration_type not in ("gate", "output", "operator", "function"):
-            raise TypeError(f"Declaration type {declaration_type} is not valid.")
+            raise TypeError(f"Declaration type '{declaration_type}' is invalid.")
         self.declaration_type = declaration_type
 
     def __str__(self) -> str:
