@@ -731,15 +731,16 @@ class XIRProgram:
             raise ValueError(f"XIR program '{name}' contains a statement.")
 
         if name in cache:
-            return list(cache[name])
+            return cache[name]
 
         # Step 1: Generate the C3 linearizations of the included XIR programs.
         stack.add(name)
 
         linearizations = []
         for include in library[name].includes:
-            linearization = XIRProgram._resolve_include_order(library, include, stack, cache)
-            linearizations.append(list(linearization))
+            # Call the list constructor to avoid modifying cached linearizations.
+            linearization = list(XIRProgram._resolve_include_order(library, include, stack, cache))
+            linearizations.append(linearization)
 
         stack.discard(name)
 
