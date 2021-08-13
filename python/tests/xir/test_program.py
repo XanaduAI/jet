@@ -470,6 +470,20 @@ class TestXIRProgram:
         program.add_variable("theta")
         assert set(program.variables) == {"theta", "phi"}
 
+    def test_clear_includes(self, program):
+        """Tests that includes can be cleared from an XIR program."""
+        program.clear_includes()
+        assert len(program.includes) == 0
+
+        program.add_include("bitset")
+        program.clear_includes()
+        assert len(program.includes) == 0
+
+        program.add_include("stack")
+        program.add_include("queue")
+        program.clear_includes()
+        assert len(program.includes) == 0
+
     def test_merge_zero_programs(self):
         """Test that a ValueError is raised when zero XIR programs are merged."""
         with pytest.raises(ValueError, match=r"Merging requires at least one XIR program"):

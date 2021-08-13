@@ -510,6 +510,10 @@ class XIRProgram:
         """
         self._variables.add(name)
 
+    def clear_includes(self) -> None:
+        """Clears the includes of an XIR program."""
+        self._includes = []
+
     def serialize(self, minimize: bool = False) -> str:
         """Serialize an ``XIRProgram`` to an XIR script.
 
@@ -684,7 +688,7 @@ class XIRProgram:
         resolved_programs = map(library.get, resolved_names)
 
         resolved_program = XIRProgram.merge(*resolved_programs)
-        resolved_program._includes = []  # pylint: disable=protected-access
+        resolved_program.clear_includes()
         return resolved_program
 
     @staticmethod
