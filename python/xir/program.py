@@ -673,8 +673,6 @@ class XIRProgram:
 
         .. code-block:: none
 
-            gate H2, 0, 2;
-
             gate H2:
                 H | [0];
                 H | [1];
