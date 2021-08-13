@@ -26,40 +26,36 @@ class TestSerialize:
     # Test declarations
     #####################
 
-    @pytest.mark.parametrize("params", [["a", "b"], [], ["theta"]])
-    @pytest.mark.parametrize("wires", [(0,), (0, 2, 1), ("a", "b", "c")])
-    @pytest.mark.parametrize("declaration_type", ["gate", "operator", "output"])
-    def test_declarations(self, params, wires, declaration_type):
+    @pytest.mark.parametrize("params, wires, declaration_type, want_res", [
+            (["a", "b"], (0,), "gate", "gate name(a, b)[0];"),
+            ([], (0, 2, 1), "operator", "operator name[0, 2, 1];"),
+            (["theta"], ("a", "b", "c"), "output", "output name(theta)[a, b, c];"),
+        ],
+    )
+    def test_declarations(self, params, wires, declaration_type, want_res):
         """Test serializing gate, operation and output declarations"""
         decl = Declaration("name", params, wires, declaration_type=declaration_type)
 
         irprog = XIRProgram()
         irprog._declarations[declaration_type].append(decl)
-        res = irprog.serialize()
+        have_res = irprog.serialize()
 
-        if len(params) == 0:
-            params_str = ""
-        else:
-            params_str = "(" + ", ".join(params) + ")"
+        assert have_res  == want_res
 
-        wires_str = ", ".join(str(w) for w in wires)
-        assert res == f"{declaration_type} name{params_str}[{wires_str}];"
-
-    @pytest.mark.parametrize("params", [["a", "b"], [], ["theta"]])
-    def test_func_declaration(self, params):
+    @pytest.mark.parametrize("params, want_res", [
+            (["a", "b"], "function name(a, b);"),
+            ([], "function name;"),
+            (["theta"], "function name(theta);"),
+        ],
+    )
+    def test_func_declaration(self, params, want_res):
         """Test serializing function declarations"""
         decl = Declaration("name", params, (), declaration_type="function")
 
         irprog = XIRProgram()
         irprog._declarations["func"].append(decl)
-        res = irprog.serialize()
-
-        if len(params) == 0:
-            params_str = ""
-        else:
-            params_str = "(" + ", ".join(params) + ")"
-
-        assert res == f"function name{params_str};"
+        have_res = irprog.serialize()
+        assert have_res  == want_res
 
     ###################
     # Test statements
