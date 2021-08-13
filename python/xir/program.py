@@ -332,15 +332,9 @@ class XIRProgram:
     def declarations(self) -> Mapping[str, Sequence[Declaration]]:
         """Returns the declarations in the XIR program.
 
-                Returns:
-                    Mapping[str, Sequence[Declaration]]: dictionary of declarations
-        <<<<<<< HEAD
-                        sorted into the following keys: 'gate', 'func', 'output' and
-                        'operator'.
-        =======
-                    sorted into the following keys: 'gate', 'func', 'output' and
-                    'operator'.
-        >>>>>>> main
+        Returns:
+            Mapping[str, Sequence[Declaration]]: dictionary of declarations
+            with the following keys: 'gate', 'func', 'output', and 'operator'
         """
         return self._declarations
 
@@ -348,15 +342,10 @@ class XIRProgram:
     def gates(self) -> Mapping[str, Mapping[str, Sequence]]:
         """Returns the gates in the XIR program.
 
-                Returns:
-                    Mapping[str, Mapping[str, Sequence]]: dictionary of gates, each gate
-        <<<<<<< HEAD
-                        consisting of a name and a dictionary with the following keys:
-                        'parameters', 'wires' and 'statements'
-        =======
-                    consisting of a name and a dictionary with the following keys:
-                    'parameters', 'wires' and 'statements'
-        >>>>>>> main
+        Returns:
+            Mapping[str, Mapping[str, Sequence]]: dictionary of gates, each one
+            consisting of a name and a dictionary with the following keys:
+            'parameters', 'wires', and 'statements'
         """
         return self._gates
 
@@ -373,15 +362,10 @@ class XIRProgram:
     def operators(self) -> Mapping[str, Mapping[str, Sequence]]:
         """Returns the operators in the XIR program.
 
-                Returns:
-                    Mapping[str, Mapping[str, Sequence]]: dictionary of operators, each
-        <<<<<<< HEAD
-                        operator consisting of a name and a dictionary with the following
-                        keys: 'parameters', 'wires' and 'statements'
-        =======
-                    operator consisting of a name and a dictionary with the following
-                    keys: 'parameters', 'wires' and 'statements'
-        >>>>>>> main
+        Returns:
+            Mapping[str, Mapping[str, Sequence]]: dictionary of operators, each
+            one consisting of a name and a dictionary with the following keys:
+            'parameters', 'wires', and 'statements'
         """
         return self._operators
 
@@ -614,9 +598,9 @@ class XIRProgram:
         if any(program.version != version for program in programs):
             raise ValueError("XIR programs with different versions cannot be merged.")
 
-        use_floats = programs[0].use_floats
+        use_floats = any(program.use_floats for program in programs)
         if any(program.use_floats != use_floats for program in programs):
-            raise ValueError("XIR programs with different float settings cannot be merged.")
+            warnings.warn("XIR programs with different float settings are being merged.")
 
         result = XIRProgram(version=version, use_floats=use_floats)
 

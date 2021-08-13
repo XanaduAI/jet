@@ -488,16 +488,16 @@ class TestXIRProgram:
             XIRProgram.merge(p1, p2)
 
     def test_merge_programs_with_different_float_settings(self):
-        """Test that a ValueError is raised when two XIR programs with different
+        """Test that a warning is issued when two XIR programs with different
         float settings are merged.
         """
         p1 = XIRProgram(use_floats=True)
         p2 = XIRProgram(use_floats=False)
 
-        match = r"XIR programs with different float settings cannot be merged"
+        match = r"XIR programs with different float settings are being merged"
 
-        with pytest.raises(ValueError, match=match):
-            XIRProgram.merge(p1, p2)
+        with pytest.warns(UserWarning, match=match):
+            assert XIRProgram.merge(p1, p2).use_floats is True
 
     @pytest.mark.parametrize(
         ["programs", "want_result"],
