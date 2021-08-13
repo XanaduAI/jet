@@ -704,10 +704,10 @@ class XIRProgram:
             library (Mapping[str, XIRProgram]): mapping from names to XIR programs
             name (str): name of the root XIR program to resolve
             stack (MutableSet[str]): names in the current call stack; prevents
-                infinite recursion in the case of circular dependencies.
+                infinite recursion in the case of circular dependencies
             cache (MutableMapping[str, Sequence[str]]): mapping from names to
                 linearizations; improves performance when an XIR program is
-                included by multiple XIR programs.
+                included by multiple XIR programs
 
         Returns:
             Sequence[str]: names representing a C3 linearization of the given XIR program.
@@ -715,10 +715,10 @@ class XIRProgram:
         Raises:
             KeyError: if ``library`` does not have an entry for ``name``, or the
                 XIR program associated with ``name`` (transitively) includes
-                another XIR program which does not have an entry in ``library``.
+                another XIR program which does not have an entry in ``library``
             ValueError: if ``name`` is already in ``stack``, or the XIR program
                 associated with ``name`` (transitively) includes an XIR program
-                with a circular dependency.
+                with a circular dependency
         """
         if name not in library:
             raise KeyError(f"XIR program '{name}' cannot be found.")
