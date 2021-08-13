@@ -578,7 +578,7 @@ class XIRProgram:
         return res_script
 
     @staticmethod
-    def merge(*programs) -> "XIRProgram":
+    def merge(*programs: "XIRProgram") -> "XIRProgram":
         """Merges one or more XIR programs into a new XIR program.
 
         The merged XIR program is formed by concatenating the given XIR programs
