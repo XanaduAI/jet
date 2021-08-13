@@ -603,9 +603,9 @@ class XIRProgram:
         if any(program.version != version for program in programs):
             raise ValueError("XIR programs with different versions cannot be merged.")
 
-        use_floats = programs[0].use_floats
+        use_floats = any(program.use_floats for program in programs)
         if any(program.use_floats != use_floats for program in programs):
-            raise ValueError("XIR programs with different float settings cannot be merged.")
+            warnings.warn("XIR programs with different float settings are being merged.")
 
         result = XIRProgram(version=version, use_floats=use_floats)
 
