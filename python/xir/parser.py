@@ -227,7 +227,7 @@ class XIRTransformer(Transformer):
         stmt_options = {
             "ctrl_wires": tuple(sorted(ctrl_wires, key=hash)),
             "adjoint": adjoint,
-            "use_floats": self.use_floats
+            "use_floats": self.use_floats,
         }
         return Statement(name, params, wires, **stmt_options)
 
@@ -329,9 +329,11 @@ class XIRTransformer(Transformer):
 
     PI = lambda self, _: "PI" if not self._eval_pi else Decimal(str(math.pi))
 
+
 def is_wire(arg):
     """Returns whether the passed argument is a tuple of wires."""
     return isinstance(arg, tuple) and arg[0] == "wires"
+
 
 def is_param(arg):
     """Returns whether the passed argument is a list of params."""

@@ -57,13 +57,7 @@ class Statement:
             and ``DecimalComplex`` objects. Defaults to ``True``.
     """
 
-    def __init__(
-            self,
-            name: str,
-            params: Params,
-            wires: Sequence[Wire],
-            **kwargs
-        ):
+    def __init__(self, name: str, params: Params, wires: Sequence[Wire], **kwargs):
         self._name = name
         self._params = params
         self._wires = wires
@@ -145,7 +139,7 @@ class OperatorStmt:
 
         self._use_floats = use_floats
 
-    def __str__(self):
+    def __str__(self) -> str:
         terms = [f"{t[0]}[{t[1]}]" for t in self.terms]
         terms_as_string = " @ ".join(terms)
         pref = str(self.pref)
@@ -171,8 +165,10 @@ class OperatorStmt:
         return tuple({t[1] for t in self.terms})
 
 
-def _serialize_declaration(name, params, wires, declaration_type):
-    """TODO"""
+def _serialize_declaration(
+    name: str, params: Sequence[Param], wires: Sequence[Wire], declaration_type
+) -> str:
+    """Constructs and returns a declaration as a serialized string."""
     if len(params):
         params = "(" + ", ".join(map(str, params)) + ")"
     else:
@@ -192,7 +188,9 @@ class Declaration:
         name (str): name of the declaration
     """
 
-    def __init__(self, name: str, params: Sequence[str], wires: Sequence[Wire], declaration_type: str):
+    def __init__(
+        self, name: str, params: Sequence[str], wires: Sequence[Wire], declaration_type: str
+    ) -> None:
         self.name = name
         self.params = list(map(str, params))
         if len(set(self.params)) != len(self.params):
@@ -346,7 +344,9 @@ class XIRProgram:
         """
         return self._called_ops
 
-    def add_gate(self, name: str, params: List[str], wires: Tuple, statements: List[Statement]):
+    def add_gate(
+        self, name: str, params: List[str], wires: Tuple, statements: List[Statement]
+    ) -> None:
         """Adds a gate to the program
 
         Args:
@@ -361,7 +361,7 @@ class XIRProgram:
 
     def add_operator(
         self, name: str, params: List[str], wires: Tuple, statements: List[OperatorStmt]
-    ):
+    ) -> None:
         """Adds an operator to the program
 
         Args:
@@ -397,7 +397,7 @@ class XIRProgram:
             res.extend([f"    {k}: {v};" for k, v in self.options.items()])
             res.append("end;\n")
 
-        res.extend([f"{dec};" for v in self._declarations.values() for dec in v ])
+        res.extend([f"{dec};" for v in self._declarations.values() for dec in v])
         if any(len(dec) != 0 for dec in self._declarations.values()):
             res.append("")
 
