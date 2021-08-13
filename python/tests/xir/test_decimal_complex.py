@@ -132,10 +132,10 @@ class TestDecimalComplex:
 
         match = r"Cannot use > with complex numbers"
         with pytest.raises(TypeError, match=match):
-            c > term
+            c > term  # pylint: disable=pointless-statement
 
         with pytest.raises(TypeError, match=match):
-            term < c
+            term < c  # pylint: disable=pointless-statement
 
     @pytest.mark.parametrize("term", [2, 3j, "2", Decimal("1"), -4.3])
     def test_less_than(self, term):
@@ -144,10 +144,10 @@ class TestDecimalComplex:
 
         match = r"Cannot use < with complex numbers"
         with pytest.raises(TypeError, match=match):
-            c < term
+            c < term  # pylint: disable=pointless-statement
 
         with pytest.raises(TypeError, match=match):
-            term > c
+            term > c  # pylint: disable=pointless-statement
 
     @pytest.mark.parametrize("term", [2, 3j, "2", Decimal("1"), -4.3])
     def test_greater_equal_than(self, term):
@@ -156,10 +156,10 @@ class TestDecimalComplex:
 
         match = r"Cannot use >= with complex numbers"
         with pytest.raises(TypeError, match=match):
-            c >= term
+            c >= term  # pylint: disable=pointless-statement
 
         with pytest.raises(TypeError, match=match):
-            term <= c
+            term <= c  # pylint: disable=pointless-statement
 
     @pytest.mark.parametrize("term", [2, 3j, "2", Decimal("1"), -4.3])
     def test_less_equal_than(self, term):
@@ -168,10 +168,10 @@ class TestDecimalComplex:
 
         match = r"Cannot use <= with complex numbers"
         with pytest.raises(TypeError, match=match):
-            c <= term
+            c <= term  # pylint: disable=pointless-statement
 
         with pytest.raises(TypeError, match=match):
-            term >= c
+            term >= c  # pylint: disable=pointless-statement
 
     @pytest.mark.parametrize(
         "t, match",
@@ -184,7 +184,15 @@ class TestDecimalComplex:
             (float, r"argument must be a string or a number"),
             (range, r"object cannot be interpreted as an integer"),
             (bytes, r"cannot convert 'DecimalComplex' object to bytes"),
-            (bytearray, r"cannot convert 'DecimalComplex' object to bytearray"),
+            (
+                bytearray,
+                (
+                    # Python 3.7
+                    r"object is not iterable|"
+                    # Python 3.8+
+                    r"cannot convert 'DecimalComplex' object to bytearray"
+                ),
+            ),
             (int, r"argument must be a string, a bytes-like object or a number"),
             (memoryview, r"a bytes-like object is required"),
         ],

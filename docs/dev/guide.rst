@@ -99,7 +99,7 @@ Running the example should produce output similar to:
     (1.53207,0)
     (0.414398,0)
     (0.721263,0)
-    You have successfully used Jet version 0.2.0
+    You have successfully used Jet version 0.2.1
 
 Congratulations, you have successfully run your first Jet program!
 

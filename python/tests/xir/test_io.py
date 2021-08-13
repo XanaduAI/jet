@@ -25,32 +25,33 @@ def create_xir_prog(
         irprog = XIRProgram(version=version)
 
     # add the statements to the program
-    stmts = [Statement(n, p, w) for n, p, w in data]
-    irprog._statements.extend(stmts)
+    for stmt in (Statement(n, p, w) for n, p, w in data):
+        irprog.add_statement(stmt)
 
     # if declaration should be included, add them to the program
     if include_decl:
-        declarations = [Declaration(n, p, w, declaration_type="gate") for n, p, w in data]
-        irprog._declarations["gate"].extend(declarations)
+        for decl in (Declaration(n, len(p), len(w), declaration_type="gate") for n, p, w in data):
+            irprog.add_declaration("gate", decl)
 
     # if any external libraries/files are included, add them to the program
     if external_libs is not None:
-        irprog._include.extend(external_libs)
+        for lib in external_libs:
+            irprog.add_include(lib)
 
     return irprog
 
 
-def create_sf_prog(num_of_wires: int, ops: List[Tuple]):
+def create_sf_prog(num_of_wires: int, ops_: List[Tuple]):
     """Create a Strawberry Fields program"""
     prog = sf.Program(num_of_wires)
 
     with prog.context as q:
-        for gate, params, wires in ops:
+        for gate, params, wires in ops_:
             regrefs = [q[w] for w in wires]
             if len(params) == 0:
-                gate | regrefs
+                gate | regrefs  # pylint: disable=pointless-statement
             else:
-                gate(*params) | regrefs
+                gate(*params) | regrefs  # pylint: disable=expression-not-assigned
 
     return prog
 
@@ -114,24 +115,19 @@ class TestStrawberryFieldsToXIR:
 
     def test_empty_sfprogram(self):
         """Test that converting from an empty SF program works"""
-        sfprog = create_sf_prog(num_of_wires=2, ops=[])
+        sfprog = create_sf_prog(num_of_wires=2, ops_=[])
         irprog = to_xir(sfprog)
 
         assert irprog.version == "0.1.0"
-        assert irprog.statements == []
-        assert irprog.include == []
-        assert irprog.statements == []
-        assert irprog.declarations == {
-            "gate": [],
-            "func": [],
-            "output": [],
-            "operator": [],
-        }
 
-        assert irprog.gates == dict()
-        assert irprog.operators == dict()
-        assert irprog.variables == set()
-        assert irprog._called_ops == set()
+        assert list(irprog.called_functions) == []
+        assert dict(irprog.declarations) == {"gate": [], "func": [], "output": [], "operator": []}
+        assert dict(irprog.gates) == {}
+        assert list(irprog.includes) == []
+        assert dict(irprog.operators) == {}
+        assert list(irprog.options) == []
+        assert list(irprog.statements) == []
+        assert list(irprog.variables) == []
 
     @pytest.mark.parametrize("add_decl", [True, False])
     def test_gates_no_args(self, add_decl):
@@ -140,20 +136,24 @@ class TestStrawberryFieldsToXIR:
             (ops.Vac, [], (0,)),
         ]
 
-        sfprog = create_sf_prog(num_of_wires=2, ops=circuit_data)
+        sfprog = create_sf_prog(num_of_wires=2, ops_=circuit_data)
         irprog = to_xir(sfprog, add_decl=add_decl)
 
-        assert irprog.statements[0].name == "Vacuum"
-        assert irprog.statements[0].params == []
-        assert irprog.statements[0].wires == (0,)
+        stmt = irprog.statements[0]
+
+        assert stmt.name == "Vacuum"
+        assert stmt.params == []
+        assert stmt.wires == (0,)
+
+        decls = irprog.declarations["gate"]
 
         if add_decl:
-            assert len(irprog.declarations["gate"]) == 1
-            assert irprog.declarations["gate"][0].name == "Vacuum"
-            assert irprog.declarations["gate"][0].params == []
-            assert irprog.declarations["gate"][0].wires == (0,)
+            assert len(decls) == 1
+            assert decls[0].name == "Vacuum"
+            assert decls[0].params == []
+            assert decls[0].wires == (0,)
         else:
-            assert irprog.declarations["gate"] == []
+            assert len(decls) == 0
 
     @pytest.mark.parametrize("add_decl", [True, False])
     def test_gates_with_args(self, add_decl):
@@ -164,21 +164,25 @@ class TestStrawberryFieldsToXIR:
             (ops.Sgate, [Decimal("0.3")], (1,)),
         ]
 
-        sfprog = create_sf_prog(num_of_wires=2, ops=circuit_data)
+        sfprog = create_sf_prog(num_of_wires=2, ops_=circuit_data)
         irprog = to_xir(sfprog, add_decl=add_decl)
 
-        assert irprog.statements[0].name == "Sgate"
-        assert irprog.statements[0].params == [0.1, 0.2]
-        assert irprog.statements[0].wires == (0,)
+        stmts = irprog.statements
 
-        assert irprog.statements[1].name == "Sgate"
-        assert irprog.statements[1].params == [0.3, 0.0]
-        assert irprog.statements[1].wires == (1,)
+        assert stmts[0].name == "Sgate"
+        assert stmts[0].params == [0.1, 0.2]
+        assert stmts[0].wires == (0,)
+
+        assert stmts[1].name == "Sgate"
+        assert stmts[1].params == [0.3, 0.0]
+        assert stmts[1].wires == (1,)
+
+        decls = irprog.declarations["gate"]
 
         if add_decl:
-            assert len(irprog.declarations["gate"]) == 1
-            assert irprog.declarations["gate"][0].name == "Sgate"
-            assert irprog.declarations["gate"][0].params == ["p0", "p1"]
-            assert irprog.declarations["gate"][0].wires == (0,)
+            assert len(decls) == 1
+            assert decls[0].name == "Sgate"
+            assert decls[0].params == ["p0", "p1"]
+            assert decls[0].wires == (0,)
         else:
-            assert irprog.declarations["gate"] == []
+            assert len(decls) == 0

@@ -3,8 +3,15 @@ with an interpreter for Xanadu IR (XIR) scripts and a set of classes to model
 quantum gates, states, and circuits.
 """
 
-# The existence of a Python binding is proof of its intention to be exposed.
-from .bindings import *
+from .bindings import (
+    PathInfo,
+    add_tensors,
+    conj,
+    contract_tensors,
+    reshape,
+    slice_index,
+    version,
+)
 
 # The rest of the modules control their exports using `__all__`.
 from .circuit import *

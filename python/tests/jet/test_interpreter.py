@@ -400,7 +400,10 @@ def test_run_xir_program_with_amplitude_statements(program, want_result):
         ),
         (
             xir.parse_script("CNOT | [0, 1]; amplitude(state: [0, 1]) | [1, 0];"),
-            r"Statement 'amplitude\(state: \[0, 1\]\) \| \[1, 0\]' must be applied to \[0 \.\. 1\]\.",
+            (
+                r"Statement 'amplitude\(state: \[0, 1\]\) \| \[1, 0\]' "
+                r"must be applied to \[0 \.\. 1\]\."
+            ),
         ),
     ],
 )

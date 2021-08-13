@@ -3,6 +3,7 @@ import pytest
 import jet
 
 
+# pylint: disable=unused-argument
 @pytest.mark.parametrize("dtype", ["complex64", "complex128"])
 class TestTensor:
     def test_default_constructor(self, dtype):

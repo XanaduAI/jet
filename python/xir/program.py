@@ -1,12 +1,12 @@
+"""This module contains the XIRProgram class and classes for the Xanadu IR"""
+
 import re
 import warnings
 from decimal import Decimal
-from typing import Any, Dict, List, Sequence, Set, Tuple, Union
+from typing import Any, Collection, Dict, List, Mapping, Sequence, Tuple, Union
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
-
-"""This module contains the XIRProgram class and classes for the Xanadu IR"""
 
 Wire = Union[int, str]
 Param = Union[complex, str, Decimal, DecimalComplex, bool, List["Param"]]
@@ -148,20 +148,24 @@ class OperatorStmt:
 
     @property
     def pref(self) -> Union[Decimal, float, int, str]:
+        """Returns the prefactor of this operator statement."""
         if isinstance(self._pref, Decimal) and self.use_floats:
             return float(self._pref)
         return self._pref
 
     @property
     def terms(self) -> List:
+        """Returns the terms in this operator statement."""
         return self._terms
 
     @property
     def use_floats(self) -> bool:
+        """Returns the float setting of this operator statement."""
         return self._use_floats
 
     @property
     def wires(self) -> Tuple:
+        """Returns the wires this operator statement is applied to."""
         return tuple({t[1] for t in self.terms})
 
 
@@ -208,7 +212,7 @@ class Declaration:
 
 
 class XIRProgram:
-    """Main XIR program containing all parsed information
+    """Structured representation of an XIR program.
 
     Args:
         version (str): Version number of the program. Must follow SemVer style (MAJOR.MINOR.PATCH).
@@ -217,48 +221,52 @@ class XIRProgram:
     """
 
     def __init__(self, version: str = "0.1.0", use_floats: bool = True):
-        if not isinstance(version, str):
-            raise TypeError(f"Invalid version number input. Must be a string.")
+        XIRProgram._validate_version(version)
 
-        valid_match = re.match(r"^\d+\.\d+\.\d+$", version)
-        if valid_match is None or valid_match.string != version:
-            raise ValueError(
-                f"Invalid version number {version} input. Must be SemVer style (MAJOR.MINOR.PATCH)."
-            )
         self._version = version
         self._use_floats = use_floats
 
-        self._include = []
-        self._options = dict()
+        self._includes = []
+        self._options = {}
         self._statements = []
 
-        self._declarations = {"gate": [], "func": [], "output": [], "operator": []}
+        self._declarations = {key: [] for key in ("gate", "func", "output", "operator")}
 
-        self._gates = dict()
-        self._operators = dict()
+        self._gates = {}
+        self._operators = {}
+
         self._variables = set()
-
-        self._called_ops = set()
+        self._called_functions = set()
 
     def __repr__(self) -> str:
+        """Returns a string representation of the XIR program."""
         return f"<XIRProgram: version={self._version}>"
 
     @property
     def version(self) -> str:
-        """Version number of the program
+        """Returns the version number of the XIR program.
 
         Returns:
-            str: program version number
+            str: version number
         """
         return self._version
 
     @property
     def use_floats(self) -> bool:
+        """Returns whether floats and complex types are used by the XIR program.
+
+        Returns:
+            bool: whether floats and complex types are used
+        """
         return self._use_floats
 
     @property
-    def wires(self) -> Set[int]:
-        """Get the wires of an XIR program"""
+    def wires(self) -> Collection[Wire]:
+        """Returns the wires of the XIR program.
+
+        Returns:
+            Collection[Wire]: collection of wires
+        """
         wires = []
         for stmt in self.statements:
             wires.extend(stmt.wires)
@@ -266,120 +274,198 @@ class XIRProgram:
         return set(wires)
 
     @property
-    def include(self) -> List[str]:
-        """Included XIR libraries/files used in the program
+    def called_functions(self) -> Collection[str]:
+        """Returns the functions that are called in the XIR program.
 
         Returns:
-            list[str]: included libraries/files
+            Collection[str]: collection of function names
         """
-        return self._include
+        return self._called_functions
 
     @property
-    def options(self) -> Dict[str, Any]:
-        """Script-level options declared in the program
+    def declarations(self) -> Mapping[str, Sequence[Declaration]]:
+        """Returns the declarations in the XIR program.
 
         Returns:
-            Dict: declared scipt-level options
+            Mapping[str, Sequence[Declaration]]: dictionary of declarations
+            with the following keys: 'gate', 'func', 'output', and 'operator'
+        """
+        return self._declarations
+
+    @property
+    def gates(self) -> Mapping[str, Mapping[str, Sequence]]:
+        """Returns the gates in the XIR program.
+
+        Returns:
+            Mapping[str, Mapping[str, Sequence]]: dictionary of gates, each one
+            consisting of a name and a dictionary with the following keys:
+            'parameters', 'wires', and 'statements'
+        """
+        return self._gates
+
+    @property
+    def includes(self) -> Sequence[str]:
+        """Returns the included XIR modules used by the XIR program.
+
+        Returns:
+            Sequence[str]: sequence of included XIR modules
+        """
+        return self._includes
+
+    @property
+    def operators(self) -> Mapping[str, Mapping[str, Sequence]]:
+        """Returns the operators in the XIR program.
+
+        Returns:
+            Mapping[str, Mapping[str, Sequence]]: dictionary of operators, each
+            one consisting of a name and a dictionary with the following keys:
+            'parameters', 'wires', and 'statements'
+        """
+        return self._operators
+
+    @property
+    def options(self) -> Mapping[str, Any]:
+        """Returns the script-level options declared in the XIR program.
+
+        Returns:
+            Mapping[str, Any]: declared scipt-level options
         """
         if self.use_floats:
             options_with_floats = get_floats(self._options)
+            # The following condition should always be True. For more context,
+            # see https://github.com/XanaduAI/jet/pull/52/files#r681872696.
             if isinstance(options_with_floats, Dict):
                 return options_with_floats
         return self._options
 
     @property
-    def statements(self) -> List[Statement]:
-        """Statements in the program
+    def statements(self) -> Sequence[Statement]:
+        """Returns the statements in the XIR program.
 
         Returns:
-            list[Statement]: a list of all statements
+            Sequence[Statement]: sequence of statements
         """
         return self._statements
 
     @property
-    def declarations(self) -> Dict[str, List]:
-        """Declarations in the program
+    def variables(self) -> Collection[str]:
+        """Returns the free parameter variables used when defining gates and
+        operators in the XIR program.
 
         Returns:
-            dict[str, list]: a dictionary of all declarations sorted into the following keys:
-            'gate', 'func', 'output' and 'operator'
-        """
-        return self._declarations
-
-    @property
-    def gates(self) -> Dict[str, Dict[str, Sequence]]:
-        """All user-defined gates in the program
-
-        Returns:
-            dict[str, dict]: a dictionary of all user-defined gates, each gate consisting of a name
-            as well as a dictionary containing parameters, wires and statements
-        """
-        return self._gates
-
-    @property
-    def operators(self) -> Dict[str, Dict[str, Sequence]]:
-        """All user-defined operators in the program
-
-        Returns:
-            dict[str, dict]: a dictionary of all user-defined operators, each operator consisting of
-            a name as well as a dictionary containing parameters, wires and statements
-        """
-        return self._operators
-
-    @property
-    def variables(self) -> Set[str]:
-        """Free parameter variables used when defining gates and operators
-
-        Returns:
-            set[str]: all variables as strings contained in a set
+            Collection[str]: collection of free parameter variable names
         """
         return self._variables
 
-    @property
-    def called_ops(self) -> Set[str]:
-        """Functions that are called at any point inside the script
+    def add_called_function(self, name: str) -> None:
+        """Adds the name of a called function to the XIR program.
 
-        Returns:
-            set[str]: all functions as strings contained in a set
+        Args:
+            name (str): name of the function
         """
-        return self._called_ops
+        self._called_functions.add(name)
+
+    def add_declaration(self, key: str, decl: Declaration) -> None:
+        """Adds a declaration to the XIR program.
+
+        Args:
+            key (str): key of the declaration ('func', 'gate', 'operator', or 'output')
+            decl (Declaration): the declaration
+        """
+        if key not in self._declarations:
+            raise KeyError(f"Key '{key}' is not a supported declaration.")
+
+        if decl.name in (decl.name for decl in self._declarations[key]):
+            warnings.warn(f"{key.title()} '{decl.name}' has already been declared.")
+
+        self._declarations[key].append(decl)
 
     def add_gate(
-        self, name: str, params: List[str], wires: Tuple, statements: List[Statement]
+        self,
+        name: str,
+        params: Sequence[str],
+        wires: Sequence[Wire],
+        statements: Sequence[Statement],
     ) -> None:
-        """Adds a gate to the program
+        """Adds a gate to the XIR program.
 
         Args:
             name (str): name of the gate
-            params (str): parameters used in the gate
-            wires (str): wires that the gate is applied to
-            statements (list[Statement]): statements that the gate applies
+            params (Sequence[str]): parameters used in the gate
+            wires (Sequence[Wire]): wires that the gate is applied to
+            statements (Sequence[Statement]): statements that the gate applies
         """
         if name in self._gates:
-            warnings.warn("Gate already defined. Replacing old definition with new definiton.")
+            warnings.warn(
+                f"Gate '{name}' already defined. Replacing old definition with new definition."
+            )
+
         self._gates[name] = {"params": params, "wires": wires, "statements": statements}
 
+    def add_include(self, include: str) -> None:
+        """Adds an included XIR module to the XIR program.
+
+        Args:
+            include (str): name of the XIR module
+        """
+        if include in self._includes:
+            warnings.warn(f"Module '{include}' is already included. Skipping include.")
+            return
+
+        self._includes.append(include)
+
     def add_operator(
-        self, name: str, params: List[str], wires: Tuple, statements: List[OperatorStmt]
+        self,
+        name: str,
+        params: Sequence[str],
+        wires: Sequence[Wire],
+        statements: Sequence[OperatorStmt],
     ) -> None:
-        """Adds an operator to the program
+        """Adds an operator to the XIR program.
 
         Args:
             name (str): name of the operator
-            params (str): parameters used in the operator
-            wires (str): wires that the operator is applied to
-            statements (list[OperatorStmt]): statements that the operator applies
+            params (Sequence[str]): parameters used in the operator
+            wires (Sequence[Wire]): wires that the operator is applied to
+            statements (Sequence[OperatorStmt]): statements that the operator applies
         """
         if name in self._operators:
-            warnings.warn("Operator already defined. Replacing old definition with new definiton.")
-        self._operators[name] = {
-            "params": params,
-            "wires": wires,
-            "statements": statements,
-        }
+            warnings.warn(
+                f"Operator '{name}' already defined. Replacing old definition with new definition."
+            )
+
+        self._operators[name] = {"params": params, "wires": wires, "statements": statements}
+
+    def add_option(self, name: str, value: Any) -> None:
+        """Adds an option to the XIR program.
+
+        Args:
+            name (str): name of the option
+            value (Any): value of the option
+        """
+        if name in self._options:
+            warnings.warn(f"Option '{name}' already set. Replacing old value with new value.")
+
+        self._options[name] = value
+
+    def add_statement(self, statement: Statement) -> None:
+        """Adds a statement to the XIR program.
+
+        Args:
+            statement (Statement): the statement
+        """
+        self._statements.append(statement)
+
+    def add_variable(self, name: str) -> None:
+        """Adds the name of a free parameter variable to the XIR program.
+
+        Args:
+            name (str): name of the variable
+        """
+        self._variables.add(name)
 
     def serialize(self, minimize: bool = False) -> str:
-        """Serialize an XIRProgram returning an XIR script
+        """Serialize an ``XIRProgram`` to an XIR script.
 
         Args:
             minimize (bool): whether to strip whitespace and newlines from file
@@ -388,8 +474,8 @@ class XIRProgram:
             str: the serialized IR script
         """
         res = []
-        res.extend([f"use {use};" for use in self._include])
-        if len(self._include) != 0:
+        res.extend([f"use {use};" for use in self._includes])
+        if len(self._includes) != 0:
             res.append("")
 
         if len(self.options) > 0:
@@ -423,3 +509,77 @@ class XIRProgram:
         if minimize:
             return strip(res_script)
         return res_script
+
+    @staticmethod
+    def merge(*programs: "XIRProgram") -> "XIRProgram":
+        """Merges one or more XIR programs into a new XIR program.
+
+        The merged XIR program is formed by concatenating the given XIR programs
+        in the order they are passed to the function. Warnings may be issued for
+        duplicate declarations, gates, includes, operators, and options.
+
+        Args:
+            programs (XIRProgram): XIR programs to merge
+
+        Returns:
+            XIRProgram: the merged XIR program
+
+        Raises:
+            ValueError: if no XIR programs are provided or if at least two XIR
+                programs have different versions or float settings
+        """
+        if len(programs) == 0:
+            raise ValueError("Merging requires at least one XIR program.")
+
+        version = programs[0].version
+        if any(program.version != version for program in programs):
+            raise ValueError("XIR programs with different versions cannot be merged.")
+
+        use_floats = any(program.use_floats for program in programs)
+        if any(program.use_floats != use_floats for program in programs):
+            warnings.warn("XIR programs with different float settings are being merged.")
+
+        result = XIRProgram(version=version, use_floats=use_floats)
+
+        for program in programs:
+            for called_function in program.called_functions:
+                result.add_called_function(called_function)
+
+            for key, decls in program.declarations.items():
+                for decl in decls:
+                    result.add_declaration(key, decl)
+
+            for name, gate in program.gates.items():
+                result.add_gate(name, **gate)
+
+            for include in program.includes:
+                result.add_include(include)
+
+            for name, operator in program.operators.items():
+                result.add_operator(name, **operator)
+
+            for name, value in program.options.items():
+                result.add_option(name, value)
+
+            for statement in program.statements:
+                result.add_statement(statement)
+
+            for variable in program.variables:
+                result.add_variable(variable)
+
+        return result
+
+    @staticmethod
+    def _validate_version(version: str) -> None:
+        """Validates the given version number.
+
+        Raises:
+            TypeError: if the version number is not a string
+            ValueError: if the version number is not a semantic version
+        """
+        if not isinstance(version, str):
+            raise TypeError(f"Version '{version}' must be a string.")
+
+        valid_match = re.fullmatch(r"\d+\.\d+\.\d+", version)
+        if valid_match is None:
+            raise ValueError(f"Version '{version}' must be a semantic version (MAJOR.MINOR.PATCH).")

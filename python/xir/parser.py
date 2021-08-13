@@ -2,6 +2,7 @@
 import math
 from decimal import Decimal
 from pathlib import Path
+from typing import Union
 
 from lark import Lark, Transformer
 
@@ -20,7 +21,7 @@ with p.open("r") as _f:
 
 xir_parser = Lark(ir_grammar, start="program", parser="lalr")
 
-
+# pylint: disable=missing-function-docstring
 class XIRTransformer(Transformer):
     """Transformer for processing the Lark parse tree.
 
@@ -42,7 +43,7 @@ class XIRTransformer(Transformer):
         super().__init__(self, *args, **kwargs)
 
     @property
-    def eval_pi(self) -> bool:
+    def eval_pi(self) -> bool:  # pylint: disable=used-before-assignment
         """Reports whether pi is evaluated and stored as a float."""
         return self._eval_pi
 
@@ -63,7 +64,7 @@ class XIRTransformer(Transformer):
             XIRProgram: program containing all parsed data
         """
         # assert all stmts are handled
-        assert all(a == None for a in args)
+        assert all(a is None for a in args)
         return self._program
 
     opdecl = list
@@ -72,16 +73,20 @@ class XIRTransformer(Transformer):
 
     def include(self, file_name):
         """Includ statements for external files"""
-        self._program._include.append(file_name[0])
+        self._program.add_include(file_name[0])
 
     def circuit(self, args):
-        """Main circuit containing all the gate statements. Should be empty after tree has been parsed from the leaves up, and all statemtents been passed to the program."""
+        """Main circuit containing all the gate statements. Should be empty after
+        the tree has been parsed from the leaves up and all statetents have been
+        passed to the program.
+        """
         # assert all stmts are handled
-        assert all(a == None for a in args)
+        assert all(a is None for a in args)
 
     def script_options(self, args):
         """Script level options."""
-        self._program._options = {k: v for k, v in args}
+        for name, value in args:
+            self._program.add_option(name, value)
 
     ###############
     # basic types
@@ -119,13 +124,18 @@ class XIRTransformer(Transformer):
 
     params_list = list
     params_dict = dict
+
     option = tuple
     array = list
-    FALSE_ = lambda self, _: False
-    TRUE_ = lambda self, _: True
 
     ADJOINT = str
     CTRL = str
+
+    def FALSE_(self, _):
+        return False
+
+    def TRUE_(self, _):
+        return True
 
     #############################
     # variables and expressions
@@ -134,7 +144,7 @@ class XIRTransformer(Transformer):
     def var(self, v):
         """Expressions that are strings are considered to be variables. Can be
         substituted by values at a later stage."""
-        self._program._variables.add(v[0])
+        self._program.add_variable(v[0])
         return str(v[0])
 
     def range(self, args):
@@ -197,7 +207,7 @@ class XIRTransformer(Transformer):
     def statement(self, args):
         """Any statement that is part of the circuit."""
         if args[0] is not None:
-            self._program._statements.append(args[0])
+            self._program.add_statement(args[0])
 
     def gatestmt(self, args):
         """Gate statements that are defined directly in the circuit or inside
@@ -295,7 +305,7 @@ class XIRTransformer(Transformer):
     #########
 
     def mathop(self, args):
-        self._program._called_ops.add(args[0])
+        self._program.add_called_function(args[0])
         return str(args[0]) + "(" + str(args[1]) + ")"
 
     def add(self, args):
@@ -327,7 +337,8 @@ class XIRTransformer(Transformer):
             return -args[0]
         return "-" + str(args[0])
 
-    PI = lambda self, _: "PI" if not self._eval_pi else Decimal(str(math.pi))
+    def PI(self, _):
+        return "PI" if not self._eval_pi else Decimal(str(math.pi))
 
 
 def is_wire(arg):
