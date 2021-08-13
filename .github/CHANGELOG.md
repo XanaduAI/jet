@@ -24,11 +24,6 @@ This release contains contributions from (in alphabetical order):
 
 * The paper benchmarks now fetch the Jet repository at tag "0.2.1". [(#62)](https://github.com/XanaduAI/jet/pull/62)
 
-
-### New features since last release
-
-* The Jet interpreter for XIR scripts now supports an `expval` output. [(#49)](https://github.com/XanaduAI/jet/pull/49)
-
 ### Documentation
 
 * Links to the [Jet paper](https://arxiv.org/abs/2107.09793) are now included in the README and Sphinx documentation. [(#59)](https://github.com/XanaduAI/jet/pull/59)
