@@ -192,7 +192,7 @@ class Declaration:
         name (str): name of the declaration
     """
 
-    def __init__(self, name: str, params: Sequence[str], wires: Wires, declaration_type: str):
+    def __init__(self, name: str, params: Sequence[str], wires: Sequence[Wire], declaration_type: str):
         self.name = name
         self.params = list(map(str, params))
         if len(set(self.params)) != len(self.params):
@@ -203,7 +203,7 @@ class Declaration:
         self.declaration_type = declaration_type
 
     def __str__(self) -> str:
-        return _decl_str(self.name, self.params, self.wires, self.declaration_type)
+        return _serialize_declaration(self.name, self.params, self.wires, self.declaration_type)
 
     def __repr__(self) -> str:
         return f"<{self.declaration_type.capitalize()} declaration:name={self.name}>"
@@ -402,7 +402,7 @@ class XIRProgram:
             res.append("")
 
         for name, gate in self._gates.items():
-            decl_str = _decl_str(name, gate["params"], gate["wires"], "gate")
+            decl_str = _serialize_declaration(name, gate["params"], gate["wires"], "gate")
 
             res.append(decl_str + ":")
 
@@ -410,7 +410,7 @@ class XIRProgram:
             res.append("end;\n")
 
         for name, op in self._operators.items():
-            decl_str = _decl_str(name, op["params"], op["wires"], "operator")
+            decl_str = _serialize_declaration(name, op["params"], op["wires"], "operator")
 
             res.append(decl_str + ":")
 

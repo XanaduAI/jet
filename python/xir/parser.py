@@ -111,12 +111,14 @@ class XIRTransformer(Transformer):
         """Tuple with wires and identifier"""
         return "wires", tuple(w)
 
-    def params(self, args):
+    def params(self, p):
         """Tuple with params and identifier"""
-        if all(isinstance(p, tuple) for p in args):
-            return "params", dict(args)
-        return "params", list(args)
+        # p will be a list with one element, which is either a list (params_list)
+        # or a dict (params_dict)
+        return "params", p[0]
 
+    params_list = list
+    params_dict = dict
     option = tuple
     array = list
     FALSE_ = lambda self, _: False

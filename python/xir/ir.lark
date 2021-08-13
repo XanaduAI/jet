@@ -19,7 +19,11 @@ obs_group: obs "[" uint "]" ("@" obs "[" uint "]")*
 
 // list-types
 wires : "[" (uint | range | name) ("," (uint | range | name))* "]"
-params: "(" (val | option) ("," (val | option))* ")"
+
+params: params_dict | params_list
+params_list: "(" val ("," val)* ")"
+params_dict: "(" option ("," option)* ")"
+
 array : "[" (val ("," val)*)? "]"
 
 ?val  : bool | expr | array
