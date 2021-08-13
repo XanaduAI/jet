@@ -275,24 +275,24 @@ class TestXIRProgram:
 
     def test_add_declaration(self, program):
         """Tests that declarations can be added to an XIR program."""
-        tan = FuncDeclaration("tan", 1)
+        tan = Declaration("tan", ["x"], (), declaration_type="function")
         program.add_declaration("func", tan)
         assert program.declarations == {"func": [tan], "gate": [], "operator": [], "output": []}
 
-        u2 = GateDeclaration("U2", 2, 1)
+        u2 = Declaration("U2", ["a", "b"], (0,), declaration_type="gate")
         program.add_declaration("gate", u2)
         assert program.declarations == {"func": [tan], "gate": [u2], "operator": [], "output": []}
 
-        z3 = GateDeclaration("Z3", 0, 3)
+        z3 = Declaration("Z3", [], (0, 1, 2), declaration_type="gate")
         program.add_declaration("operator", z3)
         assert program.declarations == {"func": [tan], "gate": [u2], "operator": [z3], "output": []}
 
     def test_add_declaration_with_same_key(self, program):
         """Tests that multiple declarations with the same key can be added to an XIR program."""
-        amplitude = OutputDeclaration("amplitude")
+        amplitude = Declaration("amplitude", [], (), declaration_type="output")
         program.add_declaration("output", amplitude)
 
-        probabilities = OutputDeclaration("probabilities")
+        probabilities = Declaration("probabilities", [], (), declaration_type="output")
         program.add_declaration("output", probabilities)
 
         assert program.declarations["output"] == [amplitude, probabilities]
@@ -301,7 +301,7 @@ class TestXIRProgram:
         """Tests that the concrete type of a declaration does not affect the
         key(s) that can be associated with it in an XIR program.
         """
-        decl = OutputDeclaration("gradient")
+        decl = Declaration("gradient", [], (), declaration_type="output")
         program.add_declaration("func", decl)
         assert program.declarations == {"func": [decl], "gate": [], "operator": [], "output": []}
 
@@ -309,7 +309,7 @@ class TestXIRProgram:
         """Tests that an exception is raised when a declaration with an unknown
         key is added to an XIR program.
         """
-        decl = Declaration("Variable")
+        decl = Declaration("var", [], (), declaration_type="gate")
         with pytest.raises(KeyError, match=r"Key 'var' is not a supported declaration"):
             program.add_declaration("var", decl)
 
@@ -317,11 +317,11 @@ class TestXIRProgram:
         """Tests that a warning is issued when two declarations with the same
         name are added to an XIR program.
         """
-        atan1 = FuncDeclaration("atan", 1)
+        atan1 = Declaration("atan", ["x"], (), declaration_type="function")
         program.add_declaration("func", atan1)
 
         with pytest.warns(UserWarning, match=r"Func 'atan' has already been declared"):
-            atan2 = FuncDeclaration("atan", 2)
+            atan2 = Declaration("atan", ["x", "y"], (), declaration_type="function")
             program.add_declaration("func", atan2)
 
         assert program.declarations["func"] == [atan1, atan2]
@@ -511,8 +511,8 @@ class TestXIRProgram:
                     make_program(
                         called_functions={"cos"},
                         declarations={
-                            "func": [FuncDeclaration("cos", 1)],
-                            "gate": [GateDeclaration("H", 0, 1)],
+                            "func": [Declaration("cos", ["x"], (), declaration_type="function")],
+                            "gate": [Declaration("H", [], (0,), declaration_type="gate")],
                             "operator": [],
                             "output": [],
                         },
@@ -526,9 +526,9 @@ class TestXIRProgram:
                     make_program(
                         called_functions={"sin"},
                         declarations={
-                            "func": [FuncDeclaration("sin", 1)],
+                            "func": [Declaration("sin", ["x"], (), declaration_type="function")],
                             "gate": [],
-                            "operator": [OperatorDeclaration("Y", 0, 1)],
+                            "operator": [Declaration("Y", [], (0,), declaration_type="operator")],
                             "output": [],
                         },
                         gates={"D": {"params": ["r", "phi"], "wires": [1], "statements": []}},
@@ -542,9 +542,9 @@ class TestXIRProgram:
                 make_program(
                     called_functions={"cos", "sin"},
                     declarations={
-                        "func": [FuncDeclaration("cos", 1), FuncDeclaration("sin", 1)],
-                        "gate": [GateDeclaration("H", 0, 1)],
-                        "operator": [OperatorDeclaration("Y", 0, 1)],
+                        "func": [Declaration("cos", ["x"], (), declaration_type="function"), Declaration("sin", ["x"], (), declaration_type="function")],
+                        "gate": [Declaration("H", [], (0,), declaration_type="gate")],
+                        "operator": [Declaration("Y", [], (0,), declaration_type="operator")],
                         "output": [],
                     },
                     gates={

@@ -30,7 +30,7 @@ def create_xir_prog(
 
     # if declaration should be included, add them to the program
     if include_decl:
-        for decl in (Declaration(n, len(p), len(w), declaration_type="gate") for n, p, w in data):
+        for decl in (Declaration(n, p, w, declaration_type="gate") for n, p, w in data):
             irprog.add_declaration("gate", decl)
 
     # if any external libraries/files are included, add them to the program
