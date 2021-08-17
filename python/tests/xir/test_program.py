@@ -57,7 +57,9 @@ class TestSerialize:
     # Test declarations
     #####################
 
-    @pytest.mark.parametrize("params, wires, declaration_type, want_res", [
+    @pytest.mark.parametrize(
+        "params, wires, declaration_type, want_res",
+        [
             (["a", "b"], (0,), "gate", "gate name(a, b)[0];"),
             ([], (0, 2, 1), "operator", "operator name[0, 2, 1];"),
             (["theta"], ("a", "b", "c"), "output", "output name(theta)[a, b, c];"),
@@ -71,9 +73,11 @@ class TestSerialize:
         irprog._declarations[declaration_type].append(decl)
         have_res = irprog.serialize()
 
-        assert have_res  == want_res
+        assert have_res == want_res
 
-    @pytest.mark.parametrize("params, want_res", [
+    @pytest.mark.parametrize(
+        "params, want_res",
+        [
             (["a", "b"], "function name(a, b);"),
             ([], "function name;"),
             (["theta"], "function name(theta);"),
@@ -86,7 +90,7 @@ class TestSerialize:
         irprog = XIRProgram()
         irprog._declarations["func"].append(decl)
         have_res = irprog.serialize()
-        assert have_res  == want_res
+        assert have_res == want_res
 
     ###################
     # Test statements
@@ -557,7 +561,10 @@ class TestXIRProgram:
                 make_program(
                     called_functions={"cos", "sin"},
                     declarations={
-                        "func": [Declaration("cos", declaration_type="function", params=["x"]), Declaration("sin", declaration_type="function", params=["x"])],
+                        "func": [
+                            Declaration("cos", declaration_type="function", params=["x"]),
+                            Declaration("sin", declaration_type="function", params=["x"]),
+                        ],
                         "gate": [Declaration("H", declaration_type="gate", wires=(0,))],
                         "operator": [Declaration("Y", declaration_type="operator", wires=(0,))],
                         "output": [],
