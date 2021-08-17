@@ -225,9 +225,9 @@ class Declaration:
         self.wires = wires or ()
 
         if not all(isinstance(p, str) for p in self.params):
-            raise TypeError("Declared parameters must be strings.")
+            raise TypeError("Declaration '{name}' has parameters which are not strings.")
         if len(set(self.params)) != len(self.params):
-            raise ValueError("All parameters in a declaration must be unique.")
+            raise ValueError("Declaration '{name}' has duplicate parameters.")
 
     def __str__(self) -> str:
         return _serialize_declaration(self.name, self.params, self.wires, self.declaration_type)
