@@ -116,14 +116,13 @@ class XIRTransformer(Transformer):
         """Tuple with wires and identifier"""
         return "wires", tuple(w)
 
-    def params(self, p):
-        """Tuple with params and identifier"""
-        # p will be a list with one element, which is either a list (params_list)
-        # or a dict (params_dict)
-        return "params", p[0]
+    def params_list(self, p):
+        """Tuple with list of params and identifier"""
+        return "params", list(p)
 
-    params_list = list
-    params_dict = dict
+    def params_dict(self, p):
+        """Tuple with dictionary of params and identifier"""
+        return "params", dict(p)
 
     option = tuple
     array = list
@@ -270,7 +269,7 @@ class XIRTransformer(Transformer):
             name, wires = args[0], args[1][1]
             params = []
 
-        decl = Declaration(name, params, wires, declaration_type="gate")
+        decl = Declaration(name, declaration_type="gate", params=params, wires=wires)
         self._program._declarations["gate"].append(decl)
 
     def operator_decl(self, args):
@@ -279,7 +278,7 @@ class XIRTransformer(Transformer):
         else:
             name, wires = args[0], args[1][1]
             params = []
-        decl = Declaration(name, params, wires, declaration_type="operator")
+        decl = Declaration(name, declaration_type="operator", params=params, wires=wires)
         self._program._declarations["operator"].append(decl)
 
     def func_decl(self, args):
@@ -288,7 +287,7 @@ class XIRTransformer(Transformer):
         else:
             name = args[0]
             params = []
-        decl = Declaration(name, params, (), declaration_type="function")
+        decl = Declaration(name, declaration_type="function", params=params)
         self._program._declarations["func"].append(decl)
 
     def output_decl(self, args):
@@ -297,7 +296,7 @@ class XIRTransformer(Transformer):
         else:
             name, wires = args[0], args[1][1]
             params = []
-        decl = Declaration(name, params, wires, declaration_type="output")
+        decl = Declaration(name, declaration_type="output", params=params, wires=wires)
         self._program._declarations["output"].append(decl)
 
     #########
@@ -347,5 +346,5 @@ def is_wire(arg):
 
 
 def is_param(arg):
-    """Returns whether the passed argument is a list of params."""
+    """Returns whether the passed argument is a list or dictionary of params."""
     return isinstance(arg, tuple) and arg[0] == "params"

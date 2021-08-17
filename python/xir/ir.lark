@@ -9,8 +9,8 @@ gatestmt: (ADJOINT | (CTRL wires))* name params? "|" wires ";"
 opstmt: expr "," obs_group";"
 script_options: _OPTIONS ":" (option ";")+ _END ";"
 
-gate_def: _GATE name params? wires? ":" gatestmt+ _END ";"
-operator_def: _OP name params? wires? ":" opstmt+ _END ";"
+gate_def: _GATE name params_list? wires? ":" gatestmt+ _END ";"
+operator_def: _OP name params_list? wires? ":" opstmt+ _END ";"
 
 option: name ":" val
 
@@ -20,7 +20,7 @@ obs_group: obs "[" uint "]" ("@" obs "[" uint "]")*
 // list-types
 wires : "[" (uint | range | name) ("," (uint | range | name))* "]"
 
-params: params_dict | params_list
+?params: params_dict | params_list
 params_list: "(" val ("," val)* ")"
 params_dict: "(" option ("," option)* ")"
 
@@ -72,10 +72,10 @@ FALSE_: "false"
 // declarations
 ?declarations: (gate_decl | operator_decl | func_decl | output_decl)
 
-gate_decl: _GATE name params? wires ";"
-operator_decl: _OP name params? wires ";"
-output_decl: _OUT name params? wires ";"
-func_decl: _FUNC name params? ";"
+gate_decl: _GATE name params_list? wires ";"
+operator_decl: _OP name params_list? wires ";"
+output_decl: _OUT name params_list? wires ";"
+func_decl: _FUNC name params_list? ";"
 
 // std imports from common.lark
 %import common.ESCAPED_STRING
