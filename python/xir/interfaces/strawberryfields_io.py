@@ -98,7 +98,7 @@ def to_xir(prog, **kwargs):
 
         if "Measure" in name:
             if kwargs.get("add_decl", False):
-                output_decl = Declaration(name, [], (), declaration_type="output")
+                output_decl = Declaration(name, declaration_type="output")
                 xir.add_declaration("output", output_decl)
 
             params = dict()
@@ -117,7 +117,8 @@ def to_xir(prog, **kwargs):
         else:
             if kwargs.get("add_decl", False):
                 if name not in [gdecl.name for gdecl in xir.declarations["gate"]]:
-                    gate_decl = Declaration(name, [f"p{i}" for i, _ in enumerate(cmd.op.p)], wires, declaration_type="gate")
+                    params = [f"p{i}" for i, _ in enumerate(cmd.op.p)]
+                    gate_decl = Declaration(name, declaration_type="gate", params=params, wires=wires)
                     xir.add_declaration("gate", gate_decl)
 
             params = []

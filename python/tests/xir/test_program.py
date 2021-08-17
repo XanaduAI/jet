@@ -22,8 +22,8 @@ def make_program(
     includes: List[str],
     operators: Dict[str, Dict[str, Any]],
     options: Dict[str, Any],
-    statements: Set[str],
-    variables: List[str],
+    statements: List[Statement],
+    variables: Set[str],
 ):
     """Returns an XIR program with the given attributes."""
     program = XIRProgram()
@@ -64,7 +64,7 @@ class TestSerialize:
     )
     def test_declarations(self, params, wires, declaration_type, want_res):
         """Test serializing gate, operation and output declarations"""
-        decl = Declaration("name", params, wires, declaration_type=declaration_type)
+        decl = Declaration("name", declaration_type, params, wires)
 
         irprog = XIRProgram()
         irprog._declarations[declaration_type].append(decl)
@@ -80,7 +80,7 @@ class TestSerialize:
     )
     def test_func_declaration(self, params, want_res):
         """Test serializing function declarations"""
-        decl = Declaration("name", params, (), declaration_type="function")
+        decl = Declaration("name", declaration_type="function", params=params)
 
         irprog = XIRProgram()
         irprog._declarations["func"].append(decl)
@@ -275,24 +275,24 @@ class TestXIRProgram:
 
     def test_add_declaration(self, program):
         """Tests that declarations can be added to an XIR program."""
-        tan = Declaration("tan", ["x"], (), declaration_type="function")
+        tan = Declaration("tan", declaration_type="function", params=["x"])
         program.add_declaration("func", tan)
         assert program.declarations == {"func": [tan], "gate": [], "operator": [], "output": []}
 
-        u2 = Declaration("U2", ["a", "b"], (0,), declaration_type="gate")
+        u2 = Declaration("U2", declaration_type="gate", params=["a", "b"], wires=(0,))
         program.add_declaration("gate", u2)
         assert program.declarations == {"func": [tan], "gate": [u2], "operator": [], "output": []}
 
-        z3 = Declaration("Z3", [], (0, 1, 2), declaration_type="gate")
+        z3 = Declaration("Z3", declaration_type="gate", wires=(0, 1, 2))
         program.add_declaration("operator", z3)
         assert program.declarations == {"func": [tan], "gate": [u2], "operator": [z3], "output": []}
 
     def test_add_declaration_with_same_key(self, program):
         """Tests that multiple declarations with the same key can be added to an XIR program."""
-        amplitude = Declaration("amplitude", [], (), declaration_type="output")
+        amplitude = Declaration("amplitude", declaration_type="output")
         program.add_declaration("output", amplitude)
 
-        probabilities = Declaration("probabilities", [], (), declaration_type="output")
+        probabilities = Declaration("probabilities", declaration_type="output")
         program.add_declaration("output", probabilities)
 
         assert program.declarations["output"] == [amplitude, probabilities]
@@ -301,7 +301,7 @@ class TestXIRProgram:
         """Tests that the concrete type of a declaration does not affect the
         key(s) that can be associated with it in an XIR program.
         """
-        decl = Declaration("gradient", [], (), declaration_type="output")
+        decl = Declaration("gradient", declaration_type="output")
         program.add_declaration("func", decl)
         assert program.declarations == {"func": [decl], "gate": [], "operator": [], "output": []}
 
@@ -309,7 +309,7 @@ class TestXIRProgram:
         """Tests that an exception is raised when a declaration with an unknown
         key is added to an XIR program.
         """
-        decl = Declaration("var", [], (), declaration_type="gate")
+        decl = Declaration("var", declaration_type="gate")
         with pytest.raises(KeyError, match=r"Key 'var' is not a supported declaration"):
             program.add_declaration("var", decl)
 
@@ -317,11 +317,11 @@ class TestXIRProgram:
         """Tests that a warning is issued when two declarations with the same
         name are added to an XIR program.
         """
-        atan1 = Declaration("atan", ["x"], (), declaration_type="function")
+        atan1 = Declaration("atan", declaration_type="function", params=["x"])
         program.add_declaration("func", atan1)
 
         with pytest.warns(UserWarning, match=r"Func 'atan' has already been declared"):
-            atan2 = Declaration("atan", ["x", "y"], (), declaration_type="function")
+            atan2 = Declaration("atan", declaration_type="function", params=["x", "y"])
             program.add_declaration("func", atan2)
 
         assert program.declarations["func"] == [atan1, atan2]
@@ -511,8 +511,8 @@ class TestXIRProgram:
                     make_program(
                         called_functions={"cos"},
                         declarations={
-                            "func": [Declaration("cos", ["x"], (), declaration_type="function")],
-                            "gate": [Declaration("H", [], (0,), declaration_type="gate")],
+                            "func": [Declaration("cos", declaration_type="function", params=["x"])],
+                            "gate": [Declaration("H", declaration_type="gate", wires=(0,))],
                             "operator": [],
                             "output": [],
                         },
@@ -526,9 +526,9 @@ class TestXIRProgram:
                     make_program(
                         called_functions={"sin"},
                         declarations={
-                            "func": [Declaration("sin", ["x"], (), declaration_type="function")],
+                            "func": [Declaration("sin", declaration_type="function", params=["x"])],
                             "gate": [],
-                            "operator": [Declaration("Y", [], (0,), declaration_type="operator")],
+                            "operator": [Declaration("Y", declaration_type="operator", wires=(0,))],
                             "output": [],
                         },
                         gates={"D": {"params": ["r", "phi"], "wires": [1], "statements": []}},
@@ -542,9 +542,9 @@ class TestXIRProgram:
                 make_program(
                     called_functions={"cos", "sin"},
                     declarations={
-                        "func": [Declaration("cos", ["x"], (), declaration_type="function"), Declaration("sin", ["x"], (), declaration_type="function")],
-                        "gate": [Declaration("H", [], (0,), declaration_type="gate")],
-                        "operator": [Declaration("Y", [], (0,), declaration_type="operator")],
+                        "func": [Declaration("cos", declaration_type="function", params=["x"]), Declaration("sin", declaration_type="function", params=["x"])],
+                        "gate": [Declaration("H", declaration_type="gate", wires=(0,))],
+                        "operator": [Declaration("Y", declaration_type="operator", wires=(0,))],
                         "output": [],
                     },
                     gates={

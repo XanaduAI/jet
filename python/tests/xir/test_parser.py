@@ -133,6 +133,7 @@ class TestParser:
         [
             "adjective name(a, b)[0];",
             "gate name(a, b)[];",
+            "gate name(a: 3, b: 2)[0, 1];",
         ],
     )
     def test_invalid_declarations_token_error(self, circuit):
@@ -144,6 +145,8 @@ class TestParser:
         "circuit",
         [
             "gate name(a, a)[0, 1];",
+            "gate name(5, 3)[0, 1];",
+            "gate name(a, 3)[0, 1];",
         ],
     )
     def test_invalid_declarations_visit_error(self, circuit):

@@ -3,7 +3,7 @@
 import re
 import warnings
 from decimal import Decimal
-from typing import Any, Collection, Dict, List, Mapping, Sequence, Tuple, Union
+from typing import Any, Collection, Dict, List, Mapping, Sequence, Tuple, Union, Optional
 
 from .decimal_complex import DecimalComplex
 from .utils import strip
@@ -190,19 +190,27 @@ class Declaration:
 
     Args:
         name (str): name of the declaration
+        declaration_type (str): The type of declaration. Can be either "gate", "operator", "output"
+            or "function".
+        params (Sequence[str]): parameters used by the declared object
+        wires (Sequence[Wire]): wires that the declared object is applied to
     """
 
     def __init__(
-        self, name: str, params: Sequence[str], wires: Sequence[Wire], declaration_type: str
+        self, name: str, declaration_type: str, params: Optional[Sequence[str]] = None, wires: Optional[Sequence[Wire]] = None
     ) -> None:
-        self.name = name
-        self.params = list(map(str, params))
-        if len(set(self.params)) != len(self.params):
-            raise ValueError("All parameters in a declaration must be unique.")
-        self.wires = wires
         if declaration_type not in ("gate", "output", "operator", "function"):
             raise TypeError(f"Declaration type '{declaration_type}' is invalid.")
+
+        self.name = name
         self.declaration_type = declaration_type
+        self.params = params or []
+        self.wires = wires or ()
+
+        if not all(isinstance(p, str) for p in self.params):
+            raise TypeError("Declared parameters must be strings.")
+        if len(set(self.params)) != len(self.params):
+            raise ValueError("All parameters in a declaration must be unique.")
 
     def __str__(self) -> str:
         return _serialize_declaration(self.name, self.params, self.wires, self.declaration_type)
@@ -483,8 +491,8 @@ class XIRProgram:
             res.extend([f"    {k}: {v};" for k, v in self.options.items()])
             res.append("end;\n")
 
-        res.extend([f"{dec};" for v in self._declarations.values() for dec in v])
-        if any(len(dec) != 0 for dec in self._declarations.values()):
+        res.extend([f"{decl};" for v in self._declarations.values() for decl in v])
+        if any(len(decl) != 0 for decl in self._declarations.values()):
             res.append("")
 
         for name, gate in self._gates.items():
