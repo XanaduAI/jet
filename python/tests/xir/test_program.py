@@ -2,9 +2,10 @@
 """Unit tests for the program class"""
 
 from decimal import Decimal
-from typing import Any, Dict, Iterable, List, Set
+from typing import Any, Dict, Iterable, List, MutableSet
 
 import pytest
+from xir import parse_script
 from xir.program import Declaration, OperatorStmt, Statement, XIRProgram
 
 
@@ -16,25 +17,25 @@ def program():
 
 # pylint: disable=protected-access
 def make_program(
-    called_functions: Set[str],
-    declarations: Dict[str, List[Declaration]],
-    gates: Dict[str, Dict[str, Any]],
-    includes: List[str],
-    operators: Dict[str, Dict[str, Any]],
-    options: Dict[str, Any],
-    statements: List[Statement],
-    variables: Set[str],
+    called_functions: MutableSet[str] = None,
+    declarations: Dict[str, List[Declaration]] = None,
+    gates: Dict[str, Dict[str, Any]] = None,
+    includes: List[str] = None,
+    operators: Dict[str, Dict[str, Any]] = None,
+    options: Dict[str, Any] = None,
+    statements: List[Statement] = None,
+    variables: MutableSet[str] = None,
 ):
     """Returns an XIR program with the given attributes."""
     program = XIRProgram()
-    program._called_functions = called_functions
-    program._declarations = declarations
-    program._gates = gates
-    program._includes = includes
-    program._operators = operators
-    program._options = options
-    program._statements = statements
-    program._variables = variables
+    program._called_functions = called_functions or set()
+    program._declarations = declarations or {"gate": [], "func": [], "output": [], "operator": []}
+    program._gates = gates or {}
+    program._includes = includes or []
+    program._operators = operators or {}
+    program._options = options or {}
+    program._statements = statements or []
+    program._variables = variables or set()
     return program
 
 
@@ -449,6 +450,20 @@ class TestXIRProgram:
         program.add_variable("theta")
         assert set(program.variables) == {"theta", "phi"}
 
+    def test_clear_includes(self, program):
+        """Tests that includes can be cleared from an XIR program."""
+        program.clear_includes()
+        assert len(program.includes) == 0
+
+        program.add_include("bitset")
+        program.clear_includes()
+        assert len(program.includes) == 0
+
+        program.add_include("stack")
+        program.add_include("queue")
+        program.clear_includes()
+        assert len(program.includes) == 0
+
     def test_merge_zero_programs(self):
         """Test that a ValueError is raised when zero XIR programs are merged."""
         with pytest.raises(ValueError, match=r"Merging requires at least one XIR program"):
@@ -594,6 +609,181 @@ class TestXIRProgram:
         have_statements = list(map(str, have_result.statements))
         want_statements = list(map(str, want_result.statements))
         assert have_statements == want_statements
+
+    @pytest.mark.parametrize(
+        "name, library, want_program",
+        [
+            pytest.param(
+                "empty",
+                {
+                    "empty": XIRProgram(),
+                },
+                XIRProgram(),
+                id="Empty",
+            ),
+            pytest.param(
+                "play",
+                {
+                    "play": parse_script("output Play;"),
+                    "loop": parse_script("use loop; output Loop;"),
+                },
+                parse_script("output Play;"),
+                id="Lazy",
+            ),
+            pytest.param(
+                "coffee",
+                {
+                    "coffee": parse_script(
+                        """
+                        use cream;
+                        use sugar;
+                        use water;
+                        output Coffee;
+                        """
+                    ),
+                    "cream": parse_script("output Cream;"),
+                    "sugar": parse_script("output Sugar;"),
+                    "water": parse_script("output Water;"),
+                },
+                parse_script(
+                    """
+                    output Cream;
+                    output Sugar;
+                    output Water;
+                    output Coffee;
+                    """
+                ),
+                id="Flat",
+            ),
+            pytest.param(
+                "bot",
+                {
+                    "bot": parse_script("use mid; output Bot;"),
+                    "mid": parse_script("use top; output Mid;"),
+                    "top": parse_script("output Top;"),
+                },
+                parse_script(
+                    """
+                    output Top;
+                    output Mid;
+                    output Bot;
+                    """
+                ),
+                id="Linear",
+            ),
+            pytest.param(
+                "salad",
+                {
+                    "salad": parse_script("use lettuce; use spinach; output Salad;"),
+                    "lettuce": parse_script("use spinach; output Lettuce;"),
+                    "spinach": parse_script("output Spinach;"),
+                },
+                parse_script(
+                    """
+                    output Spinach;
+                    output Lettuce;
+                    output Salad;
+                    """
+                ),
+                id="Acyclic",
+            ),
+            pytest.param(
+                "Z",
+                {
+                    "Z": parse_script("use K1; use K2; use K3; output Z;"),
+                    "K1": parse_script("use A; use B; use C; output K1;"),
+                    "K2": parse_script("use B; use D; use E; output K2;"),
+                    "K3": parse_script("use A; use D; output K3;"),
+                    "A": parse_script("use O; output A;"),
+                    "B": parse_script("use O; output B;"),
+                    "C": parse_script("use O; output C;"),
+                    "D": parse_script("use O; output D;"),
+                    "E": parse_script("use O; output E;"),
+                    "O": parse_script("output O;"),
+                },
+                parse_script(
+                    """
+                    output O;
+                    output A;
+                    output B;
+                    output C;
+                    output K1;
+                    output D;
+                    output E;
+                    output K2;
+                    output K3;
+                    output Z;
+                    """
+                ),
+                id="Wikipedia",
+            ),
+        ],
+    )
+    def test_resolve_programs(self, name, library, want_program):
+        """Test that a valid XIR program include hierarchy can be resolved."""
+        have_program = XIRProgram.resolve(library=library, name=name)
+        assert have_program.serialize() == want_program.serialize()
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            ("null", {}),
+            ("init", {"init": make_program(includes=["stop"])}),
+        ],
+    )
+    def test_resolve_unknown_program(self, name, library):
+        """Test that a KeyError is raised when an XIR program that is missing
+        from the passed XIR library is resolved.
+        """
+        with pytest.raises(KeyError, match=r"XIR program '[^']+' cannot be found"):
+            XIRProgram.resolve(library=library, name=name)
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            ("self", {"self": make_program(includes=["self"])}),
+            (
+                "tick",
+                {
+                    "tick": make_program(includes=["tock"]),
+                    "tock": make_program(includes=["tick"]),
+                },
+            ),
+        ],
+    )
+    def test_resolve_program_with_circular_dependency(self, name, library):
+        """Test that a ValueError is raised when an XIR program that (transitively)
+        includes itself is resolved.
+        """
+        with pytest.raises(ValueError, match=r"XIR program '[^']+' has a circular dependency"):
+            XIRProgram.resolve(library=library, name=name)
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            (
+                "client",
+                {
+                    "client": make_program(includes=["server"]),
+                    "server": make_program(statements=[Statement("Water", [], [0])]),
+                },
+            ),
+            (
+                "private",
+                {
+                    "private": make_program(includes=["colonel"]),
+                    "colonel": make_program(includes=["captain"]),
+                    "captain": make_program(statements=[Statement("Command", [], [0])]),
+                },
+            ),
+        ],
+    )
+    def test_resolve_program_with_included_statements(self, name, library):
+        """Test that a ValueError is raised when an XIR program that (transitively)
+        includes another XIR program with a statement is resolved.
+        """
+        with pytest.raises(ValueError, match=r"XIR program '[^']+' contains a statement"):
+            XIRProgram.resolve(library=library, name=name)
 
     # pylint: disable=protected-access
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
