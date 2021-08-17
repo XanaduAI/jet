@@ -210,7 +210,11 @@ class Declaration:
     """
 
     def __init__(
-        self, name: str, declaration_type: str, params: Optional[Sequence[str]] = None, wires: Optional[Sequence[Wire]] = None
+        self,
+        name: str,
+        declaration_type: str,
+        params: Optional[Sequence[str]] = None,
+        wires: Optional[Sequence[Wire]] = None,
     ) -> None:
         if declaration_type not in ("gate", "output", "operator", "function"):
             raise TypeError(f"Declaration type '{declaration_type}' is invalid.")

@@ -118,7 +118,9 @@ def to_xir(prog, **kwargs):
             if kwargs.get("add_decl", False):
                 if name not in [gdecl.name for gdecl in xir.declarations["gate"]]:
                     params = [f"p{i}" for i, _ in enumerate(cmd.op.p)]
-                    gate_decl = Declaration(name, declaration_type="gate", params=params, wires=wires)
+                    gate_decl = Declaration(
+                        name, declaration_type="gate", params=params, wires=wires
+                    )
                     xir.add_declaration("gate", gate_decl)
 
             params = []
