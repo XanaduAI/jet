@@ -2,7 +2,7 @@ name: Build-wheels
 env:
   CIBW_SKIP: cp27-* cp35-* cp36-*
   CIBW_ARCHS: auto64
-  CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
+  CIBW_BEFORE_ALL_LINUX: yum install -y blas-devel
   CIBW_BEFORE_BUILD: pip install "cmake>=3.14"
 on:
   pull_request:
@@ -36,6 +36,6 @@ jobs:
         # env:
         #   CIBW_SOME_OPTION: value
 
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
+      #- uses: actions/upload-artifact@v2
+       # with:
+        #  path: ./wheelhouse/*.whl
