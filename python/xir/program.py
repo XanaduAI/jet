@@ -221,8 +221,8 @@ class Declaration:
 
         self.name = name
         self.declaration_type = declaration_type
-        self.params = list(params) or []
-        self.wires = tuple(wires) or ()
+        self.params = list(params or [])
+        self.wires = tuple(wires or ())
 
         if not all(isinstance(p, str) for p in self.params):
             raise TypeError("Declaration '{name}' has parameters which are not strings.")
