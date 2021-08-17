@@ -624,10 +624,10 @@ class TestXIRProgram:
             pytest.param(
                 "play",
                 {
-                    "play": parse_script("output Play;"),
-                    "loop": parse_script("use loop; output Loop;"),
+                    "play": parse_script("func Play;"),
+                    "loop": parse_script("use loop; func Loop;"),
                 },
-                parse_script("output Play;"),
+                parse_script("func Play;"),
                 id="Lazy",
             ),
             pytest.param(
@@ -638,19 +638,19 @@ class TestXIRProgram:
                         use cream;
                         use sugar;
                         use water;
-                        output Coffee;
+                        func Coffee;
                         """
                     ),
-                    "cream": parse_script("output Cream;"),
-                    "sugar": parse_script("output Sugar;"),
-                    "water": parse_script("output Water;"),
+                    "cream": parse_script("func Cream;"),
+                    "sugar": parse_script("func Sugar;"),
+                    "water": parse_script("func Water;"),
                 },
                 parse_script(
                     """
-                    output Cream;
-                    output Sugar;
-                    output Water;
-                    output Coffee;
+                    func Cream;
+                    func Sugar;
+                    func Water;
+                    func Coffee;
                     """
                 ),
                 id="Flat",
@@ -658,15 +658,15 @@ class TestXIRProgram:
             pytest.param(
                 "bot",
                 {
-                    "bot": parse_script("use mid; output Bot;"),
-                    "mid": parse_script("use top; output Mid;"),
-                    "top": parse_script("output Top;"),
+                    "bot": parse_script("use mid; func Bot;"),
+                    "mid": parse_script("use top; func Mid;"),
+                    "top": parse_script("func Top;"),
                 },
                 parse_script(
                     """
-                    output Top;
-                    output Mid;
-                    output Bot;
+                    func Top;
+                    func Mid;
+                    func Bot;
                     """
                 ),
                 id="Linear",
@@ -674,15 +674,15 @@ class TestXIRProgram:
             pytest.param(
                 "salad",
                 {
-                    "salad": parse_script("use lettuce; use spinach; output Salad;"),
-                    "lettuce": parse_script("use spinach; output Lettuce;"),
-                    "spinach": parse_script("output Spinach;"),
+                    "salad": parse_script("use lettuce; use spinach; func Salad;"),
+                    "lettuce": parse_script("use spinach; func Lettuce;"),
+                    "spinach": parse_script("func Spinach;"),
                 },
                 parse_script(
                     """
-                    output Spinach;
-                    output Lettuce;
-                    output Salad;
+                    func Spinach;
+                    func Lettuce;
+                    func Salad;
                     """
                 ),
                 id="Acyclic",
@@ -690,29 +690,29 @@ class TestXIRProgram:
             pytest.param(
                 "Z",
                 {
-                    "Z": parse_script("use K1; use K2; use K3; output Z;"),
-                    "K1": parse_script("use A; use B; use C; output K1;"),
-                    "K2": parse_script("use B; use D; use E; output K2;"),
-                    "K3": parse_script("use A; use D; output K3;"),
-                    "A": parse_script("use O; output A;"),
-                    "B": parse_script("use O; output B;"),
-                    "C": parse_script("use O; output C;"),
-                    "D": parse_script("use O; output D;"),
-                    "E": parse_script("use O; output E;"),
-                    "O": parse_script("output O;"),
+                    "Z": parse_script("use K1; use K2; use K3; func Z;"),
+                    "K1": parse_script("use A; use B; use C; func K1;"),
+                    "K2": parse_script("use B; use D; use E; func K2;"),
+                    "K3": parse_script("use A; use D; func K3;"),
+                    "A": parse_script("use O; func A;"),
+                    "B": parse_script("use O; func B;"),
+                    "C": parse_script("use O; func C;"),
+                    "D": parse_script("use O; func D;"),
+                    "E": parse_script("use O; func E;"),
+                    "O": parse_script("func O;"),
                 },
                 parse_script(
                     """
-                    output O;
-                    output A;
-                    output B;
-                    output C;
-                    output K1;
-                    output D;
-                    output E;
-                    output K2;
-                    output K3;
-                    output Z;
+                    func O;
+                    func A;
+                    func B;
+                    func C;
+                    func K1;
+                    func D;
+                    func E;
+                    func K2;
+                    func K3;
+                    func Z;
                     """
                 ),
                 id="Wikipedia",
