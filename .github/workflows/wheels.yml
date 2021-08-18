@@ -1,13 +1,4 @@
 name: Build-wheels
-env:
-  CIBW_BUILD: cp37-*
-  CIBW_ARCHS: auto64 # Only build for 64-bit platforms
-  CIBW_BEFORE_BUILD: pip install "cmake>=3.14" numpy
-  CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
-  CIBW_ENVIRONMENT_LINUX: CBLAS_ROOT=/usr/include/openblas 
-  CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for full C++17 support
-  CIBW_TEST_REQUIRES: pytest
-  CIBW_TEST_COMMAND: "python -m pytest {project}/python/tests -W ignore::UserWarning"
 on:
   pull_request:
   push:
@@ -18,13 +9,15 @@ on:
       - ".github/**"
       - "docs/**"
       - "README.rst"
+      
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest]
+        os: [ubuntu-latest, macos-latest]
+        python: [37]
     steps:
       - uses: actions/checkout@v2
 
@@ -36,9 +29,15 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
-        # to supply options, put them in 'env', like:
-        # env:
-        #   CIBW_SOME_OPTION: value
+        env:
+          CIBW_BUILD: cp${{ matrix.python }}-*
+          CIBW_ARCHS: auto64 # Only build for 64-bit platforms
+          CIBW_BEFORE_BUILD: pip install "cmake>=3.14" numpy
+          CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
+          CIBW_ENVIRONMENT_LINUX: CBLAS_ROOT=/usr/include/openblas 
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for full C++17 support
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "python -m pytest {project}/python/tests -W ignore::UserWarning"
 
       #- uses: actions/upload-artifact@v2
        # with:
