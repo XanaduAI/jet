@@ -121,7 +121,7 @@ def is_equal(circuit_1: str, circuit_2: str, check_decl: bool = True):
             if is_decl(clist_1[i - 1]):
                 j -= 1
                 continue
-            elif is_decl(clist_2[j - 1]):
+            if is_decl(clist_2[j - 1]):
                 i -= 1
                 continue
 

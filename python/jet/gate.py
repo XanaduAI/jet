@@ -1,3 +1,6 @@
+"""Module containing the ``Gate`` and ``GateFactory`` classes in addition to all
+``Gate`` subclasses.
+"""
 from abc import ABC, abstractmethod
 from cmath import exp
 from functools import lru_cache
@@ -169,7 +172,6 @@ class Gate(ABC):
     @abstractmethod
     def _data(self) -> np.ndarray:
         """Returns the matrix representation of this gate."""
-        pass
 
     def tensor(self, dtype: np.dtype = np.complex128) -> TensorType:
         """Returns the tensor representation of this gate.
@@ -195,8 +197,8 @@ class GateFactory:
     has been registered by a Gate subclass using the @register decorator.
     """
 
-    """Map that associates names with concrete Gate subclasses."""
     registry: Dict[str, type] = {}
+    """Map that associates names with concrete Gate subclasses."""
 
     @staticmethod
     def create(
@@ -256,6 +258,7 @@ class GateFactory:
 
         return wrapper
 
+    # pylint: disable=bad-staticmethod-argument
     @staticmethod
     def unregister(cls: type) -> None:
         """Unregisters a class type.
@@ -287,9 +290,11 @@ class Adjoint(Gate):
         )
 
     def _data(self):
+        # pylint: disable=protected-access
         return self._gate._data().conj().T
 
     def _validate_dimension(self, dim):
+        # pylint: disable=protected-access
         self._gate._validate_dimension(dim)
 
 
@@ -310,9 +315,11 @@ class Scale(Gate):
         )
 
     def _data(self):
+        # pylint: disable=protected-access
         return self._scalar * self._gate._data()
 
     def _validate_dimension(self, dim):
+        # pylint: disable=protected-access
         self._gate._validate_dimension(dim)
 
 

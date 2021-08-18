@@ -1,9 +1,12 @@
+# pylint: disable=redefined-outer-name
 """Unit tests for the program class"""
 
 from decimal import Decimal
+from typing import Any, Dict, Iterable, List, MutableSet
 
 import pytest
 
+from xir import parse_script
 from xir.program import (
     Declaration,
     FuncDeclaration,
@@ -20,6 +23,30 @@ from xir.program import (
 def program():
     """Returns an empty XIR program."""
     return XIRProgram()
+
+
+# pylint: disable=protected-access
+def make_program(
+    called_functions: MutableSet[str] = None,
+    declarations: Dict[str, List[Declaration]] = None,
+    gates: Dict[str, Dict[str, Any]] = None,
+    includes: List[str] = None,
+    operators: Dict[str, Dict[str, Any]] = None,
+    options: Dict[str, Any] = None,
+    statements: List[str] = None,
+    variables: MutableSet[str] = None,
+):
+    """Returns an XIR program with the given attributes."""
+    program = XIRProgram()
+    program._called_functions = called_functions or set()
+    program._declarations = declarations or {"gate": [], "func": [], "output": [], "operator": []}
+    program._gates = gates or {}
+    program._includes = includes or []
+    program._operators = operators or {}
+    program._options = options or {}
+    program._statements = statements or []
+    program._variables = variables or set()
+    return program
 
 
 class TestSerialize:
@@ -242,19 +269,19 @@ class TestXIRProgram:
 
         assert list(program.wires) == []
 
-        assert list(program.called_functions) == []
+        assert set(program.called_functions) == set()
         assert dict(program.declarations) == {"gate": [], "func": [], "output": [], "operator": []}
         assert dict(program.gates) == {}
         assert list(program.includes) == []
         assert dict(program.operators) == {}
         assert list(program.options) == []
         assert list(program.statements) == []
-        assert list(program.variables) == []
+        assert set(program.variables) == set()
 
     def test_repr(self):
         """Test that the string representation of an XIR program has the correct format."""
         program = XIRProgram(version="1.2.3")
-        assert repr(program) == f"<XIRProgram: version=1.2.3>"
+        assert repr(program) == "<XIRProgram: version=1.2.3>"
 
     def test_add_called_function(self, program):
         """Tests that called functions can be added to an XIR program."""
@@ -365,7 +392,7 @@ class TestXIRProgram:
         program.add_include("algorithm")
         assert list(program.includes) == ["complex", "algorithm"]
 
-    def test_add_gate_with_same_name(self, program):
+    def test_add_include_with_same_name(self, program):
         """Tests that a warning is issued when two identical includes are added
         to an XIR program.
         """
@@ -443,17 +470,355 @@ class TestXIRProgram:
         program.add_variable("theta")
         assert set(program.variables) == {"theta", "phi"}
 
+    def test_clear_includes(self, program):
+        """Tests that includes can be cleared from an XIR program."""
+        program.clear_includes()
+        assert len(program.includes) == 0
+
+        program.add_include("bitset")
+        program.clear_includes()
+        assert len(program.includes) == 0
+
+        program.add_include("stack")
+        program.add_include("queue")
+        program.clear_includes()
+        assert len(program.includes) == 0
+
+    def test_merge_zero_programs(self):
+        """Test that a ValueError is raised when zero XIR programs are merged."""
+        with pytest.raises(ValueError, match=r"Merging requires at least one XIR program"):
+            XIRProgram.merge()
+
+    def test_merge_programs_with_different_versions(self):
+        """Test that a ValueError is raised when two XIR programs with different
+        versions are merged.
+        """
+        p1 = XIRProgram(version="0.0.1")
+        p2 = XIRProgram(version="0.0.2")
+
+        match = r"XIR programs with different versions cannot be merged"
+
+        with pytest.raises(ValueError, match=match):
+            XIRProgram.merge(p1, p2)
+
+    def test_merge_programs_with_different_float_settings(self):
+        """Test that a warning is issued when two XIR programs with different
+        float settings are merged.
+        """
+        p1 = XIRProgram(use_floats=True)
+        p2 = XIRProgram(use_floats=False)
+
+        match = r"XIR programs with different float settings are being merged"
+
+        with pytest.warns(UserWarning, match=match):
+            assert XIRProgram.merge(p1, p2).use_floats is True
+
+    @pytest.mark.parametrize(
+        ["programs", "want_result"],
+        [
+            pytest.param(
+                [
+                    make_program(
+                        called_functions={"tanh"},
+                        declarations={"func": [], "gate": [], "operator": [], "output": []},
+                        gates={"U2": {"params": ["phi", "lam"], "wires": [0], "statements": []}},
+                        includes=["xstd"],
+                        operators={"Z": {"params": [], "wires": [1], "statements": []}},
+                        options={"cutoff": 3},
+                        statements=[Statement("U1", {"phi": 1}, [0])],
+                        variables={"angle"},
+                    ),
+                ],
+                make_program(
+                    called_functions={"tanh"},
+                    declarations={"func": [], "gate": [], "operator": [], "output": []},
+                    gates={"U2": {"params": ["phi", "lam"], "wires": [0], "statements": []}},
+                    includes=["xstd"],
+                    operators={"Z": {"params": [], "wires": [1], "statements": []}},
+                    options={"cutoff": 3},
+                    statements=[Statement("U1", {"phi": 1}, [0])],
+                    variables={"angle"},
+                ),
+                id="One XIR program",
+            ),
+            pytest.param(
+                [
+                    make_program(
+                        called_functions={"cos"},
+                        declarations={
+                            "func": [FuncDeclaration("cos", 1)],
+                            "gate": [GateDeclaration("H", 0, 1)],
+                            "operator": [],
+                            "output": [],
+                        },
+                        gates={"H": {"params": [], "wires": [0], "statements": []}},
+                        includes=[],
+                        operators={"X": {"params": [], "wires": [0], "statements": []}},
+                        options={"cutoff": 2},
+                        statements=[Statement("S", [], [0])],
+                        variables={"theta"},
+                    ),
+                    make_program(
+                        called_functions={"sin"},
+                        declarations={
+                            "func": [FuncDeclaration("sin", 1)],
+                            "gate": [],
+                            "operator": [OperatorDeclaration("Y", 0, 1)],
+                            "output": [],
+                        },
+                        gates={"D": {"params": ["r", "phi"], "wires": [1], "statements": []}},
+                        includes=["xstd"],
+                        operators={"Y": {"params": [], "wires": [1], "statements": []}},
+                        options={"cutoff": 4},
+                        statements=[Statement("T", [], [0])],
+                        variables=set(),
+                    ),
+                ],
+                make_program(
+                    called_functions={"cos", "sin"},
+                    declarations={
+                        "func": [FuncDeclaration("cos", 1), FuncDeclaration("sin", 1)],
+                        "gate": [GateDeclaration("H", 0, 1)],
+                        "operator": [OperatorDeclaration("Y", 0, 1)],
+                        "output": [],
+                    },
+                    gates={
+                        "H": {"params": [], "wires": [0], "statements": []},
+                        "D": {"params": ["r", "phi"], "wires": [1], "statements": []},
+                    },
+                    includes=["xstd"],
+                    operators={
+                        "X": {"params": [], "wires": [0], "statements": []},
+                        "Y": {"params": [], "wires": [1], "statements": []},
+                    },
+                    options={"cutoff": 4},
+                    statements=[Statement("S", [], [0]), Statement("T", [], [0])],
+                    variables={"theta"},
+                ),
+                id="Two XIR programs",
+            ),
+        ],
+    )
+    def test_merge_programs(self, programs, want_result):
+        """Test that one or more XIR programs can be merged."""
+        have_result = XIRProgram.merge(*programs)
+
+        assert have_result.called_functions == want_result.called_functions
+        assert have_result.variables == want_result.variables
+        assert have_result.includes == want_result.includes
+        assert have_result.options == want_result.options
+
+        def serialize(mapping: Dict[str, Iterable[Any]]) -> Dict[str, List[str]]:
+            """Partially serializes a dictionary with sequence values by casting
+            each item of each sequence into a string.
+            """
+            return {k: list(map(str, v)) for k, v in mapping.items()}
+
+        have_declarations = serialize(have_result.declarations)
+        want_declarations = serialize(want_result.declarations)
+        assert have_declarations == want_declarations
+
+        have_gates = {k: serialize(v) for k, v in have_result.gates.items()}
+        want_gates = {k: serialize(v) for k, v in want_result.gates.items()}
+        assert have_gates == want_gates
+
+        have_operators = {k: serialize(v) for k, v in have_result.operators.items()}
+        want_operators = {k: serialize(v) for k, v in want_result.operators.items()}
+        assert have_operators == want_operators
+
+        have_statements = list(map(str, have_result.statements))
+        want_statements = list(map(str, want_result.statements))
+        assert have_statements == want_statements
+
+    @pytest.mark.parametrize(
+        "name, library, want_program",
+        [
+            pytest.param(
+                "empty",
+                {
+                    "empty": XIRProgram(),
+                },
+                XIRProgram(),
+                id="Empty",
+            ),
+            pytest.param(
+                "play",
+                {
+                    "play": parse_script("output Play;"),
+                    "loop": parse_script("use loop; output Loop;"),
+                },
+                parse_script("output Play;"),
+                id="Lazy",
+            ),
+            pytest.param(
+                "coffee",
+                {
+                    "coffee": parse_script(
+                        """
+                        use cream;
+                        use sugar;
+                        use water;
+                        output Coffee;
+                        """
+                    ),
+                    "cream": parse_script("output Cream;"),
+                    "sugar": parse_script("output Sugar;"),
+                    "water": parse_script("output Water;"),
+                },
+                parse_script(
+                    """
+                    output Cream;
+                    output Sugar;
+                    output Water;
+                    output Coffee;
+                    """
+                ),
+                id="Flat",
+            ),
+            pytest.param(
+                "bot",
+                {
+                    "bot": parse_script("use mid; output Bot;"),
+                    "mid": parse_script("use top; output Mid;"),
+                    "top": parse_script("output Top;"),
+                },
+                parse_script(
+                    """
+                    output Top;
+                    output Mid;
+                    output Bot;
+                    """
+                ),
+                id="Linear",
+            ),
+            pytest.param(
+                "salad",
+                {
+                    "salad": parse_script("use lettuce; use spinach; output Salad;"),
+                    "lettuce": parse_script("use spinach; output Lettuce;"),
+                    "spinach": parse_script("output Spinach;"),
+                },
+                parse_script(
+                    """
+                    output Spinach;
+                    output Lettuce;
+                    output Salad;
+                    """
+                ),
+                id="Acyclic",
+            ),
+            pytest.param(
+                "Z",
+                {
+                    "Z": parse_script("use K1; use K2; use K3; output Z;"),
+                    "K1": parse_script("use A; use B; use C; output K1;"),
+                    "K2": parse_script("use B; use D; use E; output K2;"),
+                    "K3": parse_script("use A; use D; output K3;"),
+                    "A": parse_script("use O; output A;"),
+                    "B": parse_script("use O; output B;"),
+                    "C": parse_script("use O; output C;"),
+                    "D": parse_script("use O; output D;"),
+                    "E": parse_script("use O; output E;"),
+                    "O": parse_script("output O;"),
+                },
+                parse_script(
+                    """
+                    output O;
+                    output A;
+                    output B;
+                    output C;
+                    output K1;
+                    output D;
+                    output E;
+                    output K2;
+                    output K3;
+                    output Z;
+                    """
+                ),
+                id="Wikipedia",
+            ),
+        ],
+    )
+    def test_resolve_programs(self, name, library, want_program):
+        """Test that a valid XIR program include hierarchy can be resolved."""
+        have_program = XIRProgram.resolve(library=library, name=name)
+        assert have_program.serialize() == want_program.serialize()
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            ("null", {}),
+            ("init", {"init": make_program(includes=["stop"])}),
+        ],
+    )
+    def test_resolve_unknown_program(self, name, library):
+        """Test that a KeyError is raised when an XIR program that is missing
+        from the passed XIR library is resolved.
+        """
+        with pytest.raises(KeyError, match=r"XIR program '[^']+' cannot be found"):
+            XIRProgram.resolve(library=library, name=name)
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            ("self", {"self": make_program(includes=["self"])}),
+            (
+                "tick",
+                {
+                    "tick": make_program(includes=["tock"]),
+                    "tock": make_program(includes=["tick"]),
+                },
+            ),
+        ],
+    )
+    def test_resolve_program_with_circular_dependency(self, name, library):
+        """Test that a ValueError is raised when an XIR program that (transitively)
+        includes itself is resolved.
+        """
+        with pytest.raises(ValueError, match=r"XIR program '[^']+' has a circular dependency"):
+            XIRProgram.resolve(library=library, name=name)
+
+    @pytest.mark.parametrize(
+        "name, library",
+        [
+            (
+                "client",
+                {
+                    "client": make_program(includes=["server"]),
+                    "server": make_program(statements=[Statement("Water", [], [0])]),
+                },
+            ),
+            (
+                "private",
+                {
+                    "private": make_program(includes=["colonel"]),
+                    "colonel": make_program(includes=["captain"]),
+                    "captain": make_program(statements=[Statement("Command", [], [0])]),
+                },
+            ),
+        ],
+    )
+    def test_resolve_program_with_included_statements(self, name, library):
+        """Test that a ValueError is raised when an XIR program that (transitively)
+        includes another XIR program with a statement is resolved.
+        """
+        with pytest.raises(ValueError, match=r"XIR program '[^']+' contains a statement"):
+            XIRProgram.resolve(library=library, name=name)
+
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", ["4.2.0", "0.3.0"])
     def test_validate_version(self, version):
         """Test that a correct version passes validation."""
         XIRProgram._validate_version(version)
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", [42, 0.2, True, object()])
     def test_validate_version_with_wrong_type(self, version):
         """Test that an exception is raised when a version has the wrong type."""
         with pytest.raises(TypeError, match=r"Version '[^']*' must be a string"):
             XIRProgram._validate_version(version)
 
+    # pylint: disable=protected-access
     @pytest.mark.parametrize("version", ["", "abc", "4.2", "1.2.3-alpha", "0.1.2.3"])
     def test_validate_version_with_wrong_format(self, version):
         """Test that an exception is raised when a version has the wrong format."""

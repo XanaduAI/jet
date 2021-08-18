@@ -58,7 +58,7 @@ class TestState:
         """Tests that two different states are not equal."""
         state0 = MockState()
         state1 = MockState()
-        state1._data = lambda: np.array([0, 0, 1])
+        state1._data = lambda: np.array([0, 0, 1])  # pylint: disable=protected-access
         assert state0 != state1
 
 
