@@ -2,7 +2,8 @@ name: Build-wheels
 on:
   release:
   workflow_dispatch:
-
+  push:
+  
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
