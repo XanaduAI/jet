@@ -6,12 +6,12 @@ on:
   
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels for cp${{ matrix.python }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python: [37]
+        python: [37, 38, 39]
         include:
           - os: ubuntu-latest
             cibw_before_all: yum install -y openblas-devel
