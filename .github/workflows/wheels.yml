@@ -1,6 +1,6 @@
 name: Build-wheels
 env:
-  CIBW_SKIP: cp27-* cp35-* cp36-* cp38-* cp39-* cp310-*
+  CIBW_BUILD: cp37-*
   CIBW_ARCHS: auto64 # Only build for 64-bit platforms
   CIBW_BEFORE_BUILD: pip install "cmake>=3.14"
   CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
