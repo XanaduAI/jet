@@ -54,7 +54,7 @@ requirements = [
     "lark-parser>=0.11.0",
     "numpy>=1.0.0",
     "StrawberryFields==0.18.0",
-    "thewalrus==0.15.0",
+    "thewalrus>=0.15.0",
 ]
 
 info = {
