@@ -9,8 +9,8 @@ from .decimal_complex import DecimalComplex
 from .program import Declaration, OperatorStmt, Statement, XIRProgram
 from .utils import check_wires, simplify_math
 
-p = Path(__file__).parent / "ir.lark"
-with p.open("r") as _f:
+_p = Path(__file__).parent / "ir.lark"
+with _p.open("r") as _f:
     ir_grammar = _f.read()
 
 xir_parser = Lark(ir_grammar, start="program", parser="lalr")
@@ -264,7 +264,7 @@ class XIRTransformer(Transformer):
             params = []
 
         decl = Declaration(name, declaration_type="gate", params=params, wires=wires)
-        self._program._declarations["gate"].append(decl)
+        self._program.add_declaration("gate", decl)
 
     def operator_decl(self, args):
         if len(args) == 3:
@@ -273,7 +273,7 @@ class XIRTransformer(Transformer):
             name, wires = args[0], args[1][1]
             params = []
         decl = Declaration(name, declaration_type="operator", params=params, wires=wires)
-        self._program._declarations["operator"].append(decl)
+        self._program.add_declaration("operator", decl)
 
     def func_decl(self, args):
         if len(args) == 2:
@@ -282,7 +282,7 @@ class XIRTransformer(Transformer):
             name = args[0]
             params = []
         decl = Declaration(name, declaration_type="function", params=params)
-        self._program._declarations["func"].append(decl)
+        self._program.add_declaration("func", decl)
 
     def output_decl(self, args):
         if len(args) == 3:
@@ -291,7 +291,7 @@ class XIRTransformer(Transformer):
             name, wires = args[0], args[1][1]
             params = []
         decl = Declaration(name, declaration_type="output", params=params, wires=wires)
-        self._program._declarations["output"].append(decl)
+        self._program.add_declaration("output", decl)
 
     #########
     # maths
