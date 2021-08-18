@@ -62,7 +62,7 @@ def to_program(xir, **kwargs):
             else:
                 gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
 
-    prog._target = kwargs.get("target")
+    prog._target = kwargs.get("target")  # pylint: disable=protected-access
 
     if kwargs.get("shots") is not None:
         prog.run_options["shots"] = kwargs.get("shots")

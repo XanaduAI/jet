@@ -1,0 +1,41 @@
+[BASIC]
+
+# Regular expression which should only match function or class names that do
+# not require a docstring.
+no-docstring-rgx=^[tT]est
+
+[STRING]
+
+# This flag controls whether inconsistent-quotes generates a warning when the
+# character used as a quote delimiter is used inconsistently within a module.
+check-quote-consistency=yes
+
+[TYPECHECK]
+
+# List of module names for which member attributes should not be checked
+# (useful for modules/projects where namespaces are manipulated during runtime
+# and thus existing member attributes cannot be deduced by static analysis. It
+# supports qualified module names, as well as Unix pattern matching.
+ignored-modules=bindings,
+                lark,
+                numpy,
+                strawberryfields,
+                thewalrus.fock_gradients
+
+[MESSAGES CONTROL]
+
+# Disable the message, report, category or checker with the given id(s). You
+# can either give multiple identifier separated by comma (,) or put this option
+# multiple time (only on the command line, not in the configuration file where
+# it should appear only once).
+disable=duplicate-code,
+        fixme,
+        invalid-name,
+        missing-module-docstring,
+        no-self-use,
+        too-few-public-methods,
+        too-many-arguments,
+        too-many-branches,
+        too-many-instance-attributes,
+        too-many-locals,
+        too-many-public-methods

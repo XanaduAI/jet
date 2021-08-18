@@ -1,4 +1,3 @@
-from itertools import chain
 from math import pi, sqrt
 
 import numpy as np
@@ -106,6 +105,7 @@ class TestGateFactory:
         """Tests that a KeyError is raised when an existing key is registered."""
         with pytest.raises(KeyError, match=r"The names {'X'} already exist in the gate registry\."):
 
+            # pylint: disable=missing-class-docstring
             @jet.GateFactory.register(names=["X", "O"])
             class TicTacToeGate(jet.Gate):
                 pass
@@ -115,6 +115,7 @@ class TestGateFactory:
     def test_register_duplicate_keys(self):
         """Tests that a Gate subclass can be registered with duplicate keys."""
 
+        # pylint: disable=missing-class-docstring
         @jet.GateFactory.register(names=["n", "N", "no", "NO", "No"])
         class CancelGate(jet.Gate):
             pass

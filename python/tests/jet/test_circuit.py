@@ -22,6 +22,7 @@ class TestCircuit:
         assert list(circuit.wires) == [jet.Wire(i, 0, False) for i in range(4)]
         assert list(circuit.operations) == [jet.Operation(jet.Qubit(), [i]) for i in range(4)]
 
+    # pylint: disable=protected-access
     def test_validate_fake_wire(self, circuit):
         """Tests that a ValueError is raised when the wire ID validator is given
         a wire ID which does not exist in the circuit.
@@ -29,6 +30,7 @@ class TestCircuit:
         with pytest.raises(ValueError, match=r"Wire ID 4 falls outside the range \[0, 4\)."):
             circuit._validate_wire_ids(wire_ids=[4])
 
+    # pylint: disable=protected-access
     def test_validate_duplicate_wire(self, circuit):
         """Tests that a ValueError is raised when the wire ID validator is given
         a duplicate wire ID.
@@ -36,6 +38,7 @@ class TestCircuit:
         with pytest.raises(ValueError, match="Wire ID 0 is specified more than once."):
             circuit._validate_wire_ids(wire_ids=[0, 0])
 
+    # pylint: disable=protected-access
     def test_validate_closed_wire(self, circuit):
         """Tests that a ValueError is raised when the wire ID validator is given
         a wire ID associated with a closed wire.
