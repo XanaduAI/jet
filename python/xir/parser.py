@@ -2,24 +2,15 @@
 import math
 from decimal import Decimal
 from pathlib import Path
-from typing import Union
 
 from lark import Lark, Transformer
 
 from .decimal_complex import DecimalComplex
-from .program import (
-    FuncDeclaration,
-    GateDeclaration,
-    OperatorDeclaration,
-    OperatorStmt,
-    OutputDeclaration,
-    Statement,
-    XIRProgram,
-)
+from .program import Declaration, OperatorStmt, Statement, XIRProgram
 from .utils import check_wires, simplify_math
 
-p = Path(__file__).parent / "ir.lark"
-with p.open("r") as _f:
+_p = Path(__file__).parent / "ir.lark"
+with _p.open("r") as _f:
     ir_grammar = _f.read()
 
 xir_parser = Lark(ir_grammar, start="program", parser="lalr")
@@ -119,19 +110,25 @@ class XIRTransformer(Transformer):
         """Tuple with wires and identifier"""
         return "wires", tuple(w)
 
-    def FALSE_(self, _) -> bool:
-        return False
+    def params_list(self, p):
+        """Tuple with list of params and identifier"""
+        return "params", list(p)
 
-    def TRUE_(self, _) -> bool:
-        return True
+    def params_dict(self, p):
+        """Tuple with dictionary of params and identifier"""
+        return "params", dict(p)
 
     option = tuple
-    options_dict = dict
-    params = list
     array = list
 
     ADJOINT = str
     CTRL = str
+
+    def FALSE_(self, _):
+        return False
+
+    def TRUE_(self, _):
+        return True
 
     #############################
     # variables and expressions
@@ -160,15 +157,20 @@ class XIRTransformer(Transformer):
 
     def operator_def(self, args):
         """Operator definition. Starts with keyword 'operator'"""
-        name = args[0]
-        if isinstance(args[2], tuple) and args[2][0] == "wires":
-            params = args[1]
-            wires = args[2][1]
-            stmts = args[3:]
-        else:  # no wires are declared
-            params = args[1]
-            wires = ()
-            stmts = args[2:]
+        name = args.pop(0)
+        wires = ()
+        params = []
+        stmts = []
+
+        for i, arg in enumerate(args):
+            if is_param(arg):
+                params = arg[1]
+            elif is_wire(arg):
+                wires = arg[1]
+
+            if isinstance(arg, OperatorStmt):
+                stmts = args[i:]
+                break
 
         if len(wires) > 0:
             check_wires(wires, stmts)
@@ -176,15 +178,20 @@ class XIRTransformer(Transformer):
 
     def gate_def(self, args):
         """Gate definition. Starts with keyword 'gate'"""
-        name = args[0]
-        if isinstance(args[2], tuple) and args[2][0] == "wires":
-            params = args[1]
-            wires = args[2][1]
-            stmts = args[3:]
-        else:  # no wires are declared
-            params = args[1]
-            wires = ()
-            stmts = args[2:]
+        name = args.pop(0)
+        wires = ()
+        params = []
+        stmts = []
+
+        for i, arg in enumerate(args):
+            if is_param(arg):
+                params = arg[1]
+            elif is_wire(arg):
+                wires = arg[1]
+
+            if isinstance(arg, Statement):
+                stmts = args[i:]
+                break
 
         if len(wires) > 0:
             check_wires(wires, stmts)
@@ -197,8 +204,7 @@ class XIRTransformer(Transformer):
 
     def gatestmt(self, args):
         """Gate statements that are defined directly in the circuit or inside
-        a gate declaration."""
-
+        a gate definition."""
         adjoint = False
         ctrl_wires = set()
 
@@ -209,16 +215,17 @@ class XIRTransformer(Transformer):
             elif a == "ctrl":
                 ctrl_wires.update(args.pop(0)[1])
 
-        name = args[0]
-        if isinstance(args[1], list):
-            params = list(map(simplify_math, args[1]))
-            wires = args[2][1]
-        elif isinstance(args[1], dict):
-            params = {k: simplify_math(v) for k, v in args[1].items()}
-            wires = args[2][1]
+        name = args.pop(0)
+        if is_param(args[0]):
+            if isinstance(args[0][1], list):
+                params = list(map(simplify_math, args[0][1]))
+                wires = args[1][1]
+            else:  # if dict
+                params = {k: simplify_math(v) for k, v in args[0][1].items()}
+                wires = args[1][1]
         else:
             params = []
-            wires = args[1][1]
+            wires = args[0][1]
 
         stmt_options = {
             "ctrl_wires": tuple(sorted(ctrl_wires, key=hash)),
@@ -228,7 +235,7 @@ class XIRTransformer(Transformer):
         return Statement(name, params, wires, **stmt_options)
 
     def opstmt(self, args):
-        """Operator statements defined inside an operator declaration
+        """Operator statements defined inside an operator definition.
 
         Returns:
             OperatorStmt: object containing statement data
@@ -250,16 +257,41 @@ class XIRTransformer(Transformer):
     ###############
 
     def gate_decl(self, args):
-        self._program.add_declaration("gate", GateDeclaration(*args))
+        if len(args) == 3:
+            name, params, wires = args[0], args[1][1], args[2][1]
+        else:
+            name, wires = args[0], args[1][1]
+            params = []
+
+        decl = Declaration(name, declaration_type="gate", params=params, wires=wires)
+        self._program.add_declaration("gate", decl)
 
     def operator_decl(self, args):
-        self._program.add_declaration("operator", OperatorDeclaration(*args))
+        if len(args) == 3:
+            name, params, wires = args[0], args[1][1], args[2][1]
+        else:
+            name, wires = args[0], args[1][1]
+            params = []
+        decl = Declaration(name, declaration_type="operator", params=params, wires=wires)
+        self._program.add_declaration("operator", decl)
 
     def func_decl(self, args):
-        self._program.add_declaration("func", FuncDeclaration(*args))
+        if len(args) == 2:
+            name, params = args[0], args[1][1]
+        else:
+            name = args[0]
+            params = []
+        decl = Declaration(name, declaration_type="function", params=params)
+        self._program.add_declaration("func", decl)
 
     def output_decl(self, args):
-        self._program.add_declaration("output", OutputDeclaration(*args))
+        if len(args) == 3:
+            name, params, wires = args[0], args[1][1], args[2][1]
+        else:
+            name, wires = args[0], args[1][1]
+            params = []
+        decl = Declaration(name, declaration_type="output", params=params, wires=wires)
+        self._program.add_declaration("output", decl)
 
     #########
     # maths
@@ -298,5 +330,15 @@ class XIRTransformer(Transformer):
             return -args[0]
         return "-" + str(args[0])
 
-    def PI(self, _) -> Union[str, Decimal]:
+    def PI(self, _):
         return "PI" if not self._eval_pi else Decimal(str(math.pi))
+
+
+def is_wire(arg):
+    """Returns whether the passed argument is a tuple of wires."""
+    return isinstance(arg, tuple) and arg[0] == "wires"
+
+
+def is_param(arg):
+    """Returns whether the passed argument is a list or dictionary of params."""
+    return isinstance(arg, tuple) and arg[0] == "params"

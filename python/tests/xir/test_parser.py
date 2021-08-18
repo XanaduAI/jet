@@ -4,6 +4,7 @@ import math
 from decimal import Decimal
 
 import pytest
+from lark.exceptions import UnexpectedToken, VisitError
 
 from xir import DecimalComplex, parse_script
 
@@ -127,3 +128,30 @@ class TestParser:
             assert irprog.statements[0].params[0] == expected
         else:
             assert irprog.statements[0].params[0] == param.upper()
+
+    @pytest.mark.parametrize(
+        "circuit",
+        [
+            "adjective name(a, b)[0];",
+            "gate name(a, b)[];",
+            "gate name(a: 3, b: 2)[0, 1];",
+        ],
+    )
+    def test_invalid_declarations_token_error(self, circuit):
+        """Test that an UnexpectedToken error is raised when using invalid declaration syntax"""
+        with pytest.raises(UnexpectedToken, match=r"Unexpected token"):
+            parse_script(circuit)
+
+    @pytest.mark.parametrize(
+        "circuit",
+        [
+            "gate name(a, a)[0, 1];",
+            "gate name(5, 3)[0, 1];",
+            "gate name(a, 3)[0, 1];",
+        ],
+    )
+    def test_invalid_declarations_visit_error(self, circuit):
+        """Test that a VisitError is raised when using invalid declarations
+        (that cannot be processed correctly)."""
+        with pytest.raises(VisitError, match=r"Error trying to process rule"):
+            parse_script(circuit)

@@ -5,14 +5,13 @@ include: "use" name ";"
 // the main circuit
 circuit: statement+
 statement: gatestmt | gate_def | operator_def | script_options
-gatestmt: (ADJOINT | (CTRL wires))* name (params | options_dict) "|" wires ";"
+gatestmt: (ADJOINT | (CTRL wires))* name params? "|" wires ";"
 opstmt: expr "," obs_group";"
 script_options: _OPTIONS ":" (option ";")+ _END ";"
 
-gate_def: _GATE name params wires? ":" gatestmt+ _END ";"
-operator_def: _OP name params wires? ":" opstmt+ _END ";"
+gate_def: _GATE name params_list? wires? ":" gatestmt+ _END ";"
+operator_def: _OP name params_list? wires? ":" opstmt+ _END ";"
 
-options_dict: "(" option ("," option)* ")"
 option: name ":" val
 
 obs_group: obs "[" uint "]" ("@" obs "[" uint "]")*
@@ -20,7 +19,11 @@ obs_group: obs "[" uint "]" ("@" obs "[" uint "]")*
 
 // list-types
 wires : "[" (uint | range | name) ("," (uint | range | name))* "]"
-params: ["(" val ("," val)* ")"]  // always optional (easier to parse)
+
+?params: params_dict | params_list
+params_list: "(" val ("," val)* ")"
+params_dict: "(" option ("," option)* ")"
+
 array : "[" (val ("," val)*)? "]"
 
 ?val  : bool | expr | array
@@ -69,10 +72,10 @@ FALSE_: "false"
 // declarations
 ?declarations: (gate_decl | operator_decl | func_decl | output_decl)
 
-gate_decl: _GATE name "," uint "," uint ";"
-operator_decl: _OP name "," uint "," uint ";"
-func_decl: _FUNC name "," uint ";"
-output_decl: _OUT name ";"
+gate_decl: _GATE name params_list? wires ";"
+operator_decl: _OP name params_list? wires ";"
+output_decl: _OUT name params_list? wires ";"
+func_decl: _FUNC name params_list? ";"
 
 // std imports from common.lark
 %import common.ESCAPED_STRING
