@@ -7,16 +7,7 @@ from typing import Any, Dict, Iterable, List, MutableSet
 import pytest
 
 from xir import parse_script
-from xir.program import (
-    Declaration,
-    FuncDeclaration,
-    GateDeclaration,
-    OperatorDeclaration,
-    OperatorStmt,
-    OutputDeclaration,
-    Statement,
-    XIRProgram,
-)
+from xir.program import Declaration, OperatorStmt, Statement, XIRProgram
 
 
 @pytest.fixture
@@ -33,7 +24,7 @@ def make_program(
     includes: List[str] = None,
     operators: Dict[str, Dict[str, Any]] = None,
     options: Dict[str, Any] = None,
-    statements: List[str] = None,
+    statements: List[Statement] = None,
     variables: MutableSet[str] = None,
 ):
     """Returns an XIR program with the given attributes."""
@@ -67,46 +58,40 @@ class TestSerialize:
     # Test declarations
     #####################
 
-    @pytest.mark.parametrize("name", ["rx", "CNOT", "a_gate"])
-    @pytest.mark.parametrize("num_params", [0, 1, 42])
-    @pytest.mark.parametrize("num_wires", [1, 42])
-    def test_gate_declaration(self, program, name, num_params, num_wires):
-        """Tests serializing an XIR program with gate declarations."""
-        decl = GateDeclaration(name, num_params=num_params, num_wires=num_wires)
+    @pytest.mark.parametrize(
+        "params, wires, declaration_type, want_res",
+        [
+            (["a", "b"], (0,), "gate", "gate name(a, b)[0];"),
+            ([], (0, 2, 1), "operator", "operator name[0, 2, 1];"),
+            (["theta"], ("a", "b", "c"), "output", "output name(theta)[a, b, c];"),
+        ],
+    )
+    def test_declarations(self, params, wires, declaration_type, want_res):
+        """Test serializing gate, operation and output declarations"""
+        decl = Declaration("name", declaration_type, params, wires)
 
-        program.add_declaration("gate", decl)
-        res = program.serialize()
-        assert res == f"gate {name}, {num_params}, {num_wires};"
+        irprog = XIRProgram()
+        irprog._declarations[declaration_type].append(decl)
+        have_res = irprog.serialize()
 
-    @pytest.mark.parametrize("name", ["sin", "COS", "arc_tan"])
-    @pytest.mark.parametrize("num_params", [0, 1, 42])
-    def test_func_declaration(self, program, name, num_params):
-        """Tests serializing an XIR program with function declarations."""
-        decl = FuncDeclaration(name, num_params=num_params)
+        assert have_res == want_res
 
-        program.add_declaration("func", decl)
-        res = program.serialize()
-        assert res == f"func {name}, {num_params};"
+    @pytest.mark.parametrize(
+        "params, want_res",
+        [
+            (["a", "b"], "function name(a, b);"),
+            ([], "function name;"),
+            (["theta"], "function name(theta);"),
+        ],
+    )
+    def test_func_declaration(self, params, want_res):
+        """Test serializing function declarations"""
+        decl = Declaration("name", declaration_type="function", params=params)
 
-    @pytest.mark.parametrize("name", ["op", "OPERATOR", "op_42"])
-    @pytest.mark.parametrize("num_params", [0, 1, 42])
-    @pytest.mark.parametrize("num_wires", [1, 42])
-    def test_operator_declaration(self, program, name, num_params, num_wires):
-        """Tests serializing an XIR program with operator declarations."""
-        decl = OperatorDeclaration(name, num_params=num_params, num_wires=num_wires)
-
-        program.add_declaration("operator", decl)
-        res = program.serialize()
-        assert res == f"operator {name}, {num_params}, {num_wires};"
-
-    @pytest.mark.parametrize("name", ["sample", "amplitude"])
-    def test_output_declaration(self, program, name):
-        """Tests serializing an XIR program with output declarations."""
-        decl = OutputDeclaration(name)
-
-        program.add_declaration("output", decl)
-        res = program.serialize()
-        assert res == f"output {name};"
+        irprog = XIRProgram()
+        irprog._declarations["func"].append(decl)
+        have_res = irprog.serialize()
+        assert have_res == want_res
 
     ###################
     # Test statements
@@ -296,24 +281,24 @@ class TestXIRProgram:
 
     def test_add_declaration(self, program):
         """Tests that declarations can be added to an XIR program."""
-        tan = FuncDeclaration("tan", 1)
+        tan = Declaration("tan", declaration_type="function", params=["x"])
         program.add_declaration("func", tan)
         assert program.declarations == {"func": [tan], "gate": [], "operator": [], "output": []}
 
-        u2 = GateDeclaration("U2", 2, 1)
+        u2 = Declaration("U2", declaration_type="gate", params=["a", "b"], wires=(0,))
         program.add_declaration("gate", u2)
         assert program.declarations == {"func": [tan], "gate": [u2], "operator": [], "output": []}
 
-        z3 = GateDeclaration("Z3", 0, 3)
+        z3 = Declaration("Z3", declaration_type="gate", wires=(0, 1, 2))
         program.add_declaration("operator", z3)
         assert program.declarations == {"func": [tan], "gate": [u2], "operator": [z3], "output": []}
 
     def test_add_declaration_with_same_key(self, program):
         """Tests that multiple declarations with the same key can be added to an XIR program."""
-        amplitude = OutputDeclaration("amplitude")
+        amplitude = Declaration("amplitude", declaration_type="output")
         program.add_declaration("output", amplitude)
 
-        probabilities = OutputDeclaration("probabilities")
+        probabilities = Declaration("probabilities", declaration_type="output")
         program.add_declaration("output", probabilities)
 
         assert program.declarations["output"] == [amplitude, probabilities]
@@ -322,7 +307,7 @@ class TestXIRProgram:
         """Tests that the concrete type of a declaration does not affect the
         key(s) that can be associated with it in an XIR program.
         """
-        decl = OutputDeclaration("gradient")
+        decl = Declaration("gradient", declaration_type="output")
         program.add_declaration("func", decl)
         assert program.declarations == {"func": [decl], "gate": [], "operator": [], "output": []}
 
@@ -330,7 +315,7 @@ class TestXIRProgram:
         """Tests that an exception is raised when a declaration with an unknown
         key is added to an XIR program.
         """
-        decl = Declaration("Variable")
+        decl = Declaration("var", declaration_type="gate")
         with pytest.raises(KeyError, match=r"Key 'var' is not a supported declaration"):
             program.add_declaration("var", decl)
 
@@ -338,11 +323,11 @@ class TestXIRProgram:
         """Tests that a warning is issued when two declarations with the same
         name are added to an XIR program.
         """
-        atan1 = FuncDeclaration("atan", 1)
+        atan1 = Declaration("atan", declaration_type="function", params=["x"])
         program.add_declaration("func", atan1)
 
         with pytest.warns(UserWarning, match=r"Func 'atan' has already been declared"):
-            atan2 = FuncDeclaration("atan", 2)
+            atan2 = Declaration("atan", declaration_type="function", params=["x", "y"])
             program.add_declaration("func", atan2)
 
         assert program.declarations["func"] == [atan1, atan2]
@@ -546,8 +531,8 @@ class TestXIRProgram:
                     make_program(
                         called_functions={"cos"},
                         declarations={
-                            "func": [FuncDeclaration("cos", 1)],
-                            "gate": [GateDeclaration("H", 0, 1)],
+                            "func": [Declaration("cos", declaration_type="function", params=["x"])],
+                            "gate": [Declaration("H", declaration_type="gate", wires=(0,))],
                             "operator": [],
                             "output": [],
                         },
@@ -561,9 +546,9 @@ class TestXIRProgram:
                     make_program(
                         called_functions={"sin"},
                         declarations={
-                            "func": [FuncDeclaration("sin", 1)],
+                            "func": [Declaration("sin", declaration_type="function", params=["x"])],
                             "gate": [],
-                            "operator": [OperatorDeclaration("Y", 0, 1)],
+                            "operator": [Declaration("Y", declaration_type="operator", wires=(0,))],
                             "output": [],
                         },
                         gates={"D": {"params": ["r", "phi"], "wires": [1], "statements": []}},
@@ -577,9 +562,12 @@ class TestXIRProgram:
                 make_program(
                     called_functions={"cos", "sin"},
                     declarations={
-                        "func": [FuncDeclaration("cos", 1), FuncDeclaration("sin", 1)],
-                        "gate": [GateDeclaration("H", 0, 1)],
-                        "operator": [OperatorDeclaration("Y", 0, 1)],
+                        "func": [
+                            Declaration("cos", declaration_type="function", params=["x"]),
+                            Declaration("sin", declaration_type="function", params=["x"]),
+                        ],
+                        "gate": [Declaration("H", declaration_type="gate", wires=(0,))],
+                        "operator": [Declaration("Y", declaration_type="operator", wires=(0,))],
                         "output": [],
                     },
                     gates={
@@ -644,10 +632,10 @@ class TestXIRProgram:
             pytest.param(
                 "play",
                 {
-                    "play": parse_script("output Play;"),
-                    "loop": parse_script("use loop; output Loop;"),
+                    "play": parse_script("func Play;"),
+                    "loop": parse_script("use loop; func Loop;"),
                 },
-                parse_script("output Play;"),
+                parse_script("func Play;"),
                 id="Lazy",
             ),
             pytest.param(
@@ -658,19 +646,19 @@ class TestXIRProgram:
                         use cream;
                         use sugar;
                         use water;
-                        output Coffee;
+                        func Coffee;
                         """
                     ),
-                    "cream": parse_script("output Cream;"),
-                    "sugar": parse_script("output Sugar;"),
-                    "water": parse_script("output Water;"),
+                    "cream": parse_script("func Cream;"),
+                    "sugar": parse_script("func Sugar;"),
+                    "water": parse_script("func Water;"),
                 },
                 parse_script(
                     """
-                    output Cream;
-                    output Sugar;
-                    output Water;
-                    output Coffee;
+                    func Cream;
+                    func Sugar;
+                    func Water;
+                    func Coffee;
                     """
                 ),
                 id="Flat",
@@ -678,15 +666,15 @@ class TestXIRProgram:
             pytest.param(
                 "bot",
                 {
-                    "bot": parse_script("use mid; output Bot;"),
-                    "mid": parse_script("use top; output Mid;"),
-                    "top": parse_script("output Top;"),
+                    "bot": parse_script("use mid; func Bot;"),
+                    "mid": parse_script("use top; func Mid;"),
+                    "top": parse_script("func Top;"),
                 },
                 parse_script(
                     """
-                    output Top;
-                    output Mid;
-                    output Bot;
+                    func Top;
+                    func Mid;
+                    func Bot;
                     """
                 ),
                 id="Linear",
@@ -694,15 +682,15 @@ class TestXIRProgram:
             pytest.param(
                 "salad",
                 {
-                    "salad": parse_script("use lettuce; use spinach; output Salad;"),
-                    "lettuce": parse_script("use spinach; output Lettuce;"),
-                    "spinach": parse_script("output Spinach;"),
+                    "salad": parse_script("use lettuce; use spinach; func Salad;"),
+                    "lettuce": parse_script("use spinach; func Lettuce;"),
+                    "spinach": parse_script("func Spinach;"),
                 },
                 parse_script(
                     """
-                    output Spinach;
-                    output Lettuce;
-                    output Salad;
+                    func Spinach;
+                    func Lettuce;
+                    func Salad;
                     """
                 ),
                 id="Acyclic",
@@ -710,29 +698,29 @@ class TestXIRProgram:
             pytest.param(
                 "Z",
                 {
-                    "Z": parse_script("use K1; use K2; use K3; output Z;"),
-                    "K1": parse_script("use A; use B; use C; output K1;"),
-                    "K2": parse_script("use B; use D; use E; output K2;"),
-                    "K3": parse_script("use A; use D; output K3;"),
-                    "A": parse_script("use O; output A;"),
-                    "B": parse_script("use O; output B;"),
-                    "C": parse_script("use O; output C;"),
-                    "D": parse_script("use O; output D;"),
-                    "E": parse_script("use O; output E;"),
-                    "O": parse_script("output O;"),
+                    "Z": parse_script("use K1; use K2; use K3; func Z;"),
+                    "K1": parse_script("use A; use B; use C; func K1;"),
+                    "K2": parse_script("use B; use D; use E; func K2;"),
+                    "K3": parse_script("use A; use D; func K3;"),
+                    "A": parse_script("use O; func A;"),
+                    "B": parse_script("use O; func B;"),
+                    "C": parse_script("use O; func C;"),
+                    "D": parse_script("use O; func D;"),
+                    "E": parse_script("use O; func E;"),
+                    "O": parse_script("func O;"),
                 },
                 parse_script(
                     """
-                    output O;
-                    output A;
-                    output B;
-                    output C;
-                    output K1;
-                    output D;
-                    output E;
-                    output K2;
-                    output K3;
-                    output Z;
+                    func O;
+                    func A;
+                    func B;
+                    func C;
+                    func K1;
+                    func D;
+                    func E;
+                    func K2;
+                    func K3;
+                    func Z;
                     """
                 ),
                 id="Wikipedia",

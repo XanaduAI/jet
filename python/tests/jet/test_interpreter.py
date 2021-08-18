@@ -771,7 +771,7 @@ def test_run_xir_program_with_expval_statements(program, want_result):
             ),
         ),
         (
-            xir.parse_script("operator box, 0, 1; expval(observable: box) | [0];"),
+            xir.parse_script("operator box[0]; expval(observable: box) | [0];"),
             (
                 r"Statement 'expval\(observable: box\) \| \[0\]' has an "
                 r"'observable' parameter which references an undefined operator\."

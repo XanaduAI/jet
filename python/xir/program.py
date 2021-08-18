@@ -11,6 +11,7 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSet,
+    Optional,
     Sequence,
     Tuple,
     Union,
@@ -150,7 +151,7 @@ class OperatorStmt:
 
         self._use_floats = use_floats
 
-    def __str__(self):
+    def __str__(self) -> str:
         terms = [f"{t[0]}[{t[1]}]" for t in self.terms]
         terms_as_string = " @ ".join(terms)
         pref = str(self.pref)
@@ -180,81 +181,58 @@ class OperatorStmt:
         return tuple({t[1] for t in self.terms})
 
 
+def _serialize_declaration(
+    name: str, params: Sequence[Param], wires: Sequence[Wire], declaration_type
+) -> str:
+    """Constructs and returns a declaration as a serialized string."""
+    if len(params):
+        params = "(" + ", ".join(map(str, params)) + ")"
+    else:
+        params = ""
+    if wires != ():
+        wires = "[" + ", ".join([str(w) for w in wires]) + "]"
+    else:
+        wires = ""
+
+    return f"{declaration_type} {name}{params}{wires}"
+
+
 class Declaration:
     """General declaration for declaring operators, gates, functions and outputs
 
     Args:
         name (str): name of the declaration
+        declaration_type (str): The type of declaration. Can be either "gate", "operator", "output"
+            or "function".
+        params (Sequence[str]): parameters used by the declared object
+        wires (Sequence[Wire]): wires that the declared object is applied to
     """
 
-    def __init__(self, name: str):
+    def __init__(
+        self,
+        name: str,
+        declaration_type: str,
+        params: Optional[Sequence[str]] = None,
+        wires: Optional[Sequence[Wire]] = None,
+    ) -> None:
+        if declaration_type not in ("gate", "output", "operator", "function"):
+            raise TypeError(f"Declaration type '{declaration_type}' is invalid.")
+
         self.name = name
+        self.declaration_type = declaration_type
+        self.params = list(params or [])
+        self.wires = tuple(wires or ())
 
-    def __str__(self):
-        return f"{self.name}"
+        if not all(isinstance(p, str) for p in self.params):
+            raise TypeError("Declaration '{name}' has parameters which are not strings.")
+        if len(set(self.params)) != len(self.params):
+            raise ValueError("Declaration '{name}' has duplicate parameters.")
 
+    def __str__(self) -> str:
+        return _serialize_declaration(self.name, self.params, self.wires, self.declaration_type)
 
-class OperatorDeclaration(Declaration):
-    """Quantum operator declarations
-
-    Args:
-        name (str): name of the operator
-        num_params (int): number of parameters that the operator uses
-        num_wires (int): number of wires that the operator is applied to
-    """
-
-    def __init__(self, name: str, num_params: int, num_wires: int):
-        self.num_params = num_params
-        self.num_wires = num_wires
-
-        super().__init__(name)
-
-    def __str__(self):
-        return f"{self.name}, {self.num_params}, {self.num_wires}"
-
-
-class GateDeclaration(Declaration):
-    """Quantum gate declarations
-
-    Args:
-        name (str): name of the gate
-        num_params (int): number of parameters that the gate uses
-        num_wires (int): number of wires that the gate is applied to
-    """
-
-    def __init__(self, name: str, num_params: int, num_wires: int):
-        self.num_params = num_params
-        self.num_wires = num_wires
-
-        super().__init__(name)
-
-    def __str__(self):
-        return f"{self.name}, {self.num_params}, {self.num_wires}"
-
-
-class FuncDeclaration(Declaration):
-    """Function declarations
-
-    Args:
-        name (str): name of the function
-        num_params (int): number of parameters that the function uses
-    """
-
-    def __init__(self, name: str, num_params: int):
-        self.num_params = num_params
-
-        super().__init__(name)
-
-    def __str__(self):
-        return f"{self.name}, {self.num_params}"
-
-
-class OutputDeclaration(Declaration):
-    """Output declarations
-
-    Args:
-        name (str): name of the output declaration
-    """
+    def __repr__(self) -> str:
+        return f"<{self.declaration_type.capitalize()} declaration:name={self.name}>"
 
 
 class XIRProgram:
@@ -533,39 +511,22 @@ class XIRProgram:
             res.extend([f"    {k}: {v};" for k, v in self.options.items()])
             res.append("end;\n")
 
-        res.extend([f"gate {dec};" for dec in self._declarations["gate"]])
-        res.extend([f"func {dec};" for dec in self._declarations["func"]])
-        res.extend([f"output {dec};" for dec in self._declarations["output"]])
-        res.extend([f"operator {dec};" for dec in self._declarations["operator"]])
-        if any(len(dec) != 0 for dec in self._declarations.values()):
+        res.extend([f"{decl};" for v in self._declarations.values() for decl in v])
+        if any(len(decl) != 0 for decl in self._declarations.values()):
             res.append("")
 
         for name, gate in self._gates.items():
-            if gate["params"] != []:
-                params = "(" + ", ".join([str(p) for p in gate["params"]]) + ")"
-            else:
-                params = ""
-            if gate["wires"] != ():
-                wires = "[" + ", ".join([str(w) for w in gate["wires"]]) + "]"
-            else:
-                wires = ""
+            decl_str = _serialize_declaration(name, gate["params"], gate["wires"], "gate")
 
-            res.extend([f"gate {name}{params}{wires}:"])
+            res.append(decl_str + ":")
 
             res.extend([f"    {stmt};" for stmt in gate["statements"]])
             res.append("end;\n")
 
         for name, op in self._operators.items():
-            if op["params"] != []:
-                params = "(" + ", ".join([str(p) for p in op["params"]]) + ")"
-            else:
-                params = ""
-            if op["wires"] != ():
-                wires = "[" + ", ".join([str(w) for w in op["wires"]]) + "]"
-            else:
-                wires = ""
+            decl_str = _serialize_declaration(name, op["params"], op["wires"], "operator")
 
-            res.extend([f"operator {name}{params}{wires}:"])
+            res.append(decl_str + ":")
 
             res.extend([f"    {stmt};" for stmt in op["statements"]])
             res.append("end;\n")
