@@ -1,15 +1,8 @@
 name: Build-wheels
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - cibuild
-    paths-ignore:
-      - ".github/**"
-      - "docs/**"
-      - "README.rst"
-      
+  release:
+  workflow-dispatch:
+
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
@@ -44,6 +37,6 @@ jobs:
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "python -m pytest {project}/python/tests -W ignore::UserWarning"
 
-      #- uses: actions/upload-artifact@v2
-       # with:
-        #  path: ./wheelhouse/*.whl
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
