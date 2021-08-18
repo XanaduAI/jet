@@ -6,7 +6,7 @@ env:
   CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
   CIBW_ENVIRONMENT_LINUX: CBLAS_ROOT=/usr/include/openblas 
   CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for full C++17 support
-  CIBW_TEST_REQUIRES: pytest
+  CIBW_TEST_REQUIRES: pytest numpy
   CIBW_TEST_COMMAND: "python -m pytest {project}/python/tests -W ignore::UserWarning"
 on:
   pull_request:
