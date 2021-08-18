@@ -1,7 +1,7 @@
 name: Build-wheels
 on:
   release:
-  workflow-dispatch:
+  workflow_dispatch:
 
 jobs:
   build_wheels:
