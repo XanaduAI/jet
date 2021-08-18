@@ -2,9 +2,10 @@ name: Build-wheels
 env:
   CIBW_SKIP: cp27-* cp35-* cp36-* cp37-* cp38-*
   CIBW_ARCHS: auto64
-  CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
   CIBW_BEFORE_BUILD: pip install "cmake>=3.14"
+  CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
   CIBW_ENVIRONMENT_LINUX: CBLAS_ROOT=/usr/include/openblas
+  CIBW_ENVIRONMENT_MACOS: MACOS_DEPLOYMENT_TARGET=10.9
 on:
   pull_request:
   push:
