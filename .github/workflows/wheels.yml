@@ -14,10 +14,10 @@ jobs:
         python: [37]
         include:
           - os: ubuntu-latest
-            cibw_environment: CBLAS_ROOT=/usr/include/openblas
             cibw_before_all: yum install -y openblas-devel
+            cibw_environment: CBLAS_ROOT=/usr/include/openblas
           - os: macos-latest
-            cibw_environment: MACOSX_DEPLOYMENT_TARGET=10.13 # Required for C++17 support
+            cibw_environment: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for C++17 support
     steps:
       - uses: actions/checkout@v2
 
