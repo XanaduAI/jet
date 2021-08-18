@@ -14,13 +14,13 @@ def parse_script(circuit: str) -> XIRProgram:
 
 
 photonics_script = """
-gate Sgate, 2, 1;
-gate BSgate, 2, 2;
-gate Rgate, 1, 1;
-output MeasureHomodyne;
+gate Sgate(a, b)[0];
+gate BSgate(theta, phi)[0, 1];
+gate Rgate(p0)[a];
+output MeasureHomodyne[0];
 
 Sgate(0.7, 0) | [1];
-BSgate(0.1, 0.0) | [0, 1];
+BSgate(0.1, 0.0) | [0, 2];
 Rgate(0.2) | [1];
 
 MeasureHomodyne(phi: 3) | [0];
