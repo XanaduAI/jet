@@ -5,7 +5,7 @@ env:
   CIBW_BEFORE_BUILD: pip install "cmake>=3.14"
   CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
   CIBW_ENVIRONMENT_LINUX: CBLAS_ROOT=/usr/include/openblas
-  CIBW_ENVIRONMENT_MACOS: MACOS_DEPLOYMENT_TARGET=10.13
+  CIBW_ENVIRONMENT_MACOS: MACOS_DEPLOYMENT_TARGET=10.14
 on:
   pull_request:
   push:
