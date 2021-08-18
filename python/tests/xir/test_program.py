@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Any, Dict, Iterable, List, MutableSet
 
 import pytest
+
 from xir import parse_script
 from xir.program import Declaration, OperatorStmt, Statement, XIRProgram
 

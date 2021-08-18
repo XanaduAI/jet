@@ -3,7 +3,6 @@
 import re
 import warnings
 from decimal import Decimal
-
 from typing import (
     Any,
     Collection,
@@ -12,10 +11,10 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSet,
+    Optional,
     Sequence,
     Tuple,
     Union,
-    Optional,
 )
 
 from .decimal_complex import DecimalComplex

@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import pytest
 from lark.exceptions import UnexpectedToken, VisitError
+
 from xir import DecimalComplex, parse_script
 
 

@@ -2,17 +2,11 @@
 import math
 from decimal import Decimal
 from pathlib import Path
-from typing import Union
 
 from lark import Lark, Transformer
 
 from .decimal_complex import DecimalComplex
-from .program import (
-    XIRProgram,
-    Declaration,
-    Statement,
-    OperatorStmt,
-)
+from .program import Declaration, OperatorStmt, Statement, XIRProgram
 from .utils import check_wires, simplify_math
 
 p = Path(__file__).parent / "ir.lark"
