@@ -18,6 +18,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         python: [37]
+        include:
+          - os: ubuntu-latest
+            cibw_environment: CBLAS_ROOT=/usr/include/openblas
+            cibw_before_all: yum install -y openblas-devel
+          - os: macos-latest
+            cibw_environment: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for C++17 support
     steps:
       - uses: actions/checkout@v2
 
@@ -30,12 +36,11 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: cp${{ matrix.python }}-*
           CIBW_ARCHS: auto64 # Only build for 64-bit platforms
+          CIBW_BUILD: cp${{ matrix.python }}-*
           CIBW_BEFORE_BUILD: pip install "cmake>=3.14" numpy
-          CIBW_BEFORE_ALL_LINUX: yum install -y openblas-devel
-          CIBW_ENVIRONMENT_LINUX: CBLAS_ROOT=/usr/include/openblas 
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for full C++17 support
+          CIBW_BEFORE_ALL: ${{ matrix.cibw_before_all }}
+          CIBW_ENVIRONMENT: ${{ matrix.cibw_environment }}
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "python -m pytest {project}/python/tests -W ignore::UserWarning"
 
