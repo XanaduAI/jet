@@ -101,7 +101,7 @@ def to_xir(prog, **kwargs):
                 output_decl = Declaration(name, declaration_type="output")
                 xir.add_declaration("output", output_decl)
 
-            params = dict()
+            params = {}
             # special case to take into account 'select' keyword argument
             if cmd.op.select is not None:
                 params["select"] = cmd.op.select
