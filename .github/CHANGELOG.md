@@ -4,6 +4,11 @@
 
 * Python source files are now linted using [PyLint](https://pypi.org/project/pylint/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
 
+### Documentation
+
+* The `pip install` instructions no longer reference a missing PyPI package. [(#66)](https://github.com/XanaduAI/jet/pull/66)
+
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):

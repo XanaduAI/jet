@@ -133,7 +133,7 @@ author = "Xanadu Inc."
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = "0.2.1"
+from jet import __version__ as release
 
 # The short X.Y version.
 version = re.match(r"^(\d+\.\d+)", release).expand(r"\1")
