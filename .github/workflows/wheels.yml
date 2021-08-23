@@ -31,7 +31,7 @@ jobs:
         env:
           CIBW_ARCHS: auto64 # Only build for 64-bit platforms
           CIBW_BUILD: cp${{ matrix.python }}-*
-          CIBW_BEFORE_BUILD: pip install "cmake>=3.14" numpy
+          CIBW_BEFORE_BUILD: pip install "cmake>=3.14"
           CIBW_BEFORE_ALL: ${{ matrix.cibw_before_all }}
           CIBW_ENVIRONMENT: ${{ matrix.cibw_environment }}
           CIBW_TEST_REQUIRES: pytest
