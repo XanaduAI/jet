@@ -1,10 +1,10 @@
-name: Build-wheels
+name: Wheels
 on:
   release:
   workflow_dispatch:
   
 jobs:
-  build_wheels:
+  build-wheels:
     name: Build wheels for cp${{ matrix.python }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:

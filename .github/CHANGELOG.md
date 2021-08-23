@@ -2,7 +2,7 @@
 
 ### Improvements
 
-* Python wheels now built in CI for Linux and MacOS [(#65)](https://github.com/XanaduAI/jet/pull/65)
+* Python wheels are now built in CI for Linux and MacOS. [(#65)](https://github.com/XanaduAI/jet/pull/65)
 
 * Python source files are now linted using [PyLint](https://pypi.org/project/pylint/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
 
