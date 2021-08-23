@@ -11,7 +11,7 @@ constexpr size_t MAJOR_VERSION = 0;
 constexpr size_t MINOR_VERSION = 2;
 
 /// Patch version number of Jet.
-constexpr size_t PATCH_VERSION = 1;
+constexpr size_t PATCH_VERSION = 2;
 
 /**
  * @brief Returns the current Jet version.
