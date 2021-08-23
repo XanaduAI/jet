@@ -2,6 +2,7 @@ name: Wheels
 on:
   release:
   workflow_dispatch:
+  push:
   
 jobs:
   build-wheels:
