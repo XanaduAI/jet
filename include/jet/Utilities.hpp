@@ -9,6 +9,10 @@
 
 #include "Abort.hpp"
 
+#ifdef _MSC_VER
+#include <intrin.h> // Used for fast_log2
+#endif
+
 namespace Jet {
 namespace Utilities {
 
@@ -36,8 +40,20 @@ constexpr inline bool is_pow_2(size_t value)
  */
 constexpr inline size_t fast_log2(size_t value)
 {
+#if defined(_MSC_VER) && defined(_M_AMD64)
+    unsigned long idx;
+    _BitScanReverse64(&idx, value);
+
+    return static_cast<size_t>(idx);
+#elif defined(_MSC_VER)
+    unsigned long idx;
+    _BitScanReverse(&idx, value);
+
+    return static_cast<size_t>(idx);
+#else
     return static_cast<size_t>(std::numeric_limits<size_t>::digits -
                                __builtin_clzll((value)) - 1ULL);
+#endif
 }
 
 /**
