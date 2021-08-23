@@ -112,7 +112,7 @@ as well as all dependencies, can be done using pip:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/XanaduAI/jet
+    pip install git+https://github.com/XanaduAI/jet#egg=quantum-jet
 
 To build the Jet Python distribution locally, a BLAS library with a CBLAS
 interface and a C++ compiler with C++17 support is required.  Simply run
