@@ -45,15 +45,8 @@ inline size_t fast_log2(size_t value)
 }
 
 #elif defined(_MSC_VER)
+
 #include <intrin.h>
-
-inline size_t fast_log2(size_t value)
-{
-    unsigned long idx;
-    _BitScanReverse(&idx, value);
-
-    return static_cast<size_t>(idx);
-}
 
 #if defined(_M_X64)
 
@@ -65,9 +58,19 @@ inline size_t fast_log2(size_t value)
     return static_cast<size_t>(idx);
 }
 
+#else
+
+inline size_t fast_log2(size_t value)
+{
+    unsigned long idx;
+    _BitScanReverse(&idx, value);
+
+    return static_cast<size_t>(idx);
+}
+
 #endif // defined(_M_X64)
 
-#endif
+#endif // defined(__GNUC__)
 
 /**
  * Streams a pair of elements to an output stream.
