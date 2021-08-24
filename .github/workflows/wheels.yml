@@ -12,7 +12,7 @@ jobs:
       matrix:
         os: [windows-latest] #[ubuntu-latest, macos-latest, windows-latest]
         python: [39] #[37, 38, 39] 
-        include:
+        #include:
           #- os: ubuntu-latest
            # cibw_before_all: yum install -y openblas-devel
             #cibw_environment: CBLAS_ROOT=/usr/include/openblas 
