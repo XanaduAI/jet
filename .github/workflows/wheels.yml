@@ -14,7 +14,6 @@ jobs:
         python: [39] #[37, 38, 39]
         include:
           - os: windows-latest
-            cibw_before_all: C:\cibw\nuget.exe install OpenBLAS -Version 0.2.14.1 -OutputDirectory C:\cibw\OpenBLAS
             cibw_environmnet: CBLAS_ROOT=C:\cibw\OpenBLAS
         #include:
           #- os: ubuntu-latest
@@ -42,7 +41,7 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "python -m pytest {project}/python/tests -W ignore::UserWarning"
-
+          CIBW_BEFORE_BUILD_WINDOWS: C:\cibw\nuget.exe install OpenBLAS -Version 0.2.14.1 -OutputDirectory C:\cibw\OpenBLAS
       - uses: actions/upload-artifact@v2
         with:
           name: wheels
