@@ -9,10 +9,6 @@
 
 #include "Abort.hpp"
 
-#ifdef _MSC_VER
-#include <intrin.h> // Used for fast_log2
-#endif
-
 namespace Jet {
 namespace Utilities {
 
@@ -38,23 +34,40 @@ constexpr inline bool is_pow_2(size_t value)
  * @return size_t log2 result of value. If value is a non power-of-2, returns
  * the floor of the log2 operation.
  */
-constexpr inline size_t fast_log2(size_t value)
-{
-#if defined(_MSC_VER) && defined(_M_AMD64)
-    unsigned long idx;
-    _BitScanReverse64(&idx, value);
+inline size_t fast_log2(size_t value);
 
-    return static_cast<size_t>(idx);
+#if defined(__GNUC__)
+
+inline size_t fast_log2(size_t value)
+{
+    return static_cast<size_t>(std::numeric_limits<size_t>::digits -
+                               __builtin_clzll((value)) - 1ULL);
+}
+
 #elif defined(_MSC_VER)
+#include <intrin.h>
+
+inline size_t fast_log2(size_t value)
+{
     unsigned long idx;
     _BitScanReverse(&idx, value);
 
     return static_cast<size_t>(idx);
-#else
-    return static_cast<size_t>(std::numeric_limits<size_t>::digits -
-                               __builtin_clzll((value)) - 1ULL);
-#endif
 }
+
+#if defined(_M_X64)
+
+inline size_t fast_log2(size_t value)
+{
+    unsigned long idx;
+    _BitScanReverse64(&idx, value);
+
+    return static_cast<size_t>(idx);
+}
+
+#endif // defined(_M_X64)
+
+#endif
 
 /**
  * Streams a pair of elements to an output stream.
