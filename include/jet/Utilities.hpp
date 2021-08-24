@@ -34,11 +34,11 @@ constexpr inline bool is_pow_2(size_t value)
  * @return size_t log2 result of value. If value is a non power-of-2, returns
  * the floor of the log2 operation.
  */
-inline size_t fast_log2(size_t value);
+constexpr inline size_t fast_log2(size_t value);
 
 #if defined(__GNUC__)
 
-inline size_t fast_log2(size_t value)
+constexpr inline size_t fast_log2(size_t value)
 {
     return static_cast<size_t>(std::numeric_limits<size_t>::digits -
                                __builtin_clzll((value)) - 1ULL);
@@ -50,7 +50,7 @@ inline size_t fast_log2(size_t value)
 
 #if defined(_M_X64)
 
-inline size_t fast_log2(size_t value)
+constexpr inline size_t fast_log2(size_t value)
 {
     unsigned long idx;
     _BitScanReverse64(&idx, value);
@@ -60,7 +60,7 @@ inline size_t fast_log2(size_t value)
 
 #else
 
-inline size_t fast_log2(size_t value)
+constexpr inline size_t fast_log2(size_t value)
 {
     unsigned long idx;
     _BitScanReverse(&idx, value);
