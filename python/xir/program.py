@@ -39,7 +39,7 @@ def get_floats(params: Params) -> Params:
                 params_with_floats.append(p)
 
     elif isinstance(params, Dict):
-        params_with_floats = dict()
+        params_with_floats = {}
         for k, v in params.items():
             if isinstance(v, DecimalComplex):
                 params_with_floats[k] = complex(v)
