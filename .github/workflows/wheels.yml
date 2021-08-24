@@ -2,21 +2,22 @@ name: Wheels
 on:
   release:
   workflow_dispatch:
-  
+  push:
+
 jobs:
   build-wheels:
     name: Build wheels for cp${{ matrix.python }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python: [37, 38, 39]
+        os: [windows-latest] #[ubuntu-latest, macos-latest, windows-latest]
+        python: [39] #[37, 38, 39] 
         include:
-          - os: ubuntu-latest
-            cibw_before_all: yum install -y openblas-devel
-            cibw_environment: CBLAS_ROOT=/usr/include/openblas 
-          - os: macos-latest
-            cibw_environment: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for C++17 support
+          #- os: ubuntu-latest
+           # cibw_before_all: yum install -y openblas-devel
+            #cibw_environment: CBLAS_ROOT=/usr/include/openblas 
+          #- os: macos-latest
+           # cibw_environment: MACOSX_DEPLOYMENT_TARGET=10.14 # Required for C++17 support
     steps:
       - uses: actions/checkout@v2
 
