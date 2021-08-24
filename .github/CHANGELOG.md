@@ -2,6 +2,8 @@
 
 ### Improvements
 
+* Python wheels are now built in CI for Linux and MacOS. [(#65)](https://github.com/XanaduAI/jet/pull/65)
+
 * Python source files are now linted using [PyLint](https://pypi.org/project/pylint/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
 
 ### Documentation
@@ -13,7 +15,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-[Mikhail Andrenkov](https://github.com/Mandrenkov).
+[Mikhail Andrenkov](https://github.com/Mandrenkov), [Jack Brown](https://github.com/brownj85).
 
 ## Release 0.2.1 (current release)
 
