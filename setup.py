@@ -35,9 +35,9 @@ class CMakeBuild(build_ext):
             f"-DPYTHON_EXECUTABLE={sys.executable}",
         ]
 
-        if sys.platform() == 'win32':
+        if sys.platform == 'win32':
             cmake_args.append("-DWINDOWS_BUNDLE_CBLAS=ON")
-            
+
         cmake_cmd = ["cmake", ext.sourcedir] + cmake_args
         build_cmd = ["cmake", "--build", "."]
 
