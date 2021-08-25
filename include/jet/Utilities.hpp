@@ -52,7 +52,7 @@ constexpr inline size_t fast_log2(size_t value)
 
 constexpr inline size_t fast_log2(size_t value)
 {
-    unsigned long idx;
+    unsigned long idx = 0;
     _BitScanReverse64(&idx, value);
 
     return static_cast<size_t>(idx);
@@ -62,7 +62,7 @@ constexpr inline size_t fast_log2(size_t value)
 
 constexpr inline size_t fast_log2(size_t value)
 {
-    unsigned long idx;
+    unsigned long idx = 0;
     _BitScanReverse(&idx, value);
 
     return static_cast<size_t>(idx);
