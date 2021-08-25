@@ -407,9 +407,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             JET_ABORT_IF(new_binary_ordering.size() < fast_log2(blocksize_),
                          "New ordering is too small to be used at this point.");
 
-            constexpr size_t Lr = fast_log2(blocksize_);
+            size_t Lr = fast_log2(blocksize_);
             size_t Ll = new_binary_ordering.size() - Lr;
-            constexpr size_t Rr = fast_log2(min_dims_);
+            size_t Rr = fast_log2(min_dims_);
 
             std::vector<std::string> Ll_old_indices(
                 old_binary_ordering.begin(), old_binary_ordering.begin() + Ll);
@@ -477,9 +477,9 @@ template <size_t BLOCKSIZE = 1024, size_t MIN_DIMS = 32> class QFlexPermuter {
             JET_ABORT_IF(new_binary_ordering.size() < fast_log2(min_dims_),
                          "New ordering is too small to be used at this point.");
 
-            constexpr size_t Lr = fast_log2(blocksize_);
+            size_t Lr = fast_log2(blocksize_);
             size_t Ll = new_binary_ordering.size() - Lr;
-            constexpr size_t Rr = fast_log2(min_dims_);
+            size_t Rr = fast_log2(min_dims_);
             size_t Rl = new_binary_ordering.size() - Rr;
             // Helper vectors that can be reused.
 
