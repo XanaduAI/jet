@@ -14,7 +14,6 @@ jobs:
         python: [39] #[37, 38, 39]
         include:
           - os: windows-latest
-            cibw_environment: WINDOWS_BUNDLE_CBLAS=ON
         #include:
           #- os: ubuntu-latest
            # cibw_before_all: yum install -y openblas-devel
