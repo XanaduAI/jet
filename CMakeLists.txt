@@ -222,7 +222,7 @@ if(ENABLE_SANITIZERS)
 endif()
 
 if(ENABLE_WARNINGS)
-  target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
+  target_compile_options(Jet INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Werror>)
 endif()
 
 if(ENABLE_NATIVE)
