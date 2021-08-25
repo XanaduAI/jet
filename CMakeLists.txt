@@ -31,6 +31,7 @@ option(ENABLE_IPO "Enable interprocedural/link-time optimisation" OFF)
 option(ENABLE_CUTENSOR "Build with CuTensor GPU support" OFF)
 option(DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
 
+
 # Build options
 option(BUILD_PYTHON "Generate Python bindings" OFF)
 option(BUILD_TESTS "Build tests" OFF)
@@ -40,6 +41,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 option(ENABLE_HPTT "Enable support for hptt tensor transpose backend" OFF)
+
+option(WINDOWS_BUNDLE_CBLAS "Fetch and statically link CBLAS during build" OFF)
+if(NOT WIN32)
+  set(WINDOWS_BUNDLE_CBLAS OFF)
+endif()
 
 ##########################
 ## Enfore Compiler Support
@@ -73,29 +79,11 @@ else()
   message(FATAL_ERROR "\nJet does not support the selected ${CMAKE_CXX_COMPILER_ID} compiler.")
 endif()
 
-##########################
-## Include BLAS modules
-##########################
-
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-
-find_package(MKL QUIET)
-
-if(MKL_FOUND)
-  add_definitions("-DENABLE_MKL")
-  set(BLAS_INCLUDE_DIRS "${MKL_INCLUDE_DIR}")
-  set(BLAS_LIBRARIES ${MKL_LIBRARY})
-else()
-  find_package(CBLAS REQUIRED)
-  set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
-  set(BLAS_INCLUDE_DIRS ${CBLAS_INCLUDE_DIRS})
-endif()
-
 
 ##########################
 ## Fetch dependencies
 ##########################
-Include(FetchContent)
+include(FetchContent)
 
 FetchContent_Declare(
   Taskflow
@@ -119,6 +107,8 @@ if(ENABLE_HPTT)
 endif()
 
 find_package(OpenMP QUIET)
+
+
 
 if(ENABLE_CUTENSOR)
     SET(CUDA_SEPARABLE_COMPILATION ON)
@@ -172,6 +162,36 @@ if(ENABLE_CUTENSOR)
     if(NOT CUTENSOR_LIB OR NOT CUTENSOR_INC)
         message(FATAL_ERROR "\nUnable to find cutensor installation. Please ensure v1.3.0+ is correctly installed.")
     endif()
+endif()
+
+
+##########################
+## Include BLAS modules
+##########################
+
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
+if(WINDOWS_BUNDLE_CBLAS)
+  FetchContent_Declare(
+    OpenBLAS
+    URL       https://github.com/xianyi/OpenBLAS/releases/download/v0.3.17/OpenBLAS-0.3.17-x64.zip
+    URL_HASH  MD5=1ee19f55bfd46120689cd260e16e7ce6
+  )
+  FetchContent_Populate(OpenBLAS)
+
+  set(BLAS_INCLUDE_DIRS "${openblas_SOURCE_DIR}/include")
+  set(BLAS_LIBRARIES "${openblas_SOURCE_DIR}/lib/libopenblas.a")
+else()
+  find_package(MKL QUIET)
+  if(MKL_FOUND)
+    add_definitions("-DENABLE_MKL")
+    set(BLAS_INCLUDE_DIRS "${MKL_INCLUDE_DIR}")
+    set(BLAS_LIBRARIES ${MKL_LIBRARY})
+  else()
+    find_package(CBLAS REQUIRED)
+    set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
+    set(BLAS_INCLUDE_DIRS ${CBLAS_INCLUDE_DIRS})
+  endif()
 endif()
 
 ##########################
