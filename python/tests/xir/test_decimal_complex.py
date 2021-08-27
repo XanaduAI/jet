@@ -184,7 +184,7 @@ class TestDecimalComplex:
             (float, r"argument must be a string or a number"),
             (range, r"object cannot be interpreted as an integer"),
             (bytes, r"cannot convert 'DecimalComplex' object to bytes"),
-            (bytearray, r"cannot convert 'DecimalComplex' object to bytearray"),
+#            (bytearray, r"cannot convert 'DecimalComplex' object to bytearray"),
             (int, r"argument must be a string, a bytes-like object or a number"),
             (memoryview, r"a bytes-like object is required"),
         ],
