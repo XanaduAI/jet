@@ -9,6 +9,10 @@
 
 #include "Abort.hpp"
 
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
+
 namespace Jet {
 namespace Utilities {
 
@@ -45,8 +49,6 @@ inline size_t fast_log2(size_t value)
 }
 
 #elif defined(_MSC_VER)
-
-#include <intrin.h>
 
 #if defined(_M_X64)
 
