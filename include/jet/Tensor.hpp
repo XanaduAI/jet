@@ -315,7 +315,7 @@ template <class T = std::complex<float>> class Tensor {
      *
      * @return Number of data elements.
      */
-    size_t GetSize() const { return Jet::Utilities::ShapeToSize(shape_); }
+    size_t GetSize() const { return data_.size(); }
 
     /**
      * @brief Returns a single scalar value from the `%Tensor` object.
