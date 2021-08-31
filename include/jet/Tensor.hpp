@@ -289,6 +289,20 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
+     * @brief Sets the data of a `%Tensor`.
+     *
+     * @param data Data of the `%Tensor` in row-major order.
+     *
+     * @exception Jet::Exception Data has the wrong size.
+     */
+    void SetData(const std::vector<T> &data)
+    {
+        JET_ABORT_IF_NOT(data.size() == GetSize(),
+                         "Data size does not match tensor size.");
+        Utilities::FastCopy(data, data_);
+    }
+
+    /**
      * @brief Returns the `%Tensor` data in row-major order.
      *
      * @return Vector of complex data values.

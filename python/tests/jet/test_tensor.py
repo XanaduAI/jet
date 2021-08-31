@@ -44,6 +44,12 @@ class TestTensor:
         tensor_2 = jet.Tensor(other=tensor_1, dtype=dtype)
         assert tensor_1 == tensor_2
 
+    def test_set_data(self, dtype):
+        """Tests that the data of a tensor can be modified."""
+        tensor = jet.Tensor(shape=[2, 3], indices=["i", "j"], data=range(6), dtype=dtype)
+        tensor.data = [9, 8, 7, 6, 5, 4]
+        assert tensor.data == [9, 8, 7, 6, 5, 4]
+
     def test_set_shape(self, dtype):
         """Tests that the shape of a tensor can be modified."""
         tensor = jet.Tensor(shape=[1, 2, 3, 4], dtype=dtype)
