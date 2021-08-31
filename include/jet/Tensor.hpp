@@ -275,9 +275,11 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Returns the `%Tensor` data value at the given n-dimensional index.
+     * @brief Returns the `%Tensor` data value at the given \f$n\f$-dimensional
+     *        index.
      *
-     * @param indices n-dimensional `%Tensor` data index in row-major order.
+     * @param indices \f$n\f$-dimensional `%Tensor` data index in row-major
+     *                order.
      *
      * @returns Complex data value.
      */
