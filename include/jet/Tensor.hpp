@@ -262,9 +262,11 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Sets the `%Tensor` data value at the given n-dimensional index.
+     * @brief Sets the `%Tensor` data value at the given \f$n\f$-dimensional
+     *        index.
      *
-     * @param indices n-dimensional `%Tensor` data index in row-major order.
+     * @param indices \f$n\f$-dimensional `%Tensor` data index in row-major
+     *                order.
      * @param value Data value to set at given index.
      */
     void SetValue(const std::vector<size_t> &indices, const T &value)
