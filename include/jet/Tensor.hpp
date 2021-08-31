@@ -298,7 +298,7 @@ template <class T = std::complex<float>> class Tensor {
     void SetData(const std::vector<T> &data)
     {
         JET_ABORT_IF_NOT(data.size() == GetSize(),
-                         "Data size does not match tensor size.");
+                         "Size of data and tensor do not match.");
         Utilities::FastCopy(data, data_);
     }
 

@@ -176,14 +176,14 @@ TEST_CASE("Tensor::SetData", "[Tensor]")
     {
         const Data data(2, 2);
         CHECK_THROWS_WITH(tensor.SetData(data),
-                          Contains("Data size does not match tensor size."));
+                          Contains("Size of data and tensor do not match."));
     }
 
     SECTION("Data is too large")
     {
         const Data data(8, 8);
         CHECK_THROWS_WITH(tensor.SetData(data),
-                          Contains("Data size does not match tensor size."));
+                          Contains("Size of data and tensor do not match."));
     }
 }
 
