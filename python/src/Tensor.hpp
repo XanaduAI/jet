@@ -97,15 +97,15 @@ Args:
         // Properties
         // ---------------------------------------------------------------------
 
+        .def_property("data", &tensor_t::GetData, &tensor_t::SetData,
+                      "Complex data values in row-major order.")
+
         .def_property("shape", &tensor_t::GetShape, &tensor_t::SetShape,
                       "List containing the dimension of each tensor index.")
 
         .def_property_readonly("index_to_dimension_map",
                                &tensor_t::GetIndexToDimension,
                                "Mapping from index labels to dimension sizes.")
-
-        .def_property_readonly("data", &tensor_t::GetData,
-                               "Complex data values in row-major order.")
 
         .def_property_readonly("indices", &tensor_t::GetIndices,
                                "List of index labels.")

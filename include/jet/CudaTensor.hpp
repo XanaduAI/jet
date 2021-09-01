@@ -178,7 +178,7 @@ template <class T = cuComplex, int CUDA_DEVICE = 0> class CudaTensor {
     }
 
     CudaTensor(const std::vector<std::string> &indices,
-               const std::vector<size_t> &shape, const std::vector<T> data)
+               const std::vector<size_t> &shape, const std::vector<T> &data)
         : CudaTensor(indices, shape)
     {
         CudaScopedDevice ctx(CUDA_DEVICE);

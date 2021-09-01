@@ -159,6 +159,34 @@ TEST_CASE("Tensor::GetIndices", "[Tensor]")
     }
 }
 
+TEST_CASE("Tensor::SetData", "[Tensor]")
+{
+    using namespace Catch::Matchers;
+
+    Tensor tensor({"i", "j"}, {2, 3}, {0, 1, 2, 3, 4, 5});
+
+    SECTION("Data is the correct size")
+    {
+        const Data data(6, 6);
+        tensor.SetData(data);
+        CHECK(tensor.GetData() == data);
+    }
+
+    SECTION("Data is too small")
+    {
+        const Data data(2, 2);
+        CHECK_THROWS_WITH(tensor.SetData(data),
+                          Contains("Size of data and tensor do not match."));
+    }
+
+    SECTION("Data is too large")
+    {
+        const Data data(8, 8);
+        CHECK_THROWS_WITH(tensor.SetData(data),
+                          Contains("Size of data and tensor do not match."));
+    }
+}
+
 TEST_CASE("Tensor::GetData", "[Tensor]")
 {
     SECTION("Data: default")

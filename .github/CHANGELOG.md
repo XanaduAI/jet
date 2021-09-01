@@ -1,15 +1,24 @@
 ## Release 0.2.2 (development release)
 
+### New features since last release
+
+* The `Tensor` class now has a public function for replacing its data. [(#68)](https://github.com/XanaduAI/jet/pull/68)
+
 ### Improvements
 
 * Python wheels are now built in CI for Linux and MacOS. [(#65)](https://github.com/XanaduAI/jet/pull/65)
 
 * Python source files are now linted using [PyLint](https://pypi.org/project/pylint/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
 
+### Bug Fixes
+
+* The `CudaTensor` class now accepts a data vector by reference in its constructor. [(#68)](https://github.com/XanaduAI/jet/pull/68)
+
 ### Documentation
 
-* The `pip install` instructions no longer reference a missing PyPI package. [(#66)](https://github.com/XanaduAI/jet/pull/66)
+* The `Tensor::GetValue()` and `Tensor::SetValue()` Doxygen comments now use LaTeX formulas. [(#68)](https://github.com/XanaduAI/jet/pull/68)
 
+* The `pip install` instructions no longer reference a missing PyPI package. [(#66)](https://github.com/XanaduAI/jet/pull/66)
 
 ### Contributors
 

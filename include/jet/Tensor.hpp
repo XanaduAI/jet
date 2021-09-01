@@ -262,9 +262,11 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Sets the `%Tensor` data value at the given n-dimensional index.
+     * @brief Sets the `%Tensor` data value at the given \f$n\f$-dimensional
+     *        index.
      *
-     * @param indices n-dimensional `%Tensor` data index in row-major order.
+     * @param indices \f$n\f$-dimensional `%Tensor` data index in row-major
+     *                order.
      * @param value Data value to set at given index.
      */
     void SetValue(const std::vector<size_t> &indices, const T &value)
@@ -273,15 +275,31 @@ template <class T = std::complex<float>> class Tensor {
     }
 
     /**
-     * @brief Returns the `%Tensor` data value at the given n-dimensional index.
+     * @brief Returns the `%Tensor` data value at the given \f$n\f$-dimensional
+     *        index.
      *
-     * @param indices n-dimensional `%Tensor` data index in row-major order.
+     * @param indices \f$n\f$-dimensional `%Tensor` data index in row-major
+     *                order.
      *
      * @returns Complex data value.
      */
     T GetValue(const std::vector<size_t> &indices) const
     {
         return data_[Jet::Utilities::RavelIndex(indices, shape_)];
+    }
+
+    /**
+     * @brief Sets the data of a `%Tensor`.
+     *
+     * @param data Data of the `%Tensor` in row-major order.
+     *
+     * @exception Jet::Exception Data has the wrong size.
+     */
+    void SetData(const std::vector<T> &data)
+    {
+        JET_ABORT_IF_NOT(data.size() == GetSize(),
+                         "Size of data and tensor do not match.");
+        Utilities::FastCopy(data, data_);
     }
 
     /**
@@ -311,7 +329,7 @@ template <class T = std::complex<float>> class Tensor {
      *
      * @return Number of data elements.
      */
-    size_t GetSize() const { return Jet::Utilities::ShapeToSize(shape_); }
+    size_t GetSize() const { return data_.size(); }
 
     /**
      * @brief Returns a single scalar value from the `%Tensor` object.
