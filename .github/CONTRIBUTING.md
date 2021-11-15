@@ -138,11 +138,11 @@ Before submitting a pull request, please make sure the following is done:
 * Once you have submitted the pull request, two things will automatically occur:
 
   - The **test suite** will automatically run on
-    [CircleCI](https://app.circleci.com/pipelines/github/XanaduAI/jet) to ensure
+    [GitHub Actions](https://github.com/XanaduAI/jet/actions) to ensure
     that all tests continue to pass.
 
   - The **formatter** will automatically run on
-    [CircleCI](https://app.circleci.com/pipelines/github/XanaduAI/jet) to ensure
+    [GitHub Actions](https://github.com/XanaduAI/jet/actions) to ensure
     that all the code is properly formatted.
 
   Based on these results, we may ask you to make small changes to your branch
