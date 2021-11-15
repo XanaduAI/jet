@@ -2,9 +2,9 @@ from inspect import cleandoc
 from math import sqrt
 
 import pytest
+import xir
 
 import jet
-import xir
 
 
 class TestGetXIRLibrary:

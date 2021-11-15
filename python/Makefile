@@ -14,6 +14,8 @@ TARGETS
 
   format [check=1]            Apply formatters; use with 'check=1' to check instead of modify
 
+  lint                        Apply linters
+
   test [args=<pytest args>]   Run tests; use with 'args=<pytest args>' to pass test arguments
 
   clean                       Remove all build artifacts
@@ -33,14 +35,17 @@ setup: $(.VENV_DIR)/touch
 .PHONY: format
 format: $(.VENV_DIR)/requirements-dev.txt.touch
 ifdef check
-	$(.VENV_BIN)/black -l 100 --check jet tests xir
-	$(.VENV_BIN)/isort --profile black --check-only jet tests xir
-	$(.VENV_BIN)/pylint jet tests/*/*.py xir
+	$(.VENV_BIN)/black -l 100 --check jet tests
+	$(.VENV_BIN)/isort --profile black --check-only jet tests
 else
-	$(.VENV_BIN)/black -l 100 jet tests xir
-	$(.VENV_BIN)/isort --profile black jet tests xir
-	$(.VENV_BIN)/pylint jet tests/*/*.py xir
+	$(.VENV_BIN)/black -l 100 jet tests
+	$(.VENV_BIN)/isort --profile black jet tests
 endif
+
+
+.PHONY: lint
+lint: $(.VENV_DIR)/requirements-dev.txt.touch
+	$(.VENV_BIN)/pylint jet tests
 
 
 .PHONY: dist

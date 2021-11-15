@@ -3,7 +3,7 @@ import random
 import warnings
 from copy import deepcopy
 from inspect import signature
-from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
+from typing import Any, Callable, Dict, Iterator, List, Set, Union
 
 import numpy as np
 import xir
@@ -341,7 +341,9 @@ def _create_statement_generator_for_composite_gate(
     return generator
 
 
-def _bind_statement_params(gate_signature_map: Dict[str, xir.Declaration], stmt: xir.Statement) -> Params:
+def _bind_statement_params(
+    gate_signature_map: Dict[str, xir.Declaration], stmt: xir.Statement
+) -> Params:
     """Binds the parameters of a statement to the parameters of its gate.
 
     Args:
@@ -368,7 +370,9 @@ def _bind_statement_params(gate_signature_map: Dict[str, xir.Declaration], stmt:
     return {name: have_params[name] for name in want_params}
 
 
-def _bind_statement_wires(gate_signature_map: Dict[str, xir.Declaration], stmt: xir.Statement) -> Wires:
+def _bind_statement_wires(
+    gate_signature_map: Dict[str, xir.Declaration], stmt: xir.Statement
+) -> Wires:
     """Binds the wires of a statement to the wires of its gate.
 
     Args:
