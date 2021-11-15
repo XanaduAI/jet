@@ -67,7 +67,7 @@ To submit a bug report, please work your way through the following checklist:
 
 * **Fill out the issue template**. If you cannot find an existing issue
   addressing the problem, create a new issue by filling out the
-  [bug issue template](./ISSUE_TEMPLATE/BUG.md). This template is added
+  [bug issue template](./ISSUE_TEMPLATE/bug-report.md). This template is added
   automatically to the comment box when you create a new issue. Please try and
   add as many details as possible!
 
@@ -88,6 +88,7 @@ suggestions for things to include:
   - If the feature is related to any theoretical results in quantum computation,
     provide any relevant equations. Alternatively, provide references to
     papers or preprints with the relevant sections and equations noted.
+
   - If the feature is workflow-related, or related to the use of Jet, explain
     why the enhancement would be useful and where/how you would like to use it.
 
