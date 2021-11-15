@@ -9,10 +9,11 @@ import jet
 
 class TestGetXIRLibrary:
     @pytest.mark.parametrize(
-        "registry, want_xir_script",
+        "registry, outputs, want_xir_script",
         [
             pytest.param(
                 {},
+                [],
                 "",
                 id="Empty",
             ),
@@ -22,11 +23,17 @@ class TestGetXIRLibrary:
                     "Y": jet.PauliY,
                     "Z": jet.PauliZ,
                 },
+                [
+                    "Amplitude",
+                    "Probabilities",
+                ],
                 cleandoc(
                     """
                     gate X[0];
                     gate Y[0];
                     gate Z[0];
+                    out Amplitude;
+                    out Probabilities;
                     """
                 ),
                 id="Ordering",
@@ -37,6 +44,7 @@ class TestGetXIRLibrary:
                     "U2": jet.U2,
                     "U3": jet.U3,
                 },
+                [],
                 cleandoc(
                     """
                     gate U1(phi)[0];
@@ -51,6 +59,7 @@ class TestGetXIRLibrary:
                     "SWAP": jet.SWAP,
                     "CSWAP": jet.CSWAP,
                 },
+                [],
                 cleandoc(
                     """
                     gate CSWAP[0, 1, 2];
@@ -64,6 +73,7 @@ class TestGetXIRLibrary:
                     "H": jet.Hadamard,
                     "Hadamard": jet.Hadamard,
                 },
+                [],
                 cleandoc(
                     """
                     gate H[0];
@@ -74,14 +84,19 @@ class TestGetXIRLibrary:
             ),
         ],
     )
-    def test_fake_registry(self, monkeypatch, registry, want_xir_script):
-        """Tests that the correct XIRProgram is returned for the fake gate registry."""
+    def test_fake_gates_and_outputs(self, monkeypatch, registry, outputs, want_xir_script):
+        """Tests that the correct XIR program is returned for the fake gate
+        registry and supported outputs.
+        """
         monkeypatch.setattr("jet.GateFactory.registry", registry)
+        monkeypatch.setattr("jet.interpreter._get_xir_outputs", lambda: outputs)
         have_xir_script = jet.get_xir_manifest().serialize()
         assert have_xir_script == want_xir_script
 
-    def test_real_registry(self):
-        """Tests that the correct XIRProgram is returned for the real gate registry."""
+    def test_real_gates_and_outputs(self):
+        """Tests that the correct XIR program is returned for the real gate
+        registry and supported outputs.
+        """
         have_xir_program = jet.get_xir_manifest().serialize(minimize=True)
         want_xir_program = (
             "gate BS(theta, phi)[0, 1]; "
@@ -161,7 +176,13 @@ class TestGetXIRLibrary:
             "gate u3(theta, phi, lam)[0]; "
             "gate x[0]; "
             "gate y[0]; "
-            "gate z[0];"
+            "gate z[0]; "
+            "out Amplitude; "
+            "out Expval; "
+            "out Probabilities; "
+            "out amplitude; "
+            "out expval; "
+            "out probabilities;"
         )
         assert have_xir_program == want_xir_program
 

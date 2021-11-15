@@ -27,10 +27,11 @@ StatementGenerator = Callable[[Params, Wires, Stack], Iterator[xir.Statement]]
 
 
 def get_xir_manifest() -> xir.Program:
-    """Returns an ``xir.Program`` containing the gate declarations supported by Jet.
+    """Returns an XIR program that is populated with declarations for the gates
+    and outputs supported by Jet.
 
     Returns:
-        xir.program.xir.Program: Declarations of the gates supported by Jet.
+        xir.Program: XIR program with the supported gate and output declarations.
 
     **Example**
 
@@ -42,28 +43,35 @@ def get_xir_manifest() -> xir.Program:
 
         program = jet.get_xir_manifest()
 
-        assert program.gates
+        assert program.declarations["gate"]
+        assert program.declarations["out"]
     """
-    lines = []
+    program = xir.Program()
 
     for name, cls in sorted(GateFactory.registry.items()):
-        # Instantiating the Gate subclass (with placeholder parameters) is an
-        # easy way to access properties such as the number of wires a Gate can
-        # be applied to.
+        # The [1:] is required because self is not explicitly passed to cls.__init__().
         param_vals = signature(cls.__init__).parameters.values()
-        # There is no need to mock parameters that have default values; the [1:]
-        # is required because self is not explicitly passed to cls.__init__().
         param_keys = [param.name for param in param_vals if param.default is param.empty][1:]
+
+        # Instantiating the Gate subclass (with placeholder parameters) is an
+        # easy way to query the number of wires a Gate acts on.
         gate = cls(*[None for _ in param_keys])
+        wires = range(gate.num_wires)
 
-        gate_params = "" if not param_keys else "(" + ", ".join(param_keys) + ")"
-        gate_wires = list(range(gate.num_wires))
+        decl = xir.Declaration(type_="gate", name=name, params=param_keys, wires=wires)
+        program.add_declaration(decl)
 
-        line = f"gate {name} {gate_params} {gate_wires};"
-        lines.append(line)
+    for name in _get_xir_outputs():
+        decl = xir.Declaration(type_="out", name=name)
+        program.add_declaration(decl)
 
-    script = "\n".join(lines)
-    return xir.parse_script(script)
+    return program
+
+
+def _get_xir_outputs() -> Iterator[str]:
+    """Returns the names of the supported XIR outputs."""
+    names = ((name, name.lower()) for name in ("Amplitude", "Expval", "Probabilities"))
+    yield from sorted(name for pair in names for name in pair)
 
 
 def run_xir_program(program: xir.Program) -> List[Union[np.number, np.ndarray]]:
@@ -115,10 +123,11 @@ def run_xir_program(program: xir.Program) -> List[Union[np.number, np.ndarray]]:
     """
     result: List[Union[np.number, np.ndarray]] = []
 
+    # Merge the XIR manifest even if there is no corresponding include statement.
     manifest = get_xir_manifest()
     program = xir.Program.merge(manifest, program)
 
-    _validate_xir_program_options(program=program)
+    _validate_xir_program_options(program)
 
     num_wires = len(program.wires)
     dimension = program.options.get("dimension", 2)
