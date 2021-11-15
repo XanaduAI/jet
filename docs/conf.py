@@ -44,11 +44,14 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
 ]
+
+intersphinx_mapping = {"xir": ("https://xir.readthedocs.io/en/stable/", None)}
 
 bibtex_bibfiles = []
 
