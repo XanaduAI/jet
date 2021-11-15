@@ -24,17 +24,9 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate X[0]:
-                        X | [0];
-                    end;
-
-                    gate Y[0]:
-                        Y | [0];
-                    end;
-
-                    gate Z[0]:
-                        Z | [0];
-                    end;
+                    gate X[0];
+                    gate Y[0];
+                    gate Z[0];
                     """
                 ),
                 id="Ordering",
@@ -47,17 +39,9 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate U1(phi)[0]:
-                        U1(phi) | [0];
-                    end;
-
-                    gate U2(phi, lam)[0]:
-                        U2(phi, lam) | [0];
-                    end;
-
-                    gate U3(theta, phi, lam)[0]:
-                        U3(theta, phi, lam) | [0];
-                    end;
+                    gate U1(phi)[0];
+                    gate U2(phi, lam)[0];
+                    gate U3(theta, phi, lam)[0];
                     """
                 ),
                 id="Parameters",
@@ -69,13 +53,8 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate CSWAP[0, 1, 2]:
-                        CSWAP | [0, 1, 2];
-                    end;
-
-                    gate SWAP[0, 1]:
-                        SWAP | [0, 1];
-                    end;
+                    gate CSWAP[0, 1, 2];
+                    gate SWAP[0, 1];
                     """
                 ),
                 id="Wires",
@@ -87,13 +66,8 @@ class TestGetXIRLibrary:
                 },
                 cleandoc(
                     """
-                    gate H[0]:
-                        H | [0];
-                    end;
-
-                    gate Hadamard[0]:
-                        Hadamard | [0];
-                    end;
+                    gate H[0];
+                    gate Hadamard[0];
                     """
                 ),
                 id="Duplicate",
@@ -103,91 +77,91 @@ class TestGetXIRLibrary:
     def test_fake_registry(self, monkeypatch, registry, want_xir_script):
         """Tests that the correct XIRProgram is returned for the fake gate registry."""
         monkeypatch.setattr("jet.GateFactory.registry", registry)
-        have_xir_script = jet.get_xir_library().serialize()
+        have_xir_script = jet.get_xir_manifest().serialize()
         assert have_xir_script == want_xir_script
 
     def test_real_registry(self):
         """Tests that the correct XIRProgram is returned for the real gate registry."""
-        have_xir_program = jet.get_xir_library().serialize(minimize=True)
+        have_xir_program = jet.get_xir_manifest().serialize(minimize=True)
         want_xir_program = (
-            "gate BS(theta, phi)[0, 1]: BS(theta, phi) | [0, 1]; end; "
-            "gate Beamsplitter(theta, phi)[0, 1]: Beamsplitter(theta, phi) | [0, 1]; end; "
-            "gate CNOT[0, 1]: CNOT | [0, 1]; end; "
-            "gate CPhaseShift(phi)[0, 1]: CPhaseShift(phi) | [0, 1]; end; "
-            "gate CRX(theta)[0, 1]: CRX(theta) | [0, 1]; end; "
-            "gate CRY(theta)[0, 1]: CRY(theta) | [0, 1]; end; "
-            "gate CRZ(theta)[0, 1]: CRZ(theta) | [0, 1]; end; "
-            "gate CRot(phi, theta, omega)[0, 1]: CRot(phi, theta, omega) | [0, 1]; end; "
-            "gate CSWAP[0, 1, 2]: CSWAP | [0, 1, 2]; end; "
-            "gate CX[0, 1]: CX | [0, 1]; end; "
-            "gate CY[0, 1]: CY | [0, 1]; end; "
-            "gate CZ[0, 1]: CZ | [0, 1]; end; "
-            "gate D(r, phi)[0]: D(r, phi) | [0]; end; "
-            "gate Displacement(r, phi)[0]: Displacement(r, phi) | [0]; end; "
-            "gate H[0]: H | [0]; end; "
-            "gate Hadamard[0]: Hadamard | [0]; end; "
-            "gate ISWAP[0, 1]: ISWAP | [0, 1]; end; "
-            "gate NOT[0]: NOT | [0]; end; "
-            "gate PauliX[0]: PauliX | [0]; end; "
-            "gate PauliY[0]: PauliY | [0]; end; "
-            "gate PauliZ[0]: PauliZ | [0]; end; "
-            "gate PhaseShift(phi)[0]: PhaseShift(phi) | [0]; end; "
-            "gate RX(theta)[0]: RX(theta) | [0]; end; "
-            "gate RY(theta)[0]: RY(theta) | [0]; end; "
-            "gate RZ(theta)[0]: RZ(theta) | [0]; end; "
-            "gate Rot(phi, theta, omega)[0]: Rot(phi, theta, omega) | [0]; end; "
-            "gate S[0]: S | [0]; end; "
-            "gate SWAP[0, 1]: SWAP | [0, 1]; end; "
-            "gate SX[0]: SX | [0]; end; "
-            "gate Squeezing(r, theta)[0]: Squeezing(r, theta) | [0]; end; "
-            "gate T[0]: T | [0]; end; "
-            "gate Toffoli[0, 1, 2]: Toffoli | [0, 1, 2]; end; "
-            "gate TwoModeSqueezing(r, theta)[0, 1]: TwoModeSqueezing(r, theta) | [0, 1]; end; "
-            "gate U1(phi)[0]: U1(phi) | [0]; end; "
-            "gate U2(phi, lam)[0]: U2(phi, lam) | [0]; end; "
-            "gate U3(theta, phi, lam)[0]: U3(theta, phi, lam) | [0]; end; "
-            "gate X[0]: X | [0]; end; "
-            "gate Y[0]: Y | [0]; end; "
-            "gate Z[0]: Z | [0]; end; "
-            "gate beamsplitter(theta, phi)[0, 1]: beamsplitter(theta, phi) | [0, 1]; end; "
-            "gate bs(theta, phi)[0, 1]: bs(theta, phi) | [0, 1]; end; "
-            "gate cnot[0, 1]: cnot | [0, 1]; end; "
-            "gate cphaseshift(phi)[0, 1]: cphaseshift(phi) | [0, 1]; end; "
-            "gate crot(phi, theta, omega)[0, 1]: crot(phi, theta, omega) | [0, 1]; end; "
-            "gate crx(theta)[0, 1]: crx(theta) | [0, 1]; end; "
-            "gate cry(theta)[0, 1]: cry(theta) | [0, 1]; end; "
-            "gate crz(theta)[0, 1]: crz(theta) | [0, 1]; end; "
-            "gate cswap[0, 1, 2]: cswap | [0, 1, 2]; end; "
-            "gate cx[0, 1]: cx | [0, 1]; end; "
-            "gate cy[0, 1]: cy | [0, 1]; end; "
-            "gate cz[0, 1]: cz | [0, 1]; end; "
-            "gate d(r, phi)[0]: d(r, phi) | [0]; end; "
-            "gate displacement(r, phi)[0]: displacement(r, phi) | [0]; end; "
-            "gate h[0]: h | [0]; end; "
-            "gate hadamard[0]: hadamard | [0]; end; "
-            "gate iswap[0, 1]: iswap | [0, 1]; end; "
-            "gate not[0]: not | [0]; end; "
-            "gate paulix[0]: paulix | [0]; end; "
-            "gate pauliy[0]: pauliy | [0]; end; "
-            "gate pauliz[0]: pauliz | [0]; end; "
-            "gate phaseshift(phi)[0]: phaseshift(phi) | [0]; end; "
-            "gate rot(phi, theta, omega)[0]: rot(phi, theta, omega) | [0]; end; "
-            "gate rx(theta)[0]: rx(theta) | [0]; end; "
-            "gate ry(theta)[0]: ry(theta) | [0]; end; "
-            "gate rz(theta)[0]: rz(theta) | [0]; end; "
-            "gate s[0]: s | [0]; end; "
-            "gate squeezing(r, theta)[0]: squeezing(r, theta) | [0]; end; "
-            "gate swap[0, 1]: swap | [0, 1]; end; "
-            "gate sx[0]: sx | [0]; end; "
-            "gate t[0]: t | [0]; end; "
-            "gate toffoli[0, 1, 2]: toffoli | [0, 1, 2]; end; "
-            "gate twomodesqueezing(r, theta)[0, 1]: twomodesqueezing(r, theta) | [0, 1]; end; "
-            "gate u1(phi)[0]: u1(phi) | [0]; end; "
-            "gate u2(phi, lam)[0]: u2(phi, lam) | [0]; end; "
-            "gate u3(theta, phi, lam)[0]: u3(theta, phi, lam) | [0]; end; "
-            "gate x[0]: x | [0]; end; "
-            "gate y[0]: y | [0]; end; "
-            "gate z[0]: z | [0]; end;"
+            "gate BS(theta, phi)[0, 1]; "
+            "gate Beamsplitter(theta, phi)[0, 1]; "
+            "gate CNOT[0, 1]; "
+            "gate CPhaseShift(phi)[0, 1]; "
+            "gate CRX(theta)[0, 1]; "
+            "gate CRY(theta)[0, 1]; "
+            "gate CRZ(theta)[0, 1]; "
+            "gate CRot(phi, theta, omega)[0, 1]; "
+            "gate CSWAP[0, 1, 2]; "
+            "gate CX[0, 1]; "
+            "gate CY[0, 1]; "
+            "gate CZ[0, 1]; "
+            "gate D(r, phi)[0]; "
+            "gate Displacement(r, phi)[0]; "
+            "gate H[0]; "
+            "gate Hadamard[0]; "
+            "gate ISWAP[0, 1]; "
+            "gate NOT[0]; "
+            "gate PauliX[0]; "
+            "gate PauliY[0]; "
+            "gate PauliZ[0]; "
+            "gate PhaseShift(phi)[0]; "
+            "gate RX(theta)[0]; "
+            "gate RY(theta)[0]; "
+            "gate RZ(theta)[0]; "
+            "gate Rot(phi, theta, omega)[0]; "
+            "gate S[0]; "
+            "gate SWAP[0, 1]; "
+            "gate SX[0]; "
+            "gate Squeezing(r, theta)[0]; "
+            "gate T[0]; "
+            "gate Toffoli[0, 1, 2]; "
+            "gate TwoModeSqueezing(r, theta)[0, 1]; "
+            "gate U1(phi)[0]; "
+            "gate U2(phi, lam)[0]; "
+            "gate U3(theta, phi, lam)[0]; "
+            "gate X[0]; "
+            "gate Y[0]; "
+            "gate Z[0]; "
+            "gate beamsplitter(theta, phi)[0, 1]; "
+            "gate bs(theta, phi)[0, 1]; "
+            "gate cnot[0, 1]; "
+            "gate cphaseshift(phi)[0, 1]; "
+            "gate crot(phi, theta, omega)[0, 1]; "
+            "gate crx(theta)[0, 1]; "
+            "gate cry(theta)[0, 1]; "
+            "gate crz(theta)[0, 1]; "
+            "gate cswap[0, 1, 2]; "
+            "gate cx[0, 1]; "
+            "gate cy[0, 1]; "
+            "gate cz[0, 1]; "
+            "gate d(r, phi)[0]; "
+            "gate displacement(r, phi)[0]; "
+            "gate h[0]; "
+            "gate hadamard[0]; "
+            "gate iswap[0, 1]; "
+            "gate not[0]; "
+            "gate paulix[0]; "
+            "gate pauliy[0]; "
+            "gate pauliz[0]; "
+            "gate phaseshift(phi)[0]; "
+            "gate rot(phi, theta, omega)[0]; "
+            "gate rx(theta)[0]; "
+            "gate ry(theta)[0]; "
+            "gate rz(theta)[0]; "
+            "gate s[0]; "
+            "gate squeezing(r, theta)[0]; "
+            "gate swap[0, 1]; "
+            "gate sx[0]; "
+            "gate t[0]; "
+            "gate toffoli[0, 1, 2]; "
+            "gate twomodesqueezing(r, theta)[0, 1]; "
+            "gate u1(phi)[0]; "
+            "gate u2(phi, lam)[0]; "
+            "gate u3(theta, phi, lam)[0]; "
+            "gate x[0]; "
+            "gate y[0]; "
+            "gate z[0];"
         )
         assert have_xir_program == want_xir_program
 
@@ -196,8 +170,8 @@ class TestGetXIRLibrary:
     "program",
     [
         xir.parse_script(""),
-        xir.parse_script("use xstd;"),
-        xir.parse_script("use xstd; H | [0];"),
+        xir.parse_script("use <xc/jet>;"),
+        xir.parse_script("H | [0];"),
     ],
 )
 def test_run_xir_program_with_no_output_statements(program):
@@ -211,6 +185,8 @@ def test_run_xir_program_with_no_output_statements(program):
         (
             xir.parse_script(
                 """
+                use <xc/jet>;
+
                 options:
                     dimension: 2;
                 end;
@@ -228,6 +204,8 @@ def test_run_xir_program_with_no_output_statements(program):
         (
             xir.parse_script(
                 """
+                use <xc/jet>;
+
                 options:
                     dimension: 3;
                 end;
@@ -313,6 +291,8 @@ def test_run_xir_program_with_incompatible_dimensions():
         (
             xir.parse_script(
                 """
+                use <xc/jet>;
+
                 X | [0];
 
                 amplitude(state: [0]) | [0];
@@ -324,6 +304,8 @@ def test_run_xir_program_with_incompatible_dimensions():
         (
             xir.parse_script(
                 """
+                use <xc/jet>;
+
                 H | [0];
                 CNOT | [0, 1];
 
@@ -338,6 +320,8 @@ def test_run_xir_program_with_incompatible_dimensions():
         (
             xir.parse_script(
                 """
+                use <xc/jet>;
+
                 TwoModeSqueezing(3, 1) | [0, 1];
 
                 amplitude(state: [0, 0]) | [0, 1];
@@ -685,23 +669,13 @@ def test_run_xir_program_with_invalid_gate_definitions(program, match):
         jet.run_xir_program(program)
 
 
-def test_run_xir_program_with_overridden_gate_definition():
-    """Tests that a UserWarning is given when an XIR program contains a
-    duplicate gate definition.
-    """
-    program = xir.parse_script("gate X: NOT | [0]; end;")
-
-    with pytest.warns(UserWarning, match=r"Gate 'X' overrides the Jet gate with the same name\."):
-        jet.run_xir_program(program)
-
-
 @pytest.mark.parametrize(
     "program, want_result",
     [
         (
             xir.parse_script(
                 """
-                operator Z:
+                obs Z [0]:
                     1, Z[0];
                 end;
 
@@ -713,8 +687,8 @@ def test_run_xir_program_with_overridden_gate_definition():
         (
             xir.parse_script(
                 """
-                operator Z3:
-                    3, Z[0];
+                obs Z3 [wire]:
+                    3, Z[wire];
                 end;
 
                 X | [0];
@@ -727,12 +701,12 @@ def test_run_xir_program_with_overridden_gate_definition():
         (
             xir.parse_script(
                 """
-                operator XY:
+                obs XY[0, 1]:
                     1, X[0];
                     1, Y[1];
                 end;
 
-                operator YX:
+                obs YX[0, 1]:
                     1, Y[0];
                     1, X[1];
                 end;
@@ -767,20 +741,20 @@ def test_run_xir_program_with_expval_statements(program, want_result):
             xir.parse_script("expval(observable: dne) | [0];"),
             (
                 r"Statement 'expval\(observable: dne\) \| \[0\]' has an "
-                r"'observable' parameter which references an undefined operator\."
+                r"'observable' parameter which references an undefined observable\."
             ),
         ),
         (
-            xir.parse_script("operator box[0]; expval(observable: box) | [0];"),
+            xir.parse_script("obs box[0]; expval(observable: box) | [0];"),
             (
                 r"Statement 'expval\(observable: box\) \| \[0\]' has an "
-                r"'observable' parameter which references an undefined operator\."
+                r"'observable' parameter which references an undefined observable\."
             ),
         ),
         (
             xir.parse_script(
                 """
-                operator up(scale):
+                obs up(scale)[0]:
                     scale, Z[0];
                 end;
 
@@ -789,31 +763,31 @@ def test_run_xir_program_with_expval_statements(program, want_result):
             ),
             (
                 r"Statement 'expval\(observable: up\) \| \[0\]' has an 'observable' "
-                r"parameter which references a parameterized operator\."
+                r"parameter which references a parameterized observable\."
             ),
         ),
         (
             xir.parse_script(
                 """
-                operator obs:
+                obs obs[0]:
                     1, Z[0];
                 end;
 
                 X | [0];
                 X | [1];
 
-                expval(observable: obs) | [0];
+                expval(observable: obs) | [0, 1];
                 """
             ),
             (
-                r"Statement 'expval\(observable: obs\) \| \[0\]' must be applied "
-                r"to \[0 \.\. 1\]\."
+                r"Statement 'expval\(observable: obs\) \| \[0, 1\]' has an 'observable' "
+                r"parameter which applies the wrong number of wires\."
             ),
         ),
         (
             xir.parse_script(
                 """
-                operator natural:
+                obs natural[0]:
                     one, Z[0];
                 end;
 
@@ -821,7 +795,7 @@ def test_run_xir_program_with_expval_statements(program, want_result):
                 """
             ),
             (
-                r"Operator statement 'one, Z\[0\]' has a prefactor \(one\) "
+                r"Observable statement 'one, Z\[0\]' has a prefactor \(one\) "
                 r"which cannot be converted to a floating-point number\."
             ),
         ),
@@ -839,7 +813,7 @@ def test_run_xir_program_with_unsupported_statement():
     """Tests that a ValueError is raised when an XIR program contains an
     unsupported statement.
     """
-    program = xir.parse_script("use xstd; halt | [0];")
+    program = xir.parse_script("halt | [0];")
 
     with pytest.raises(ValueError, match=r"Statement 'halt \| \[0\]' is not supported\."):
         jet.run_xir_program(program)

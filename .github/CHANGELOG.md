@@ -1,4 +1,4 @@
-## Release 0.2.2 (development release)
+## Release 0.2.2 (current release)
 
 ### New features since last release
 
@@ -9,6 +9,8 @@
 * Python wheels are now built in CI for Linux and MacOS. [(#65)](https://github.com/XanaduAI/jet/pull/65)
 
 * Python source files are now linted using [PyLint](https://pypi.org/project/pylint/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
+
+* XIR is now installed from [PyPI](https://pypi.org/project/quantum-xir/). [(#XXX)](https://github.com/XanaduAI/jet/pull/XXX)
 
 ### Bug Fixes
 
