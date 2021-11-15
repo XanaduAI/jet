@@ -54,7 +54,8 @@ requirements = [
     "lark-parser>=0.11.0",
     # Necessary until https://github.com/numba/numba/issues/7176 is resolved.
     "numpy<1.21.0",
-    "StrawberryFields==0.18.0",
+    "quantum-xir",
+    "strawberryfields>=0.18.0",
     "thewalrus>=0.15.0",
 ]
 
