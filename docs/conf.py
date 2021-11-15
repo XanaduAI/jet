@@ -314,7 +314,6 @@ html_theme_options = {
     # "homepage": "special_index.html",
     # Set the name of the project to appear in the left sidebar.
     "project_nav_name": "Jet",
-    "touch_icon": "_static/logo_new.png",
     # TODO: Set Google Analytics ID to enable tracking.
     # "google_analytics_account": "UA-116279123-2",
     # colors
