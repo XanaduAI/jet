@@ -229,7 +229,7 @@ formatted locally using:
 
 .. code-block:: bash
 
-    ./bin/format include test
+    make format
 
 All files within the listed directories will be modified to fit the expected format, if required.
 
