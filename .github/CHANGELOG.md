@@ -14,6 +14,8 @@
 
 * A `requirements.txt` file is now included in the `python/` directory. [(#69)](https://github.com/XanaduAI/jet/pull/69)
 
+* The Jet XIR manifest now declares the outputs supported by Jet. [(#69)](https://github.com/XanaduAI/jet/pull/69)
+
 ### Breaking Changes
 
 * The `get_xir_library()` Python function has been renamed to `get_xir_manifest()`. [(#69)](https://github.com/XanaduAI/jet/pull/69)
