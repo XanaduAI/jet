@@ -70,8 +70,8 @@ def get_xir_manifest() -> xir.Program:
 
 def _get_xir_outputs() -> Iterator[str]:
     """Returns the names of the supported XIR outputs."""
-    names = ((name, name.lower()) for name in ("Amplitude", "Expval", "Probabilities"))
-    yield from sorted(name for pair in names for name in pair)
+    names = ("Amplitude", "amplitude", "Expval", "expval", "Probabilities", "probabilities")
+    yield from sorted(names)
 
 
 def run_xir_program(program: xir.Program) -> List[Union[np.number, np.ndarray]]:
