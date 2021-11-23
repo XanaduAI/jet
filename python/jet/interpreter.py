@@ -82,7 +82,7 @@ def run_xir_program(program: xir.Program) -> List[Union[np.number, np.ndarray]]:
             statement or an invalid gate definition.
 
     Args:
-        program (xir.Program): XIR script to execute.
+        program (xir.Program): XIR program to execute.
 
     Returns:
         List[Union[np.number, np.ndarray]]: List of NumPy values representing the
