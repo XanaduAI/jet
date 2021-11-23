@@ -51,7 +51,6 @@ with open("include/jet/Version.hpp", "r") as f:
     version = f"{major}.{minor}.{patch}"
 
 requirements = [
-    "lark-parser>=0.11.0",
     # Necessary until https://github.com/numba/numba/issues/7176 is resolved.
     "numpy<1.21.0",
     "quantum-xir",
