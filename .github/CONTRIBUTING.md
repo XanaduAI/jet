@@ -67,9 +67,9 @@ To submit a bug report, please work your way through the following checklist:
 
 * **Fill out the issue template**. If you cannot find an existing issue
   addressing the problem, create a new issue by filling out the
-  [bug issue template](./ISSUE_TEMPLATE/bug-report.md). This template is added
-  automatically to the comment box when you create a new issue. Please try and
-  add as many details as possible!
+  [bug issue template](https://github.com/XanaduAI/jet/issues/new?template=bug-report.md).
+  This template is added automatically to the comment box when you create a new
+  issue. Please try and add as many details as possible!
 
 * Try and make your issue as **clear, concise, and descriptive** as possible.
   Include a clear and descriptive title, and include all code snippets and
