@@ -162,7 +162,7 @@ on the releases.  See our `changelog
 details.
 
 We also encourage bug reports, suggestions for new features and enhancements,
-and even links to cool projects or applications built using Jet.  Visit the
+and even links to cool projects or applications built using Jet. Visit the
 `contributions page
 <https://github.com/XanaduAI/jet/blob/main/.github/CONTRIBUTING.md>`_ to
 learn more about sharing your ideas with the Jet team.
