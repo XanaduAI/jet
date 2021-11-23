@@ -1,7 +1,7 @@
 .. raw:: html
 
     <p align="center">
-        <img width="250" alt="Jet" src="https://raw.githubusercontent.com/XanaduAI/jet/docs/_static/jet_title.svg">
+        <img width="250" alt="Jet" src="https://raw.githubusercontent.com/XanaduAI/jet/main/docs/_static/jet_title.svg">
     </p>
 
 ##################################################
@@ -158,13 +158,13 @@ We welcome new contributions - simply fork the Jet repository and make a
 `pull request <https://help.github.com/articles/about-pull-requests/>`_
 containing your contribution.  All contributers to Jet will be listed as authors
 on the releases.  See our `changelog
-<https://raw.githubusercontent.com/XanaduAI/jet/.github/CHANGELOG.md>`_ for more
+<https://github.com/XanaduAI/jet/blob/main/.github/CHANGELOG.md>`_ for more
 details.
 
 We also encourage bug reports, suggestions for new features and enhancements,
 and even links to cool projects or applications built using Jet.  Visit the
 `contributions page
-<https://raw.githubusercontent.com/XanaduAI/jet/.github/CONTRIBUTIONS.md>`_ to
+<https://github.com/XanaduAI/jet/blob/main/.github/CONTRIBUTING.md>`_ to
 learn more about sharing your ideas with the Jet team.
 
 Support
