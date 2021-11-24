@@ -1,3 +1,5 @@
+## Release 0.2.3 (development release)
+
 ## Release 0.2.2 (current release)
 
 ### New features since last release
