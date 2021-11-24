@@ -3,7 +3,6 @@ version: 2
 build:
   image: latest
   apt_packages:
-    - cmake
     - doxygen
     - graphviz
     - libblas-dev
@@ -15,6 +14,7 @@ python:
   install:
     - requirements: docs/requirements.txt
     - requirements: python/requirements.txt
+    - requirements: python/requirements-dev.txt
     - method: pip
       path: .
 
