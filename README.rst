@@ -1,8 +1,7 @@
-.. raw:: html
-
-    <p align="center">
-        <img width="250" alt="Jet" src="https://raw.githubusercontent.com/XanaduAI/jet/main/docs/_static/jet_title.svg">
-    </p>
+.. image:: https://raw.githubusercontent.com/XanaduAI/jet/main/docs/_static/jet_title.svg
+    :alt: Jet
+    :height: 65
+    :width: 100%
 
 ##################################################
 
