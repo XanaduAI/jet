@@ -48,7 +48,7 @@ with open("include/jet/Version.hpp", "r") as f:
     major = re.search(r"MAJOR_VERSION\s*=\s*(\d+)", contents).group(1)
     minor = re.search(r"MINOR_VERSION\s*=\s*(\d+)", contents).group(1)
     patch = re.search(r"PATCH_VERSION\s*=\s*(\d+)", contents).group(1)
-    version = f"{major}.{minor}.{patch}"
+    version = f"{major}.{minor}.{patch}-dev"
 
 requirements = [
     # Necessary until https://github.com/numba/numba/issues/7176 is resolved.
