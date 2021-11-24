@@ -1,8 +1,7 @@
-.. raw:: html
-
-    <p align="center">
-        <img width="250" alt="Jet" src="https://raw.githubusercontent.com/XanaduAI/jet/main/docs/_static/jet_title.svg">
-    </p>
+.. image:: https://raw.githubusercontent.com/XanaduAI/jet/main/docs/_static/jet_title.svg
+    :alt: Jet
+    :height: 65
+    :width: 100%
 
 ##################################################
 
@@ -112,7 +111,7 @@ as well as all dependencies, can be done using pip:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/XanaduAI/jet#egg=quantum-jet
+    pip install quantum-jet
 
 To build the Jet Python distribution locally, a BLAS library with a CBLAS
 interface and a C++ compiler with C++17 support is required.  Simply run
