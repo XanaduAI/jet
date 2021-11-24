@@ -229,7 +229,7 @@ formatted locally using:
 
 .. code-block:: bash
 
-    ./bin/format include test
+    make format
 
 All files within the listed directories will be modified to fit the expected format, if required.
 
@@ -286,4 +286,5 @@ added automatically to the comment box when you create a new issue.
   including any bug fixes, mention the issue numbers associated with the bugs.
 
 * Once you have submitted the pull request, the **test suite** will
-  automatically run on CircleCI to ensure that all tests continue to pass.
+  automatically run on `GitHub Actions <https://github.com/XanaduAI/jet/actions>`_
+  to ensure that all tests continue to pass.

@@ -67,9 +67,9 @@ To submit a bug report, please work your way through the following checklist:
 
 * **Fill out the issue template**. If you cannot find an existing issue
   addressing the problem, create a new issue by filling out the
-  [bug issue template](./ISSUE_TEMPLATE/BUG.md). This template is added
-  automatically to the comment box when you create a new issue. Please try and
-  add as many details as possible!
+  [bug issue template](https://github.com/XanaduAI/jet/issues/new?template=bug-report.md).
+  This template is added automatically to the comment box when you create a new
+  issue. Please try and add as many details as possible!
 
 * Try and make your issue as **clear, concise, and descriptive** as possible.
   Include a clear and descriptive title, and include all code snippets and
@@ -88,6 +88,7 @@ suggestions for things to include:
   - If the feature is related to any theoretical results in quantum computation,
     provide any relevant equations. Alternatively, provide references to
     papers or preprints with the relevant sections and equations noted.
+
   - If the feature is workflow-related, or related to the use of Jet, explain
     why the enhancement would be useful and where/how you would like to use it.
 
@@ -138,11 +139,11 @@ Before submitting a pull request, please make sure the following is done:
 * Once you have submitted the pull request, two things will automatically occur:
 
   - The **test suite** will automatically run on
-    [CircleCI](https://app.circleci.com/pipelines/github/XanaduAI/jet) to ensure
+    [GitHub Actions](https://github.com/XanaduAI/jet/actions) to ensure
     that all tests continue to pass.
 
   - The **formatter** will automatically run on
-    [CircleCI](https://app.circleci.com/pipelines/github/XanaduAI/jet) to ensure
+    [GitHub Actions](https://github.com/XanaduAI/jet/actions) to ensure
     that all the code is properly formatted.
 
   Based on these results, we may ask you to make small changes to your branch

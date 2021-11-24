@@ -44,11 +44,14 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
 ]
+
+intersphinx_mapping = {"xir": ("https://xir.readthedocs.io/en/stable/", None)}
 
 bibtex_bibfiles = []
 
@@ -314,7 +317,6 @@ html_theme_options = {
     # "homepage": "special_index.html",
     # Set the name of the project to appear in the left sidebar.
     "project_nav_name": "Jet",
-    "touch_icon": "_static/logo_new.png",
     # TODO: Set Google Analytics ID to enable tracking.
     # "google_analytics_account": "UA-116279123-2",
     # colors

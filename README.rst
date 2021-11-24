@@ -1,7 +1,7 @@
 .. raw:: html
 
     <p align="center">
-        <img width="250" alt="Jet" src="docs/_static/jet_title.svg">
+        <img width="250" alt="Jet" src="https://raw.githubusercontent.com/XanaduAI/jet/main/docs/_static/jet_title.svg">
     </p>
 
 ##################################################
@@ -36,9 +36,9 @@ Features
 * Models quantum systems with an arbitrary number of basis states.
 
 To get started with Jet, read one of our `tutorial walkthroughs
-<https://quantum-jet.readthedocs.io/en/latest/use/introduction.html>`__ or
+<https://quantum-jet.readthedocs.io/en/stable/use/introduction.html>`__ or
 browse the full `API documentation
-<https://quantum-jet.readthedocs.io/en/latest/api/library_root.html>`__.
+<https://quantum-jet.readthedocs.io/en/stable/api/library_root.html>`__.
 
 Installation
 ============
@@ -157,12 +157,15 @@ Contributing to Jet
 We welcome new contributions - simply fork the Jet repository and make a
 `pull request <https://help.github.com/articles/about-pull-requests/>`_
 containing your contribution.  All contributers to Jet will be listed as authors
-on the releases.  See our `changelog <.github/CHANGELOG.md>`_ for more details.
+on the releases.  See our `changelog
+<https://github.com/XanaduAI/jet/blob/main/.github/CHANGELOG.md>`_ for more
+details.
 
 We also encourage bug reports, suggestions for new features and enhancements,
-and even links to cool projects or applications built using Jet.  Visit the
-`contributions page <.github/CONTRIBUTIONS.md>`_ to learn more about sharing
-your ideas with the Jet team.
+and even links to cool projects or applications built using Jet. Visit the
+`contributions page
+<https://github.com/XanaduAI/jet/blob/main/.github/CONTRIBUTING.md>`_ to
+learn more about sharing your ideas with the Jet team.
 
 Support
 =======
@@ -189,6 +192,6 @@ Jet is **free** and **open source**, released under the
 `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_.
 
 Jet contains a copy of
-`JSON for Modern C++ <https://github.com/nlohmann/json>`_ 
+`JSON for Modern C++ <https://github.com/nlohmann/json>`_
 from Niels Lohmann which is licenced under the
 `MIT License <https://opensource.org/licenses/MIT>`_.

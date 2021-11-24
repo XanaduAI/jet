@@ -1,4 +1,4 @@
-## Release 0.2.2 (development release)
+## Release 0.2.2 (current release)
 
 ### New features since last release
 
@@ -10,6 +10,16 @@
 
 * Python source files are now linted using [PyLint](https://pypi.org/project/pylint/). [(#64)](https://github.com/XanaduAI/jet/pull/64)
 
+* The XIR Python package is now installed from [PyPI](https://pypi.org/project/quantum-xir/). [(#69)](https://github.com/XanaduAI/jet/pull/69)
+
+* A `requirements.txt` file is now included in the `python/` directory. [(#69)](https://github.com/XanaduAI/jet/pull/69)
+
+* The Jet XIR manifest now declares the outputs supported by Jet. [(#69)](https://github.com/XanaduAI/jet/pull/69)
+
+### Breaking Changes
+
+* The `get_xir_library()` Python function has been renamed to `get_xir_manifest()`. [(#69)](https://github.com/XanaduAI/jet/pull/69)
+
 ### Bug Fixes
 
 * The `CudaTensor` class now accepts a data vector by reference in its constructor. [(#68)](https://github.com/XanaduAI/jet/pull/68)
@@ -19,6 +29,8 @@
 * The `Tensor::GetValue()` and `Tensor::SetValue()` Doxygen comments now use LaTeX formulas. [(#68)](https://github.com/XanaduAI/jet/pull/68)
 
 * The `pip install` instructions no longer reference a missing PyPI package. [(#66)](https://github.com/XanaduAI/jet/pull/66)
+
+* References to the XIR are now hyperlinked to the [XIR documentation](https://xir.readthedocs.io/). [(#69)](https://github.com/XanaduAI/jet/pull/69)
 
 ### Contributors
 

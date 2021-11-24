@@ -3,12 +3,10 @@ import random
 import warnings
 from copy import deepcopy
 from inspect import signature
-from typing import Any, Callable, Dict, Iterator, List, Sequence, Set, Union
+from typing import Any, Callable, Dict, Iterator, List, Set, Union
 
 import numpy as np
-
-from xir import OperatorStmt, Statement, XIRProgram
-from xir import parse_script as parse_xir_script
+import xir
 
 from .bindings import PathInfo
 from .circuit import Circuit, Operation
@@ -17,7 +15,7 @@ from .gate import FockGate, GateFactory
 from .state import Qudit
 
 __all__ = [
-    "get_xir_library",
+    "get_xir_manifest",
     "run_xir_program",
 ]
 
@@ -25,15 +23,15 @@ __all__ = [
 Params = Dict[str, Any]
 Wires = Dict[str, int]
 Stack = Set[str]
-GateSignature = Dict[str, Sequence]
-StatementGenerator = Callable[[Params, Wires, Stack], Iterator[Statement]]
+StatementGenerator = Callable[[Params, Wires, Stack], Iterator[xir.Statement]]
 
 
-def get_xir_library() -> XIRProgram:
-    """Returns an ``XIRProgram`` containing the gate declarations supported by Jet.
+def get_xir_manifest() -> xir.Program:
+    """Returns an XIR program that is populated with declarations for the gates
+    and outputs supported by Jet.
 
     Returns:
-        xir.program.XIRProgram: Declarations of the gates supported by Jet.
+        xir.Program: XIR program with the supported gate and output declarations.
 
     **Example**
 
@@ -43,35 +41,40 @@ def get_xir_library() -> XIRProgram:
 
         import jet
 
-        program = jet.get_xir_library()
+        program = jet.get_xir_manifest()
 
-        assert program.gates
+        assert program.declarations["gate"]
+        assert program.declarations["out"]
     """
-    lines = []
+    program = xir.Program()
 
     for name, cls in sorted(GateFactory.registry.items()):
-        # Instantiating the Gate subclass (with placeholder parameters) is an
-        # easy way to access properties such as the number of wires a Gate can
-        # be applied to.
+        # The [1:] is required because self is not explicitly passed to cls.__init__().
         param_vals = signature(cls.__init__).parameters.values()
-        # There is no need to mock parameters that have default values; the [1:]
-        # is required because self is not explicitly passed to cls.__init__().
         param_keys = [param.name for param in param_vals if param.default is param.empty][1:]
+
+        # Instantiating the Gate subclass (with placeholder parameters) is an
+        # easy way to query the number of wires a Gate acts on.
         gate = cls(*[None for _ in param_keys])
+        wires = range(gate.num_wires)
 
-        # TODO: Replace gate definitions with gate declarations when parameter
-        #       and wire names are supported in gate declarations.
-        xir_params = "" if not param_keys else "(" + ", ".join(param_keys) + ")"
-        xir_wires = list(range(gate.num_wires))
+        decl = xir.Declaration(type_="gate", name=name, params=param_keys, wires=wires)
+        program.add_declaration(decl)
 
-        line = f"gate {name} {xir_params} {xir_wires}: {name} {xir_params} | {xir_wires}; end;"
-        lines.append(line)
+    for name in _get_xir_outputs():
+        decl = xir.Declaration(type_="out", name=name)
+        program.add_declaration(decl)
 
-    script = "\n".join(lines)
-    return parse_xir_script(script)
+    return program
 
 
-def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
+def _get_xir_outputs() -> Iterator[str]:
+    """Returns the names of the supported XIR outputs."""
+    names = ("Amplitude", "amplitude", "Expval", "expval", "Probabilities", "probabilities")
+    yield from sorted(names)
+
+
+def run_xir_program(program: xir.Program) -> List[Union[np.number, np.ndarray]]:
     """Executes an XIR program.
 
     Raises:
@@ -79,7 +82,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             statement or an invalid gate definition.
 
     Args:
-        program (xir.program.XIRProgram): XIR script to execute.
+        program (xir.Program): XIR program to execute.
 
     Returns:
         List[Union[np.number, np.ndarray]]: List of NumPy values representing the
@@ -90,9 +93,7 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     Consider the following XIR script which generates a Bell state and then
     measures the amplitude of each basis state:
 
-    .. code-block:: haskell
-
-        use xstd;
+    .. code-block:: text
 
         H | [0];
         CNOT | [0, 1];
@@ -122,7 +123,11 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     """
     result: List[Union[np.number, np.ndarray]] = []
 
-    _validate_xir_program_options(program=program)
+    # Merge the XIR manifest even if there is no corresponding include statement.
+    manifest = get_xir_manifest()
+    program = xir.Program.merge(manifest, program)
+
+    _validate_xir_program_options(program)
 
     num_wires = len(program.wires)
     dimension = program.options.get("dimension", 2)
@@ -183,28 +188,37 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
             if not isinstance(stmt.params, dict) or "observable" not in stmt.params:
                 raise ValueError(f"Statement '{stmt}' is missing an 'observable' parameter.")
 
-            operator = stmt.params["observable"]
+            observable = stmt.params["observable"]
 
-            if operator not in program.operators:
+            if observable not in program.observables:
                 raise ValueError(
                     f"Statement '{stmt}' has an 'observable' parameter which "
-                    f"references an undefined operator."
+                    f"references an undefined observable."
                 )
 
-            if program.operators[operator]["params"]:
+            if program.search("obs", "params", observable):
                 raise ValueError(
                     f"Statement '{stmt}' has an 'observable' parameter which "
-                    f"references a parameterized operator."
+                    f"references a parameterized observable."
                 )
 
-            if stmt.wires != tuple(range(num_wires)):
-                raise ValueError(f"Statement '{stmt}' must be applied to [0 .. {num_wires - 1}].")
+            have_wires = stmt.wires
+            want_wires = program.search("obs", "wires", observable)
 
-            observable = _generate_observable_from_operation_statements(
-                program.operators[operator]["statements"]
+            if len(have_wires) != len(want_wires):
+                raise ValueError(
+                    f"Statement '{stmt}' has an 'observable' parameter which "
+                    f"applies the wrong number of wires."
+                )
+
+            wires = {name: have_wires[i] for (i, name) in enumerate(want_wires)}
+
+            operations = _generate_operations_from_observable_statements(
+                stmts=program.observables[observable],
+                wires=wires,
             )
 
-            output = _compute_expected_value(circuit=circuit, observable=observable)
+            output = _compute_expected_value(circuit=circuit, observable=operations)
             result.append(output)
 
         else:
@@ -213,11 +227,11 @@ def run_xir_program(program: XIRProgram) -> List[Union[np.number, np.ndarray]]:
     return result
 
 
-def _validate_xir_program_options(program: XIRProgram) -> None:
-    """Validates the options in an ``XIRProgram``.
+def _validate_xir_program_options(program: xir.Program) -> None:
+    """Validates the options in an ``xir.Program``.
 
     Args:
-        program (XIRProgram): Program with the options to validate.
+        program (xir.Program): Program with the options to validate.
 
     Raises:
         ValueError: If the value of at least one option is invalid.
@@ -238,18 +252,23 @@ def _validate_xir_program_options(program: XIRProgram) -> None:
         warnings.warn(f"Option '{option}' is not supported and will be ignored.")
 
 
-def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
-    """Resolves the statements in an ``XIRProgram`` such that each yielded
+def _resolve_xir_program_statements(program: xir.Program) -> Iterator[xir.Statement]:
+    """Resolves the statements in an ``xir.Program`` such that each yielded
     gate application ``Statement`` is applied to a registered Jet gate.
 
     Args:
-        program (XIRProgram): Program with the statements to be resolved.
+        program (xir.Program): Program with the statements to be resolved.
 
     Returns:
-        Iterator[Statement]: Resolved statements in the given ``XIRProgram``.
+        Iterator[Statement]: Resolved statements in the given ``xir.Program``.
     """
-    # TODO: Use gate declarations when parameter and wire names are supported.
-    gate_signature_map = XIRProgram.merge(get_xir_library(), program).gates
+    gate_signature_map = {}
+    for decl in program.declarations["gate"]:
+        gate_signature_map[decl.name] = {
+            "params": decl.params,
+            "statements": program.gates.get(decl.name),
+            "wires": decl.wires,
+        }
 
     # Create a mapping from gate names to XIR statement generators.
     stmt_generator_map = {}
@@ -258,12 +277,12 @@ def _resolve_xir_program_statements(program: XIRProgram) -> Iterator[Statement]:
         stmt_generator_map[name] = _create_statement_generator_for_terminal_gate(name=name)
 
     for name in program.gates:
-        if name in stmt_generator_map:
-            warnings.warn(f"Gate '{name}' overrides the Jet gate with the same name.")
-
-        stmt_generator_map[name] = _create_statement_generator_for_composite_gate(
-            name=name, stmt_generator_map=stmt_generator_map, gate_signature_map=gate_signature_map
-        )
+        if gate_signature_map[name]["statements"] is not None:
+            stmt_generator_map[name] = _create_statement_generator_for_composite_gate(
+                name=name,
+                stmt_generator_map=stmt_generator_map,
+                gate_signature_map=gate_signature_map,
+            )
 
     for stmt in program.statements:
         if stmt.name in stmt_generator_map:
@@ -286,10 +305,10 @@ def _create_statement_generator_for_terminal_gate(name: str) -> StatementGenerat
             objects which implement the given terminal gate.
     """
 
-    def generator(params: Params, wires: Wires, _: Stack) -> Iterator[Statement]:
-        # The ``Statement`` constructor expects ``wires`` to be a list.
+    def generator(params: Params, wires: Wires, _: Stack) -> Iterator[xir.Statement]:
+        # The ``xir.Statement`` constructor expects ``wires`` to be a list.
         wires_tuple = tuple(wires[i] for i in sorted(wires, key=int))
-        yield Statement(name=name, params=params, wires=wires_tuple)
+        yield xir.Statement(name=name, params=params, wires=wires_tuple)
 
     return generator
 
@@ -297,7 +316,7 @@ def _create_statement_generator_for_terminal_gate(name: str) -> StatementGenerat
 def _create_statement_generator_for_composite_gate(
     name: str,
     stmt_generator_map: Dict[str, StatementGenerator],
-    gate_signature_map: Dict[str, GateSignature],
+    gate_signature_map: Dict[str, xir.Declaration],
 ) -> StatementGenerator:
     """Creates a statement generator for a composite (user-defined) gate.
 
@@ -311,7 +330,7 @@ def _create_statement_generator_for_composite_gate(
             objects which implement the given composite gate.
     """
 
-    def generator(params: Params, wires: Wires, stack: Stack) -> Iterator[Statement]:
+    def generator(params: Params, wires: Wires, stack: Stack) -> Iterator[xir.Statement]:
         if name in stack:
             raise ValueError(f"Gate '{name}' has a circular dependency.")
 
@@ -331,7 +350,9 @@ def _create_statement_generator_for_composite_gate(
     return generator
 
 
-def _bind_statement_params(gate_signature_map: Dict[str, GateSignature], stmt: Statement) -> Params:
+def _bind_statement_params(
+    gate_signature_map: Dict[str, xir.Declaration], stmt: xir.Statement
+) -> Params:
     """Binds the parameters of a statement to the parameters of its gate.
 
     Args:
@@ -358,7 +379,9 @@ def _bind_statement_params(gate_signature_map: Dict[str, GateSignature], stmt: S
     return {name: have_params[name] for name in want_params}
 
 
-def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: Statement) -> Wires:
+def _bind_statement_wires(
+    gate_signature_map: Dict[str, xir.Declaration], stmt: xir.Statement
+) -> Wires:
     """Binds the wires of a statement to the wires of its gate.
 
     Args:
@@ -381,28 +404,32 @@ def _bind_statement_wires(gate_signature_map: Dict[str, GateSignature], stmt: St
     return {name: have_wires[i] for (i, name) in enumerate(want_wires)}
 
 
-def _generate_observable_from_operation_statements(
-    stmts: Iterator[OperatorStmt],
+def _generate_operations_from_observable_statements(
+    stmts: Iterator[xir.ObservableStmt],
+    wires: Wires,
 ) -> Iterator[Operation]:
-    """Generates an observable from a series of operator statements.
+    """Generates a sequence of operations from a series of observable statements.
 
     Args:
-        stmts (Iterator[OperatorStmt]): Operator statements defining the observable.
+        stmts (Iterator[ObservableStmt]): Observable statements defining the observable.
+        wires (Wires): Map which associates the label of each wire in the
+            observable definition with the ID of that wire.
 
     Returns:
         Iterator[Operation]: Iterator over a sequence of ``Operation`` objects
-            which implement the observable given by the operator statements.
+            which implement the observable given by the observable statements.
     """
     for stmt in stmts:
         try:
             scalar = float(stmt.pref)
         except ValueError as exc:
             raise ValueError(
-                f"Operator statement '{stmt}' has a prefactor ({stmt.pref}) "
+                f"Observable statement '{stmt}' has a prefactor ({stmt.pref}) "
                 f"which cannot be converted to a floating-point number."
             ) from exc
 
-        for gate_name, wire_id in stmt.terms:
+        for gate_name, wire_label in stmt.terms:
+            wire_id = wires[wire_label]
             gate = GateFactory.create(gate_name, scalar=scalar)
             yield Operation(part=gate, wire_ids=[wire_id])
 

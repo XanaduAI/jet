@@ -54,3 +54,4 @@ jobs:
         run: |
           cd python
           make format check=1
+          make lint

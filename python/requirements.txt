@@ -1,6 +1,4 @@
-black
-cmake>=3.14
-isort>5
-pylint
-pytest>=5,<6
-wheel
+numpy==1.20.3
+quantum-xir==0.1.0
+strawberryfields==0.20.0
+thewalrus==0.17.0

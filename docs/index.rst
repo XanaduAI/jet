@@ -115,8 +115,8 @@ issue on our GitHub issue tracker.
 License
 =======
 
-The Jet library is **free** and **open source**, released under the Apache,
-Version 2.0.
+The Jet library is **free** and **open source**, released under the Apache
+License, Version 2.0.
 
 .. toctree::
    :maxdepth: 2
