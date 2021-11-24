@@ -3,11 +3,12 @@ version: 2
 build:
   image: latest
   apt_packages:
+    - cmake
+    - doxygen
+    - graphviz
     - libblas-dev
     - python3.7-dev
     - python3-wheel
-    - doxygen
-    - graphviz
 
 python:
   version: 3.7
