@@ -3,17 +3,18 @@ version: 2
 build:
   image: latest
   apt_packages:
+    - doxygen
+    - graphviz
     - libblas-dev
     - python3.7-dev
     - python3-wheel
-    - doxygen
-    - graphviz
 
 python:
   version: 3.7
   install:
     - requirements: docs/requirements.txt
     - requirements: python/requirements.txt
+    - requirements: python/requirements-dev.txt
     - method: pip
       path: .
 
