@@ -305,6 +305,11 @@ html_theme_options = {
 
     "navbar_right_links": [
         {
+            "name": "Paper",
+            "href": "https://arxiv.org/abs/2107.09793",
+            "icon": "fas fa-book",
+        },
+        {
             "name": "GitHub",
             "href": "https://github.com/XanaduAI/jet",
             "icon": "fab fa-github",
