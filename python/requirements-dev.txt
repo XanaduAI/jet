@@ -1,6 +1,6 @@
-black
+black==22.3.0
 cmake>=3.14
-isort>5
+isort[colors]==5.9.3
 pylint
 pytest>=5,<6
 wheel

@@ -141,7 +141,7 @@ class QuditRegister(State):
         super().__init__(name=name, num_wires=size)
 
         if data is None:
-            self._state_vector = (np.arange(dim ** size) == 0).astype(np.complex128)
+            self._state_vector = (np.arange(dim**size) == 0).astype(np.complex128)
         else:
             self._state_vector = data.flatten()
 

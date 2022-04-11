@@ -94,10 +94,10 @@ class TestQuditRegister:
 
     def test_init_with_data(self):
         """Tests that the state vector of a qudit register can be manually specified."""
-        tensor = jet.QuditRegister(dim=4, size=3, data=np.arange(4 ** 3)).tensor()
+        tensor = jet.QuditRegister(dim=4, size=3, data=np.arange(4**3)).tensor()
         assert tensor.indices == ["0", "1", "2"]
         assert tensor.shape == [4, 4, 4]
-        assert tensor.data == list(range(4 ** 3))
+        assert tensor.data == list(range(4**3))
 
 
 class TestQubit:

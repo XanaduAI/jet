@@ -18,7 +18,7 @@ class MockGate(jet.Gate):
         super().__init__(name="MockGate", num_wires=2, dim=3)
 
     def _data(self):
-        return np.eye(3 ** 2) * (1 + 1j)
+        return np.eye(3**2) * (1 + 1j)
 
     def _validate_dimension(self, dim):
         if dim != 3:
@@ -37,7 +37,7 @@ class MockFockGate(jet.FockGate):
         super().__init__(name="MockFockGate", num_wires=2, cutoff=cutoff)
 
     def _data(self):
-        return np.eye(self.dimension ** 2) * (1 + 1j)
+        return np.eye(self.dimension**2) * (1 + 1j)
 
 
 class MockQubitGate(jet.QubitGate):
