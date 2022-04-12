@@ -128,7 +128,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Jet"
-copyright = "2022 Xanadu Quantum Technologies"
+copyright = "2022, Xanadu Quantum Technologies"
 author = "Xanadu Inc."
 
 # The version info for the project you're documenting, acts as replacement for
