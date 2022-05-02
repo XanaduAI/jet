@@ -1,5 +1,17 @@
 ## Release 0.2.3 (development release)
 
+### Documentation
+
+* The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
+  is now used to style the Sphinx documentation.
+  [(#73)](https://github.com/XanaduAI/jet/pull/73)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+[Mikhail Andrenkov](https://github.com/Mandrenkov)
+
 ## Release 0.2.2 (current release)
 
 ### New features since last release

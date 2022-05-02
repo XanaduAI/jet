@@ -2,7 +2,6 @@ graft cmake
 graft include
 graft python/jet
 graft python/src
-graft python/xir
 include python/CMakeLists.txt
 include CMakeLists.txt
 include LICENSE
