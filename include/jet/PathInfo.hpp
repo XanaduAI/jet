@@ -171,7 +171,7 @@ class PathInfo {
             const auto it = index_to_size_map_.find(index);
             muls *= it == index_to_size_map_.end() ? 1 : it->second;
         }
-        double adds = muls - 1;
+        double adds = muls;
 
         // Find the number of elements in the tensor.
         double size = 1;
