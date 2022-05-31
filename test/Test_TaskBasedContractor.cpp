@@ -185,7 +185,7 @@ TEST_CASE("TaskBasedContractor::AddContractionTasks()", "[TaskBasedContractor]")
         CHECK(have_shared_tasks == want_shared_tasks);
 
         const double have_flops = tbc.GetFlops();
-        const double want_flops = (3 * 4) * 3 + (2 * 4) * 5 + (2 * 3) * 7;
+        const double want_flops = (3 * 4) * 4 + (2 * 4) * 6 + (2 * 3) * 8;
         CHECK(have_flops == want_flops);
 
         const double have_memory = tbc.GetMemory();
@@ -246,7 +246,7 @@ TEST_CASE("TaskBasedContractor::AddContractionTasks()", "[TaskBasedContractor]")
         CHECK(have_shared_tasks_2 == want_shared_tasks_2);
 
         const double have_flops = tbc.GetFlops();
-        const double want_flops = 3 * 3 + 2 * 5;
+        const double want_flops = 3 * 4 + 2 * 6;
         CHECK(have_flops == want_flops);
 
         const double have_memory = tbc.GetMemory();
@@ -707,7 +707,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddContractionTasks()",
         CHECK(have_shared_tasks == want_shared_tasks);
 
         const double have_flops = tbc.GetFlops();
-        const double want_flops = (3 * 4) * 3 + (2 * 4) * 5 + (2 * 3) * 7;
+        const double want_flops = (3 * 4) * 4 + (2 * 4) * 6 + (2 * 3) * 8;
         CHECK(have_flops == want_flops);
 
         const double have_memory = tbc.GetMemory();
@@ -789,7 +789,7 @@ TEST_CASE("TaskBasedContractor<CudaTensor>::AddContractionTasks()",
         CHECK(have_shared_tasks_2 == want_shared_tasks_2);
 
         const double have_flops = tbc.GetFlops();
-        const double want_flops = 3 * 3 + 2 * 5;
+        const double want_flops = 3 * 4 + 2 * 6;
         CHECK(have_flops == want_flops);
 
         const double have_memory = tbc.GetMemory();
