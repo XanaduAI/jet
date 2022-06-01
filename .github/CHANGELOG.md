@@ -1,5 +1,9 @@
 ## Release 0.2.3 (development release)
 
+### Improvements
+
+* The Jet Python package no longer specifies a version constraint for NumPy. [(#75)](https://github.com/XanaduAI/jet/pull/75)
+
 ### Documentation
 
 * The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)

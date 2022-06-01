@@ -51,8 +51,7 @@ with open("include/jet/Version.hpp", "r") as f:
     version = f"{major}.{minor}.{patch}-dev"
 
 requirements = [
-    # Necessary until https://github.com/numba/numba/issues/7176 is resolved.
-    "numpy<1.21.0",
+    "numpy",
     "quantum-xir",
     "strawberryfields>=0.18.0",
     "thewalrus>=0.15.0",
