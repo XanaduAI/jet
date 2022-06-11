@@ -279,7 +279,7 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
         const PathInfo path_info(tn, {{0, 1}});
 
         const double have_flops = path_info.GetPathStepFlops(2);
-        const double want_flops = 1;
+        const double want_flops = 2;
         CHECK(have_flops == want_flops);
     }
 
