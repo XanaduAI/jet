@@ -5,10 +5,14 @@
 * The calculation in the function GetPathFlops has been altered so that it is consistent
 with the way Cotengra and the jet paper computes the FLOPS for a given path.
 
+### Improvements
+
+* The Jet Python package no longer specifies a version constraint for NumPy. [(#75)](https://github.com/XanaduAI/jet/pull/75)
+
 ### Documentation
 
-* The jet paper reference in the README.md has been updated because the jet paper is now
-  published in Quantum.
+* The jet paper reference in the README.md has been updated because it is now
+  published in the Quantum journal.
 * The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
   is now used to style the Sphinx documentation.
   [(#73)](https://github.com/XanaduAI/jet/pull/73)
