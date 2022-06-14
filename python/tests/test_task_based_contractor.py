@@ -46,5 +46,5 @@ class TestTaskBasedContractor:
         assert tbc.name_to_parents_map == want_name_to_parents_map
         assert tbc.results == [want_result]
         assert tbc.reduction_result == want_result
-        assert tbc.flops == 2*2*4 + 2*4
+        assert tbc.flops == 2 * 2 * 4 + 2 * 4
         assert tbc.memory == 6
