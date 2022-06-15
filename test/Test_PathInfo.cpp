@@ -279,7 +279,7 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
         const PathInfo path_info(tn, {{0, 1}});
 
         const double have_flops = path_info.GetPathStepFlops(2);
-        const double want_flops = 1;
+        const double want_flops = 2;
         CHECK(have_flops == want_flops);
     }
 
@@ -294,7 +294,7 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
         const PathInfo path_info(tn, {{0, 1}});
 
         const double have_flops = path_info.GetPathStepFlops(2);
-        const double want_flops = 6;
+        const double want_flops = 12;
         CHECK(have_flops == want_flops);
     }
 
@@ -309,7 +309,7 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
         const PathInfo path_info(tn, {{0, 1}});
 
         const double have_flops = path_info.GetPathStepFlops(2);
-        const double want_flops = 3 + 2;
+        const double want_flops = 3 + 3;
         CHECK(have_flops == want_flops);
     }
 
@@ -324,7 +324,7 @@ TEST_CASE("PathInfo::GetPathStepFlops()", "[PathInfo]")
         const PathInfo path_info(tn, {{0, 1}});
 
         const double have_flops = path_info.GetPathStepFlops(2);
-        const double want_flops = (4 * 5) * (6 + 5);
+        const double want_flops = (4 * 5) * (6 + 6);
         CHECK(have_flops == want_flops);
     }
     SECTION("Path step with invalid ID")
@@ -382,7 +382,7 @@ TEST_CASE("PathInfo::GetTotalFlops()", "[PathInfo]")
         const PathInfo path_info(tn, {{0, 1}, {2, 3}});
 
         const double have_flops = path_info.GetTotalFlops();
-        const double want_flops = 12 * (2 + 1) + 20 * (3 + 2);
+        const double want_flops = 12 * (2 + 2) + 20 * (3 + 3);
         CHECK(have_flops == want_flops);
     }
 
