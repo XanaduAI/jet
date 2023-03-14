@@ -1,4 +1,4 @@
-numpy==1.21.0
+numpy==1.22.0
 quantum-xir==0.1.0
 strawberryfields==0.20.0
 thewalrus==0.17.0
